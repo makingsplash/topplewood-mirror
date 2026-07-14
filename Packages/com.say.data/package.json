@@ -1,0 +1,10 @@
+{
+  "name": "com.say.data",
+  "version": "1.0.4",
+  "displayName": "SayData",
+  "description": "This package contains Data Storage for SayStudio projects",
+  "dependencies": {
+    "com.say.infrastructure": "1.2.3"
+  },
+  "author": "SayGames Studio"
+}

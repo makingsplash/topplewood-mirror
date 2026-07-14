@@ -1,0 +1,384 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.jira.JiraProjectProperty plugin="jira@3.1.3"/>
+    <com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty plugin="gitlab-plugin@1.5.13">
+      <gitLabConnection>gitlab.saygames.io</gitLabConnection>
+    </com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>branch</name>
+          <description></description>
+          <defaultValue>master</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>platform</name>
+          <description></description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>android</string>
+              <string>ios</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>configuration</name>
+          <description></description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>dev</string>
+              <string>release</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>clean</name>
+          <description>should we clean repo before build</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>china</name>
+          <description>should we build version for chinese store</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.4.4">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://gitlab.com/gamepie/terrorists.git</url>
+        <credentialsId>6079f256-4daa-4032-8ef0-c23bc08926e5</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/$branch</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions>
+      <hudson.plugins.git.extensions.impl.SubmoduleOption>
+        <disableSubmodules>false</disableSubmodules>
+        <recursiveSubmodules>true</recursiveSubmodules>
+        <trackingSubmodules>false</trackingSubmodules>
+        <reference></reference>
+        <parentCredentials>true</parentCredentials>
+        <timeout>60</timeout>
+        <shallow>true</shallow>
+      </hudson.plugins.git.extensions.impl.SubmoduleOption>
+    </extensions>
+  </scm>
+  <assignedNode>master</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <EnvInjectBuilder plugin="envinject@2.3.0">
+      <info>
+        <propertiesContent>PROJECT_NAME=terrorists
+RESULT_BUILD_PATH=${WORKSPACE}/build
+BUILD_SCRIPTS_PATH=${WORKSPACE}/buildscripts
+UNITY_PROJECT_PATH=${WORKSPACE}/${PROJECT_NAME}
+IOS_EXPORT_METHOD=development
+IOS_TEAM=45YHY9FR4M</propertiesContent>
+      </info>
+    </EnvInjectBuilder>
+    <jenkins.plugins.shiningpanda.builders.PythonBuilder plugin="shiningpanda@0.24">
+      <pythonName>python3</pythonName>
+      <nature>shell</nature>
+      <command>$PYTHON_EXE ${BUILD_SCRIPTS_PATH}/add_builder_script.py $PROJECT_NAME $UNITY_PROJECT_PATH $china</command>
+      <ignoreExitCode>false</ignoreExitCode>
+    </jenkins.plugins.shiningpanda.builders.PythonBuilder>
+    <org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder plugin="conditional-buildstep@1.4.1">
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$DontRun" plugin="run-condition@1.5"/>
+      <runCondition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition" plugin="run-condition@1.5">
+        <arg1>${platform}</arg1>
+        <arg2>ios</arg2>
+        <ignoreCase>false</ignoreCase>
+      </runCondition>
+      <conditionalbuilders>
+        <hudson.tasks.Shell>
+          <command>if [[ &quot;$china&quot; == &quot;true&quot; ]]; then
+filename=provision_${configuration}_china.mobileprovision
+else
+filename=provision_${configuration}.mobileprovision
+fi
+
+filepath=&quot;$WORKSPACE/ios_certificates/$filename&quot;
+uuid=`grep UUID -A1 -a &quot;$filepath&quot; | grep -io &quot;[-A-F0-9]\{36\}&quot;`
+cp &quot;$filepath&quot; ~/Library/MobileDevice/Provisioning\ Profiles/$uuid.mobileprovision
+
+bundle_id=`grep application-identifier -A1 -a &quot;$filepath&quot; | grep -o &quot;\..*\..*\..*&lt;&quot;`
+bundle_id=${bundle_id:1:${#bundle_id}-2}
+echo &quot;PROVISIONING_PROFILE=$uuid\nBUNDLE_ID=$bundle_id&quot; &gt; $WORKSPACE/provisions.env</command>
+          <configuredLocalRules/>
+        </hudson.tasks.Shell>
+        <EnvInjectBuilder plugin="envinject@2.3.0">
+          <info>
+            <propertiesFilePath>$WORKSPACE/provisions.env</propertiesFilePath>
+          </info>
+        </EnvInjectBuilder>
+      </conditionalbuilders>
+    </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
+    <org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder plugin="conditional-buildstep@1.4.1">
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$DontRun" plugin="run-condition@1.5"/>
+      <runCondition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition" plugin="run-condition@1.5">
+        <arg1>${configuration}</arg1>
+        <arg2>dev</arg2>
+        <ignoreCase>false</ignoreCase>
+      </runCondition>
+      <conditionalbuilders>
+        <EnvInjectBuilder plugin="envinject@2.3.0">
+          <info>
+            <propertiesContent>IOS_BUILD_CONFIGURATION=Release
+IOS_EXPORT_METHOD=ad-hoc
+IOS_TEAM=45YHY9FR4M</propertiesContent>
+          </info>
+        </EnvInjectBuilder>
+      </conditionalbuilders>
+    </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
+    <org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder plugin="conditional-buildstep@1.4.1">
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.5"/>
+      <runCondition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition" plugin="run-condition@1.5">
+        <arg1>${configuration}</arg1>
+        <arg2>release</arg2>
+        <ignoreCase>false</ignoreCase>
+      </runCondition>
+      <conditionalbuilders>
+        <EnvInjectBuilder plugin="envinject@2.3.0">
+          <info>
+            <propertiesContent>IOS_BUILD_CONFIGURATION=Release
+IOS_EXPORT_METHOD=app-store
+IOS_TEAM=VAGJS89CCG</propertiesContent>
+          </info>
+        </EnvInjectBuilder>
+      </conditionalbuilders>
+    </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
+    <hudson.tasks.Shell>
+      <command>echo $BUILD_NUMBER &gt; $WORKSPACE/${PROJECT_NAME}/Assets/Resources/build_number.txt</command>
+      <configuredLocalRules/>
+    </hudson.tasks.Shell>
+    <org.jenkinsci.plugins.unity3d.Unity3dBuilder plugin="unity3d-plugin@1.3">
+      <unity3dName>2019.2.21f1</unity3dName>
+      <argLine>-buildTarget $platform -batchmode -quit -executeMethod Builder.PerformBuild_${platform}_${configuration} -nographics -projectPath ./${PROJECT_NAME}</argLine>
+      <unstableReturnCodes></unstableReturnCodes>
+    </org.jenkinsci.plugins.unity3d.Unity3dBuilder>
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="conditional-buildstep@1.4.1">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition" plugin="run-condition@1.5">
+        <arg1>${platform}</arg1>
+        <arg2>ios</arg2>
+        <ignoreCase>false</ignoreCase>
+      </condition>
+      <buildStep class="au.com.rayh.XCodeBuilder" plugin="xcode-plugin@2.0.14">
+        <cleanBeforeBuild>true</cleanBeforeBuild>
+        <cleanTestReports>false</cleanTestReports>
+        <configuration>${IOS_BUILD_CONFIGURATION}</configuration>
+        <target></target>
+        <sdk></sdk>
+        <symRoot></symRoot>
+        <buildDir>${WORKSPACE}/build/iOS/build/Unity-iPhone.build</buildDir>
+        <xcodeProjectPath>./build/iOS</xcodeProjectPath>
+        <xcodeProjectFile></xcodeProjectFile>
+        <xcodebuildArguments>PROVISIONING_PROFILE=${PROVISIONING_PROFILE}</xcodebuildArguments>
+        <xcodeSchema>Unity-iPhone</xcodeSchema>
+        <xcodeWorkspaceFile></xcodeWorkspaceFile>
+        <cfBundleVersionValue></cfBundleVersionValue>
+        <cfBundleShortVersionStringValue></cfBundleShortVersionStringValue>
+        <buildIpa>true</buildIpa>
+        <ipaExportMethod>${IOS_EXPORT_METHOD}</ipaExportMethod>
+        <generateArchive>false</generateArchive>
+        <noConsoleLog>false</noConsoleLog>
+        <logfileOutputDirectory></logfileOutputDirectory>
+        <unlockKeychain>true</unlockKeychain>
+        <keychainId></keychainId>
+        <keychainPath>${HOME}/Library/Keychains/login.keychain-db</keychainPath>
+        <keychainPwd>{AQAAABAAAAAQHTiZuNXzxrOVdnpNyOHo/Sl3ch46qvgPAgDFfwmrMLc=}</keychainPwd>
+        <developmentTeamName></developmentTeamName>
+        <developmentTeamID></developmentTeamID>
+        <allowFailingBuildResults>false</allowFailingBuildResults>
+        <ipaName>${BASE_NAME}</ipaName>
+        <ipaOutputDirectory>${RESULT_BUILD_PATH}/ios_result</ipaOutputDirectory>
+        <provideApplicationVersion>false</provideApplicationVersion>
+        <changeBundleID>false</changeBundleID>
+        <bundleID></bundleID>
+        <bundleIDInfoPlistPath></bundleIDInfoPlistPath>
+        <interpretTargetAsRegEx>false</interpretTargetAsRegEx>
+        <signingMethod>manual</signingMethod>
+        <provisioningProfiles>
+          <au.com.rayh.ProvisioningProfile>
+            <provisioningProfileAppId>${BUNDLE_ID}</provisioningProfileAppId>
+            <provisioningProfileUUID>${PROVISIONING_PROFILE}</provisioningProfileUUID>
+          </au.com.rayh.ProvisioningProfile>
+        </provisioningProfiles>
+        <uploadBitcode>false</uploadBitcode>
+        <uploadSymbols>true</uploadSymbols>
+        <compileBitcode>true</compileBitcode>
+        <thinning></thinning>
+        <appURL></appURL>
+        <displayImageURL></displayImageURL>
+        <fullSizeImageURL></fullSizeImageURL>
+        <assetPackManifestURL></assetPackManifestURL>
+        <skipBuildStep>false</skipBuildStep>
+        <stripSwiftSymbols>true</stripSwiftSymbols>
+        <copyProvisioningProfile>false</copyProvisioningProfile>
+        <useLegacyBuildSystem>false</useLegacyBuildSystem>
+        <resultBundlePath></resultBundlePath>
+        <cleanResultBundlePath>false</cleanResultBundlePath>
+      </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.5"/>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+    <org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder plugin="conditional-buildstep@1.4.1">
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.5"/>
+      <runCondition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition" plugin="run-condition@1.5">
+        <arg1>${platform}</arg1>
+        <arg2>ios</arg2>
+        <ignoreCase>false</ignoreCase>
+      </runCondition>
+      <conditionalbuilders>
+        <hudson.tasks.Shell>
+          <command>filename_ipa=$(find $RESULT_BUILD_PATH/ios_result/ -type f -name &quot;*.ipa&quot; | head -n 1)
+echo &quot;FILENAME_IPA=$filename_ipa&quot; &gt; $WORKSPACE/result_ipa.env</command>
+          <configuredLocalRules/>
+        </hudson.tasks.Shell>
+        <EnvInjectBuilder plugin="envinject@2.3.0">
+          <info>
+            <propertiesFilePath>$WORKSPACE/result_ipa.env</propertiesFilePath>
+          </info>
+        </EnvInjectBuilder>
+      </conditionalbuilders>
+    </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="conditional-buildstep@1.4.1">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition" plugin="run-condition@1.5">
+        <arg1>${platform}</arg1>
+        <arg2>ios</arg2>
+        <ignoreCase>false</ignoreCase>
+      </condition>
+      <buildStep class="jenkins.plugins.shiningpanda.builders.PythonBuilder" plugin="shiningpanda@0.24">
+        <pythonName>python3</pythonName>
+        <nature>shell</nature>
+        <command>$PYTHON_EXE ${BUILD_SCRIPTS_PATH}/upload_to_diawi.py ${PROJECT_NAME} ${FILENAME_IPA} ${BUILD_SCRIPTS_PATH}/env.txt</command>
+        <ignoreExitCode>false</ignoreExitCode>
+      </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$DontRun" plugin="run-condition@1.5"/>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="conditional-buildstep@1.4.1">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition" plugin="run-condition@1.5">
+        <arg1>${platform}</arg1>
+        <arg2>android</arg2>
+        <ignoreCase>false</ignoreCase>
+      </condition>
+      <buildStep class="jenkins.plugins.shiningpanda.builders.PythonBuilder" plugin="shiningpanda@0.24">
+        <pythonName>python3</pythonName>
+        <nature>shell</nature>
+        <command>$PYTHON_EXE ${BUILD_SCRIPTS_PATH}/upload_to_diawi.py ${PROJECT_NAME} $RESULT_BUILD_PATH/Android/build.apk ${BUILD_SCRIPTS_PATH}/env.txt</command>
+        <ignoreExitCode>false</ignoreExitCode>
+      </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$DontRun" plugin="run-condition@1.5"/>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="conditional-buildstep@1.4.1">
+      <condition class="org.jenkins_ci.plugins.run_condition.logic.And" plugin="run-condition@1.5">
+        <conditions>
+          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+            <condition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition">
+              <arg1>${platform}</arg1>
+              <arg2>ios</arg2>
+              <ignoreCase>false</ignoreCase>
+            </condition>
+          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+            <condition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition">
+              <arg1>${configuration}</arg1>
+              <arg2>release</arg2>
+              <ignoreCase>false</ignoreCase>
+            </condition>
+          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+        </conditions>
+      </condition>
+      <buildStep class="hudson.tasks.Shell">
+        <command>filename=$(basename -- $FILENAME_IPA)
+filename=&quot;${filename%.*}.app.dSYM&quot;
+
+$UNITY_PROJECT_PATH/Assets/SayKit/Internal/Plugins/iOS/SayKit/firebase-upload-symbols -gsp $UNITY_PROJECT_PATH/Assets/Plugins/iOS/GoogleService-Info.plist -p ios $WORKSPACE/build/iOS/build/Unity-iPhone.build/Release-iphoneos/$filename</command>
+        <configuredLocalRules/>
+      </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.5"/>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+    <EnvInjectBuilder plugin="envinject@2.3.0">
+      <info>
+        <propertiesFilePath>${BUILD_SCRIPTS_PATH}/env.txt</propertiesFilePath>
+      </info>
+    </EnvInjectBuilder>
+  </builders>
+  <publishers>
+    <jenkins.plugins.slack.SlackNotifier plugin="slack@2.43">
+      <baseUrl></baseUrl>
+      <teamDomain>saygamesby</teamDomain>
+      <authToken></authToken>
+      <tokenCredentialId>game-pie-slack-secret</tokenCredentialId>
+      <botUser>false</botUser>
+      <room>#bot-gamepie-builds</room>
+      <sendAsText>false</sendAsText>
+      <iconEmoji></iconEmoji>
+      <username></username>
+      <startNotification>true</startNotification>
+      <notifySuccess>true</notifySuccess>
+      <notifyAborted>true</notifyAborted>
+      <notifyNotBuilt>true</notifyNotBuilt>
+      <notifyUnstable>true</notifyUnstable>
+      <notifyRegression>true</notifyRegression>
+      <notifyFailure>false</notifyFailure>
+      <notifyEveryFailure>true</notifyEveryFailure>
+      <notifyBackToNormal>true</notifyBackToNormal>
+      <notifyRepeatedFailure>false</notifyRepeatedFailure>
+      <includeTestSummary>false</includeTestSummary>
+      <includeFailedTests>false</includeFailedTests>
+      <uploadFiles>false</uploadFiles>
+      <artifactIncludes></artifactIncludes>
+      <commitInfoChoice>AUTHORS_AND_TITLES</commitInfoChoice>
+      <includeCustomMessage>true</includeCustomMessage>
+      <customMessage>Platform:              ${platform}
+Configuration:      ${configuration}
+Branch:                ${branch}</customMessage>
+      <customMessageSuccess>Link to build: ${LINK_TO_DIAWI}
+Platform:              ${platform}
+Configuration:      ${configuration}
+Branch:                ${branch}</customMessageSuccess>
+      <customMessageAborted></customMessageAborted>
+      <customMessageNotBuilt></customMessageNotBuilt>
+      <customMessageUnstable></customMessageUnstable>
+      <customMessageFailure>Platform:              ${platform}
+Configuration:      ${configuration}
+Branch:                ${branch}</customMessageFailure>
+    </jenkins.plugins.slack.SlackNotifier>
+    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="parameterized-trigger@2.39">
+      <configs>
+        <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+          <configs class="empty-list"/>
+          <projects>post-fail-message</projects>
+          <condition>FAILED</condition>
+          <triggerWithNoParameters>true</triggerWithNoParameters>
+          <triggerFromChildProjects>false</triggerFromChildProjects>
+        </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+      </configs>
+    </hudson.plugins.parameterizedtrigger.BuildTrigger>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.38">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter>clean</cleanupParameter>
+      <externalDelete></externalDelete>
+      <disableDeferredWipeout>false</disableDeferredWipeout>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+  </buildWrappers>
+</project>

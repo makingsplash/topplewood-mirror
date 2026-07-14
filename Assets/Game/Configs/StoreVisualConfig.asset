@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a63d1a24e54a48bfac1e8beaf2affcad, type: 3}
+  m_Name: StoreVisualConfig
+  m_EditorClassIdentifier: 
+  _preset:
+    Blocks:
+    - Id: Main
+      PrefabReference:
+        m_AssetGUID: 26c5e8fa02a9f254d8f1c100ead29525
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    - Id: Bundles
+      PrefabReference:
+        m_AssetGUID: 56685336fb7c9734ea195a8113f9c861
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    - Id: NoAds
+      PrefabReference:
+        m_AssetGUID: 91c17383d1262474d9a3317e90b49a71
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    Cards:
+    - Id: Coins
+      PrefabReference:
+        m_AssetGUID: fd2efd0e00de7294a9272a9e324d3526
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    - Id: FreeCoins
+      PrefabReference:
+        m_AssetGUID: fd2efd0e00de7294a9272a9e324d3526
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    - Id: NoAds
+      PrefabReference:
+        m_AssetGUID: 46ef6c97177d78c4ba8a6d7b008be5ba
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 1
+    - Id: Bundle
+      PrefabReference:
+        m_AssetGUID: 724f7f0fe0de9ce4bbe13060f7049c28
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    - Id: NoAdsPack
+      PrefabReference:
+        m_AssetGUID: f865159b13e0399418e63ce566e3cefb
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    - Id: OfferCard
+      PrefabReference:
+        m_AssetGUID: 724f7f0fe0de9ce4bbe13060f7049c28
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    StoreCards:
+    - Id: Coins
+      PrefabReference:
+        m_AssetGUID: fd2efd0e00de7294a9272a9e324d3526
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    - Id: FreeCoins
+      PrefabReference:
+        m_AssetGUID: fd2efd0e00de7294a9272a9e324d3526
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 1
+    - Id: NoAds
+      PrefabReference:
+        m_AssetGUID: 46ef6c97177d78c4ba8a6d7b008be5ba
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    - Id: Bundle
+      PrefabReference:
+        m_AssetGUID: 724f7f0fe0de9ce4bbe13060f7049c28
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    - Id: NoAdsPack
+      PrefabReference:
+        m_AssetGUID: f865159b13e0399418e63ce566e3cefb
+        m_SubObjectName: 
+        m_SubObjectType: 
+        m_SubObjectGUID: 
+        m_EditorAssetChanged: 0
+    Icons:
+    - Id: Coins
+      SpriteReferences:
+      - {fileID: 21300000, guid: 5e7b072f786684754b34cdffe915cdf2, type: 3}
+      - {fileID: 21300000, guid: 5e7b072f786684754b34cdffe915cdf2, type: 3}
+      - {fileID: 21300000, guid: 5e7b072f786684754b34cdffe915cdf2, type: 3}
+      - {fileID: 21300000, guid: 5e7b072f786684754b34cdffe915cdf2, type: 3}
+      - {fileID: 21300000, guid: 5e7b072f786684754b34cdffe915cdf2, type: 3}
+      - {fileID: 21300000, guid: 5e7b072f786684754b34cdffe915cdf2, type: 3}
+      - {fileID: 21300000, guid: 5e7b072f786684754b34cdffe915cdf2, type: 3}
+    - Id: Hearts
+      SpriteReferences:
+      - {fileID: 21300000, guid: fc0ec97eda05a4dc0bc51ce9626ea38a, type: 3}
+    - Id: InfinityHearts
+      SpriteReferences:
+      - {fileID: 21300000, guid: aad00029b66be4dab9e08db2910be53d, type: 3}
+    PackIcons:
+    - Id: Coins
+      SpriteReferences:
+      - {fileID: 21300000, guid: c2c7f7c18ea334ed99fe0c0d71a14bad, type: 3}
+      - {fileID: 21300000, guid: c2c7f7c18ea334ed99fe0c0d71a14bad, type: 3}
+      - {fileID: 21300000, guid: c2c7f7c18ea334ed99fe0c0d71a14bad, type: 3}
+      - {fileID: 21300000, guid: 15def4df01ee848909546eb635a29b98, type: 3}
+      - {fileID: 21300000, guid: dfd5433ae623d4d10be6552d538e061a, type: 3}
+      - {fileID: 21300000, guid: de2388dd898bd48dc91e93af98e634a3, type: 3}
+    - Id: Hearts
+      SpriteReferences:
+      - {fileID: 21300000, guid: fc0ec97eda05a4dc0bc51ce9626ea38a, type: 3}
+    - Id: InfinityHearts
+      SpriteReferences:
+      - {fileID: 21300000, guid: aad00029b66be4dab9e08db2910be53d, type: 3}
+    AnimationSettings:
+      CardClickDuration: 0.4
+      CardClickScale: 1.1
+      CardHideDuration: 0.5
+      BlockShrinkDuration: 0.5
+      BlockShrinkEasing: 27

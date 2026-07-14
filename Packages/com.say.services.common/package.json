@@ -1,0 +1,16 @@
+{
+  "name": "com.say.services.common",
+  "version": "1.1.0-woolsort",
+  "displayName": "SayServicesCommon",
+  "description": "This package contains common local and global Services for SayStudio projects",
+  "dependencies": {
+    "com.say.data": "1.0.0",
+    "com.say.services": "1.1.0",
+    "io.saygames.saykit": "2026.6.3",
+    "com.say.dynamic.debug.menu": "1.0.1",
+    "com.say.infrastructure": "1.3.0",
+    "com.say.pureinterfaces": "1.0.0",
+    "com.say.services.interfaces": "1.0.0",
+    "com.say.extensions.unity": "1.0.0"
+  }
+}

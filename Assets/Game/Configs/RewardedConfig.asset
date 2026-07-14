@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cb897bd2338450d8220f54f4a38820a, type: 3}
+  m_Name: RewardedConfig
+  m_EditorClassIdentifier: 
+  _data:
+    Inters:
+      StartAfterLevel: 10
+      PurchaseDelayBeforeStart: 0
+      PurchaseDelayAfterStart: 0
+    Revives:
+      StartAfterLevel: 1
+      DelaysForPayers: 0,9999
+      DelaysForNonPayers: 0,9999
+      MaxRevivesForRewarded: 1
+    AdBoosters:
+      StartAfterLevel: 1
+      PurchaseDelayBeforeStart: 0
+      PurchaseDelayAfterStart: 0
+    AdHearts:
+      StartAfterLevel: 1
+      PurchaseDelayBeforeStart: 0
+      PurchaseDelayAfterStart: 0
+    RewardTimeouts:
+    - Placement: ad_rewarded_get_heart
+      Timeout:
+        _ticks: 0
+    - Placement: ad_rewarded_revive
+      Timeout:
+        _ticks: 0

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3af926024dd4bb5bdc991c8c863f645, type: 3}
+  m_Name: CoreConfig
+  m_EditorClassIdentifier: 
+  _data:
+    LevelReward: 60
+    AdditionalTimeSeconds: 20
+    AdditionalMovesOnRevive: 10
+    WinScreenX2ButtonStartLevel: 4
+    RevivePricesList: 200, 300, 450, 600
+    LoseScreenOfferStartLevel: 10
+    EnableFreeTutorialRevive: 1
+    EnableSingleTileColumnHelper: 1

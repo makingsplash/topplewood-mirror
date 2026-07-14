@@ -1,0 +1,9 @@
+{
+  "name": "com.say.nicevibrations",
+  "version": "3.9.0",
+  "displayName": "SayNiceVibrations",
+  "description": "This package of Nice Vibrations plugin from http://nice-vibrations-docs.moremountains.com/",
+    "dependencies": {
+	  "com.unity.modules.androidjni": "1.0.0"
+  }
+}

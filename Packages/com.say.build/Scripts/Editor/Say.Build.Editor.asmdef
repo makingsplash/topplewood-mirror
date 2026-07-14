@@ -1,0 +1,29 @@
+{
+    "name": "SayGames.BuildScripts.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Unity.ResourceManager",
+        "Unity.ScriptableBuildPipeline.Editor",
+        "Unity.ScriptableBuildPipeline",
+        "Unity.Purchasing",
+        "Unity.Purchasing.Stores",
+        "UnityEditor.Purchasing"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "1.0.0",
+            "define": "HAVE_PURCHASING"
+        }
+    ],
+    "noEngineReferences": false
+}

@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09bb99cf6b4241378568c47812fbc614, type: 3}
+  m_Name: StoreConfig
+  m_EditorClassIdentifier: 
+  _data:
+    Placements:
+    - PlacementId: in.app.noadsshop8
+      VisualBlockId: NoAds
+      LoopStartIndex: 0
+      ItemId: NoAds
+      Steps:
+      - ItemId: NoAds
+        TimeToStep:
+          _ticks: 0
+        ShowTimer: 0
+    - PlacementId: in.app.noads.bundle12
+      VisualBlockId: NoAds
+      LoopStartIndex: 0
+      ItemId: NoAdsPack
+      Steps:
+      - ItemId: NoAdsPack
+        TimeToStep:
+          _ticks: 0
+        ShowTimer: 0
+    - PlacementId: in.app.hard.pack.1
+      VisualBlockId: Main
+      LoopStartIndex: 0
+      ItemId: Coins_1
+      Steps:
+      - ItemId: Coins_1
+        TimeToStep:
+          _ticks: 0
+        ShowTimer: 0
+    - PlacementId: in.app.hard.pack.2
+      VisualBlockId: Main
+      LoopStartIndex: 0
+      ItemId: Coins_2
+      Steps:
+      - ItemId: Coins_2
+        TimeToStep:
+          _ticks: 0
+        ShowTimer: 0
+    - PlacementId: in.app.hard.pack.3
+      VisualBlockId: Main
+      LoopStartIndex: 0
+      ItemId: Coins_3
+      Steps:
+      - ItemId: Coins_3
+        TimeToStep:
+          _ticks: 0
+        ShowTimer: 0
+    - PlacementId: in.app.hard.pack.4
+      VisualBlockId: Main
+      LoopStartIndex: 0
+      ItemId: Coins_4
+      Steps:
+      - ItemId: Coins_4
+        TimeToStep:
+          _ticks: 0
+        ShowTimer: 0
+    - PlacementId: in.app.hard.pack.5
+      VisualBlockId: Main
+      LoopStartIndex: 0
+      ItemId: Coins_5
+      Steps:
+      - ItemId: Coins_5
+        TimeToStep:
+          _ticks: 0
+        ShowTimer: 0
+    - PlacementId: in.app.hard.pack.6
+      VisualBlockId: Main
+      LoopStartIndex: 0
+      ItemId: Coins_6
+      Steps:
+      - ItemId: Coins_6
+        TimeToStep:
+          _ticks: 0
+        ShowTimer: 0
+    Blocks:
+    - VisualBlockId: NoAds
+      ShowCondition: '!premium'
+    - VisualBlockId: Main
+      ShowCondition: 

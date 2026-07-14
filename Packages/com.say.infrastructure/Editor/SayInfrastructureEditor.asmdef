@@ -1,0 +1,26 @@
+{
+    "name": "SayInfrastructureEditor",
+    "rootNamespace": "SGS",
+    "references": [
+        "SayKit.Internal",
+        "SayKit.API",
+        "SayKit.Editor",
+        "Unity.TextMeshPro",
+        "Unity.EditorCoroutines.Editor",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor",
+        "SayInfrastructure",
+        "ToolbarExtender.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,17 @@
+{
+  "name": "com.say.store.ui",
+  "version": "1.3.0-woolsort",
+  "displayName": "SayStore UI",
+  "description": "This package contains store UI classes and prefabs",
+  "dependencies": {
+    "com.unity.2d.sprite": "1.0.0",
+    "com.say.store": "1.2.0",
+    "com.say.infrastructure": "1.3.0",
+    "com.say.services.common": "1.0.0",
+    "com.say.services": "1.1.0",
+    "com.say.data": "1.0.1",
+    "com.say.services.interfaces": "1.0.0",
+    "com.say.extensions.pure": "1.0.0"
+  },
+  "author": "SayGames Studio"
+}

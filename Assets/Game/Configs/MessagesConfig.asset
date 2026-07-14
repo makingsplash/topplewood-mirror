@@ -1,0 +1,291 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77e66b461caa4f04baaa038dae3acdac, type: 3}
+  m_Name: MessagesConfig
+  m_EditorClassIdentifier: 
+  _parameters:
+  - rid: 4024719622877478912
+  - rid: 9100000000000000001
+  - rid: 9100000000000000002
+  - rid: 9100000000000000003
+  - rid: 9100000000000000004
+  - rid: 9100000000000000005
+  - rid: 2997429352204861542
+  - rid: 2997429352204861543
+  - rid: 2997429352204861544
+  - rid: 9100000000000000006
+  - rid: 9100000000000000007
+  - rid: 9100000000000000008
+  - rid: 9100000000000000009
+  references:
+    version: 2
+    RefIds:
+    - rid: 2997429352204861542
+      type: {class: BoosterInfoViewParameters, ns: Ui.Components.Message.BoosterInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: BoosterUndo
+        _prefab:
+          m_AssetGUID: ba7536960b3674e4d958d7b3a54c3eae
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+        _title: BoosterUndo
+        _boosterTitle: Message.FeatureInfo.Header
+        _boosterDescription: BoosterUndo.Descr
+        _boosterImage:
+          m_AssetGUID: ca8ae89c5762e4d5db4c02d5077b713d
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 2997429352204861543
+      type: {class: BoosterInfoViewParameters, ns: Ui.Components.Message.BoosterInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: BoosterSwap
+        _prefab:
+          m_AssetGUID: ba7536960b3674e4d958d7b3a54c3eae
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+        _title: BoosterSwap
+        _boosterTitle: Message.FeatureInfo.Header
+        _boosterDescription: BoosterSwap.Descr
+        _boosterImage:
+          m_AssetGUID: b1a611037612e452991a568c3098503b
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 2997429352204861544
+      type: {class: BoosterInfoViewParameters, ns: Ui.Components.Message.BoosterInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: BoosterMagnet
+        _prefab:
+          m_AssetGUID: ba7536960b3674e4d958d7b3a54c3eae
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+        _title: BoosterMagnet
+        _boosterTitle: Message.FeatureInfo.Header
+        _boosterDescription: Item.BoosterMagnet.Description
+        _boosterImage:
+          m_AssetGUID: 25f86ed27d77749d8a8b1cc1b4ae298b
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 4024719622877478912
+      type: {class: LoseLevelViewParameters, ns: Ui.Components.Message.LoseLevel,
+        asm: Assembly-CSharp}
+      data:
+        _name: LoseLevelTemp
+        _prefab:
+          m_AssetGUID: 4034a749c3e57418292edacaa352d784
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: Level.Failed
+        _description1: LoseLifeWarning.Description
+        _description2: LoseLevel.Revive.Description
+        _centerItem:
+          m_AssetGUID: 6a9926a1e8ea64435931b57dd73e3533
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 9100000000000000001
+      type: {class: FeatureInfoViewParameters, ns: Ui.Components.Message.FeatureInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: FeatureQuestionTile
+        _prefab:
+          m_AssetGUID: 4f5bbd26f8df6450fbeb484e01850762
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: FeatureQuestionTile
+        _featureTitle: Message.FeatureInfo.FeatureHeader
+        _featureDescription: FeatureQuestionTile.Descr
+        _featureImage:
+          m_AssetGUID: e752dcc0d17f548feb513bb566753083
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 9100000000000000002
+      type: {class: FeatureInfoViewParameters, ns: Ui.Components.Message.FeatureInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: FeatureFrozenColumn
+        _prefab:
+          m_AssetGUID: 4f5bbd26f8df6450fbeb484e01850762
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: FeatureFrozenColumn
+        _featureTitle: Message.FeatureInfo.FeatureHeader
+        _featureDescription: FeatureFrozenColumn.Descr
+        _featureImage:
+          m_AssetGUID: 64f67df5972a0484a86fb77419be0ce2
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 9100000000000000003
+      type: {class: FeatureInfoViewParameters, ns: Ui.Components.Message.FeatureInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: FeatureStoneColumn
+        _prefab:
+          m_AssetGUID: 4f5bbd26f8df6450fbeb484e01850762
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: FeatureStoneColumn
+        _featureTitle: Message.FeatureInfo.FeatureHeader
+        _featureDescription: FeatureStoneColumn.Descr
+        _featureImage:
+          m_AssetGUID: 75d9ec250ec42482cba0efc23bc884f2
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 9100000000000000004
+      type: {class: FeatureInfoViewParameters, ns: Ui.Components.Message.FeatureInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: FeatureConnectedColumns
+        _prefab:
+          m_AssetGUID: 4f5bbd26f8df6450fbeb484e01850762
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: FeatureConnectedColumns
+        _featureTitle: Message.FeatureInfo.FeatureHeader
+        _featureDescription: FeatureConnectedColumns.Descr
+        _featureImage:
+          m_AssetGUID: f82a4f5a538454217b0ad70d963f497f
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 9100000000000000005
+      type: {class: FeatureInfoViewParameters, ns: Ui.Components.Message.FeatureInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: FeatureColorColumn
+        _prefab:
+          m_AssetGUID: 4f5bbd26f8df6450fbeb484e01850762
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: FeatureColorColumn
+        _featureTitle: Message.FeatureInfo.FeatureHeader
+        _featureDescription: FeatureColorColumn.Descr
+        _featureImage:
+          m_AssetGUID: a256836f0de724f6380c68f85efcdbef
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 9100000000000000006
+      type: {class: FeatureInfoViewParameters, ns: Ui.Components.Message.FeatureInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: FeatureSubTile
+        _prefab:
+          m_AssetGUID: 4f5bbd26f8df6450fbeb484e01850762
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: FeatureSubTile
+        _featureTitle: Message.FeatureInfo.FeatureHeader
+        _featureDescription: FeatureSubTile.Descr
+        _featureImage:
+          m_AssetGUID: 4b534e1982ef14129a2ac7fc1c3549de
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 9100000000000000007
+      type: {class: FeatureInfoViewParameters, ns: Ui.Components.Message.FeatureInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: FeatureLockKeyColumn
+        _prefab:
+          m_AssetGUID: 4f5bbd26f8df6450fbeb484e01850762
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: FeatureLockKeyColumn
+        _featureTitle: Message.FeatureInfo.FeatureHeader
+        _featureDescription: FeatureLockKeyColumn.Descr
+        _featureImage:
+          m_AssetGUID: 75307e77c38bc44d08f6b0287f681052
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 9100000000000000008
+      type: {class: FeatureInfoViewParameters, ns: Ui.Components.Message.FeatureInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: FeatureColorLockedColumn
+        _prefab:
+          m_AssetGUID: 4f5bbd26f8df6450fbeb484e01850762
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: FeatureColorLockedColumn
+        _featureTitle: Message.FeatureInfo.FeatureHeader
+        _featureDescription: FeatureColorLockedColumn.Descr
+        _featureImage:
+          m_AssetGUID: 3f20ae21c634948bab399c23c3b8a417
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1
+    - rid: 9100000000000000009
+      type: {class: FeatureInfoViewParameters, ns: Ui.Components.Message.FeatureInfo,
+        asm: Assembly-CSharp}
+      data:
+        _name: FeatureTimerBomb
+        _prefab:
+          m_AssetGUID: 4f5bbd26f8df6450fbeb484e01850762
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 0
+        _title: FeatureTimerBomb
+        _featureTitle: Message.FeatureInfo.FeatureHeader
+        _featureDescription: FeatureTimerBomb.Descr
+        _featureImage:
+          m_AssetGUID: 4bc0bdefe438e4ade8dddfc024f88911
+          m_SubObjectName: 
+          m_SubObjectType: 
+          m_SubObjectGUID: 
+          m_EditorAssetChanged: 1

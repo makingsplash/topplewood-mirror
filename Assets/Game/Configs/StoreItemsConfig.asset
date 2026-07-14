@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 065fa901d18647859785d71355a5e16c, type: 3}
+  m_Name: StoreItemsConfig
+  m_EditorClassIdentifier: 
+  _data:
+    StoreItems:
+    - ItemId: NoAds
+      ProductId: in.app.noadsshop8
+      VisualSettings:
+        IdBeforeDiscount: 
+        VisualId: NoAds
+        LocalizationId: Store.NoAds
+        Badges: []
+      LimitedAvailabilitySettings:
+        HasCooldown: 0
+        CooldownTime:
+          _ticks: 0
+        AdsCountDuringCooldown: 0
+        AdsPlacement: 
+      IsTimedOffer: 0
+      AccessTime:
+        _ticks: 0
+      ShowCondition: 
+    - ItemId: NoAdsPack
+      ProductId: in.app.noads.bundle12
+      VisualSettings:
+        IdBeforeDiscount: 
+        VisualId: NoAdsPack
+        LocalizationId: Store.NoAdsBundle
+        Badges: []
+      LimitedAvailabilitySettings:
+        HasCooldown: 0
+        CooldownTime:
+          _ticks: 0
+        AdsCountDuringCooldown: 0
+        AdsPlacement: 
+      IsTimedOffer: 0
+      AccessTime:
+        _ticks: 0
+      ShowCondition: 
+    - ItemId: Coins_1
+      ProductId: in.app.hard.pack.1
+      VisualSettings:
+        IdBeforeDiscount: 
+        VisualId: Coins
+        LocalizationId: 
+        Badges: []
+      LimitedAvailabilitySettings:
+        HasCooldown: 0
+        CooldownTime:
+          _ticks: 0
+        AdsCountDuringCooldown: 0
+        AdsPlacement: 
+      IsTimedOffer: 0
+      AccessTime:
+        _ticks: 0
+      ShowCondition: 
+    - ItemId: Coins_2
+      ProductId: in.app.hard.pack.2
+      VisualSettings:
+        IdBeforeDiscount: 
+        VisualId: Coins
+        LocalizationId: 
+        Badges: []
+      LimitedAvailabilitySettings:
+        HasCooldown: 0
+        CooldownTime:
+          _ticks: 0
+        AdsCountDuringCooldown: 0
+        AdsPlacement: 
+      IsTimedOffer: 0
+      AccessTime:
+        _ticks: 0
+      ShowCondition: 
+    - ItemId: Coins_3
+      ProductId: in.app.hard.pack.3
+      VisualSettings:
+        IdBeforeDiscount: 
+        VisualId: Coins
+        LocalizationId: 
+        Badges: []
+      LimitedAvailabilitySettings:
+        HasCooldown: 0
+        CooldownTime:
+          _ticks: 0
+        AdsCountDuringCooldown: 0
+        AdsPlacement: 
+      IsTimedOffer: 0
+      AccessTime:
+        _ticks: 0
+      ShowCondition: 
+    - ItemId: Coins_4
+      ProductId: in.app.hard.pack.4
+      VisualSettings:
+        IdBeforeDiscount: 
+        VisualId: Coins
+        LocalizationId: 
+        Badges: []
+      LimitedAvailabilitySettings:
+        HasCooldown: 0
+        CooldownTime:
+          _ticks: 0
+        AdsCountDuringCooldown: 0
+        AdsPlacement: 
+      IsTimedOffer: 0
+      AccessTime:
+        _ticks: 0
+      ShowCondition: 
+    - ItemId: Coins_5
+      ProductId: in.app.hard.pack.5
+      VisualSettings:
+        IdBeforeDiscount: 
+        VisualId: Coins
+        LocalizationId: 
+        Badges: []
+      LimitedAvailabilitySettings:
+        HasCooldown: 0
+        CooldownTime:
+          _ticks: 0
+        AdsCountDuringCooldown: 0
+        AdsPlacement: 
+      IsTimedOffer: 0
+      AccessTime:
+        _ticks: 0
+      ShowCondition: 
+    - ItemId: Coins_6
+      ProductId: in.app.hard.pack.6
+      VisualSettings:
+        IdBeforeDiscount: 
+        VisualId: Coins
+        LocalizationId: 
+        Badges: []
+      LimitedAvailabilitySettings:
+        HasCooldown: 0
+        CooldownTime:
+          _ticks: 0
+        AdsCountDuringCooldown: 0
+        AdsPlacement: 
+      IsTimedOffer: 0
+      AccessTime:
+        _ticks: 0
+      ShowCondition: 
+    NonStoreItems: []

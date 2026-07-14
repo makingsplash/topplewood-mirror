@@ -1,0 +1,9 @@
+{
+  "name": "com.say.services.interfaces",
+  "version": "1.0.0",
+  "displayName": "SayServicesInterfaces",
+  "description": "This package contains only interfaces needed for Service package for SayStudio projects, use it if you want to add Service logic support into your service.",
+  "dependencies": {
+    
+  }
+}

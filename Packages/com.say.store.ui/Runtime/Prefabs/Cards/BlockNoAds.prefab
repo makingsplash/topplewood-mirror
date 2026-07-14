@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &9185491961263988715
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1989653068286412229, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: GridSize.x
+      value: 348
+      objectReference: {fileID: 0}
+    - target: {fileID: 1989653068286412229, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: GridSize.y
+      value: 492
+      objectReference: {fileID: 0}
+    - target: {fileID: 1989653068286412229, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: ColumnsCount
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3301654089602085642, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3301654089602085642, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3301654089602085642, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3301654089602085642, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3301654089602085642, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3358260000658618037, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: SpaceAfter
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5051480431877581499, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: m_Name
+      value: BlockNoAds
+      objectReference: {fileID: 0}
+    - target: {fileID: 8835597241054935366, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}
+      propertyPath: _id
+      value: new_store.noads_header
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: cb5b960660a7a400bbf314159fb0f8e4, type: 3}

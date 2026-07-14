@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: StubFont_PurpleOutline_Store
+  m_Shader: {fileID: 4800000, guid: 68e6db2ebdc24f95958faec2be5558d6, type: 3}
+  m_Parent: {fileID: 2100000, guid: 515584c0d5d32d646a1c325bffead552, type: 2}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - OUTLINE_ON
+  m_InvalidKeywords:
+  - MASK_HARD
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 3049171541073764218, guid: 25f48dbea4541b84fb09a6b0f06c6d7e, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _FaceDilate: 0.3
+    - _OutlineWidth: 0.3
+    - _ScaleRatioB: 0.67544997
+    - _ScaleRatioC: 0.46124998
+    - _StencilReadMask: 1
+    - _StencilWriteMask: 0
+    - _UnderlayDilate: 0.276
+    - _UnderlayOffsetX: -0.222
+    - _UnderlayOffsetY: 0.076
+    - _UnderlaySoftness: 0.169
+    m_Colors:
+    - _OutlineColor: {r: 0.088655606, g: 0, b: 0.088655606, a: 1}
+  m_BuildTextureStacks: []

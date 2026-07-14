@@ -1,0 +1,9 @@
+{
+  "name": "com.say.extensions.pure",
+  "version": "1.0.0",
+  "displayName": "SayExtensions",
+  "description": "This package contains pure shared interfaces for SayStudio projects",
+  "dependencies": {
+    
+  }
+}

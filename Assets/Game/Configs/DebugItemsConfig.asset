@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 779f3ecfdf2e141bcb969ce6aba62976, type: 3}
+  m_Name: DebugItemsConfig
+  m_EditorClassIdentifier: 
+  MainPrefab: {fileID: 5048605391997228022, guid: 0732595ff29774693bed5c5318ffbeee, type: 3}
+  PagePrefab: {fileID: 825242430021101157, guid: 5ef4eb637a3e1408dbe225e646da1b98, type: 3}
+  SubmenuPrefab: {fileID: 9110622662038594647, guid: 087aa3ba37e064fad99c9e062aa3a21c, type: 3}
+  LabelPrefab: {fileID: 6632192195609218338, guid: a98ce25f76373444491ed8a2bbc59778, type: 3}
+  MultilineLabelPrefab: {fileID: 6632192195609218338, guid: b54e35c78342a8640b4f962feb0684de, type: 3}
+  CheckboxPrefab: {fileID: 4790958783532926688, guid: 72a5400acb82048baabadc074dd53efc, type: 3}
+  InputPrefab: {fileID: 4712280746955147420, guid: 09ae3d848d1e84a55883430455370d13, type: 3}
+  DropdownPrefab: {fileID: 7449577493818361149, guid: 1e699297dcad3486e9a4951d4b7ac381, type: 3}
+  DropdownSavePrefab: {fileID: 6851786228990777080, guid: 9d6fec5f533f94b2b8d37eab688e9fbe, type: 3}
+  ButtonPrefab: {fileID: 817712374588501632, guid: f8b4e6b57d314467e966338dec6c87b6, type: 3}
+  InputButtonPrefab: {fileID: 8832935495603040986, guid: cf4eb8d43971b44a6b0b943e4c163cc8, type: 3}
+  DoubleInputButtonPrefab: {fileID: 8832935495603040986, guid: 1fff0ae9b8a447649b4c604b12b86600, type: 3}
+  CheckboxSavePrefab: {fileID: 4790958783532926688, guid: e864dcc48c1da4f5c88807236328dd27, type: 3}
+  DropdownInput: {fileID: 4712280746955147420, guid: 09ae3d848d1e84a55883430455370d13, type: 3}
+  DropdownInputFilter: {fileID: 6851786228990777080, guid: 0ec012bf4b857dd4b8b575bee8d77116, type: 3}
+  DropdownButton: {fileID: 6851786228990777080, guid: acaf225c34db24be6927054e48726183, type: 3}
+  LabelButtonPrefab: {fileID: 8832935495603040986, guid: 93a7246a9404c4a469b0314d44d189a0, type: 3}
+  HoldButtonPrefab: {fileID: 817712374588501632, guid: 23dc9794788d4c943826bdd8575a579a, type: 3}
+  SliderPrefab: {fileID: 4712280746955147420, guid: 89287ff549b40c8469d0923a5e2cf2df, type: 3}

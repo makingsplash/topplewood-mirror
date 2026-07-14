@@ -1,0 +1,7 @@
+{
+  "name": "com.say.build",
+  "version": "1.0.3",
+  "displayName": "SayBuildScripts",
+  "description": "This package is used for continuous integrations and auto build in jenkins",
+  "author": "SayGames Studio"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "com.say.extensions.unity",
+  "version": "1.0.0",
+  "displayName": "SayExtensionsForUnity",
+  "description": "This package contains pure shared interfaces for SayStudio projects",
+  "dependencies": {
+    
+  }
+}

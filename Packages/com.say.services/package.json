@@ -1,0 +1,9 @@
+{
+  "name": "com.say.services",
+  "version": "1.1.0",
+  "displayName": "SayServices",
+  "description": "This package contains Services for SayStudio projects",
+  "dependencies": {
+    "com.say.services.interfaces": "1.0.0"
+  }
+}

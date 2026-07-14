@@ -1,0 +1,157 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0d4bb89e9304e16a6facd85dee0273, type: 3}
+  m_Name: TextStyleConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Configs.TextStyleConfig
+  _styles:
+  - Name: Counters
+    Description: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F
+      \u0434\u043B\u044F \u0441\u0447\u0435\u0442\u0447\u0438\u043A\u043E\u0432 \u0432
+      \u0432\u0435\u0440\u0445\u043D\u0435\u0439 \u043F\u0430\u043D\u0435\u043B\u0438\n"
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: d2c3c5009faf241ee88e5054926b88f9, type: 2}
+    FontSize: 50
+    Color: {r: 0.1764706, g: 0.20784314, b: 0.4627451, a: 1}
+    CharacterSpacing: 0
+  - Name: LightBlue-Outline
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: f587f44628f314f5dbe9cb2e48e9156c, type: 2}
+    FontSize: 50
+    Color: {r: 0.105882354, g: 0.38039216, b: 0.64705884, a: 1}
+    CharacterSpacing: 0
+  - Name: White-Outline
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: f723661fa73c9432998dceac00a4be6c, type: 2}
+    FontSize: 80
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: Home-LevelItem-LevelNum-Outline
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: f723661fa73c9432998dceac00a4be6c, type: 2}
+    FontSize: 80
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: LevelStart-Normal
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 9a09908ac4f6f4ca8a4049472dc46961, type: 2}
+    FontSize: 100
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: LevelStart-Hard
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 6c707fca50d8b4dcc9739962cfb7711f, type: 2}
+    FontSize: 80
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: LevelStart-Hard-Difficulty
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 3116bcd9a872e45b987afe2431c16c53, type: 2}
+    FontSize: 80
+    Color: {r: 0.60784316, g: 0.16078432, b: 0.05882353, a: 1}
+    CharacterSpacing: 0
+  - Name: LevelStart-SuperHard
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: d1d524fbe4709499f88ad5461af5f0d2, type: 2}
+    FontSize: 80
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: LevelStart-SuperHard-Difficulty
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 2ae2a293ae5b74625b4f3685f7370e00, type: 2}
+    FontSize: 80
+    Color: {r: 0.3137255, g: 0.03529412, b: 0.36078432, a: 1}
+    CharacterSpacing: 0
+  - Name: White-RedOutline
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: d54997facb52a460c8e54a1dc1ae0eda, type: 2}
+    FontSize: 70
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: Popup-H1-Header-White-TransparentOutline
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 14b1efe3a419d4befbcf1ba5a68d7f5c, type: 2}
+    FontSize: 95
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: Popup-H2-Text-White-TransparentOutline
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 14b1efe3a419d4befbcf1ba5a68d7f5c, type: 2}
+    FontSize: 80
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: Popup-H3-Descr-White-TransparentOutline
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 14b1efe3a419d4befbcf1ba5a68d7f5c, type: 2}
+    FontSize: 50
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: Booster-Counter
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 986d4a5fc26a941668267f299a83c1e6, type: 2}
+    FontSize: 50
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0
+  - Name: WinScreen-Level
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 85ad503b588c14858ae967ca5a60c0ce, type: 2}
+    FontSize: 80
+    Color: {r: 0.27058825, g: 0.9137255, b: 0.9490196, a: 1}
+    CharacterSpacing: -10
+  - Name: Popup-ButtonGreen
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 0adf342929b5c4e5c8e47fbe53aeb1c8, type: 2}
+    FontSize: 90
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: -1.27
+  - Name: Popup-ButtonBlue
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: d696ef045374d4bef8e347d15bff40b5, type: 2}
+    FontSize: 90
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: -10
+  - Name: Popup-Ribbon_Blue
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: 73fdaf949d90f49cc9ca8e3180011d4a, type: 2}
+    FontSize: 90
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: -3.77
+  - Name: Popup-Ribbon_Red
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: c94d14c31956840309f973858cce83ce, type: 2}
+    FontSize: 90
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: -9.73
+  - Name: SettingsText
+    Description: 
+    Font: {fileID: 11400000, guid: f9ba10e26d54d4e64978d3b5f4e752e2, type: 2}
+    FontMaterial: {fileID: 2100000, guid: aae2980e7543d42e7ab4b852d996c4bb, type: 2}
+    FontSize: 80
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    CharacterSpacing: 0

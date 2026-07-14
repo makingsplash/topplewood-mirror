@@ -1,0 +1,6 @@
+{
+  "name": "com.say.debugger",
+  "version": "1.0.0",
+  "displayName": "SayDebugger",
+  "description": "This package is used for easy and handy runtime debug on device"
+}

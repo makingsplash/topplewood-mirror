@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0419e94afeec460cbf3d2bbe16fdc62a, type: 3}
+  m_Name: PurchaseConfig
+  m_EditorClassIdentifier: 
+  _data:
+    Purchases:
+      Products:
+      - ProductId: in.app.noadsshop8
+        Rewards:
+        - RewardType: NoAds
+          Id: 
+          Amount: 1
+        PurchaseType: 1
+        AndroidId: in.app.noadsshop8
+        IosId: woolsort.in.app.noadsshop8
+      - ProductId: in.app.noads.bundle12
+        Rewards:
+        - RewardType: NoAds
+          Id: 
+          Amount: 1
+        - RewardType: Coins
+          Id: 
+          Amount: 1500
+        PurchaseType: 1
+        AndroidId: in.app.noads.bundle12
+        IosId: woolsort.in.app.noads.bundle12
+      - ProductId: in.app.hard.pack.1
+        Rewards:
+        - RewardType: Coins
+          Id: 
+          Amount: 700
+        PurchaseType: 0
+        AndroidId: in.app.hard.pack.1
+        IosId: woolsort.in.app.hard.pack.1
+      - ProductId: in.app.hard.pack.2
+        Rewards:
+        - RewardType: Coins
+          Id: 
+          Amount: 1600
+        PurchaseType: 0
+        AndroidId: in.app.hard.pack.2
+        IosId: woolsort.in.app.hard.pack.2
+      - ProductId: in.app.hard.pack.3
+        Rewards:
+        - RewardType: Coins
+          Id: 
+          Amount: 3400
+        PurchaseType: 0
+        AndroidId: in.app.hard.pack.3
+        IosId: woolsort.in.app.hard.pack.3
+      - ProductId: in.app.hard.pack.4
+        Rewards:
+        - RewardType: Coins
+          Id: 
+          Amount: 7500
+        PurchaseType: 0
+        AndroidId: in.app.hard.pack.4
+        IosId: woolsort.in.app.hard.pack.4
+      - ProductId: in.app.hard.pack.5
+        Rewards:
+        - RewardType: Coins
+          Id: 
+          Amount: 10500
+        PurchaseType: 0
+        AndroidId: in.app.hard.pack.5
+        IosId: woolsort.in.app.hard.pack.5
+      - ProductId: in.app.hard.pack.6
+        Rewards:
+        - RewardType: Coins
+          Id: 
+          Amount: 18000
+        PurchaseType: 0
+        AndroidId: in.app.hard.pack.6
+        IosId: woolsort.in.app.hard.pack.6

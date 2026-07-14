@@ -1,0 +1,31 @@
+{
+    "name": "SayStoreUi",
+    "rootNamespace": "SGS.Store",
+    "references": [
+        "SayStore",
+        "SayData",
+        "Unity.Services.Core",
+        "Unity.Services.Core.Environments",
+        "Unity.TextMeshPro",
+        "SayServicesCommon",
+        "SayServices",
+        "UniTask",
+        "Unity.Purchasing",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "SayInfrastructure",
+        "SayExtensions",
+        "SayServices.Interfaces"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "SAYKIT_PURCHASING"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

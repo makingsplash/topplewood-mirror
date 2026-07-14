@@ -1,0 +1,18 @@
+{
+  "name": "com.say.infrastructure",
+  "version": "1.3.0",
+  "displayName": "SayInfrastructure",
+  "description": "This package contains basic tools and interfaces for SayStudio projects",
+  "dependencies": {
+    "com.unity.editorcoroutines": "1.0.0",
+    "com.unity.textmeshpro": "3.0.6",
+    "com.unity.addressables": "1.21.19",
+    "com.cysharp.unitask": "2.5.10",
+    "io.saygames.saykit": "2026.6.3",
+    "com.say.extensions.pure": "1.0.0",
+    "com.say.extensions.unity": "1.0.0"
+  },
+  "author": {
+    "name": "SayGames Studio"
+  }
+}

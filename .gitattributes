@@ -1,0 +1,46 @@
+# Normalize Unity text-serialized assets to LF to reduce cross-platform diff noise
+* text=auto eol=lf
+*.cs text eol=lf
+*.asset text eol=lf
+*.meta text eol=lf
+*.prefab text eol=lf
+*.unity text eol=lf
+*.mat text eol=lf
+ProjectSettings/*.asset text eol=lf
+
+*.meta linguist-generated=true
+*.json linguist-generated=true
+*.xml linguist-generated=true
+*.prefab linguist-generated=true
+*.fbx linguist-generated=true
+*.anim linguist-generated=true
+*.mat linguist-generated=true
+*.unity linguist-generated=true
+*.mesh linguist-generated=true
+*.spriteatlas linguist-generated=true
+*.asset linguist-generated=true
+*.controller linguist-generated=true
+
+# Keep LFS entries below text rules so -text wins for binary files.
+*.[pP][nN][gG] filter=lfs diff=lfs merge=lfs -text
+*.[jJ][pP][gG] filter=lfs diff=lfs merge=lfs -text
+*.[tT][gG][aA] filter=lfs diff=lfs merge=lfs -text
+*.[oO][gG][gG] filter=lfs diff=lfs merge=lfs -text
+*.[wW][aA][vV] filter=lfs diff=lfs merge=lfs -text
+*.[mM][pP]3 filter=lfs diff=lfs merge=lfs -text
+*.[pP][sS][dD] filter=lfs diff=lfs merge=lfs -text
+*.[fF][bB][xX] filter=lfs diff=lfs merge=lfs -text
+*.[tT][tT][fF] filter=lfs diff=lfs merge=lfs -text
+*.[oO][tT][fF] filter=lfs diff=lfs merge=lfs -text
+*.unitypackage filter=lfs diff=lfs merge=lfs -text
+*.[dD][lL][lL] filter=lfs diff=lfs merge=lfs -text
+*.[eE][xX][eE] filter=lfs diff=lfs merge=lfs -text
+*.[zZ][iI][pP] filter=lfs diff=lfs merge=lfs -text
+*.7z filter=lfs diff=lfs merge=lfs -text
+*.[pP][dD][fF] filter=lfs diff=lfs merge=lfs -text
+*.[jJ][aA][rR] filter=lfs diff=lfs merge=lfs -text
+*.[aA][rR][rR] filter=lfs diff=lfs merge=lfs -text
+*.[aA] filter=lfs diff=lfs merge=lfs -text
+*.[sS][oO] filter=lfs diff=lfs merge=lfs -text
+*.[aA][aA][rR] filter=lfs diff=lfs merge=lfs -text
+*.tgz filter=lfs diff=lfs merge=lfs -text

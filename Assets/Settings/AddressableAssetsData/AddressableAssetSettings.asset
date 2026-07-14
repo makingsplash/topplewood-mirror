@@ -1,0 +1,363 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 468a46d0ae32c3544b7d98094e6448a9, type: 3}
+  m_Name: AddressableAssetSettings
+  m_EditorClassIdentifier: 
+  m_DefaultGroup: 3a9d14bbc33698e4088d8075b3b4b7c7
+  m_currentHash:
+    serializedVersion: 2
+    Hash: 656d2295349373f724b9129de37cbcb6
+  m_OptimizeCatalogSize: 0
+  m_BuildRemoteCatalog: 1
+  m_CatalogRequestsTimeout: 0
+  m_DisableCatalogUpdateOnStart: 0
+  m_InternalIdNamingMode: 0
+  m_InternalBundleIdMode: 1
+  m_AssetLoadMode: 0
+  m_BundledAssetProviderType:
+    m_AssemblyName: Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    m_ClassName: UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider
+  m_AssetBundleProviderType:
+    m_AssemblyName: Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    m_ClassName: UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider
+  m_IgnoreUnsupportedFilesInBuild: 0
+  m_UniqueBundleIds: 0
+  m_EnableJsonCatalog: 0
+  m_NonRecursiveBuilding: 1
+  m_AllowNestedBundleFolders: 0
+  m_CCDEnabled: 0
+  m_maxConcurrentWebRequests: 10
+  m_UseUWRForLocalBundles: 0
+  m_BundleTimeout: 0
+  m_BundleRetryCount: 0
+  m_BundleRedirectLimit: -1
+  m_SharedBundleSettings: 0
+  m_SharedBundleSettingsCustomGroupIndex: 0
+  m_simulatedLoadDelay: 0.1
+  m_ContiguousBundles: 1
+  m_StripUnityVersionFromBundleBuild: 0
+  m_DisableVisibleSubAssetRepresentations: 0
+  m_BuiltInBundleNaming: 0
+  mBuiltInBundleCustomNaming: 
+  m_MonoScriptBundleNaming: 0
+  m_CheckForContentUpdateRestrictionsOption: 0
+  m_MonoScriptBundleCustomNaming: 
+  m_RemoteCatalogBuildPath:
+    m_Id: 204b815c622422e4d9b3668bf559694e
+  m_RemoteCatalogLoadPath:
+    m_Id: 3a189eb5531528042b6069c467aec8c3
+  m_ContentStateBuildPathProfileVariableName: <default settings path>
+  m_CustomContentStateBuildPath: 
+  m_ContentStateBuildPath: 
+  m_BuildAddressablesWithPlayerBuild: 0
+  m_overridePlayerVersion: 
+  m_GroupAssets:
+  - {fileID: 11400000, guid: 9cae0b99fa6f6f94490f7105b4f81058, type: 2}
+  - {fileID: 11400000, guid: 455833416e07af94bbadeebfd218a66f, type: 2}
+  - {fileID: 11400000, guid: aedd00768fb40f34da4306d703e36f2e, type: 2}
+  - {fileID: 11400000, guid: d3f709312683248559b4c53dacdb63a1, type: 2}
+  - {fileID: 11400000, guid: 688a3649fc2cd46fea42e0b272623b32, type: 2}
+  - {fileID: 11400000, guid: 9467c96b710568f4b9289a6d08a5b420, type: 2}
+  - {fileID: 11400000, guid: 5aaca054fa16d44828ccc70769770458, type: 2}
+  - {fileID: 11400000, guid: 8ec4cd6f927ec4f46abf92bb42ddd197, type: 2}
+  - {fileID: 11400000, guid: c7a96590470e30b429dc751bf34f52c6, type: 2}
+  - {fileID: 11400000, guid: 9726a409269ee4d4fb76cae372bef950, type: 2}
+  - {fileID: 11400000, guid: d9f986e1035056b46aef9006b7887a42, type: 2}
+  - {fileID: 11400000, guid: fd21cdb6ed524f94b0deae1e7dce1086, type: 2}
+  - {fileID: 11400000, guid: ef752d65636a64f379fcf4603d822dd3, type: 2}
+  - {fileID: 11400000, guid: 26043703cc01f4a8ebc78f158c608804, type: 2}
+  - {fileID: 11400000, guid: 5f39792a937efbc498aada8e4b2cf5b6, type: 2}
+  - {fileID: 11400000, guid: ade2a44ee97dd49a49fd7278080d7b9a, type: 2}
+  - {fileID: 11400000, guid: c404ed7689aa4f248bd5420e15dbda21, type: 2}
+  m_BuildSettings:
+    m_LogResourceManagerExceptions: 1
+    m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
+  m_ProfileSettings:
+    m_Profiles:
+    - m_InheritedParent: 
+      m_Id: 592e4d67f68ca6145a904e98cbbf8352
+      m_ProfileName: Default
+      m_Values:
+      - m_Id: 204b815c622422e4d9b3668bf559694e
+        m_Value: 'ServerData/[BuildTarget]'
+      - m_Id: 3a189eb5531528042b6069c467aec8c3
+        m_Value: 'http://[PrivateIpAddress]:[HostingServicePort]'
+      - m_Id: 82a961e6fe0b9ef428477afc256f3ad5
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: aa3ea077841e247879ab73125af429d7
+        m_Value: '[UnityEditor.PlayerSettings.bundleVersion]'
+      - m_Id: b56fe6fa25f33481c893654fa27d7fb5
+        m_Value: '[UnityEngine.Application.version]'
+      - m_Id: bddfbc2d24f0e5348865501c093ba105
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: f26e522c0bcffaa41a116f0c91df4b09
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: feeb42539bb03426f9857cec68826f5f
+        m_Value: https://wool-sort.sgdn.io
+    - m_InheritedParent: 
+      m_Id: 42b69b33948ba449caf577c00dc972af
+      m_ProfileName: Release
+      m_Values:
+      - m_Id: 204b815c622422e4d9b3668bf559694e
+        m_Value: 'ServerData/[AppVersion]/[BuildTarget]'
+      - m_Id: 3a189eb5531528042b6069c467aec8c3
+        m_Value: '[CdnRootPath]/release/[AppVersion]/[BuildTarget]/[BundleVersion]/'
+      - m_Id: 82a961e6fe0b9ef428477afc256f3ad5
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: aa3ea077841e247879ab73125af429d7
+        m_Value: '[UnityEditor.PlayerSettings.bundleVersion]'
+      - m_Id: b56fe6fa25f33481c893654fa27d7fb5
+        m_Value: '[UnityEngine.Application.version]'
+      - m_Id: bddfbc2d24f0e5348865501c093ba105
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: f26e522c0bcffaa41a116f0c91df4b09
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: feeb42539bb03426f9857cec68826f5f
+        m_Value: https://wool-sort.sgdn.io
+    - m_InheritedParent: 
+      m_Id: 6d851f60a12a94f9c8c1bb9a98d08385
+      m_ProfileName: Develop
+      m_Values:
+      - m_Id: 204b815c622422e4d9b3668bf559694e
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: 3a189eb5531528042b6069c467aec8c3
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: 82a961e6fe0b9ef428477afc256f3ad5
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: aa3ea077841e247879ab73125af429d7
+        m_Value: '[UnityEditor.PlayerSettings.bundleVersion]'
+      - m_Id: b56fe6fa25f33481c893654fa27d7fb5
+        m_Value: '[UnityEngine.Application.version]'
+      - m_Id: bddfbc2d24f0e5348865501c093ba105
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: f26e522c0bcffaa41a116f0c91df4b09
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: feeb42539bb03426f9857cec68826f5f
+        m_Value: https://wool-sort.sgdn.io
+    - m_InheritedParent: 
+      m_Id: b7f3b12d49644434a8bcdb21923bb97a
+      m_ProfileName: Develop_remote
+      m_Values:
+      - m_Id: 204b815c622422e4d9b3668bf559694e
+        m_Value: 'ServerData/[AppVersion]/[BuildTarget]'
+      - m_Id: 3a189eb5531528042b6069c467aec8c3
+        m_Value: '[CdnRootPath]/dev/[AppVersion]/[BuildTarget]/[BundleVersion]/'
+      - m_Id: 82a961e6fe0b9ef428477afc256f3ad5
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: aa3ea077841e247879ab73125af429d7
+        m_Value: '[UnityEditor.PlayerSettings.bundleVersion]'
+      - m_Id: b56fe6fa25f33481c893654fa27d7fb5
+        m_Value: '[UnityEngine.Application.version]'
+      - m_Id: bddfbc2d24f0e5348865501c093ba105
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: f26e522c0bcffaa41a116f0c91df4b09
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: feeb42539bb03426f9857cec68826f5f
+        m_Value: https://wool-sort.sgdn.io
+    m_ProfileEntryNames:
+    - m_Id: 204b815c622422e4d9b3668bf559694e
+      m_Name: Remote.BuildPath
+      m_InlineUsage: 0
+    - m_Id: 3a189eb5531528042b6069c467aec8c3
+      m_Name: Remote.LoadPath
+      m_InlineUsage: 0
+    - m_Id: 82a961e6fe0b9ef428477afc256f3ad5
+      m_Name: Local.BuildPath
+      m_InlineUsage: 0
+    - m_Id: aa3ea077841e247879ab73125af429d7
+      m_Name: BundleVersion
+      m_InlineUsage: 0
+    - m_Id: b56fe6fa25f33481c893654fa27d7fb5
+      m_Name: AppVersion
+      m_InlineUsage: 0
+    - m_Id: bddfbc2d24f0e5348865501c093ba105
+      m_Name: BuildTarget
+      m_InlineUsage: 0
+    - m_Id: f26e522c0bcffaa41a116f0c91df4b09
+      m_Name: Local.LoadPath
+      m_InlineUsage: 0
+    - m_Id: feeb42539bb03426f9857cec68826f5f
+      m_Name: CdnRootPath
+      m_InlineUsage: 0
+    m_ProfileVersion: 1
+  m_LabelTable:
+    m_LabelNames:
+    - default
+    - remote_levels_first
+    - Level_Aerostat
+    - Level_Arcade
+    - Level_Beehive
+    - Level_Big_Mag
+    - Level_Billiard_Table
+    - Level_Bobrito_bandito
+    - Level_bouquet
+    - Level_Bunny
+    - Level_bunny_in_a_hat
+    - Level_Butterfly
+    - Level_Cake
+    - Level_Camel
+    - Level_Camera
+    - Level_Camp
+    - Level_Car
+    - Level_Castle
+    - Level_Chess
+    - Level_Chest
+    - Level_Christmas_Tree
+    - Level_Circus_cannon
+    - Level_Closet
+    - Level_Clown
+    - Level_Colors
+    - Level_Coral
+    - Level_Corn
+    - Level_Cube_Rubik
+    - Level_Dango
+    - Level_Dino
+    - Level_DNA
+    - Level_Drums
+    - Level_Eiffel_tower
+    - Level_Elephant
+    - Level_F1
+    - Level_Fairy_Castle
+    - Level_Ferris_Wheel
+    - Level_Franky
+    - Level_Fridge
+    - Level_Gameboy
+    - Level_Gamepad
+    - Level_Grape
+    - Level_Gum_vending
+    - Level_Heart
+    - Level_House
+    - Level_Ice_Cream_Bus
+    - Level_Igloo
+    - Level_Jenga
+    - Level_Kitchen
+    - Level_Knight
+    - Level_library
+    - Level_Lighthouse
+    - Level_Luggage
+    - Level_Makeup_Table
+    - Level_Mill
+    - Level_Motor_Home
+    - Level_Mouse_on_Bike
+    - Level_Note
+    - Level_Nutcraker
+    - Level_Pancakes
+    - Level_Peacock
+    - Level_Piano
+    - Level_Picnic
+    - Level_Pilot_Bear
+    - Level_Piramid
+    - Level_Pirate
+    - Level_Pirate_Ship
+    - Level_Pisa
+    - Level_Pixel_Heart
+    - Level_Pizza
+    - Level_Plane-ambiplan
+    - Level_Pony_Ride
+    - Level_Pumpkin_Carriage
+    - Level_Rainbow
+    - Level_Ramen
+    - Level_Robot
+    - Level_Rocket
+    - Level_Room
+    - Level_Santa
+    - Level_Sea_Container
+    - Level_Shark
+    - Level_Skeleton_melee
+    - Level_Snack_Board
+    - Level_Snailman
+    - Level_Snake
+    - Level_Sneaker
+    - Level_Snowman
+    - Level_Sports_Equipment
+    - Level_Submarine
+    - Level_Sushi
+    - Level_Taj_Mahal
+    - Level_Teapot
+    - Level_Telescope
+    - Level_Tool_Box
+    - Level_Toucan
+    - Level_Train
+    - Level_Truck
+    - Level_UFO
+    - Level_Unicorn
+    - Level_Vegetable_Counter
+    - Level_Washing_Machine
+    - Level_Whale
+    - Level_Fish
+    - Level_CatChef
+    - Level_Microscope
+    - Level_Ballerino_Cappuccino
+    - Level_Phonograph
+    - Level_Bike
+    - Level_RetroPhone
+    - Level_Vintage_car
+    - Level_jedi_hamster
+    - Level_Walkie_Talkie
+    - Level_Lawn_Mower
+    - Level_Simple_Flower
+    - Level_Bathroom
+    - Level_Coffee_machine
+    - Level_Hairdryer
+    - Level_Microwave
+    - Level_Octopus
+    - Level_Playground
+    - Level_Salad
+    - Level_Samurai
+    - Level_Sewing_Machine
+    - Level_SharkCat
+    - Level_Tractor
+    - Level_Trawler
+    - Level_Typewriter
+    - Level_Vegetable_garden
+    - Level_Wizard_Girl
+    - Level_Cute_Panda
+    - Level_AlarmClock
+    - Level_Little_Deer
+    - Level_Owl
+    - Level_cosmetic_organizer
+    - Level_Bedroom
+    - Level_Cosmetic_box
+    - Level_LivingRoom
+    - Level_Boombox
+    - Level_Goose
+    - Level_Robot_Oven
+    - Level_Capybara
+    - Level_Rack
+    - Level_Fly_ship
+    - Level_Milkshake
+    - Level_Bus
+    - Level_Birdhouse
+    - Level_Bonsai
+    - Level_Guitar
+    - Level_Racoon
+    - Level_Helicopter
+    - Level_Penguin
+    - Level_Koala
+    - Level_Succulent
+    - Level_CarrotBunny
+    - Level_Piggy
+    - Level_Slot_Machine
+    - Level_Checker
+  m_SchemaTemplates: []
+  m_GroupTemplateObjects:
+  - {fileID: 11400000, guid: 51ad21bff344f7d4f9cfd86aec4e6c4c, type: 2}
+  m_InitializationObjects: []
+  m_CertificateHandlerType:
+    m_AssemblyName: 
+    m_ClassName: 
+  m_ActivePlayerDataBuilderIndex: 2
+  m_DataBuilders:
+  - {fileID: 11400000, guid: dbf1d98e0178a634db657392a127e226, type: 2}
+  - {fileID: 11400000, guid: d0ac9c9711b750044aa03b87f9c3d2f0, type: 2}
+  - {fileID: 11400000, guid: ab3adcc6b9ca5a5459282a285270966a, type: 2}
+  m_ActiveProfileId: b7f3b12d49644434a8bcdb21923bb97a

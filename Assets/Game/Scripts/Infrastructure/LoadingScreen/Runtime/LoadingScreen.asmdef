@@ -1,0 +1,22 @@
+{
+  "name": "LoadingScreen",
+  "rootNamespace": "",
+  "references": [
+    "Common.Runtime",
+    "DOTween.Modules",
+    "DOTweenPro.Scripts",
+    "UniTask",
+    "UniTask.DOTween",
+    "Unity.TextMeshPro",
+    "VContainer"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

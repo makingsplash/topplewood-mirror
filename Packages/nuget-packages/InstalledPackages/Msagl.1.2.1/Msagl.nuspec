@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Msagl</id>
+    <version>1.2.1</version>
+    <authors>levnach</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <projectUrl>https://github.com/Microsoft/automatic-graph-layout</projectUrl>
+    <description>This .NET assembly contains the core MSAGL functionality. Use it when you just need a layout and the visualization is done by other means.</description>
+    <releaseNotes>The release contains bug fixes and code cleanup. Some defines like TEST_MSAGL were removed.</releaseNotes>
+    <copyright>Copyright � Microsoft Corporation</copyright>
+    <language>en-US</language>
+    <tags>MSAGL Graph Layout</tags>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0" />
+    </dependencies>
+  </metadata>
+</package>

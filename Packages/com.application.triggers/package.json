@@ -1,0 +1,22 @@
+{
+  "name": "com.application.triggers",
+  "displayName": "Application Triggers",
+  "description": "This package is used for triggering events in the application.",
+  "version": "1.0.0",
+  "unity": "2018.4",
+  "license": "MIT",
+  "author": {
+    "name": "Dran1K",
+    "email": "dmitryzenevich@gmail.com",
+    "url": "https://github.com/dmitryzenevich"
+  },
+  "dependencies": {
+    "jp.hadashikick.vcontainer": "1.17.0",
+    "com.vcontainer.extensions" : "1.0.0"
+  },
+  "keywords": [
+    "Application",
+    "Triggers",
+    "Trigger"
+  ]
+}

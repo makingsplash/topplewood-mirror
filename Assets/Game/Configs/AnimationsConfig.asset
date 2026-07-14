@@ -1,0 +1,208 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71764521c91da4931bf0151c2b2880b3, type: 3}
+  m_Name: AnimationsConfig
+  m_EditorClassIdentifier: 
+  _flyingResource:
+    SpawnDelay: 0.1
+    SoundDelay: 0.15
+    SpawnMoveTime: 0.1
+    TotalDuration: 1.4
+    SpawnRadius: 0.5
+    DelayAndFlyTime: 0.2
+    ScaleTime: 0.8
+    TargetScale: 0.5
+    ChildCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  _woolScaleUpSettings:
+    Easing: 21
+    Duration: 0.4
+    TargetScaleMultiplier: 0.95
+    Delay: 0.5
+  _winConfettiSettings:
+    ConfettiZ: -5
+    ConfettiYOffset: -1.75
+  _levelDestructionOnLose:
+    Enabled: 1
+    SpeedRange: {x: 0.1, y: 0.5}
+    AngularSpeedRange: {x: 10, y: 30}
+  _levelIdleRotation:
+    Enabled: 1
+    Speed: 12
+    IdleDelayBeforeStart: 3
+  _columnCompleteFlip:
+    FlipDuration: 0.25
+    WaveDelay: 0.06
+    ColorFlashDelay: 0.07
+    ColorFlashInDuration: 0.05
+    ColorFlashOutDuration: 0.22
+    ColorFlashBrightness: 1.4
+    TilePopFxEnabled: 1
+    ColumnBeamEnabled: 1
+    TilePunchScale: 1.12
+    TilePunchDuration: 0.22
+    StackDipDepth: 0.1
+    StackDipDuration: 0.28
+  _fxSpawn:
+    ColumnCompleteFxOffset: {x: 0, y: 0, z: -0.4}
+    ConnectedColumnBreakFxOffset: {x: 0, y: 0, z: -0.4}
+    FrozenColumnBreakFxOffset: {x: 0, y: 0, z: -0.4}
+    StoneColumnBreakFxOffset: {x: 0, y: 0, z: -0.3}
+    QuestionTileRevealFxOffset: {x: 0, y: 0, z: -0.4}
+    BombExplosionFxOffset: {x: 0, y: 0, z: -0.15}
+    TilePopFxOffset: {x: 0, y: 0, z: -0.4}
+    ColumnBeamFxOffset: {x: 0, y: 0, z: -0.45}
+  _tileFlight:
+    EchelonHeight: 1
+    BoosterFlightDuration: 0.5
+    HandTileFlyOutDuration: 0.18
+    HandTileFlyInDuration: 0.18
+    BoardShiftDuration: 0.18
+    EnableTrail: 1
+    TrailTime: 0.1
+    TrailStartWidth: 1
+    TrailMaterial: {fileID: 2100000, guid: a41a00e01b0b24db094b4dc075e84851, type: 2}
+    LegacyArcDuration: 0.5
+    LegacyLinearDuration: 0.18
+  _swapBoosterLift:
+    LiftHeight: 0.15
+    LiftDuration: 0.12
+    ReturnDuration: 0.12
+    BobAmplitude: 0.06
+    BobHalfPeriod: 0.35
+  _undoBooster:
+    HintDisplayDuration: 0.5
+  _tileDownWave:
+    StepDuration: 0.12
+    LiftHeight: 0.5
+    LiftDepth: 0.4
+  _unlockReveal:
+    StepDelay: 0.12
+    StartDelay: 0.6
+    PopDuration: 0.22
+  _camera:
+    TopLevelBoundOffset: 3
+    BottomLevelBoundOffset: 3
+    LevelStartDelay: 0.5
+  _popupAnimations:
+    ScaleInDelay: 0
+    ScaleInDuration: 0.25
+    ScaleInCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    ScaleInEndValue: 1
+    ScaleOutDelay: 0
+    ScaleOutDuration: 0.25
+    ScaleOutCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    ScaleOutEndValue: 0
+    FadeInDelay: 0
+    FadeInDuration: 0.25
+    FadeInCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    FadeInEndValue: 1
+    FadeOutDelay: 0
+    FadeOutDuration: 0.25
+    FadeOutCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    FadeOutEndValue: 0

@@ -1,0 +1,33 @@
+{
+    "name": "SayStore",
+    "rootNamespace": "SGS.Store",
+    "references": [
+        "Unity.Purchasing",
+        "Unity.Purchasing.SecurityCore",
+        "Unity.Purchasing.Security",
+        "Unity.Purchasing.SecurityStub",
+        "Unity.Purchasing.Stores",
+        "Unity.Services.Core",
+        "Unity.Services.Core.Environments",
+        "Unity.TextMeshPro",
+        "SayInfrastructure",
+        "SayExtensions"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "SAYKIT_PURCHASING"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.say.infrastructure",
+            "expression": "1.0.0",
+            "define": "SAY_INFRASTURCTURE"
+        }
+    ],
+    "noEngineReferences": false
+}

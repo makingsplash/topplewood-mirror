@@ -1,0 +1,16 @@
+{
+    "name": "SayServices",
+    "rootNamespace": "SGS.Services",
+    "references": [
+        "SayServices.Interfaces"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

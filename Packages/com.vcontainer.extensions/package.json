@@ -1,0 +1,32 @@
+{
+  "name": "com.vcontainer.extensions",
+  "displayName": "VContainer Extensions",
+  "description": "This package is used to expand the package VContainer",
+  "version": "1.0.0",
+  "unity": "2018.4",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VContainerExtensions.git"
+  },
+  "author": {
+    "name": "VContainer",
+    "email": "vcontainer@vcontainer.vcontainer",
+    "url": "https://github.com/vcontainer"
+  },
+  "dependencies": {
+    "jp.hadashikick.vcontainer": "1.17.0"
+  },
+  "keywords": [
+    "VContainer",
+    "DI",
+    "Dependency Injection",
+    "DI Container"
+  ],
+  "documentationUrl": "https://vcontainer.hadashikick.jp/",
+  "changelogUrl": "https://github.com/hadashiA/VContainer/releases",
+  "licensesUrl": "https://github.com/hadashiA/VContainer/blob/master/LICENSE",
+  "publishConfig": {
+    "registry": "https://package.openupm.com"
+  }
+}

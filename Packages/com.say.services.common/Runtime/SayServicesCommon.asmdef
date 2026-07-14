@@ -1,0 +1,32 @@
+{
+    "name": "SayServicesCommon",
+    "rootNamespace": "SGS.Services",
+    "references": [
+        "SayData",
+        "SayServices",
+        "Unity.TextMeshPro",
+        "Unity.ResourceManager",
+        "Unity.Addressables",
+        "UniTask",
+        "UniTask.Addressables",
+        "Unity.Purchasing",
+        "SayDinamicDebugMenu",
+        "SayInfrastructure",
+        "MoreMountains.NiceVibrations",
+        "MoreMountains.NiceVibrations.Haptics",
+        "SayPureInterfaces",
+        "SayExtensionsForUnity",
+        "SayServices.Interfaces",
+        "SayKit.API",
+        "SayKit.Internal"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

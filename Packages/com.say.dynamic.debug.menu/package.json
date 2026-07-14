@@ -1,0 +1,10 @@
+{
+  "name": "com.say.dynamic.debug.menu",
+  "version": "1.0.4",
+  "displayName": "SayDynamicDebugMenu",
+  "description": "This package is used for easy and handy runtime debug on device",
+  "dependencies": {
+    "com.say.debugger": "1.0.0"
+  },
+  "author": "SayGames Studio"
+}
