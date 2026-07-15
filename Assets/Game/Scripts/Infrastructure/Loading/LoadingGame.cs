@@ -66,8 +66,12 @@ namespace Infrastructure.Loading
 
             InitializeGlobalServices();
 
-            // TODO: load the new game's main scene here, e.g.:
+            // TODO: load the new game's main scene here — BEFORE hiding the loading screen — e.g.:
             //     await _sceneLoader.LoadSceneByAddressableAsync(SceneInBuild.Game, _loadingScreen.Progress);
+            // (also add the Game scene to ScenesConfig.asset with a valid addressable reference).
+
+            // Reveal the app. Without this the DontDestroyOnLoad loading screen stays on top forever.
+            await _loadingScreen.HideIfActiveAsync(cancellationToken: cancellationToken);
 
             // app_loaded должен уходить, когда игра полностью загружена
             // и игрок может взаимодействовать с экраном (см. доку SayKit).

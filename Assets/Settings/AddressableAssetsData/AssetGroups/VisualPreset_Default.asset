@@ -14,17 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: VisualPreset_Default
   m_GUID: 6c7c5cfa2fb004ee69840a76386d600f
-  m_SerializeEntries:
-  - m_GUID: 4a3a61c2fbd404b3ca2e71d1a3d03d3b
-    m_Address: Assets/Game/Art/VisualPresets/Default
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d398f7e14ea6843f09ca25085e73ef87
-    m_Address: Configs/ColorsConfig.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 133e70855b51d494da01f81d5a285cd2, type: 2}
   m_SchemaSet:

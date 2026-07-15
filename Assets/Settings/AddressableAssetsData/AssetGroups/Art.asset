@@ -17,33 +17,8 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: db8557b8f689bb64f8ea073dd7e3a313
   m_SerializeEntries:
-  - m_GUID: 0486be6d14fb9d946b0d2b30e8784a1a
-    m_Address: UI/RedBackPlank.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7107e533af7334ff18ec871b87b13ffb
-    m_Address: UI/Universal/Buttons/RegularButton/regular_button_background_red.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 777de02c2cf304c7ab80601fe16bea45
-    m_Address: UI/Universal/Buttons/RegularButton/regular_button_background_blue.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 82f5e18d2c8764144a72e243d26331f2
-    m_Address: UI/PurpleBackPlank.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 88f3441d3f60843ee936edbb112fbbf7
     m_Address: Fonts
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f6df0c1194d194b5ba8a3b7e4e2b539e
-    m_Address: UI/Universal/Buttons/RegularButton/regular_button_background_purple.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

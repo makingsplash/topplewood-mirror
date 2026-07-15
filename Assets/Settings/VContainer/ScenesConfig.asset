@@ -19,9 +19,3 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-  - Key: 1
-    SceneReference:
-      m_AssetGUID: 99c9720ab356a0642a771bea13969a05
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 0

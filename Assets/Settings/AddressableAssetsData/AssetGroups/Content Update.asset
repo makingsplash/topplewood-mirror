@@ -16,32 +16,7 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: b0920436a71044702b177718b75ab70d
-  m_SerializeEntries:
-  - m_GUID: 0191065febb0d584d8bc23b85663a44f
-    m_Address: PolyDiamond
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3df8804e4837445e09aa55fbd6d6b8cc
-    m_Address: Cube_For_FX
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5a584f3f02503d140ba065d45c75d3be
-    m_Address: PolyFireTetrahedron
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a5169dd48d2b8b942bd1ec97d88ac52e
-    m_Address: PolySpikeSimple
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f23d1cdf4b40737488ce8a40b040b22d
-    m_Address: PolySphereSmall
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 133e70855b51d494da01f81d5a285cd2, type: 2}
   m_SchemaSet:

@@ -14,12 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: VisualPreset_Prime
   m_GUID: a6fbffbc8d1944abb5db4f594012ce2d
-  m_SerializeEntries:
-  - m_GUID: eb5bde792984f4505a88f34f7e21a1b7
-    m_Address: Assets/Game/Art/VisualPresets/Prime
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 133e70855b51d494da01f81d5a285cd2, type: 2}
   m_SchemaSet:

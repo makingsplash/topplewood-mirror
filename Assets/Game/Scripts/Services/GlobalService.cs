@@ -40,6 +40,8 @@ namespace Services
             GlobalServiceContainer.Register(new TimerService());
             GlobalServiceContainer.Register(new GameTimerService());
             GlobalServiceContainer.Register(new AssetPreloadService());
+            GlobalServiceContainer.Register(new CatalogUpdateService());
+            GlobalServiceContainer.Register(new AssetStatusChecker());
             GlobalServiceContainer.Register(AudioService.Create());
             GlobalServiceContainer.Register(new HapticService());
             GlobalServiceContainer.Register(new DateService());

@@ -14,12 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_GroupName: Pools
   m_GUID: 63b7264b4988b124b8f4be5c2d8b2568
-  m_SerializeEntries:
-  - m_GUID: 49130f8c9a6cab547b12c2148425dcf8
-    m_Address: Pool
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 133e70855b51d494da01f81d5a285cd2, type: 2}
   m_SchemaSet:

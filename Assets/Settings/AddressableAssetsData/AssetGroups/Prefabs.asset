@@ -15,68 +15,13 @@ MonoBehaviour:
   m_GroupName: Prefabs
   m_GUID: 3a9d14bbc33698e4088d8075b3b4b7c7
   m_SerializeEntries:
-  - m_GUID: 17d951f93d2e54d0190203f33a97bd85
-    m_Address: Tutorials
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 198a3d1cb681146748970c30f9b43f48
-    m_Address: Assets/Game/Art/Font/Nunito-Black.ttf
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 24998059b05674fcc8216fd26d5da539
-    m_Address: Assets/Game/Art/Sprites/UI/Screens/Settings/WoolSort_Map/BlockRedDisactive.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 28e579aacc5c24db0bfcbfe0643eb850
     m_Address: SceneLoader
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6676992eef42e42a8b96a52ebfa1b618
-    m_Address: Assets/Game/Art/Sprites/UI/Screens/Settings/WoolSort_Map/BlockBlueDisactive.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 68e41105ab98e00459ec668078d53a33
-    m_Address: Assets/Game/Art/Background/Mat_background.mat
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 70e6ecf0a0a20d142a054231092b55ea
     m_Address: Infrastructure
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 99f8b14bed84147e39035fc953ab3dd0
-    m_Address: Assets/Game/Art/Sprites/UI/Screens/Settings/WoolSort_Map/BlockVioletDisactive.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9d94595fea08a43f8ad858cc3643d246
-    m_Address: Assets/Game/Art/Sprites/UI/Screens/Settings/WoolSort_Map/BlockVioletActive.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d0cb1b3c0406543f9b3c99a8dba1570d
-    m_Address: Assets/Game/Art/Sprites/UI/Screens/Settings/ButtonBlueBodySm01.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d60896ae2e0d74e53bbb15de60bdce38
-    m_Address: Assets/Game/Art/Sprites/UI/Screens/Settings/WoolSort_Map/BlockRedActive.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dc10d6001636d4f4bb8e1b47f36cd8e8
-    m_Address: Assets/Game/Art/Materials/UI/BlurBackdround.mat
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e10f30196782842d18afd40b24709881
-    m_Address: Assets/Game/Art/Sprites/UI/Screens/Settings/WoolSort_Map/BlockBlue.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

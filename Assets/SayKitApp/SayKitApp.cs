@@ -9,7 +9,7 @@ public class SayKitApp
     public const string APP_NAME_IOS = "";
 
     public const string APP_BUNDLE_CHINA_IOS = "";
-    public const string APP_BUNDLE_IOS = "com.game.tilesort";
+    public const string APP_BUNDLE_IOS = "com.game.dropcolorblocks";
 
 #if SAYKIT_PURCHASING
     public static bool purchasesEnabled = true;
@@ -20,8 +20,10 @@ public class SayKitApp
     public const string APP_KEY_IOS = "";
     public const string APP_SECRET_IOS = "";
 
-    public const string APP_KEY_ANDROID = "ctlsrta";
-    public const string APP_SECRET_ANDROID = "WTnQWMoOzkEBxTlbNPx6kHpkklai1tdf";
+    // TODO: provision this game's own SayKit app key/secret from SayGames (dropcolorblocks).
+    // Left empty on purpose — the previous values belonged to TileSort and would report into its app.
+    public const string APP_KEY_ANDROID = "";
+    public const string APP_SECRET_ANDROID = "";
 
     public const string PROMO_KEY_IOS = "";
 
