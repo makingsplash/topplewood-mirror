@@ -26,6 +26,7 @@ namespace Gameplay.Core.Mechanic
         private readonly List<PlacedShape> _settledScratch = new();
 
         private IDisposable _levelLoadedSub;
+        private IDisposable _stateRestoredSub;
         private LevelData _level;
         private ISilhouetteRegion _region;
 
@@ -45,6 +46,7 @@ namespace Gameplay.Core.Mechanic
             _tuning = tuning;
 
             _levelLoadedSub = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
+            _stateRestoredSub = _model.StateRestored.Subscribe(_ => OnStateRestored());
         }
 
         private void OnLevelLoaded()
@@ -70,6 +72,48 @@ namespace Gameplay.Core.Mechanic
 
             _model.SetPhase(GamePhase.Running);
             SpawnNext();
+        }
+
+        /// <summary>
+        /// Rebuild runtime state from a restored snapshot (RFC §4.2). Runs AFTER OnLevelLoaded (restore
+        /// happens onto the already-loaded level), so it resets the simulation/views the fresh load spawned
+        /// and re-materialises bodies/views from each block's saved state. Settled blocks are re-spawned in
+        /// their exact pose (kinematic, coverage preserved); the single Floating block is re-spawned; Lost
+        /// blocks are skipped (their pool unit is already accounted for by PoolCursor).
+        /// </summary>
+        private void OnStateRestored()
+        {
+            _level = _model.CurrentLevel;
+            _region = new PolygonSilhouetteRegion(_level.Silhouette);
+
+            foreach (var view in _viewByInstance.Values)
+                view.Dispose();
+
+            _bodyByInstance.Clear();
+            _viewByInstance.Clear();
+            _defByInstance.Clear();
+
+            _simulation.Reset();
+            _simulation.LoadStatics(_level.StaticGeometry, _level.Bounds, _level.Gravity);
+
+            foreach (var block in _model.Blocks)
+            {
+                if (block.State == BlockLifecycle.Lost)
+                    continue;
+
+                var def = _model.DefFor(block);
+                var bodyId = block.State == BlockLifecycle.Settled
+                    ? _simulation.SpawnSettled(def, block.Position, block.Rotation)
+                    : _simulation.SpawnFloating(def, block.Position);
+
+                _bodyByInstance[block.InstanceId] = bodyId;
+                _defByInstance[block.InstanceId] = def;
+
+                var view = _viewFactory.Create(def);
+                view.SetState(block.State);
+                view.Sync(block.Position, block.Rotation);
+                _viewByInstance[block.InstanceId] = view;
+            }
         }
 
         public void OnIntent(InputIntent intent)
@@ -238,6 +282,8 @@ namespace Gameplay.Core.Mechanic
         {
             _levelLoadedSub?.Dispose();
             _levelLoadedSub = null;
+            _stateRestoredSub?.Dispose();
+            _stateRestoredSub = null;
         }
     }
 }

@@ -10,6 +10,12 @@ namespace Gameplay.Core.Adapters
         /// <summary>Spawn a body at rest (gravity off) and return its stable body id.</summary>
         int SpawnFloating(BlockDef def, Vec2 spawn);
 
+        /// <summary>
+        /// Spawn a body already at rest in an exact pose (RFC §4.3, save rehydration). The body does not
+        /// re-simulate — its pose (and thus coverage) is preserved exactly. Returns its stable body id.
+        /// </summary>
+        int SpawnSettled(BlockDef def, Vec2 pos, float rotation);
+
         /// <summary>Enable gravity → the body starts falling.</summary>
         void Release(int bodyId);
 

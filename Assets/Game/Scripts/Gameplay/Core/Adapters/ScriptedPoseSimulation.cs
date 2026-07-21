@@ -28,6 +28,13 @@ namespace Gameplay.Core.Adapters
             return id;
         }
 
+        public int SpawnSettled(BlockDef def, Vec2 pos, float rotation)
+        {
+            var id = _nextId++;
+            _bodies[id] = new Body { Pose = new BodyPose(pos, rotation), Speed = 0f };
+            return id;
+        }
+
         public void Release(int bodyId)
         {
             if (_bodies.TryGetValue(bodyId, out var b))

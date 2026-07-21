@@ -14,12 +14,16 @@ namespace Gameplay.Core
         private readonly ReactiveProperty<GameOutcome> _outcome = new(GameOutcome.None);
         private readonly Subject<Unit> _levelLoaded = new();
         private readonly Subject<Unit> _levelResolved = new();
+        private readonly Subject<Unit> _stateRestored = new();
         private readonly List<BlockInstance> _blocks = new();
 
         public ReadOnlyReactiveProperty<GamePhase> Phase => _phase;
         public ReadOnlyReactiveProperty<GameOutcome> Outcome => _outcome;
         public Observable<Unit> LevelLoaded => _levelLoaded;
         public Observable<Unit> LevelResolved => _levelResolved;
+
+        /// <summary>Fires after a snapshot is restored so the mechanic can rebuild bodies/views (RFC §4.2).</summary>
+        public Observable<Unit> StateRestored => _stateRestored;
 
         public LevelData CurrentLevel { get; private set; }
         public IReadOnlyList<BlockInstance> Blocks => _blocks;
@@ -130,6 +134,7 @@ namespace Gameplay.Core
             }
 
             _phase.Value = v2.Phase;
+            _stateRestored.OnNext(Unit.Default);
             return true;
         }
     }

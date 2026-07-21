@@ -94,6 +94,38 @@ namespace Gameplay.Adapters
             return id;
         }
 
+        public int SpawnSettled(BlockDef def, Vec2 pos, float rotation)
+        {
+            var go = new GameObject($"Block_{def.Kind}_{_nextId}");
+            go.transform.SetParent(Root, false);
+            go.transform.position = new Vector3(pos.X, pos.Y, 0f);
+            go.transform.rotation = Quaternion.Euler(0f, 0f, rotation * Mathf.Rad2Deg);
+
+            var collider = go.AddComponent<PolygonCollider2D>();
+            collider.points = ToPoints(def.Shape.Vertices);
+            collider.density = Mathf.Max(0.0001f, def.Material.Density);
+            collider.sharedMaterial = new PhysicsMaterial2D($"mat_{def.Kind}")
+            {
+                friction = def.Material.Friction,
+                bounciness = def.Material.Restitution,
+            };
+
+            var rb = go.AddComponent<Rigidbody2D>();
+            // Kinematic: the restored stack keeps its exact saved pose (coverage preserved), no re-settle.
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+
+            var id = _nextId++;
+            _bodies[id] = new Body
+            {
+                Rigidbody = rb,
+                Collider = collider,
+                Radius = Mathf.Max(0.0001f, collider.bounds.extents.magnitude),
+            };
+            return id;
+        }
+
         public void Release(int bodyId)
         {
             if (_bodies.TryGetValue(bodyId, out var body) && body.Rigidbody != null)

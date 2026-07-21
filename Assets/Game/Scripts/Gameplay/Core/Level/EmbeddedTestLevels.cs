@@ -12,6 +12,12 @@ namespace Gameplay.Core
     {
         private static readonly MaterialProfile Wood = new MaterialProfile(1.0f, 0.6f, 0.05f);
 
+        // Container holding walls derived from the silhouette footprint (F1, RFC §3). Walls sit OUTSIDE the
+        // outline (interior never narrowed) with an open top (drop aperture). ⟨balancer⟩ — UNVERIFIED, tune
+        // by lost_count/playtests.
+        private const float WallThickness = 0.3f; // w
+        private const float WallLip = 0.5f;        // how far walls rise above the silhouette top
+
         private readonly List<LevelData> _levels;
 
         public EmbeddedTestLevels()
@@ -46,6 +52,7 @@ namespace Gameplay.Core
                 AttemptLimit = null,
                 MoveLimit = null,
                 DropSpawn = new Vec2(0f, 5f),
+                StaticGeometry = BuildContainer(-1f, 1f, -1f, 1f),
                 Bounds = new Rect(new Vec2(-6f, -6f), new Vec2(6f, 10f)),
                 Gravity = new Vec2(0f, -9.81f),
                 Seed = 1,
@@ -76,12 +83,49 @@ namespace Gameplay.Core
                 PoolOrdering = PoolOrdering.Fixed,
                 CoverageThreshold = 0.80f,
                 DropSpawn = new Vec2(0f, 5f),
+                StaticGeometry = BuildContainer(-1.5f, 1.5f, -0.5f, 0.5f),
                 Bounds = new Rect(new Vec2(-6f, -6f), new Vec2(6f, 10f)),
                 Gravity = new Vec2(0f, -9.81f),
                 Seed = 2,
                 DifficultyTier = 1,
                 Source = LevelSourceKind.Authored,
             };
+        }
+
+        /// <summary>
+        /// Deterministic footprint→container rule (F1, RFC §3.1): three rectangular walls (floor + left +
+        /// right) placed OUTSIDE the silhouette bbox, open at the top (drop aperture). Inner faces align to
+        /// the bbox edges so the fillable interior is never narrowed → coverage≥θ stays reachable.
+        /// </summary>
+        private static Polygon[] BuildContainer(float minX, float maxX, float minY, float maxY)
+        {
+            const float w = WallThickness;
+            const float lip = WallLip;
+            var top = maxY + lip;
+
+            var floor = new Polygon(new[]
+            {
+                new Vec2(minX - w, minY - w),
+                new Vec2(maxX + w, minY - w),
+                new Vec2(maxX + w, minY),
+                new Vec2(minX - w, minY),
+            });
+            var leftWall = new Polygon(new[]
+            {
+                new Vec2(minX - w, minY),
+                new Vec2(minX, minY),
+                new Vec2(minX, top),
+                new Vec2(minX - w, top),
+            });
+            var rightWall = new Polygon(new[]
+            {
+                new Vec2(maxX, minY),
+                new Vec2(maxX + w, minY),
+                new Vec2(maxX + w, top),
+                new Vec2(maxX, top),
+            });
+
+            return new[] { floor, leftWall, rightWall };
         }
     }
 }

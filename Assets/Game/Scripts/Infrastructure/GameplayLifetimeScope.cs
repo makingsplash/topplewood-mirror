@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using DataStorage;
+using Gameplay.Adapters;
+using Gameplay.Core;
 using Gameplay.DI;
 using Gameplay.Sequence.DI;
 using Services;
@@ -39,9 +41,14 @@ namespace Game.Code.Infrastructure
             builder.Register<IInputService, InputService>(Lifetime.Singleton);
             builder.Register<IInputBlockersHandler, InputBlockersHandler>(Lifetime.Singleton);
 
+            // Production input source (moved out of GameplayCoreInstaller, RFC §2.3): IInputService-backed.
+            builder.Register<IGameplayInputSource, InputServiceGameplayInputSource>(Lifetime.Singleton);
+
             builder.RegisterInstance(Data.Configs.Core).AsSelf();
 
-            // Saving
+            // Saving — F2 round-trip sink + facade, then the autosave lifecycle entry point.
+            builder.Register<IShapeFillSaveStore, FileShapeFillSaveStore>(Lifetime.Singleton);
+            builder.Register<IProgressSaver, ShapeFillProgressSaver>(Lifetime.Singleton);
             builder.RegisterEntryPoint<SaveManager>();
 
             RegisterSessionServices(builder);

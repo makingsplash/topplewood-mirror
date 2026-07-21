@@ -1,5 +1,6 @@
 using System;
 using DataStorage;
+using Gameplay.Core;
 using Infrastructure.ApplicationTriggers;
 using UnityEngine;
 using VContainer.Unity;
@@ -16,17 +17,20 @@ namespace Game.Infrastructure.Saving
     {
         private readonly IApplicationTriggers _applicationTriggers;
         private readonly ILogService _logService;
+        private readonly IProgressSaver _progressSaver;
 
         private float _lastSaveTime;
         private const float TimeBetweenSave = 1f;
 
         public SaveManager(
             IApplicationTriggers applicationTriggers,
-            ILogService logService
+            ILogService logService,
+            IProgressSaver progressSaver
         )
         {
             _applicationTriggers = applicationTriggers;
             _logService = logService;
+            _progressSaver = progressSaver;
         }
 
         public void Initialize()
@@ -74,7 +78,7 @@ namespace Game.Infrastructure.Saving
 
             _lastSaveTime = Time.realtimeSinceStartup;
 
-            // TODO: plug the new game's progress serialization here.
+            _progressSaver.Save();
             _logService.Log(LogLevel.Info, $"Autosave tick. Delta = {delta}", LogCategory.SaveManager);
         }
     }

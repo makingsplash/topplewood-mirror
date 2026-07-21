@@ -37,7 +37,8 @@ namespace Gameplay.DI
             builder.Register<ICoverageEvaluator, SampleGridCoverageEvaluator>(Lifetime.Singleton);
             builder.Register<LevelDataValidator>(Lifetime.Singleton);
             builder.Register<IBlockViewFactory, BlockViewFactory>(Lifetime.Singleton);
-            builder.Register<IGameplayInputSource, InputServiceGameplayInputSource>(Lifetime.Singleton);
+            // IGameplayInputSource is bound by the hosting scope (prod: InputService-backed; bringup: raw
+            // pointer) so this core installer stays context-independent (RFC §2.3).
 
             builder.Register<GameController>(Lifetime.Singleton);
 

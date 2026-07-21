@@ -17,6 +17,7 @@ namespace Gameplay.Core
         private readonly IGameplaySimulation _simulation;
         private readonly IGameplayClock _clock;
         private readonly IGameplayInputSource _inputSource;
+        private readonly IProgressSaver _progressSaver;
 
         private IDisposable _inputSubscription;
         private bool _started;
@@ -27,7 +28,8 @@ namespace Gameplay.Core
             IMechanicController mechanic,
             IGameplaySimulation simulation,
             IGameplayClock clock,
-            IGameplayInputSource inputSource)
+            IGameplayInputSource inputSource,
+            IProgressSaver progressSaver)
         {
             _levelSource = levelSource;
             _model = model;
@@ -35,6 +37,7 @@ namespace Gameplay.Core
             _simulation = simulation;
             _clock = clock;
             _inputSource = inputSource;
+            _progressSaver = progressSaver;
         }
 
         public void Start()
@@ -47,6 +50,10 @@ namespace Gameplay.Core
 
             var level = _levelSource.Load();
             _model.LoadLevel(level); // mechanic reacts to LevelLoaded: installs statics, spawns first block.
+
+            // Save round-trip (RFC §4.1): restore onto the freshly-loaded level; no-op if there is no
+            // (or a foreign) save, in which case the fresh level stands.
+            _progressSaver.TryRestore();
         }
 
         public void Tick(float dt)
