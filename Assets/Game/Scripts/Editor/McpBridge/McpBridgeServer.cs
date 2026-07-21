@@ -38,6 +38,9 @@ namespace Game.Editor.McpBridge
         {
             if (!McpBridgeConfig.Enabled) return;
             EditorApplication.update += ProcessMainThreadQueue;
+            // Cleanly release our own listen socket before every domain reload, so the
+            // editor never contends with a stale copy of itself across recompiles.
+            AssemblyReloadEvents.beforeAssemblyReload += Stop;
             Start();
         }
 
@@ -49,21 +52,44 @@ namespace Game.Editor.McpBridge
         public static void Start()
         {
             if (_running) return;
-            try
-            {
-                _listener = new HttpListener();
-                _listener.Prefixes.Add($"http://localhost:{McpBridgeConfig.Port}/");
-                _listener.Start();
-                _running = true;
 
-                _listenerThread = new Thread(ListenLoop) { IsBackground = true };
-                _listenerThread.Start();
-
-                Debug.Log($"[McpBridge] Server started on port {McpBridgeConfig.Port}");
-            }
-            catch (Exception ex)
+            const int maxAttempts = 4;
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                Debug.LogError($"[McpBridge] Failed to start: {ex.Message}");
+                try
+                {
+                    _listener = new HttpListener();
+                    _listener.Prefixes.Add($"http://localhost:{McpBridgeConfig.Port}/");
+                    _listener.Start();
+                    _running = true;
+
+                    _listenerThread = new Thread(ListenLoop) { IsBackground = true };
+                    _listenerThread.Start();
+
+                    Debug.Log($"[McpBridge] Server started on port {McpBridgeConfig.Port}");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    try { _listener?.Close(); } catch { /* ignore */ }
+                    _listener = null;
+
+                    // Usual cause after a domain reload: an AssetImportWorker forked from
+                    // this editor inherited our listen socket (the fd is not CLOEXEC under
+                    // Mono) and still holds the port, so the rebind hits "Address already in
+                    // use". Free it by killing only the squatting worker(s), then retry. If
+                    // nothing can be freed on the last attempt, fail exactly like before —
+                    // no regression versus the original single-shot behaviour.
+                    var freed = FreePortFromImportWorkers(McpBridgeConfig.Port);
+                    if (attempt == maxAttempts)
+                    {
+                        Debug.LogError($"[McpBridge] Failed to start after {maxAttempts} attempts: {ex.Message}");
+                        return;
+                    }
+                    if (freed > 0)
+                        Debug.Log($"[McpBridge] Port {McpBridgeConfig.Port} was held by {freed} AssetImportWorker(s); freed it, retrying ({attempt + 1}/{maxAttempts})…");
+                    Thread.Sleep(250);
+                }
             }
         }
 
@@ -74,6 +100,56 @@ namespace Game.Editor.McpBridge
             _listener?.Close();
             _listenerThread = null;
             Debug.Log("[McpBridge] Server stopped");
+        }
+
+        // Kills only processes that both (a) hold a listen socket on `port` and (b) are
+        // Unity AssetImportWorkers — never this editor, never anything else — to release a
+        // listen-socket fd they inherited from us on fork. Returns the number killed.
+        // Best-effort and macOS/Linux only (lsof/ps/kill); any failure returns 0 and lets
+        // Start() fail as it did before.
+        private static int FreePortFromImportWorkers(int port)
+        {
+            var killed = 0;
+            try
+            {
+                var self = System.Diagnostics.Process.GetCurrentProcess().Id;
+                foreach (var raw in RunTool("lsof", $"-nP -iTCP:{port} -sTCP:LISTEN -t"))
+                {
+                    if (!int.TryParse(raw.Trim(), out var pid) || pid == self) continue;
+                    var cmd = string.Join(" ", RunTool("ps", $"-o command= -p {pid}"));
+                    var isWorker = cmd.IndexOf("AssetImportWorker", StringComparison.OrdinalIgnoreCase) >= 0
+                                   || cmd.IndexOf("-adb2", StringComparison.OrdinalIgnoreCase) >= 0;
+                    if (!isWorker) continue;
+                    RunTool("kill", $"-9 {pid}");
+                    killed++;
+                }
+            }
+            catch { /* best-effort */ }
+            return killed;
+        }
+
+        // Runs a short-lived tool and returns its stdout as non-empty trimmed lines.
+        private static List<string> RunTool(string file, string args)
+        {
+            var lines = new List<string>();
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo(file, args)
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                using var proc = System.Diagnostics.Process.Start(psi);
+                if (proc == null) return lines;
+                var stdout = proc.StandardOutput.ReadToEnd();
+                proc.WaitForExit(2000);
+                foreach (var line in stdout.Split('\n'))
+                    if (!string.IsNullOrWhiteSpace(line))
+                        lines.Add(line);
+            }
+            catch { /* ignore */ }
+            return lines;
         }
 
         private static void ListenLoop()
