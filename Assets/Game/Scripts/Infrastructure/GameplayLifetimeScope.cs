@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DataStorage;
+using Gameplay.DI;
 using Gameplay.Sequence.DI;
 using Services;
 using Services.Gameplay;
@@ -27,6 +28,7 @@ namespace Game.Code.Infrastructure
         private readonly List<IInstaller> _installers = new()
         {
             new SequenceInstaller(),
+            new GameplayCoreInstaller(),
         };
 
         protected override void Configure(IContainerBuilder builder)
