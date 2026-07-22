@@ -19,6 +19,7 @@ namespace Gameplay.DI
         {
             var tuning = new ShapeFillTuning();
             builder.RegisterInstance(tuning);
+            builder.RegisterInstance(new TargetPreviewConfig());
             builder.RegisterInstance<IGameplayClock>(new GameplayClock(tuning.FixedStep));
             builder.RegisterInstance<IGameplayRandom>(new DeterministicRandom(0));
             builder.RegisterInstance<IEmbeddedLevels>(new EmbeddedTestLevels());
@@ -44,6 +45,7 @@ namespace Gameplay.DI
 
             builder.RegisterEntryPoint<GameControllerRunner>();
             builder.RegisterEntryPoint<ShapeFillPresenter>();
+            builder.RegisterEntryPoint<TargetPreviewPresenter>();
         }
     }
 }

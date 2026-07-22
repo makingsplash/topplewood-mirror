@@ -8,22 +8,27 @@ using VContainer.Unity;
 namespace Gameplay.View
 {
     /// <summary>
-    /// Unity presenter that renders the target as a ghost overlay when a level loads (RFC §6, GAME_RULES §Q5):
-    /// the union outline plus one paler per-slot ghost so the player sees where each piece belongs. Observes
-    /// <see cref="GameModel"/> only (domain stays view-agnostic); piece views are handled by the factory.
+    /// Unity presenter for the shape_fill scene: surfaces gray-box outcome (Won/Lost) and, as an optional
+    /// assist, the full-size on-field ghost overlay — union outline plus paler per-slot ghosts showing where
+    /// each piece belongs. The ghost is now gated behind <see cref="TargetPreviewConfig.ShowOnFieldGhost"/>
+    /// (default OFF): the mini preview (<see cref="TargetPreviewPresenter"/>) is the primary target reference
+    /// (GAME_RULES §7, RFC §4.6). Observes <see cref="GameModel"/> only (domain stays view-agnostic); piece
+    /// views are handled by the factory.
     /// </summary>
     public sealed class ShapeFillPresenter : IStartable, IDisposable
     {
         private static readonly Color GhostColor = new Color(0.6f, 0.85f, 1f, 0.35f);
 
         private readonly GameModel _model;
+        private readonly TargetPreviewConfig _config;
         private readonly List<GameObject> _ghosts = new();
         private IDisposable _subscription;
         private IDisposable _outcomeSubscription;
 
-        public ShapeFillPresenter(GameModel model)
+        public ShapeFillPresenter(GameModel model, TargetPreviewConfig config)
         {
             _model = model;
+            _config = config;
         }
 
         public void Start()
@@ -47,6 +52,11 @@ namespace Gameplay.View
         private void OnLevelLoaded()
         {
             ClearGhosts();
+
+            // The full-size on-field ghost is now an optional assist (default OFF): the mini preview
+            // (TargetPreviewPresenter) is the primary target reference (GAME_RULES §7, RFC §4.6).
+            if (!_config.ShowOnFieldGhost)
+                return;
 
             var level = _model.CurrentLevel;
             if (level?.Target?.Outline?.Outline == null)
