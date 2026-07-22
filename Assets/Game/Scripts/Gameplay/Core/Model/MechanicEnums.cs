@@ -1,20 +1,12 @@
 namespace Gameplay.Core
 {
-    /// <summary>Canonical block life-cycle (GAME_RULES §2).</summary>
-    public enum BlockLifecycle
+    /// <summary>Canonical piece life-cycle (GAME_RULES §2): all pieces start Idle, tap releases one.</summary>
+    public enum PieceLifecycle
     {
-        Floating,
+        Idle,
         Falling,
-        Settled,
+        Placed,
         Lost,
-    }
-
-    /// <summary>How the pool feeds blocks to the player (GAME_RULES §1). v0 default = Fixed.</summary>
-    public enum PoolOrdering
-    {
-        Fixed,
-        Bag,
-        PlayerChoice,
     }
 
     /// <summary>Provenance of a level (GAME_RULES §5). v0 = Authored.</summary>

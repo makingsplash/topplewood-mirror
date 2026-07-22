@@ -3,128 +3,180 @@ using System.Collections.Generic;
 namespace Gameplay.Core
 {
     /// <summary>
-    /// 1–2 hand-authored test levels embedded in code — deliberately minimal input for the vertical
-    /// slice (RFC §2.4), so no content pipeline is fixed yet (open question #3). Numbers are the
-    /// balancer's starting values (θ=0.80, "wood" 1.0/0.6/0.05, gravity (0,-9.81), pool ≈1.4× silhouette),
-    /// all UNVERIFIED and tuned after playtests.
+    /// Hand-authored test levels embedded in code — deliberately minimal input for the pivot slice (RFC §7.2),
+    /// so no content pipeline is fixed yet. The layout invariant: a piece's start pose is ABOVE its target
+    /// slot (there is no aiming — a straight drop under gravity lands it on place; the puzzle is the release
+    /// ORDER). All numbers (posTol/angTol, start heights, floor/cradle) are the balancer's starting values
+    /// (<c>⟨balancer⟩</c>), UNVERIFIED — solvability of circle_halves/house is level-sim / QA's call.
     /// </summary>
     public sealed class EmbeddedTestLevels : IEmbeddedLevels
     {
         private static readonly MaterialProfile Wood = new MaterialProfile(1.0f, 0.6f, 0.05f);
 
-        // Container holding walls derived from the silhouette footprint (F1, RFC §3). Walls sit OUTSIDE the
-        // outline (interior never narrowed) with an open top (drop aperture). ⟨balancer⟩ — UNVERIFIED, tune
-        // by lost_count/playtests.
-        private const float WallThickness = 0.3f; // w
-        private const float WallLip = 0.5f;        // how far walls rise above the silhouette top
+        private const float PosTol = 0.25f;                 // world units ⟨balancer⟩
+        private const float AngTol = 15f * (System.MathF.PI / 180f); // 15° in rad ⟨balancer⟩
+        private const float FloorThickness = 0.3f;
+
+        private static readonly Rect DefaultBounds = new Rect(new Vec2(-6f, -6f), new Vec2(6f, 10f));
+        private static readonly Vec2 DefaultGravity = new Vec2(0f, -9.81f);
 
         private readonly List<LevelData> _levels;
 
         public EmbeddedTestLevels()
         {
-            _levels = new List<LevelData> { BuildBoxSilhouette(), BuildWideSilhouette() };
+            _levels = new List<LevelData> { BuildTwoCubes(), BuildCircleHalves(), BuildHouse() };
         }
 
         public IReadOnlyList<LevelData> Levels => _levels;
         public LevelData Default => _levels[0];
 
-        // Level 1: fill a 2×2 square. Silhouette area = 4; pool = 6 unit boxes (area 6 ≈ 1.5× → margin).
-        private static LevelData BuildBoxSilhouette()
+        // (M1) two_cubes — two identical cubes stacked (the human's requested first playable figure).
+        private static LevelData BuildTwoCubes()
         {
-            var silhouette = new Polygon(new[]
+            var wood = new PieceType("wood_unit", Shape.Box(1f, 1f), Wood, symmetryOrder: 4);
+
+            var outline = new Polygon(new[]
             {
-                new Vec2(-1f, -1f),
-                new Vec2(1f, -1f),
-                new Vec2(1f, 1f),
-                new Vec2(-1f, 1f),
+                new Vec2(-0.5f, -0.5f),
+                new Vec2(0.5f, -0.5f),
+                new Vec2(0.5f, 1.5f),
+                new Vec2(-0.5f, 1.5f),
+            });
+            var target = new TargetFigure(outline, new[]
+            {
+                new TargetSlot("wood_unit", new Vec2(0f, 0f), 0f), // bottom
+                new TargetSlot("wood_unit", new Vec2(0f, 1f), 0f), // top
             });
 
             return new LevelData
             {
-                LevelId = "slice_box_2x2",
-                Silhouette = silhouette,
-                BlockPool = new List<BlockDef>
+                LevelId = "two_cubes",
+                Target = target,
+                Pieces = new[]
                 {
-                    new BlockDef("wood_unit", Shape.Box(1f, 1f), Wood, count: 6),
+                    new PiecePlacement(wood, new Vec2(0f, 3.0f)),
+                    new PiecePlacement(wood, new Vec2(0f, 4.5f)),
                 },
-                PoolOrdering = PoolOrdering.Fixed,
-                CoverageThreshold = 0.80f,
-                AttemptLimit = null,
-                MoveLimit = null,
-                DropSpawn = new Vec2(0f, 5f),
-                StaticGeometry = BuildContainer(-1f, 1f, -1f, 1f),
-                Bounds = new Rect(new Vec2(-6f, -6f), new Vec2(6f, 10f)),
-                Gravity = new Vec2(0f, -9.81f),
+                MatchTolerance = new MatchTolerance(PosTol, AngTol),
+                StaticGeometry = new[] { BuildFloor(-1.5f, 1.5f, -0.5f, FloorThickness) },
+                Decoys = null,
+                Bounds = DefaultBounds,
+                Gravity = DefaultGravity,
                 Seed = 1,
                 DifficultyTier = 1,
                 Source = LevelSourceKind.Authored,
             };
         }
 
-        // Level 2: fill a wide 3×1 strip. Silhouette area = 3; pool = 5 unit boxes (area 5 ≈ 1.6× → margin).
-        private static LevelData BuildWideSilhouette()
+        // (M2) circle_halves — a disc split into two halves. Bottom half sits dome-down in a cradle (rot π),
+        // top half domes up on it (rot 0). Cradle + numbers UNVERIFIED (needs level-sim; RFC §7.2).
+        private static LevelData BuildCircleHalves()
         {
-            var silhouette = new Polygon(new[]
+            var half = new PieceType("half_disc", Shape.HalfDisc(0.5f, 12), Wood, symmetryOrder: 1);
+
+            var outline = new Polygon(new[]
             {
-                new Vec2(-1.5f, -0.5f),
-                new Vec2(1.5f, -0.5f),
-                new Vec2(1.5f, 0.5f),
-                new Vec2(-1.5f, 0.5f),
+                new Vec2(-0.5f, -0.5f),
+                new Vec2(0.5f, -0.5f),
+                new Vec2(0.5f, 0.5f),
+                new Vec2(-0.5f, 0.5f),
+            });
+            var target = new TargetFigure(outline, new[]
+            {
+                new TargetSlot("half_disc", new Vec2(0f, 0f), System.MathF.PI), // bottom (dome down)
+                new TargetSlot("half_disc", new Vec2(0f, 0f), 0f),              // top (dome up)
             });
 
             return new LevelData
             {
-                LevelId = "slice_wide_3x1",
-                Silhouette = silhouette,
-                BlockPool = new List<BlockDef>
+                LevelId = "circle_halves",
+                Target = target,
+                Pieces = new[]
                 {
-                    new BlockDef("wood_unit", Shape.Box(1f, 1f), Wood, count: 5),
+                    new PiecePlacement(half, new Vec2(0f, 3.0f), System.MathF.PI),
+                    new PiecePlacement(half, new Vec2(0f, 4.5f), 0f),
                 },
-                PoolOrdering = PoolOrdering.Fixed,
-                CoverageThreshold = 0.80f,
-                DropSpawn = new Vec2(0f, 5f),
-                StaticGeometry = BuildContainer(-1.5f, 1.5f, -0.5f, 0.5f),
-                Bounds = new Rect(new Vec2(-6f, -6f), new Vec2(6f, 10f)),
-                Gravity = new Vec2(0f, -9.81f),
-                Seed = 2,
-                DifficultyTier = 1,
+                MatchTolerance = new MatchTolerance(PosTol, AngTol),
+                StaticGeometry = BuildCradle(-0.6f, 0.6f, -0.5f, FloorThickness),
+                Decoys = null,
+                Bounds = DefaultBounds,
+                Gravity = DefaultGravity,
+                Seed = 3,
+                DifficultyTier = 2,
                 Source = LevelSourceKind.Authored,
             };
         }
 
-        /// <summary>
-        /// Deterministic footprint→container rule (F1, RFC §3.1): three rectangular walls (floor + left +
-        /// right) placed OUTSIDE the silhouette bbox, open at the top (drop aperture). Inner faces align to
-        /// the bbox edges so the fillable interior is never narrowed → coverage≥θ stays reachable.
-        /// </summary>
-        private static Polygon[] BuildContainer(float minX, float maxX, float minY, float maxY)
+        // (M2) house — box base (■) + triangle roof (▲). Base must be released before the roof (order puzzle).
+        private static LevelData BuildHouse()
         {
-            const float w = WallThickness;
-            const float lip = WallLip;
-            var top = maxY + lip;
+            var wood = new PieceType("wood_unit", Shape.Box(1f, 1f), Wood, symmetryOrder: 4);
+            var roof = new PieceType("roof_tri", Shape.Triangle(1f, 1f), Wood, symmetryOrder: 1);
 
-            var floor = new Polygon(new[]
+            // House pentagon: box x[-0.5,0.5] y[-0.5,0.5] + triangle base y=0.5 apex (0,1.5).
+            var outline = new Polygon(new[]
             {
-                new Vec2(minX - w, minY - w),
-                new Vec2(maxX + w, minY - w),
-                new Vec2(maxX + w, minY),
-                new Vec2(minX - w, minY),
+                new Vec2(-0.5f, -0.5f),
+                new Vec2(0.5f, -0.5f),
+                new Vec2(0.5f, 0.5f),
+                new Vec2(0f, 1.5f),
+                new Vec2(-0.5f, 0.5f),
             });
+            var target = new TargetFigure(outline, new[]
+            {
+                new TargetSlot("wood_unit", new Vec2(0f, 0f), 0f), // base
+                new TargetSlot("roof_tri", new Vec2(0f, 1f), 0f),  // roof
+            });
+
+            return new LevelData
+            {
+                LevelId = "house",
+                Target = target,
+                Pieces = new[]
+                {
+                    new PiecePlacement(wood, new Vec2(0f, 3.0f)),
+                    new PiecePlacement(roof, new Vec2(0f, 4.5f)),
+                },
+                MatchTolerance = new MatchTolerance(PosTol, AngTol),
+                StaticGeometry = new[] { BuildFloor(-1.5f, 1.5f, -0.5f, FloorThickness) },
+                Decoys = null,
+                Bounds = DefaultBounds,
+                Gravity = DefaultGravity,
+                Seed = 2,
+                DifficultyTier = 2,
+                Source = LevelSourceKind.Authored,
+            };
+        }
+
+        /// <summary>A static floor plate: top edge at <paramref name="topY"/>, extending down by thickness (CCW).</summary>
+        private static Polygon BuildFloor(float minX, float maxX, float topY, float th)
+            => new Polygon(new[]
+            {
+                new Vec2(minX, topY - th),
+                new Vec2(maxX, topY - th),
+                new Vec2(maxX, topY),
+                new Vec2(minX, topY),
+            });
+
+        /// <summary>Floor + two low side walls forming a cradle so a dome-down half-disc does not roll away.</summary>
+        private static Polygon[] BuildCradle(float minX, float maxX, float topY, float th)
+        {
+            var floor = BuildFloor(minX, maxX, topY, th);
+            const float wallH = 0.6f;
             var leftWall = new Polygon(new[]
             {
-                new Vec2(minX - w, minY),
-                new Vec2(minX, minY),
-                new Vec2(minX, top),
-                new Vec2(minX - w, top),
+                new Vec2(minX - th, topY),
+                new Vec2(minX, topY),
+                new Vec2(minX, topY + wallH),
+                new Vec2(minX - th, topY + wallH),
             });
             var rightWall = new Polygon(new[]
             {
-                new Vec2(maxX, minY),
-                new Vec2(maxX + w, minY),
-                new Vec2(maxX + w, top),
-                new Vec2(maxX, top),
+                new Vec2(maxX, topY),
+                new Vec2(maxX + th, topY),
+                new Vec2(maxX + th, topY + wallH),
+                new Vec2(maxX, topY + wallH),
             });
-
             return new[] { floor, leftWall, rightWall };
         }
     }

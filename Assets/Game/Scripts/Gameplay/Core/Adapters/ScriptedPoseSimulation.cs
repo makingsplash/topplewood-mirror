@@ -21,14 +21,14 @@ namespace Gameplay.Core.Adapters
         private readonly Dictionary<int, Body> _bodies = new();
         private int _nextId = 1;
 
-        public int SpawnFloating(BlockDef def, Vec2 spawn)
+        public int SpawnFloating(PieceType type, Vec2 spawn, float rotation)
         {
             var id = _nextId++;
-            _bodies[id] = new Body { Pose = new BodyPose(spawn, 0f), Speed = 0f };
+            _bodies[id] = new Body { Pose = new BodyPose(spawn, rotation), Speed = 0f };
             return id;
         }
 
-        public int SpawnSettled(BlockDef def, Vec2 pos, float rotation)
+        public int SpawnSettled(PieceType type, Vec2 pos, float rotation)
         {
             var id = _nextId++;
             _bodies[id] = new Body { Pose = new BodyPose(pos, rotation), Speed = 0f };

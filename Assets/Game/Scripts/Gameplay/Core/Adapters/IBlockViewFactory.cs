@@ -1,8 +1,2 @@
-namespace Gameplay.Core.Adapters
-{
-    /// <summary>Creates a view for a block definition. Unity impl instantiates the block GameObject.</summary>
-    public interface IBlockViewFactory
-    {
-        IBlockView Create(BlockDef def);
-    }
-}
+// Superseded by the TASK-007 pivot — replaced by IPieceViewFactory.cs.
+// File neutralised (empty) because `rm` is unavailable in this sandbox; run `git rm` to remove it.

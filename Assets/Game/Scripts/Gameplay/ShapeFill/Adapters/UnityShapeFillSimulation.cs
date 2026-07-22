@@ -62,20 +62,24 @@ namespace Gameplay.Adapters
             }
         }
 
-        public int SpawnFloating(BlockDef def, Vec2 spawn)
+        public int SpawnFloating(PieceType type, Vec2 spawn, float rotation)
         {
-            var go = new GameObject($"Block_{def.Kind}_{_nextId}");
+            var go = new GameObject($"Piece_{type.Kind}_{_nextId}");
             go.transform.SetParent(Root, false);
             go.transform.position = new Vector3(spawn.X, spawn.Y, 0f);
+            go.transform.rotation = Quaternion.Euler(0f, 0f, rotation * Mathf.Rad2Deg);
 
             var collider = go.AddComponent<PolygonCollider2D>();
-            collider.points = ToPoints(def.Shape.Vertices);
-            collider.density = Mathf.Max(0.0001f, def.Material.Density);
-            collider.sharedMaterial = new PhysicsMaterial2D($"mat_{def.Kind}")
+            collider.points = ToPoints(type.Shape.Vertices);
+            collider.density = Mathf.Max(0.0001f, type.Material.Density);
+            collider.sharedMaterial = new PhysicsMaterial2D($"mat_{type.Kind}")
             {
-                friction = def.Material.Friction,
-                bounciness = def.Material.Restitution,
+                friction = type.Material.Friction,
+                bounciness = type.Material.Restitution,
             };
+            // Idle piece is physically absent: no collision so hanging pieces never block another's drop
+            // column (RFC §5.3). Release() re-enables the collider + gravity.
+            collider.enabled = false;
 
             var rb = go.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic;
@@ -89,25 +93,27 @@ namespace Gameplay.Adapters
             {
                 Rigidbody = rb,
                 Collider = collider,
-                Radius = Mathf.Max(0.0001f, collider.bounds.extents.magnitude),
+                // Collider is disabled while Idle, so its bounds are unreliable — derive the rest-speed radius
+                // from the shape vertices instead (used only for the angular-speed term in GetSpeed).
+                Radius = VertexRadius(type.Shape.Vertices),
             };
             return id;
         }
 
-        public int SpawnSettled(BlockDef def, Vec2 pos, float rotation)
+        public int SpawnSettled(PieceType type, Vec2 pos, float rotation)
         {
-            var go = new GameObject($"Block_{def.Kind}_{_nextId}");
+            var go = new GameObject($"Piece_{type.Kind}_{_nextId}");
             go.transform.SetParent(Root, false);
             go.transform.position = new Vector3(pos.X, pos.Y, 0f);
             go.transform.rotation = Quaternion.Euler(0f, 0f, rotation * Mathf.Rad2Deg);
 
             var collider = go.AddComponent<PolygonCollider2D>();
-            collider.points = ToPoints(def.Shape.Vertices);
-            collider.density = Mathf.Max(0.0001f, def.Material.Density);
-            collider.sharedMaterial = new PhysicsMaterial2D($"mat_{def.Kind}")
+            collider.points = ToPoints(type.Shape.Vertices);
+            collider.density = Mathf.Max(0.0001f, type.Material.Density);
+            collider.sharedMaterial = new PhysicsMaterial2D($"mat_{type.Kind}")
             {
-                friction = def.Material.Friction,
-                bounciness = def.Material.Restitution,
+                friction = type.Material.Friction,
+                bounciness = type.Material.Restitution,
             };
 
             var rb = go.AddComponent<Rigidbody2D>();
@@ -128,8 +134,11 @@ namespace Gameplay.Adapters
 
         public void Release(int bodyId)
         {
-            if (_bodies.TryGetValue(bodyId, out var body) && body.Rigidbody != null)
-                body.Rigidbody.gravityScale = 1f;
+            if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)
+                return;
+            if (body.Collider != null)
+                body.Collider.enabled = true; // materialise: Idle piece becomes physical (RFC §5.3)
+            body.Rigidbody.gravityScale = 1f;
         }
 
         public BodyPose GetPose(int bodyId)
@@ -212,6 +221,17 @@ namespace Gameplay.Adapters
             for (var i = 0; i < verts.Length; i++)
                 points[i] = new Vector2(verts[i].X, verts[i].Y);
             return points;
+        }
+
+        private static float VertexRadius(Vec2[] verts)
+        {
+            var max = 0.0001f;
+            foreach (var v in verts)
+            {
+                var r = v.Length;
+                if (r > max) max = r;
+            }
+            return max;
         }
     }
 }

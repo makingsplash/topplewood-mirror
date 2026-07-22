@@ -5,7 +5,7 @@ namespace Gameplay.Core
     /// <summary>
     /// Domain implementation of <see cref="IProgressSaver"/> (RFC §4.1): bridges <see cref="GameModel"/>
     /// capture/restore with the opaque <see cref="IShapeFillSaveStore"/>. Newtonsoft with stable field
-    /// names (schema v2). Restore returns false for an empty/foreign save so callers start fresh.
+    /// names (schema v3). Restore returns false for an empty/foreign save so callers start fresh.
     /// </summary>
     public sealed class ShapeFillProgressSaver : IProgressSaver
     {

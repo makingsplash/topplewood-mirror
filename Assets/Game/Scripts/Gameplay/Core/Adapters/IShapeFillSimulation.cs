@@ -7,16 +7,20 @@ namespace Gameplay.Core.Adapters
     /// </summary>
     public interface IShapeFillSimulation : IGameplaySimulation
     {
-        /// <summary>Spawn a body at rest (gravity off) and return its stable body id.</summary>
-        int SpawnFloating(BlockDef def, Vec2 spawn);
+        /// <summary>
+        /// Spawn an Idle piece: floating (gravity off) AND non-colliding (collider disabled) at the given
+        /// pose, so pre-placed pieces hang without blocking each other's drop column (RFC §5.3). Returns its
+        /// stable body id.
+        /// </summary>
+        int SpawnFloating(PieceType type, Vec2 spawn, float rotation);
 
         /// <summary>
-        /// Spawn a body already at rest in an exact pose (RFC §4.3, save rehydration). The body does not
-        /// re-simulate — its pose (and thus coverage) is preserved exactly. Returns its stable body id.
+        /// Spawn a body already at rest in an exact pose (RFC §8, save rehydration). The body does not
+        /// re-simulate — its pose is preserved exactly and it can support other pieces. Returns its body id.
         /// </summary>
-        int SpawnSettled(BlockDef def, Vec2 pos, float rotation);
+        int SpawnSettled(PieceType type, Vec2 pos, float rotation);
 
-        /// <summary>Enable gravity → the body starts falling.</summary>
+        /// <summary>Materialise a floating piece: enable its collider AND gravity → it starts falling.</summary>
         void Release(int bodyId);
 
         BodyPose GetPose(int bodyId);

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 namespace Gameplay.Core
 {
     /// <summary>
-    /// Structural, deterministic level-schema validator (RFC §5). Catches broken schema only — statistical
+    /// Structural, deterministic level-schema validator (RFC §7.3). Catches broken schema only — statistical
     /// solvability (pass-rate over seeded strategies) is level-sim's job (GAME_RULES §4), not this.
+    /// TASK-007 pivot: target figure + pre-placed pieces + pose tolerance (no coverage/pool checks).
     /// </summary>
     public sealed class LevelDataValidator
     {
@@ -18,81 +19,92 @@ namespace Gameplay.Core
                 return new ValidationResult(errors);
             }
 
-            // 1. Silhouette structural sanity.
-            var region = ValidateSilhouette(level, errors);
+            // 1. Target figure: outline ≥3 verts, non-empty slots.
+            ValidateTarget(level, errors);
 
-            // 2. Coverage threshold in (0,1].
-            if (level.CoverageThreshold <= 0f || level.CoverageThreshold > 1f)
-                errors.Add($"CoverageThreshold must be in (0,1]; was {level.CoverageThreshold}.");
+            // 2. Pieces: non-empty, each shape ≥3 verts, non-negative material, start pose in Bounds.
+            ValidatePieces(level, errors);
 
-            // 3. Pool + shapes + material sanity.
-            var totalBlockArea = ValidatePool(level, errors);
+            // 3. Kind coverage: for every slot Kind there must be at least as many pieces of that Kind.
+            ValidateKindCoverage(level, errors);
 
-            // 4. Lower-bound solvability sanity: Σ block area ≥ silhouette area · θ.
-            if (region != null && level.CoverageThreshold > 0f)
-            {
-                var needed = region.Area * level.CoverageThreshold;
-                if (totalBlockArea < needed)
-                    errors.Add($"Pool area {totalBlockArea:0.###} < silhouette·θ {needed:0.###} — level is unwinnable.");
-            }
+            // 4. Tolerance: PosTol > 0, AngTol ≥ 0.
+            if (level.MatchTolerance.PosTol <= 0f)
+                errors.Add($"MatchTolerance.PosTol must be > 0; was {level.MatchTolerance.PosTol}.");
+            if (level.MatchTolerance.AngTol < 0f)
+                errors.Add($"MatchTolerance.AngTol must be ≥ 0; was {level.MatchTolerance.AngTol}.");
 
-            // 5. Bounds / drop spawn / gravity.
+            // 5. Bounds / gravity.
             if (level.Bounds.IsDegenerate)
                 errors.Add("Bounds are degenerate.");
-            if (level.DropSpawn.HasValue && !level.Bounds.Contains(level.DropSpawn.Value))
-                errors.Add("DropSpawn is outside Bounds.");
             if (level.Gravity.SqrLength <= 0f)
                 errors.Add("Gravity must be non-zero.");
 
             return new ValidationResult(errors);
         }
 
-        private static PolygonSilhouetteRegion ValidateSilhouette(LevelData level, List<string> errors)
+        private static void ValidateTarget(LevelData level, List<string> errors)
         {
-            if (level.Silhouette?.Outline == null || level.Silhouette.Outline.Length < 3)
+            if (level.Target == null)
             {
-                errors.Add("Silhouette outline must have at least 3 vertices.");
-                return null;
+                errors.Add("Target figure is null.");
+                return;
             }
-
-            var region = new PolygonSilhouetteRegion(level.Silhouette);
-            if (region.Area <= 0f)
-                errors.Add("Silhouette area must be positive (degenerate outline).");
-            return region;
+            if (level.Target.Outline?.Outline == null || level.Target.Outline.Outline.Length < 3)
+                errors.Add("Target outline must have at least 3 vertices.");
+            if (level.Target.Slots == null || level.Target.Slots.Count == 0)
+                errors.Add("Target has no slots.");
         }
 
-        private static float ValidatePool(LevelData level, List<string> errors)
+        private static void ValidatePieces(LevelData level, List<string> errors)
         {
-            if (level.BlockPool == null || level.BlockPool.Count == 0)
+            if (level.Pieces == null || level.Pieces.Count == 0)
             {
-                errors.Add("BlockPool is empty.");
-                return 0f;
+                errors.Add("Pieces list is empty.");
+                return;
             }
 
-            var total = 0f;
-            for (var i = 0; i < level.BlockPool.Count; i++)
+            for (var i = 0; i < level.Pieces.Count; i++)
             {
-                var def = level.BlockPool[i];
-                if (def.Shape?.Vertices == null || def.Shape.Vertices.Length < 3)
+                var type = level.Pieces[i].Type;
+                if (type == null)
                 {
-                    errors.Add($"BlockPool[{i}] '{def?.Kind}' has an invalid shape (need ≥3 vertices).");
+                    errors.Add($"Pieces[{i}] has a null type.");
                     continue;
                 }
-                if (def.Material.Density < 0f || def.Material.Friction < 0f || def.Material.Restitution < 0f)
-                    errors.Add($"BlockPool[{i}] '{def.Kind}' has a negative material field.");
-
-                total += ShapeArea(def.Shape) * def.Count;
+                if (type.Shape?.Vertices == null || type.Shape.Vertices.Length < 3)
+                    errors.Add($"Pieces[{i}] '{type.Kind}' has an invalid shape (need ≥3 vertices).");
+                if (type.Material.Density < 0f || type.Material.Friction < 0f || type.Material.Restitution < 0f)
+                    errors.Add($"Pieces[{i}] '{type.Kind}' has a negative material field.");
+                if (!level.Bounds.Contains(level.Pieces[i].StartPosition))
+                    errors.Add($"Pieces[{i}] '{type.Kind}' start position is outside Bounds.");
             }
-            return total;
         }
 
-        private static float ShapeArea(Shape shape)
+        private static void ValidateKindCoverage(LevelData level, List<string> errors)
         {
-            var verts = shape.Vertices;
-            var sum = 0f;
-            for (int i = 0, j = verts.Length - 1; i < verts.Length; j = i++)
-                sum += (verts[j].X * verts[i].Y) - (verts[i].X * verts[j].Y);
-            return System.MathF.Abs(sum) * 0.5f;
+            if (level.Target?.Slots == null || level.Pieces == null)
+                return;
+
+            var slotCounts = new Dictionary<string, int>();
+            foreach (var slot in level.Target.Slots)
+                slotCounts[slot.Kind] = slotCounts.TryGetValue(slot.Kind, out var c) ? c + 1 : 1;
+
+            var pieceCounts = new Dictionary<string, int>();
+            foreach (var placement in level.Pieces)
+            {
+                var kind = placement.Type?.Kind;
+                if (kind == null)
+                    continue;
+                pieceCounts[kind] = pieceCounts.TryGetValue(kind, out var c) ? c + 1 : 1;
+            }
+
+            foreach (var kv in slotCounts)
+            {
+                pieceCounts.TryGetValue(kv.Key, out var have);
+                if (have < kv.Value)
+                    errors.Add($"Kind '{kv.Key}': {kv.Value} slot(s) but only {have} piece(s) — unwinnable.");
+            }
         }
     }
 }

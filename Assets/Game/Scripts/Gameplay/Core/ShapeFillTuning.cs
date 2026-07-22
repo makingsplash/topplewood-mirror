@@ -10,11 +10,8 @@ namespace Gameplay.Core
         /// <summary>ε — rest speed threshold, domain units/s (max(|lin|,|ang|·r)).</summary>
         public float RestSpeedEpsilon { get; set; } = 0.05f;
 
-        /// <summary>T — how long a body must stay below ε before it counts as Settled.</summary>
+        /// <summary>T — how long a body must stay below ε before it counts as Placed.</summary>
         public float RestDurationSeconds { get; set; } = 0.5f;
-
-        /// <summary>N — sample-grid resolution per axis for coverage.</summary>
-        public int CoverageSampleN { get; set; } = 64;
 
         /// <summary>Fixed simulation step (s). Acceleration is by step COUNT, never by enlarging this.</summary>
         public float FixedStep { get; set; } = 1f / 60f;

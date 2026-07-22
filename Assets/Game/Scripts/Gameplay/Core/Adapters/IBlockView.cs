@@ -1,13 +1,2 @@
-namespace Gameplay.Core.Adapters
-{
-    /// <summary>
-    /// View seam for a single block — the domain never sees a MonoBehaviour. Unity impl syncs a mesh
-    /// from the mirrored pose each frame and can react to life-cycle changes (juice on settle).
-    /// </summary>
-    public interface IBlockView
-    {
-        void Sync(Vec2 position, float rotation);
-        void SetState(BlockLifecycle state);
-        void Dispose();
-    }
-}
+// Superseded by the TASK-007 pivot — replaced by IPieceView.cs.
+// File neutralised (empty) because `rm` is unavailable in this sandbox; run `git rm` to remove it.

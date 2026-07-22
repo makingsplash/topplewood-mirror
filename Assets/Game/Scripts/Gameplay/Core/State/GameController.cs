@@ -49,7 +49,7 @@ namespace Gameplay.Core
             _inputSubscription = _inputSource.Intents.Subscribe(OnIntent);
 
             var level = _levelSource.Load();
-            _model.LoadLevel(level); // mechanic reacts to LevelLoaded: installs statics, spawns first block.
+            _model.LoadLevel(level); // mechanic reacts to LevelLoaded: installs statics, pre-places all pieces.
 
             // Save round-trip (RFC §4.1): restore onto the freshly-loaded level; no-op if there is no
             // (or a foreign) save, in which case the fresh level stands.

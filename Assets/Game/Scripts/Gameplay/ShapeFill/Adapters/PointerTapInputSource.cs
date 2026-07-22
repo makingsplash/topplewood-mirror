@@ -9,9 +9,9 @@ namespace Gameplay.Adapters
     /// <summary>
     /// Raw one-tap input source for the isolated bringup scope (RFC §2.3): reads the new Input System
     /// <see cref="Pointer"/> directly (mouse or touch) with no <c>IInputService</c>/<c>Data</c> dependency.
-    /// One press = one <see cref="InputIntent"/>. The press position is projected through the main camera to
-    /// a world-space X (v0 drop mechanic, TASK-007 rework): the tap chooses the drop column so blocks can
-    /// spread across the silhouette. Ticked as a VContainer entry point.
+    /// One press = one <see cref="InputIntent"/>. The press position is projected through the main camera to a
+    /// world-space point (X,Y) (TASK-007 pivot): the domain hit-tests which Idle piece was tapped and releases
+    /// it. Ticked as a VContainer entry point.
     /// </summary>
     public sealed class PointerTapInputSource : IGameplayInputSource, ITickable
     {
@@ -34,6 +34,7 @@ namespace Gameplay.Adapters
                 return;
 
             var worldX = 0f;
+            var worldY = 0f;
             var camera = ResolveCamera();
             if (camera != null)
             {
@@ -42,9 +43,10 @@ namespace Gameplay.Adapters
                 // stays correct if the camera ever goes perspective).
                 var world = camera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -camera.transform.position.z));
                 worldX = world.x;
+                worldY = world.y;
             }
 
-            _intents.OnNext(new InputIntent(worldX, 0f));
+            _intents.OnNext(new InputIntent(worldX, worldY));
         }
 
         private UnityEngine.Camera ResolveCamera()

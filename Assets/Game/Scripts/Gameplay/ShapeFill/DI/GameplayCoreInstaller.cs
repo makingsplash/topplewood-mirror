@@ -34,9 +34,9 @@ namespace Gameplay.DI
                 .As<IShapeFillSimulation>()
                 .As<IGameplaySimulation>();
 
-            builder.Register<ICoverageEvaluator, SampleGridCoverageEvaluator>(Lifetime.Singleton);
+            builder.Register<IMatchEvaluator, PoseMatchEvaluator>(Lifetime.Singleton);
             builder.Register<LevelDataValidator>(Lifetime.Singleton);
-            builder.Register<IBlockViewFactory, BlockViewFactory>(Lifetime.Singleton);
+            builder.Register<IPieceViewFactory, PieceViewFactory>(Lifetime.Singleton);
             // IGameplayInputSource is bound by the hosting scope (prod: InputService-backed; bringup: raw
             // pointer) so this core installer stays context-independent (RFC §2.3).
 
