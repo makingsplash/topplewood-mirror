@@ -19,6 +19,7 @@ namespace Gameplay.View
         private readonly GameModel _model;
         private readonly List<GameObject> _ghosts = new();
         private IDisposable _subscription;
+        private IDisposable _outcomeSubscription;
 
         public ShapeFillPresenter(GameModel model)
         {
@@ -28,6 +29,14 @@ namespace Gameplay.View
         public void Start()
         {
             _subscription = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
+
+            // Gray-box outcome feedback (no UI yet): the domain resolves Won/Lost silently, so surface each
+            // transition once via the console. Outcome is a ReactiveProperty (None → Won|Lost), so it only emits
+            // on change and re-loading a level resets it to None — filtering None gives exactly one log per result.
+            _outcomeSubscription = _model.Outcome
+                .Where(outcome => outcome != GameOutcome.None)
+                .Subscribe(outcome => Debug.Log(
+                    outcome == GameOutcome.Won ? "[ShapeFill] LEVEL WON" : "[ShapeFill] LEVEL LOST"));
 
             // A level may already be loaded before this entry point starts: GameControllerRunner is registered
             // first and its Start() calls LoadLevel(), which fires LevelLoaded synchronously. Render the current
@@ -91,6 +100,8 @@ namespace Gameplay.View
         {
             _subscription?.Dispose();
             _subscription = null;
+            _outcomeSubscription?.Dispose();
+            _outcomeSubscription = null;
             ClearGhosts();
         }
     }
