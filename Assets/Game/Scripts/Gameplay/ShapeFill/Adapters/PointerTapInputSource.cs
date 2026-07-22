@@ -3,7 +3,6 @@ using R3;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer.Unity;
-using Camera = UnityEngine.Camera; // disambiguate from a package "Camera" namespace in scope
 
 namespace Gameplay.Adapters
 {
@@ -18,7 +17,10 @@ namespace Gameplay.Adapters
     {
         private readonly Subject<InputIntent> _intents = new();
 
-        private Camera _camera;
+        // Fully qualified on purpose: the enclosing Gameplay namespace has a sibling namespace
+        // Gameplay.Camera, so the simple name "Camera" binds to that namespace (CS0118). A using-alias
+        // does not win over the enclosing-namespace member, so we spell out UnityEngine.Camera everywhere.
+        private UnityEngine.Camera _camera;
 
         public Observable<InputIntent> Intents => _intents;
 
@@ -45,10 +47,10 @@ namespace Gameplay.Adapters
             _intents.OnNext(new InputIntent(worldX, 0f));
         }
 
-        private Camera ResolveCamera()
+        private UnityEngine.Camera ResolveCamera()
         {
             if (_camera == null)
-                _camera = Camera.main;
+                _camera = UnityEngine.Camera.main;
             return _camera;
         }
     }
