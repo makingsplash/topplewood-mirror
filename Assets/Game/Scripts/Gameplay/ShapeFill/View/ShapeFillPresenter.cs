@@ -24,6 +24,11 @@ namespace Gameplay.View
         public void Start()
         {
             _subscription = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
+
+            // A level may already be loaded before this entry point starts: GameControllerRunner is
+            // registered first and its Start() calls LoadLevel(), which fires LevelLoaded synchronously.
+            // Render the current level now so the silhouette isn't missed (OnLevelLoaded self-guards on null).
+            OnLevelLoaded();
         }
 
         private void OnLevelLoaded()
