@@ -42,7 +42,7 @@ namespace Gameplay.Core.Sim
             _mechanic = new ShapeFillMechanicController(
                 _model, simulation, _match, new LevelDataValidator(), new NullPieceViewFactory(), tuning);
             _controller = new GameController(
-                new FixedLevelSource(level), _model, _mechanic, simulation, _clock, _input, new NullProgressSaver());
+                new FixedLevelSource(level), _model, _mechanic, simulation, _clock, _input);
 
             _outcomeSub = _model.Outcome.Subscribe(o => _outcome = o);
             _controller.Start(); // mechanic reacts to LevelLoaded → pre-places every piece Idle

@@ -10,6 +10,8 @@ namespace Gameplay.Core.Sim
 
         public FixedLevelSource(LevelData level) => _level = level;
 
-        public LevelData Load() => _level;
+        public int Count => 1;
+
+        public LevelData Load(int index) => _level;
     }
 }

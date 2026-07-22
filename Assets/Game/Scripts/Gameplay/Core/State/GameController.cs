@@ -17,7 +17,6 @@ namespace Gameplay.Core
         private readonly IGameplaySimulation _simulation;
         private readonly IGameplayClock _clock;
         private readonly IGameplayInputSource _inputSource;
-        private readonly IProgressSaver _progressSaver;
 
         private IDisposable _inputSubscription;
         private bool _started;
@@ -28,8 +27,7 @@ namespace Gameplay.Core
             IMechanicController mechanic,
             IGameplaySimulation simulation,
             IGameplayClock clock,
-            IGameplayInputSource inputSource,
-            IProgressSaver progressSaver)
+            IGameplayInputSource inputSource)
         {
             _levelSource = levelSource;
             _model = model;
@@ -37,7 +35,6 @@ namespace Gameplay.Core
             _simulation = simulation;
             _clock = clock;
             _inputSource = inputSource;
-            _progressSaver = progressSaver;
         }
 
         public void Start()
@@ -48,12 +45,20 @@ namespace Gameplay.Core
 
             _inputSubscription = _inputSource.Intents.Subscribe(OnIntent);
 
-            var level = _levelSource.Load();
-            _model.LoadLevel(level); // mechanic reacts to LevelLoaded: installs statics, pre-places all pieces.
+            // Load the first level; the campaign controller (if present) resumes to the persisted index and
+            // drives subsequent reloads. In-level progress is NOT restored (TASK-009: kill mid-level = fresh).
+            ReloadLevel(0);
+        }
 
-            // Save round-trip (RFC §4.1): restore onto the freshly-loaded level; no-op if there is no
-            // (or a foreign) save, in which case the fresh level stands.
-            _progressSaver.TryRestore();
+        /// <summary>
+        /// Load level <paramref name="index"/> from scratch (TASK-009). Re-entrant: the mechanic's LevelLoaded
+        /// handler already clears the runtime, resets the simulation, reloads statics and re-spawns, so
+        /// advancing/retrying needs no extra teardown (dev-architect 17:25 §4).
+        /// </summary>
+        public void ReloadLevel(int index)
+        {
+            var level = _levelSource.Load(index);
+            _model.LoadLevel(level); // mechanic reacts to LevelLoaded: installs statics, pre-places all pieces.
         }
 
         public void Tick(float dt)

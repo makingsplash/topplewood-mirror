@@ -28,7 +28,15 @@ namespace Gameplay.DI
 
             // Mechanic seams (replace Null/Empty stubs).
             builder.Register<IMechanicController, ShapeFillMechanicController>(Lifetime.Singleton);
-            builder.Register<ILevelSource, ShapeFillLevelSource>(Lifetime.Singleton);
+
+            // Level storage (TASK-009): authored JSON in StreamingAssets read through the ILevelStore seam,
+            // replacing the hardcoded ShapeFillLevelSource (the human's 15:04 "storage system" mandate).
+            builder.Register<ILevelStore, StreamingAssetsLevelStore>(Lifetime.Singleton);
+            builder.Register<ILevelSource, JsonLevelSource>(Lifetime.Singleton);
+
+            // Campaign progression + meta-pointer persistence (TASK-009). ICampaignStore is separate from the
+            // in-level IShapeFillSaveStore; only the level number is saved (kill mid-level = level from scratch).
+            builder.Register<ICampaignStore, FileCampaignStore>(Lifetime.Singleton);
 
             // Physics adapter: one instance seen as both the generic seam and the shape_fill contract.
             builder.Register<UnityShapeFillSimulation>(Lifetime.Singleton)
@@ -44,6 +52,9 @@ namespace Gameplay.DI
             builder.Register<GameController>(Lifetime.Singleton);
 
             builder.RegisterEntryPoint<GameControllerRunner>();
+            // After the runner loads level 0, this resumes the persisted campaign index and drives WIN→next /
+            // LOSS→retry reloads (TASK-009). Registered before the presenters so they render the resumed level.
+            builder.RegisterEntryPoint<CampaignProgressionController>();
             builder.RegisterEntryPoint<ShapeFillPresenter>();
             builder.RegisterEntryPoint<TargetPreviewPresenter>();
         }

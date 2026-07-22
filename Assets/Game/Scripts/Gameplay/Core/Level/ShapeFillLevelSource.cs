@@ -1,8 +1,10 @@
 namespace Gameplay.Core
 {
     /// <summary>
-    /// Fills the <c>ILevelSource</c> seam for shape_fill. v0 serves an embedded test level (the default);
-    /// authored/generated content is a later task.
+    /// Embedded-backed <see cref="ILevelSource"/>: serves the in-code <see cref="IEmbeddedLevels"/> as an
+    /// ordered campaign. TASK-009 ships authored JSON content via <see cref="JsonLevelSource"/> (the bound
+    /// impl); this remains a valid engine-free fallback over the hardcoded levels (and the source the
+    /// level-sim harness exercises).
     /// </summary>
     public sealed class ShapeFillLevelSource : ILevelSource
     {
@@ -13,6 +15,16 @@ namespace Gameplay.Core
             _levels = levels;
         }
 
-        public LevelData Load() => _levels.Default;
+        public int Count => _levels.Levels.Count;
+
+        public LevelData Load(int index)
+        {
+            var levels = _levels.Levels;
+            if (index < 0)
+                index = 0;
+            else if (index >= levels.Count)
+                index = levels.Count - 1;
+            return levels[index];
+        }
     }
 }

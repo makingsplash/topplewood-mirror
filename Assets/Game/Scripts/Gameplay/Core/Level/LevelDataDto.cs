@@ -1,0 +1,190 @@
+using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+
+namespace Gameplay.Core
+{
+    /// <summary>
+    /// Serialization layer for authored levels (TASK-009): the JSON storage shape, kept OUT of the clean
+    /// domain <see cref="LevelData"/>. Newtonsoft with stable field names, Unity-free. The human mandate
+    /// (comment 15:04) — "levels are hardcoded, design a storage system and assemble levels in it" — is met
+    /// by hand-authored JSON in StreamingAssets (see <c>shapefill_levels.json</c>) mapped here to the domain.
+    /// One file groups the small related POCOs (mirrors <c>GameSnapshot.cs</c>).
+    /// </summary>
+    public sealed class CampaignFileDto
+    {
+        public const int CurrentSchemaVersion = 1;
+
+        [JsonProperty("schemaVersion")] public int SchemaVersion { get; set; } = CurrentSchemaVersion;
+        [JsonProperty("levels")] public List<LevelDataDto> Levels { get; set; } = new();
+    }
+
+    /// <summary>One authored level. <c>pieceTypes</c> is a per-level catalogue keyed by <c>kind</c>; both
+    /// <c>pieces</c> and target <c>slots</c> reference a kind (mirrors the identity-agnostic domain match).</summary>
+    public sealed class LevelDataDto
+    {
+        [JsonProperty("levelId")] public string LevelId { get; set; }
+        [JsonProperty("seed")] public int Seed { get; set; }
+        [JsonProperty("difficultyTier")] public int DifficultyTier { get; set; }
+        [JsonProperty("matchTolerance")] public MatchToleranceDto MatchTolerance { get; set; }
+        [JsonProperty("bounds")] public RectDto Bounds { get; set; }
+        [JsonProperty("gravity")] public Vec2Dto Gravity { get; set; }
+        [JsonProperty("pieceTypes")] public List<PieceTypeDto> PieceTypes { get; set; } = new();
+        [JsonProperty("target")] public TargetFigureDto Target { get; set; }
+        [JsonProperty("pieces")] public List<PiecePlacementDto> Pieces { get; set; } = new();
+        [JsonProperty("staticGeometry")] public List<PolygonDto> StaticGeometry { get; set; } = new();
+
+        public LevelData ToDomain()
+        {
+            var types = new Dictionary<string, PieceType>(StringComparer.Ordinal);
+            foreach (var t in PieceTypes)
+            {
+                if (t == null || string.IsNullOrEmpty(t.Kind))
+                    throw new InvalidOperationException($"Level '{LevelId}': a pieceType has no kind.");
+                types[t.Kind] = t.ToDomain();
+            }
+
+            var slots = new List<TargetSlot>(Target?.Slots?.Count ?? 0);
+            if (Target?.Slots != null)
+                foreach (var s in Target.Slots)
+                    slots.Add(new TargetSlot(s.Kind, s.Position.ToDomain(), s.Rotation));
+
+            var pieces = new List<PiecePlacement>(Pieces.Count);
+            foreach (var p in Pieces)
+            {
+                if (!types.TryGetValue(p.Kind, out var type))
+                    throw new InvalidOperationException(
+                        $"Level '{LevelId}': piece references unknown kind '{p.Kind}'.");
+                pieces.Add(new PiecePlacement(type, p.StartPosition.ToDomain(), p.StartRotation));
+            }
+
+            var statics = new Polygon[StaticGeometry.Count];
+            for (var i = 0; i < StaticGeometry.Count; i++)
+                statics[i] = StaticGeometry[i].ToDomain();
+
+            return new LevelData
+            {
+                LevelId = LevelId,
+                Target = new TargetFigure(new Polygon(Target.ToOutlineVertices()), slots),
+                Pieces = pieces,
+                MatchTolerance = MatchTolerance.ToDomain(),
+                StaticGeometry = statics,
+                Decoys = null,
+                Bounds = Bounds.ToDomain(),
+                Gravity = Gravity.ToDomain(),
+                Seed = Seed,
+                DifficultyTier = DifficultyTier,
+                Source = LevelSourceKind.Authored,
+            };
+        }
+    }
+
+    public sealed class Vec2Dto
+    {
+        [JsonProperty("x")] public float X { get; set; }
+        [JsonProperty("y")] public float Y { get; set; }
+
+        public Vec2 ToDomain() => new Vec2(X, Y);
+    }
+
+    public sealed class RectDto
+    {
+        [JsonProperty("min")] public Vec2Dto Min { get; set; }
+        [JsonProperty("max")] public Vec2Dto Max { get; set; }
+
+        public Rect ToDomain() => new Rect(Min.ToDomain(), Max.ToDomain());
+    }
+
+    public sealed class MatchToleranceDto
+    {
+        [JsonProperty("posTol")] public float PosTol { get; set; }
+        [JsonProperty("angTol")] public float AngTol { get; set; }
+
+        public MatchTolerance ToDomain() => new MatchTolerance(PosTol, AngTol);
+    }
+
+    public sealed class MaterialProfileDto
+    {
+        [JsonProperty("density")] public float Density { get; set; }
+        [JsonProperty("friction")] public float Friction { get; set; }
+        [JsonProperty("restitution")] public float Restitution { get; set; }
+
+        public MaterialProfile ToDomain() => new MaterialProfile(Density, Friction, Restitution);
+    }
+
+    /// <summary>A convex primitive, reconstructed via the <see cref="Shape"/> factories (no raw vertex lists
+    /// to author). Discriminated by <c>primitive</c>: box | triangle | halfdisc.</summary>
+    public sealed class ShapeDto
+    {
+        [JsonProperty("primitive")] public string Primitive { get; set; }
+        [JsonProperty("width")] public float Width { get; set; }
+        [JsonProperty("height")] public float Height { get; set; }
+        [JsonProperty("radius")] public float Radius { get; set; }
+        [JsonProperty("segments")] public int Segments { get; set; } = 12;
+
+        public Shape ToDomain()
+        {
+            switch (Primitive)
+            {
+                case "box": return Shape.Box(Width, Height);
+                case "triangle": return Shape.Triangle(Width, Height);
+                case "halfdisc": return Shape.HalfDisc(Radius, Segments);
+                default:
+                    throw new InvalidOperationException($"Unknown shape primitive '{Primitive}'.");
+            }
+        }
+    }
+
+    public sealed class PieceTypeDto
+    {
+        [JsonProperty("kind")] public string Kind { get; set; }
+        [JsonProperty("color")] public string Color { get; set; }
+        [JsonProperty("symmetryOrder")] public int SymmetryOrder { get; set; } = 1;
+        [JsonProperty("material")] public MaterialProfileDto Material { get; set; }
+        [JsonProperty("shape")] public ShapeDto Shape { get; set; }
+
+        public PieceType ToDomain()
+            => new PieceType(Kind, Shape.ToDomain(), Material.ToDomain(), Color, SymmetryOrder);
+    }
+
+    public sealed class PiecePlacementDto
+    {
+        [JsonProperty("kind")] public string Kind { get; set; }
+        [JsonProperty("startPosition")] public Vec2Dto StartPosition { get; set; }
+        [JsonProperty("startRotation")] public float StartRotation { get; set; }
+    }
+
+    public sealed class TargetSlotDto
+    {
+        [JsonProperty("kind")] public string Kind { get; set; }
+        [JsonProperty("position")] public Vec2Dto Position { get; set; }
+        [JsonProperty("rotation")] public float Rotation { get; set; }
+    }
+
+    public sealed class TargetFigureDto
+    {
+        [JsonProperty("outline")] public List<Vec2Dto> Outline { get; set; } = new();
+        [JsonProperty("slots")] public List<TargetSlotDto> Slots { get; set; } = new();
+
+        public Vec2[] ToOutlineVertices()
+        {
+            var verts = new Vec2[Outline.Count];
+            for (var i = 0; i < Outline.Count; i++)
+                verts[i] = Outline[i].ToDomain();
+            return verts;
+        }
+    }
+
+    public sealed class PolygonDto
+    {
+        [JsonProperty("outline")] public List<Vec2Dto> Outline { get; set; } = new();
+
+        public Polygon ToDomain()
+        {
+            var verts = new Vec2[Outline.Count];
+            for (var i = 0; i < Outline.Count; i++)
+                verts[i] = Outline[i].ToDomain();
+            return new Polygon(verts);
+        }
+    }
+}
