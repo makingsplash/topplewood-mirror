@@ -13,7 +13,7 @@ namespace Gameplay.View
     /// </summary>
     public sealed class TargetPreviewView : MonoBehaviour
     {
-        private static readonly Color DefaultColor = new Color(0.78f, 0.56f, 0.31f); // wood, mirrors PieceView
+        private static readonly Color DefaultColor = new Color(0.29f, 0.56f, 0.89f); // blue, mirrors PieceView
 
         public void Initialize(
             TargetFigure target,

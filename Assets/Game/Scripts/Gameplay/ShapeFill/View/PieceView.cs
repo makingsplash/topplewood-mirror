@@ -12,7 +12,7 @@ namespace Gameplay.View
     /// </summary>
     public sealed class PieceView : MonoBehaviour, IPieceView
     {
-        private static readonly Color DefaultColor = new Color(0.78f, 0.56f, 0.31f); // wood
+        private static readonly Color DefaultColor = new Color(0.29f, 0.56f, 0.89f); // blue (TargetPreviewView mirrors this)
 
         private MeshRenderer _renderer;
         private MaterialPropertyBlock _mpb;
