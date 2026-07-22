@@ -29,6 +29,8 @@ namespace Gameplay.Core.Mechanic
         private IDisposable _stateRestoredSub;
         private LevelData _level;
         private ISilhouetteRegion _region;
+        private float _silhouetteMinX;
+        private float _silhouetteMaxX;
 
         public ShapeFillMechanicController(
             GameModel model,
@@ -62,6 +64,7 @@ namespace Gameplay.Core.Mechanic
             }
 
             _region = new PolygonSilhouetteRegion(_level.Silhouette);
+            CacheSilhouetteSpan();
 
             _bodyByInstance.Clear();
             _viewByInstance.Clear();
@@ -85,6 +88,7 @@ namespace Gameplay.Core.Mechanic
         {
             _level = _model.CurrentLevel;
             _region = new PolygonSilhouetteRegion(_level.Silhouette);
+            CacheSilhouetteSpan();
 
             foreach (var view in _viewByInstance.Values)
                 view.Dispose();
@@ -125,7 +129,20 @@ namespace Gameplay.Core.Mechanic
             if (floating == null)
                 return;
 
-            _simulation.Release(_bodyByInstance[floating.InstanceId]);
+            // v0 drop mechanic (TASK-007 rework): the tap picks the drop column. Move the floating block to
+            // the tapped world-X (clamped to the silhouette span) before releasing, so blocks spread across
+            // the shape and coverage can reach θ instead of stacking in one fixed column. intent.X is a
+            // world/level X — PointerTapInputSource already projected the screen tap through the camera.
+            var def = _defByInstance[floating.InstanceId];
+            var dropPos = new Vec2(ClampDropX(intent.X, def), floating.Position.Y);
+
+            _simulation.Despawn(_bodyByInstance[floating.InstanceId]);
+            var bodyId = _simulation.SpawnFloating(def, dropPos);
+            _bodyByInstance[floating.InstanceId] = bodyId;
+            floating.Position = dropPos;
+            _viewByInstance[floating.InstanceId].Sync(dropPos, 0f);
+
+            _simulation.Release(bodyId);
             floating.State = BlockLifecycle.Falling;
             floating.RestTimer = 0f;
             _viewByInstance[floating.InstanceId].SetState(BlockLifecycle.Falling);
@@ -266,6 +283,47 @@ namespace Gameplay.Core.Mechanic
             view.SetState(BlockLifecycle.Floating);
             view.Sync(spawn, 0f);
             _viewByInstance[block.InstanceId] = view;
+        }
+
+        private void CacheSilhouetteSpan()
+        {
+            var min = float.MaxValue;
+            var max = float.MinValue;
+            foreach (var v in _level.Silhouette.Outline)
+            {
+                if (v.X < min) min = v.X;
+                if (v.X > max) max = v.X;
+            }
+            _silhouetteMinX = min;
+            _silhouetteMaxX = max;
+        }
+
+        /// <summary>
+        /// Clamp the tapped world-X to the drop column range so the whole block footprint lands inside the
+        /// silhouette (v0). If the block is wider than the silhouette it is centred.
+        /// </summary>
+        private float ClampDropX(float worldX, BlockDef def)
+        {
+            var half = ShapeHalfWidth(def.Shape);
+            var lo = _silhouetteMinX + half;
+            var hi = _silhouetteMaxX - half;
+            if (lo > hi)
+                return (_silhouetteMinX + _silhouetteMaxX) * 0.5f;
+            if (worldX < lo) return lo;
+            if (worldX > hi) return hi;
+            return worldX;
+        }
+
+        private static float ShapeHalfWidth(Shape shape)
+        {
+            var min = float.MaxValue;
+            var max = float.MinValue;
+            foreach (var v in shape.Vertices)
+            {
+                if (v.X < min) min = v.X;
+                if (v.X > max) max = v.X;
+            }
+            return (max - min) * 0.5f;
         }
 
         private BlockInstance FindFloating()

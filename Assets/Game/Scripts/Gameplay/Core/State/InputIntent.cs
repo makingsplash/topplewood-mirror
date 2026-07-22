@@ -1,9 +1,10 @@
 namespace Gameplay.Core
 {
     /// <summary>
-    /// Domain input intent (overview §Адаптерная граница): normalised screen coordinates in 0..1,
-    /// no <c>UnityEngine.Vector2</c>. One gesture = one intent (one-tap, GAME_BRIEF). In v0 shape_fill
-    /// the coordinates are unused (fixed drop spawn) — the intent simply means "release the block".
+    /// Domain input intent (overview §Адаптерная граница): a plain float pair, no <c>UnityEngine.Vector2</c>.
+    /// One gesture = one intent (one-tap, GAME_BRIEF). In v0 shape_fill <see cref="X"/> carries the tapped
+    /// drop column in world/level space (the adapter projects the screen tap through the camera); the block
+    /// is dropped there, clamped to the silhouette span. <see cref="Y"/> is unused in v0.
     /// </summary>
     public readonly struct InputIntent
     {
