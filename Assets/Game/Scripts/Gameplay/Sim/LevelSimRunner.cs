@@ -13,12 +13,18 @@ namespace Gameplay.Sim
 {
     /// <summary>
     /// Unity host of the level-sim harness (RFC §7 п.12): a play-mode MonoBehaviour that drives the real
-    /// <see cref="Gameplay.Core.Sim.SimRun"/> over the embedded test levels, aggregates solve statistics,
+    /// <see cref="Gameplay.Core.Sim.SimRun"/> over the shipped campaign levels, aggregates solve statistics,
     /// runs the M0 confirmation experiments (ADR-0001), and writes a CSV + JSON report to <c>Artifacts/</c>.
     /// It injects the production <see cref="UnityShapeFillSimulation"/> (real Physics2D) into the otherwise
     /// container-free domain graph, and honours the determinism mandate (RFC §6): a fresh simulation instance
     /// plus a frame yield between runs so the deferred body <c>Destroy</c> flushes.
     /// </summary>
+    /// <remarks>
+    /// Canonical execution is headless <c>-batchmode -executeMethod Gameplay.Sim.Editor.LevelSimBatch.Run</c>
+    /// (RFC-Δ / ADR-0001 Block 4/5): batchmode spins the player loop regardless of window focus, so the
+    /// multi-frame coroutine completes and the report reaches disk. An interactive / unfocused (MCP-driven)
+    /// editor throttles frames and may not finish it — see <c>.claude/skills/level-sim/SKILL.md</c>.
+    /// </remarks>
     public sealed class LevelSimRunner : MonoBehaviour
     {
         [Header("Sweep (config-over-hardcode; ⟨balancer/qa⟩ tune these)")]
@@ -32,66 +38,181 @@ namespace Gameplay.Sim
         [SerializeField] private int _m0ReproRepeats = 100;        // same-device reproducibility sample size
         [SerializeField] private int[] _accelStepsPerFrame = { 1, 8, 64 };
 
-        [Header("Output")]
+        [Header("Output / batch execution")]
         [SerializeField] private string _outputSubdir = "Artifacts/level-sim";
         [SerializeField] private bool _exitOnDone = false;
+        [SerializeField] private float _batchTimeoutSeconds = 300f; // watchdog: abort a wedged CI run (RFC-Δ §4.2)
 
         // The sim now takes its release-drag knobs from tuning (TASK-009); this standalone harness (outside DI)
         // uses production defaults so its physics matches the runtime.
         private readonly ShapeFillTuning _tuning = new ShapeFillTuning();
 
+        private float _startRealtime;
+        private bool _m0Faulted;
+
+        private void Awake()
+        {
+            // Best-effort (RFC-Δ §7): if an interactive/MCP play-mode entered, keep the loop ticking without
+            // focus so the coroutine can still finish and write the report.
+            Application.runInBackground = true;
+
+            // Headless batch MUST self-exit (do not trust the scene-serialized flag).
+            if (Application.isBatchMode)
+                _exitOnDone = true;
+        }
+
         private void Start() => StartCoroutine(RunSweep());
 
         private IEnumerator RunSweep()
         {
-            var levels = new EmbeddedTestLevels().Levels;
+            _startRealtime = Time.realtimeSinceStartup;
+            _m0Faulted = false;
+            var ok = true;
             var runs = new List<SimRunResult>();
+            IReadOnlyList<LevelData> levels = null;
 
-            foreach (var level in levels)
+            // GAP-1 (human 2026-07-23): sweep the ACTUAL shipped campaign, not embedded stubs.
+            try
             {
-                var orders = SolveSweepPlan.BuildOrders(
-                    level.Pieces.Count, _maxFullPermute, _sampleCount, level.Seed, Debug.Log);
+                levels = LoadLevels();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[level-sim] failed to load campaign '{JsonLevelSource.CampaignFileName}': {e}");
+                ok = false;
+            }
 
-                foreach (var order in orders)
+            if (ok)
+            {
+                foreach (var level in levels)
                 {
-                    var orderKey = string.Join("-", order);
-                    for (var r = 0; r < _repeats; r++)
+                    IReadOnlyList<int[]> orders = null;
+                    try
                     {
-                        var sim = new UnityShapeFillSimulation(_tuning);
-                        runs.Add(SimRun.Run(level, sim, new ReleaseOrderPolicy(order),
-                            "release-order", orderKey, r, _maxSteps));
-                        yield return null; // RFC §6: let deferred Destroy flush before the next run
+                        orders = SolveSweepPlan.BuildOrders(
+                            level.Pieces.Count, _maxFullPermute, _sampleCount, level.Seed, Debug.Log);
                     }
-                }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"[level-sim] {level.LevelId}: failed to build release orders: {e}");
+                        ok = false;
+                    }
 
-                if (_runSlotAscendingSmoke)
-                {
-                    for (var r = 0; r < _repeats; r++)
+                    if (!ok)
+                        break;
+
+                    foreach (var order in orders)
                     {
-                        var sim = new UnityShapeFillSimulation(_tuning);
-                        runs.Add(SimRun.Run(level, sim, new SlotAscendingPolicy(),
-                            "slot-ascending", "slot-asc", r, _maxSteps));
-                        yield return null;
+                        var orderKey = string.Join("-", order);
+                        for (var r = 0; r < _repeats; r++)
+                        {
+                            var sim = new UnityShapeFillSimulation(_tuning);
+                            try
+                            {
+                                runs.Add(SimRun.Run(level, sim, new ReleaseOrderPolicy(order),
+                                    "release-order", orderKey, r, _maxSteps));
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.LogError($"[level-sim] {level.LevelId} order {orderKey} run {r} threw: {e}");
+                                ok = false;
+                            }
+
+                            yield return null; // RFC §6: let deferred Destroy flush before the next run
+
+                            if (!ok || WatchdogExpired())
+                            {
+                                ok = false;
+                                break;
+                            }
+                        }
+
+                        if (!ok)
+                            break;
                     }
+
+                    if (ok && _runSlotAscendingSmoke)
+                    {
+                        for (var r = 0; r < _repeats; r++)
+                        {
+                            var sim = new UnityShapeFillSimulation(_tuning);
+                            try
+                            {
+                                runs.Add(SimRun.Run(level, sim, new SlotAscendingPolicy(),
+                                    "slot-ascending", "slot-asc", r, _maxSteps));
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.LogError($"[level-sim] {level.LevelId} slot-ascending run {r} threw: {e}");
+                                ok = false;
+                            }
+
+                            yield return null;
+
+                            if (!ok || WatchdogExpired())
+                            {
+                                ok = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!ok)
+                        break;
                 }
             }
 
-            var stats = SimAggregator.Aggregate(runs);
+            IReadOnlyList<LevelSolveStats> stats = Array.Empty<LevelSolveStats>();
+            try
+            {
+                stats = SimAggregator.Aggregate(runs);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[level-sim] aggregation failed: {e}");
+                ok = false;
+            }
 
             object m0 = null;
-            yield return StartCoroutine(BuildM0Summary(levels, runs, result => m0 = result));
+            if (ok)
+            {
+                yield return StartCoroutine(BuildM0Summary(levels, runs, result => m0 = result));
+                if (_m0Faulted)
+                    ok = false;
+            }
 
-            WriteReports(runs, stats, m0);
+            var written = WriteReports(runs, stats, m0, out var dir, out var csvPath, out var jsonPath);
             LogSummary(stats, m0);
 
+            // exitCode = tool health, NOT a finding: 0 ⇔ report on disk without exception; 1 ⇔ threw / no report /
+            // watchdog. Solve-rate / solvability is DATA for balancer/QA, never a non-zero exit (RFC-Δ §4.2).
+            var exitCode = ok && written ? 0 : 1;
+            Debug.Log($"[level-sim] DONE exitCode={exitCode} reportDir={dir} " +
+                      $"csv={csvPath ?? "<none>"} json={jsonPath ?? "<none>"}");
+            LogSmoke(stats);
+
             if (_exitOnDone)
-            {
-#if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-#else
-                Application.Quit();
-#endif
-            }
+                Exit(exitCode);
+        }
+
+        // GAP-1: reuse the TASK-009 JSON pipeline verbatim (JsonLevelSource over the StreamingAssets ILevelStore,
+        // same structural validation production runs) so the sweep drives the real two_cubes…snowman — no
+        // duplicate loader. JsonLevelSource validates eagerly and throws on malformed content (fail-fast → exit 1).
+        private static IReadOnlyList<LevelData> LoadLevels()
+        {
+            var source = new JsonLevelSource(new StreamingAssetsLevelStore(), new LevelDataValidator());
+            var levels = new List<LevelData>(source.Count);
+            for (var i = 0; i < source.Count; i++)
+                levels.Add(source.Load(i));
+            return levels;
+        }
+
+        private bool WatchdogExpired()
+        {
+            if (Time.realtimeSinceStartup - _startRealtime <= _batchTimeoutSeconds)
+                return false;
+            Debug.LogError($"[level-sim] watchdog: sweep exceeded {_batchTimeoutSeconds}s — aborting.");
+            return true;
         }
 
         // M0-confirmation experiments (RFC §8): same-device reproducibility, safe acceleration factor,
@@ -107,18 +228,36 @@ namespace Gameplay.Sim
             for (var i = 0; i < _m0ReproRepeats; i++)
             {
                 var sim = new UnityShapeFillSimulation(_tuning);
-                var res = SimRun.Run(level, sim, new ReleaseOrderPolicy((int[])order.Clone()),
-                    "m0-repro", "identity", i, _maxSteps);
-                hashes.Add(res.PoseHash);
+                try
+                {
+                    var res = SimRun.Run(level, sim, new ReleaseOrderPolicy((int[])order.Clone()),
+                        "m0-repro", "identity", i, _maxSteps);
+                    hashes.Add(res.PoseHash);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[level-sim] M0 repro repeat {i} threw: {e}");
+                    _m0Faulted = true;
+                }
+
                 yield return null;
+                if (_m0Faulted)
+                    break;
             }
             var reproducible = hashes.Count == 1;
 
             // M0.2 — safe acceleration: the same order run all-in-one-frame (∞) vs spread across frames in
             // batches of stepsPerFrame must reach an identical final pose hash (RFC §8.2).
-            var oneFrameSim = new UnityShapeFillSimulation(_tuning);
-            var oneFrameHash = SimRun.Run(level, oneFrameSim, new ReleaseOrderPolicy((int[])order.Clone()),
-                "m0-accel", "inf", 0, _maxSteps).PoseHash;
+            long oneFrameHash = 0;
+            try
+            {
+                oneFrameHash = RunOneFrameHash(level, (int[])order.Clone());
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[level-sim] M0 one-frame reference threw: {e}");
+                _m0Faulted = true;
+            }
             yield return null;
 
             var accelSafe = true;
@@ -167,6 +306,13 @@ namespace Gameplay.Sim
             });
         }
 
+        // Small helper so the M0 one-frame reference reads by intent (and its SimRun.Run can be wrapped).
+        private long RunOneFrameHash(LevelData level, int[] order)
+        {
+            var sim = new UnityShapeFillSimulation(_tuning);
+            return SimRun.Run(level, sim, new ReleaseOrderPolicy(order), "m0-accel", "inf", 0, _maxSteps).PoseHash;
+        }
+
         // Drives a SimRun across multiple frames, yielding every stepsPerFrame steps, so deferred Destroys of
         // any Lost bodies flush mid-run — the sensitive path the accel-safe check probes (RFC §6/§8.2).
         private IEnumerator RunChunked(LevelData level, int[] order, int stepsPerFrame, Action<long> done)
@@ -191,23 +337,33 @@ namespace Gameplay.Sim
             yield return null;
         }
 
-        private void WriteReports(IReadOnlyList<SimRunResult> runs, IReadOnlyList<LevelSolveStats> stats, object m0)
+        private bool WriteReports(IReadOnlyList<SimRunResult> runs, IReadOnlyList<LevelSolveStats> stats, object m0,
+            out string dir, out string csvPath, out string jsonPath)
         {
-            var csv = SimReportWriter.BuildCsv(runs);
-            var json = SimReportWriter.BuildJson(runs, stats, m0);
-            var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
-            var dir = ResolveOutputDir();
+            csvPath = null;
+            jsonPath = null;
+            dir = ResolveOutputDir();
 
             try
             {
+                var csv = SimReportWriter.BuildCsv(runs);
+                var json = SimReportWriter.BuildJson(runs, stats, m0);
+                var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
+
                 Directory.CreateDirectory(dir);
-                File.WriteAllText(Path.Combine(dir, $"level-sim_{stamp}.csv"), csv);
-                File.WriteAllText(Path.Combine(dir, $"level-sim_{stamp}.json"), json);
+                csvPath = Path.Combine(dir, $"level-sim_{stamp}.csv");
+                jsonPath = Path.Combine(dir, $"level-sim_{stamp}.json");
+                File.WriteAllText(csvPath, csv);
+                File.WriteAllText(jsonPath, json);
                 Debug.Log($"[level-sim] wrote report to {dir} (level-sim_{stamp}.csv / .json)");
+                return true;
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[level-sim] failed to write report to {dir}: {e.Message}");
+                Debug.LogError($"[level-sim] failed to write report to {dir}: {e.Message}");
+                csvPath = null;
+                jsonPath = null;
+                return false;
             }
         }
 
@@ -228,6 +384,32 @@ namespace Gameplay.Sim
                           $"avgSteps={s.AvgStepsToSolve:0}, minSteps={s.MinStepsToSolve}, medianMatchError={s.MedianMatchError:0.####}");
             }
             Debug.Log("[level-sim] M0: " + JsonConvert.SerializeObject(m0));
+        }
+
+        // Acceptance smoke (RFC-Δ §4.2 п.4): a stable grep line for QA/CI. Reports data; never gates exitCode.
+        private static void LogSmoke(IReadOnlyList<LevelSolveStats> stats)
+        {
+            foreach (var s in stats)
+            {
+                if (s.LevelId != "two_cubes")
+                    continue;
+                Debug.Log($"[level-sim] SMOKE two_cubes deterministic={s.Deterministic} " +
+                          $"solveRate={s.SolveRate.ToString("0.###", CultureInfo.InvariantCulture)}");
+                return;
+            }
+            Debug.LogWarning("[level-sim] SMOKE two_cubes: not present in sweep stats.");
+        }
+
+        private static void Exit(int exitCode)
+        {
+#if UNITY_EDITOR
+            if (Application.isBatchMode)
+                UnityEditor.EditorApplication.Exit(exitCode);
+            else
+                UnityEditor.EditorApplication.isPlaying = false; // interactive: just leave play mode
+#else
+            Application.Quit(exitCode);
+#endif
         }
 
         private static int[] Identity(int n)
