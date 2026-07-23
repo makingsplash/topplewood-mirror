@@ -113,7 +113,8 @@ namespace Gameplay.Core
     }
 
     /// <summary>A convex primitive, reconstructed via the <see cref="Shape"/> factories (no raw vertex lists
-    /// to author). Discriminated by <c>primitive</c>: box | triangle | halfdisc.</summary>
+    /// to author). Discriminated by <c>primitive</c>: box | triangle | halfdisc | plank | trapezoid | parallelogram.
+    /// <c>topWidth</c> feeds trapezoid (top edge), <c>skew</c> feeds parallelogram (top-edge +X shift).</summary>
     public sealed class ShapeDto
     {
         [JsonProperty("primitive")] public string Primitive { get; set; }
@@ -121,6 +122,8 @@ namespace Gameplay.Core
         [JsonProperty("height")] public float Height { get; set; }
         [JsonProperty("radius")] public float Radius { get; set; }
         [JsonProperty("segments")] public int Segments { get; set; } = 12;
+        [JsonProperty("topWidth")] public float TopWidth { get; set; }   // trapezoid: top-edge width
+        [JsonProperty("skew")] public float Skew { get; set; }           // parallelogram: top-edge +X shift
 
         public Shape ToDomain()
         {
@@ -129,6 +132,26 @@ namespace Gameplay.Core
                 case "box": return Shape.Box(Width, Height);
                 case "triangle": return Shape.Triangle(Width, Height);
                 case "halfdisc": return Shape.HalfDisc(Radius, Segments);
+                case "plank":
+                {
+                    var w = Width > 0f ? Width : 1f;
+                    var h = Height > 0f ? Height : 2f;
+                    return Shape.Plank(w, h);
+                }
+                case "trapezoid":
+                {
+                    if (Width <= 0f || TopWidth <= 0f || Height <= 0f)
+                        throw new InvalidOperationException(
+                            $"trapezoid needs positive width/topWidth/height; got {Width}/{TopWidth}/{Height}.");
+                    return Shape.Trapezoid(Width, TopWidth, Height);
+                }
+                case "parallelogram":
+                {
+                    if (Width <= 0f || Height <= 0f)
+                        throw new InvalidOperationException(
+                            $"parallelogram needs positive width/height; got {Width}/{Height}.");
+                    return Shape.Parallelogram(Width, Height, Skew);
+                }
                 default:
                     throw new InvalidOperationException($"Unknown shape primitive '{Primitive}'.");
             }
