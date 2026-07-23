@@ -36,6 +36,10 @@ namespace Gameplay.Sim
         [SerializeField] private string _outputSubdir = "Artifacts/level-sim";
         [SerializeField] private bool _exitOnDone = false;
 
+        // The sim now takes its release-drag knobs from tuning (TASK-009); this standalone harness (outside DI)
+        // uses production defaults so its physics matches the runtime.
+        private readonly ShapeFillTuning _tuning = new ShapeFillTuning();
+
         private void Start() => StartCoroutine(RunSweep());
 
         private IEnumerator RunSweep()
@@ -53,7 +57,7 @@ namespace Gameplay.Sim
                     var orderKey = string.Join("-", order);
                     for (var r = 0; r < _repeats; r++)
                     {
-                        var sim = new UnityShapeFillSimulation();
+                        var sim = new UnityShapeFillSimulation(_tuning);
                         runs.Add(SimRun.Run(level, sim, new ReleaseOrderPolicy(order),
                             "release-order", orderKey, r, _maxSteps));
                         yield return null; // RFC §6: let deferred Destroy flush before the next run
@@ -64,7 +68,7 @@ namespace Gameplay.Sim
                 {
                     for (var r = 0; r < _repeats; r++)
                     {
-                        var sim = new UnityShapeFillSimulation();
+                        var sim = new UnityShapeFillSimulation(_tuning);
                         runs.Add(SimRun.Run(level, sim, new SlotAscendingPolicy(),
                             "slot-ascending", "slot-asc", r, _maxSteps));
                         yield return null;
@@ -102,7 +106,7 @@ namespace Gameplay.Sim
             var hashes = new HashSet<long>();
             for (var i = 0; i < _m0ReproRepeats; i++)
             {
-                var sim = new UnityShapeFillSimulation();
+                var sim = new UnityShapeFillSimulation(_tuning);
                 var res = SimRun.Run(level, sim, new ReleaseOrderPolicy((int[])order.Clone()),
                     "m0-repro", "identity", i, _maxSteps);
                 hashes.Add(res.PoseHash);
@@ -112,7 +116,7 @@ namespace Gameplay.Sim
 
             // M0.2 — safe acceleration: the same order run all-in-one-frame (∞) vs spread across frames in
             // batches of stepsPerFrame must reach an identical final pose hash (RFC §8.2).
-            var oneFrameSim = new UnityShapeFillSimulation();
+            var oneFrameSim = new UnityShapeFillSimulation(_tuning);
             var oneFrameHash = SimRun.Run(level, oneFrameSim, new ReleaseOrderPolicy((int[])order.Clone()),
                 "m0-accel", "inf", 0, _maxSteps).PoseHash;
             yield return null;
@@ -167,7 +171,7 @@ namespace Gameplay.Sim
         // any Lost bodies flush mid-run — the sensitive path the accel-safe check probes (RFC §6/§8.2).
         private IEnumerator RunChunked(LevelData level, int[] order, int stepsPerFrame, Action<long> done)
         {
-            var sim = new UnityShapeFillSimulation();
+            var sim = new UnityShapeFillSimulation(_tuning);
             using var run = new SimRun(level, sim, new ReleaseOrderPolicy(order));
 
             var steps = 0;

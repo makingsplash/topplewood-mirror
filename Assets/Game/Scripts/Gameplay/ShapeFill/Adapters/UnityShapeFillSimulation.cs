@@ -23,9 +23,15 @@ namespace Gameplay.Adapters
 
         private readonly Dictionary<int, Body> _bodies = new();
         private readonly List<GameObject> _statics = new();
+        private readonly ShapeFillTuning _tuning;
         private Transform _root;
         private Rect _bounds;
         private int _nextId = 1;
+
+        public UnityShapeFillSimulation(ShapeFillTuning tuning)
+        {
+            _tuning = tuning;
+        }
 
         private Transform Root
         {
@@ -139,6 +145,27 @@ namespace Gameplay.Adapters
             if (body.Collider != null)
                 body.Collider.enabled = true; // materialise: Idle piece becomes physical (RFC §5.3)
             body.Rigidbody.gravityScale = 1f;
+            // Damping settles the fall (angular in particular tames rolling half-discs) — RFC 07 §2.3.
+            body.Rigidbody.linearDamping = _tuning.ReleaseLinearDrag;
+            body.Rigidbody.angularDamping = _tuning.ReleaseAngularDrag;
+        }
+
+        public void FreezeAt(int bodyId, Vec2 position, float rotation)
+        {
+            if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)
+                return;
+            var rb = body.Rigidbody;
+            // Lock exactly like SpawnSettled: zero velocity, kinematic, exact pose → no post-rest drift, and the
+            // body becomes a rigid support the next piece cannot shove (RFC 07 §2.1).
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            var deg = rotation * Mathf.Rad2Deg;
+            rb.position = new Vector2(position.X, position.Y);
+            rb.rotation = deg;
+            var t = rb.transform;
+            t.position = new Vector3(position.X, position.Y, t.position.z);
+            t.rotation = Quaternion.Euler(0f, 0f, deg);
         }
 
         public BodyPose GetPose(int bodyId)

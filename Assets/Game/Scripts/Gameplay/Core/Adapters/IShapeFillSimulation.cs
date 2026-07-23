@@ -23,6 +23,12 @@ namespace Gameplay.Core.Adapters
         /// <summary>Materialise a floating piece: enable its collider AND gravity → it starts falling.</summary>
         void Release(int bodyId);
 
+        /// <summary>
+        /// Lock a settled body at an exact pose: kinematic, zero velocity — stops post-rest drift and turns it
+        /// into a stable support (mirrors SpawnSettled). Called at Falling→Placed (RFC 07 §2.1).
+        /// </summary>
+        void FreezeAt(int bodyId, Vec2 position, float rotation);
+
         BodyPose GetPose(int bodyId);
 
         /// <summary>max(|linear|, |angular|·r) in domain units — compared against ε for rest.</summary>

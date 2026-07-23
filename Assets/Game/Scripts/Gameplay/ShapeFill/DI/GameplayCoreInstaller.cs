@@ -20,6 +20,7 @@ namespace Gameplay.DI
             var tuning = new ShapeFillTuning();
             builder.RegisterInstance(tuning);
             builder.RegisterInstance(new TargetPreviewConfig());
+            builder.RegisterInstance(new CameraFramingConfig());
             builder.RegisterInstance<IGameplayClock>(new GameplayClock(tuning.FixedStep));
             builder.RegisterInstance<IGameplayRandom>(new DeterministicRandom(0));
             builder.RegisterInstance<IEmbeddedLevels>(new EmbeddedTestLevels());
@@ -55,6 +56,10 @@ namespace Gameplay.DI
             // After the runner loads level 0, this resumes the persisted campaign index and drives WIN→next /
             // LOSS→retry reloads (TASK-009). Registered before the presenters so they render the resumed level.
             builder.RegisterEntryPoint<CampaignProgressionController>();
+            // Frames Camera.main to the level content (TASK-009, RFC 07 §1) so tall levels (L5) fit on screen
+            // and every piece is tappable. Registered BEFORE TargetPreviewPresenter, which anchors to the
+            // camera viewport — the camera must be framed first.
+            builder.RegisterEntryPoint<CameraFramingPresenter>();
             builder.RegisterEntryPoint<ShapeFillPresenter>();
             builder.RegisterEntryPoint<TargetPreviewPresenter>();
         }

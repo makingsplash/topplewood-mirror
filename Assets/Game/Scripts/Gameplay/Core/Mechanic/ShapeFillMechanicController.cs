@@ -25,6 +25,9 @@ namespace Gameplay.Core.Mechanic
         private readonly Dictionary<int, IPieceView> _viewByInstance = new();
         private readonly Dictionary<int, PieceType> _typeByInstance = new();
         private readonly List<PlacedPiece> _placedScratch = new();
+        // Slots already claimed by a Placed piece this session — one slot, one piece (mirrors the evaluator's
+        // greedy assignment) so the snap assist never sends two pieces to the same slot (RFC 07 §2.2).
+        private readonly HashSet<int> _occupiedSlots = new();
 
         private IDisposable _levelLoadedSub;
         private IDisposable _stateRestoredSub;
@@ -166,15 +169,108 @@ namespace Gameplay.Core.Mechanic
             {
                 piece.RestTimer += dt;
                 if (piece.RestTimer >= _tuning.RestDurationSeconds)
-                {
-                    piece.State = PieceLifecycle.Placed;
-                    _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Placed);
-                }
+                    Place(piece, bodyId);
             }
             else
             {
                 piece.RestTimer = 0f;
             }
+        }
+
+        /// <summary>
+        /// Settle a piece at rest: snap it onto its target slot when it landed within the capture window (casual
+        /// assist), otherwise freeze it exactly where it lies. Freezing (kinematic) kills post-rest drift and
+        /// makes the piece a rigid support the next drop cannot shove — RFC 07 §2.1/§2.2.
+        /// </summary>
+        private void Place(PieceInstance piece, int bodyId)
+        {
+            Vec2 pos;
+            float rot;
+
+            var slot = FindSnapSlot(piece, bodyId);
+            if (slot >= 0)
+            {
+                var target = _level.Target.Slots[slot];
+                pos = target.Position;
+                rot = target.Rotation;
+                _occupiedSlots.Add(slot);
+            }
+            else
+            {
+                var pose = _simulation.GetPose(bodyId);
+                pos = pose.Position;
+                rot = pose.Rotation;
+            }
+
+            _simulation.FreezeAt(bodyId, pos, rot);
+            piece.State = PieceLifecycle.Placed;
+            piece.Position = pos;
+            piece.Rotation = rot;
+            _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Placed);
+            _viewByInstance[piece.InstanceId].Sync(pos, rot);
+        }
+
+        /// <summary>
+        /// Nearest unclaimed slot of the same Kind within the snap capture window (position AND symmetry-reduced
+        /// rotation), or -1 when snapping is off or nothing qualifies. Mirrors the evaluator's admissibility so
+        /// a snapped piece trivially matches (RFC 07 §2.2).
+        /// </summary>
+        private int FindSnapSlot(PieceInstance piece, int bodyId)
+        {
+            if (!_tuning.SnapToSlotEnabled)
+                return -1;
+
+            var slots = _level.Target?.Slots;
+            if (slots == null)
+                return -1;
+
+            var pose = _simulation.GetPose(bodyId);
+            var symmetryOrder = _typeByInstance[piece.InstanceId].SymmetryOrder;
+
+            var best = -1;
+            var bestPosErr = float.MaxValue;
+            for (var s = 0; s < slots.Count; s++)
+            {
+                if (_occupiedSlots.Contains(s))
+                    continue;
+
+                var slot = slots[s];
+                if (slot.Kind != piece.Kind)
+                    continue;
+
+                var posErr = (slot.Position - pose.Position).Length;
+                if (posErr > _tuning.SnapCaptureRadius)
+                    continue;
+
+                var angErr = SymmetryReduce(pose.Rotation - slot.Rotation, symmetryOrder);
+                if (angErr > _tuning.SnapCaptureAngle)
+                    continue;
+
+                if (posErr < bestPosErr)
+                {
+                    bestPosErr = posErr;
+                    best = s;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>
+        /// Reduce an angle delta into the piece's symmetry period and return its magnitude (box order=4 → 90°;
+        /// triangle/half order=1 → full circle). Same reduction as <see cref="PoseMatchEvaluator"/> so the snap
+        /// window and the win check agree.
+        /// </summary>
+        private static float SymmetryReduce(float delta, int symmetryOrder)
+        {
+            var order = symmetryOrder < 1 ? 1 : symmetryOrder;
+            var period = (2f * MathF.PI) / order;
+            var d = delta % period;
+            if (d > period * 0.5f)
+                d -= period;
+            else if (d < -period * 0.5f)
+                d += period;
+            return MathF.Abs(d);
         }
 
         private void MirrorPose(PieceInstance piece, int bodyId)
@@ -276,6 +372,7 @@ namespace Gameplay.Core.Mechanic
             _bodyByInstance.Clear();
             _viewByInstance.Clear();
             _typeByInstance.Clear();
+            _occupiedSlots.Clear();
         }
 
         public void Dispose()
