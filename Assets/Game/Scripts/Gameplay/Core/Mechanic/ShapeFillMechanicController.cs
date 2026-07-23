@@ -271,11 +271,21 @@ namespace Gameplay.Core.Mechanic
             // Soft-settle assist: begin the eased glide the moment the still-falling piece enters the capture
             // window of a free slot — so the correction blends into the descent instead of playing as a delayed
             // animation after the piece has already come to rest (human 11:36). No rest dwell is required.
-            var slot = FindSnapSlot(piece, bodyId);
-            if (slot >= 0)
+            //
+            // Support gate (TASK-010, human 15:20): snap is a SETTLING assist, not an in-air magnet. Capture a
+            // slot only once the piece already has support beneath it (the floor or an already-settled body
+            // within a small gap under its lower edge — it is about to sit down). While it is in free fall with
+            // empty space below, it keeps falling even through a slot's capture window, so a piece bound for a
+            // lower slot is never grabbed by a higher one it merely passes through (the L1 two_cubes regress).
+            // Physical & level-agnostic — no dependence on neighbouring slots' Kind/position.
+            if (_simulation.HasSupportBelow(bodyId, _tuning.SnapSupportProbeDistance))
             {
-                BeginSettle(piece, bodyId, slot);
-                return;
+                var slot = FindSnapSlot(piece, bodyId);
+                if (slot >= 0)
+                {
+                    BeginSettle(piece, bodyId, slot);
+                    return;
+                }
             }
 
             if (_simulation.GetSpeed(bodyId) < _tuning.RestSpeedEpsilon)

@@ -23,6 +23,9 @@ namespace Gameplay.Adapters
 
         private readonly Dictionary<int, Body> _bodies = new();
         private readonly List<GameObject> _statics = new();
+        // Reused across HasSupportBelow calls so the every-fixed-step support probe allocates nothing (no
+        // GC in the physics hot path).
+        private readonly RaycastHit2D[] _supportHits = new RaycastHit2D[8];
         private readonly ShapeFillTuning _tuning;
         private Transform _root;
         private Rect _bounds;
@@ -191,6 +194,29 @@ namespace Gameplay.Adapters
                 return Vec2.Zero;
             var v = body.Rigidbody.linearVelocity;
             return new Vec2(v.x, v.y);
+        }
+
+        public bool HasSupportBelow(int bodyId, float maxGap)
+        {
+            if (!_bodies.TryGetValue(bodyId, out var body) || body.Collider == null || !body.Collider.enabled)
+                return false;
+
+            // Sweep the piece's own collider straight down by the small probe gap: this reports whatever it
+            // would first touch below its actual lower edge (any shape/rotation), initial overlaps included.
+            // ignoreSiblingColliders excludes the piece itself.
+            var count = body.Collider.Cast(Vector2.down, _supportHits, maxGap);
+            for (var i = 0; i < count; i++)
+            {
+                var other = _supportHits[i].collider;
+                if (other == null || other == body.Collider)
+                    continue;
+                // Support = the floor (a static collider, no rigidbody) or an already-settled piece (kinematic,
+                // locked by FreezeAt/SpawnSettled). Another still-falling dynamic body is not yet a support.
+                var otherRb = other.attachedRigidbody;
+                if (otherRb == null || otherRb.bodyType == RigidbodyType2D.Kinematic)
+                    return true;
+            }
+            return false;
         }
 
         public bool IsWithinBounds(int bodyId)

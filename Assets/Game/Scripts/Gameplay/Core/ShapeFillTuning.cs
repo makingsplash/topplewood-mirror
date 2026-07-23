@@ -33,6 +33,15 @@ namespace Gameplay.Core
         /// one point by rotation without being a "magnet at any angle".</summary>
         public float SnapCaptureAngle { get; set; } = 0.5236f;
 
+        /// <summary>Support-probe gap (world units) for the snap gate (TASK-010, human 2026-07-23 15:20). Snap
+        /// captures a slot only once the piece has support this close beneath its lower edge (floor or an
+        /// already-settled body) — i.e. it is about to sit down, not still free-falling. Kept small so a piece
+        /// falling through a higher same-Kind slot's capture window (empty space below) keeps falling to its own
+        /// lower slot instead of being grabbed mid-air. Physical & level-agnostic: no dependence on neighbouring
+        /// slots' Kind/position. Near landing a piece advances well under this per fixed step, so the gate opens
+        /// on the contact frame; QA/balancer to re-bless.</summary>
+        public float SnapSupportProbeDistance { get; set; } = 0.1f;
+
         /// <summary>Linear damping applied on Release — light, does not stall the drop.</summary>
         public float ReleaseLinearDrag { get; set; } = 0.5f;
 

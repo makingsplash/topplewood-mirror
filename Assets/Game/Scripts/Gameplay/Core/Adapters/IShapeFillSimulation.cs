@@ -35,6 +35,16 @@ namespace Gameplay.Core.Adapters
         float GetSpeed(int bodyId);
 
         /// <summary>
+        /// True when the body has physical support directly beneath it — the floor (static geometry) or an
+        /// already-settled (kinematic) body within <paramref name="maxGap"/> below its lower edge — i.e. it is
+        /// about to come to rest on something rather than still in free fall. The snap-to-slot assist is gated
+        /// on this so a piece is captured only while it is settling, never plucked out of the air by a slot it
+        /// merely falls THROUGH on the way to a lower one (TASK-010 root cause). A still-falling dynamic body
+        /// beneath does NOT count as support.
+        /// </summary>
+        bool HasSupportBelow(int bodyId, float maxGap);
+
+        /// <summary>
         /// Linear velocity (domain units/s) of a body. Read at capture to seed the soft-settle glide so it
         /// continues the fall's momentum instead of restarting from a dead stop (human 12:02 — no hitch).
         /// </summary>

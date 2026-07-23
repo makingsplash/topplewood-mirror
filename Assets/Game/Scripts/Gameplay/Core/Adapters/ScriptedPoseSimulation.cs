@@ -17,6 +17,9 @@ namespace Gameplay.Core.Adapters
             public Vec2 Velocity;
             public bool WithinBounds = true;
             public bool Released;
+            // No physics here to derive support from, so the pose-canvas author drives it. Defaults true so the
+            // synthetic snap behaviour is unchanged (snap allowed) unless a test explicitly models free fall.
+            public bool SupportBelow = true;
         }
 
         private readonly Dictionary<int, Body> _bodies = new();
@@ -55,6 +58,7 @@ namespace Gameplay.Core.Adapters
         public float GetSpeed(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Speed : 0f;
         public Vec2 GetVelocity(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Velocity : Vec2.Zero;
         public bool IsWithinBounds(int bodyId) => !_bodies.TryGetValue(bodyId, out var b) || b.WithinBounds;
+        public bool HasSupportBelow(int bodyId, float maxGap) => _bodies.TryGetValue(bodyId, out var b) && b.SupportBelow;
 
         public void Despawn(int bodyId) => _bodies.Remove(bodyId);
 
@@ -110,6 +114,12 @@ namespace Gameplay.Core.Adapters
         {
             if (_bodies.TryGetValue(bodyId, out var b))
                 b.WithinBounds = within;
+        }
+
+        public void SetSupportBelow(int bodyId, bool supported)
+        {
+            if (_bodies.TryGetValue(bodyId, out var b))
+                b.SupportBelow = supported;
         }
     }
 }
