@@ -185,6 +185,14 @@ namespace Gameplay.Adapters
             return Mathf.Max(linear, angular);
         }
 
+        public Vec2 GetVelocity(int bodyId)
+        {
+            if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)
+                return Vec2.Zero;
+            var v = body.Rigidbody.linearVelocity;
+            return new Vec2(v.x, v.y);
+        }
+
         public bool IsWithinBounds(int bodyId)
         {
             if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)

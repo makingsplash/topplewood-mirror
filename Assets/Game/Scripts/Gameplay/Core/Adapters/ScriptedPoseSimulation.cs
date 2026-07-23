@@ -14,6 +14,7 @@ namespace Gameplay.Core.Adapters
         {
             public BodyPose Pose;
             public float Speed;
+            public Vec2 Velocity;
             public bool WithinBounds = true;
             public bool Released;
         }
@@ -52,6 +53,7 @@ namespace Gameplay.Core.Adapters
 
         public BodyPose GetPose(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Pose : default;
         public float GetSpeed(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Speed : 0f;
+        public Vec2 GetVelocity(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Velocity : Vec2.Zero;
         public bool IsWithinBounds(int bodyId) => !_bodies.TryGetValue(bodyId, out var b) || b.WithinBounds;
 
         public void Despawn(int bodyId) => _bodies.Remove(bodyId);
@@ -96,6 +98,12 @@ namespace Gameplay.Core.Adapters
         {
             if (_bodies.TryGetValue(bodyId, out var b))
                 b.Speed = speed;
+        }
+
+        public void SetVelocity(int bodyId, Vec2 velocity)
+        {
+            if (_bodies.TryGetValue(bodyId, out var b))
+                b.Velocity = velocity;
         }
 
         public void SetWithinBounds(int bodyId, bool within)

@@ -34,6 +34,12 @@ namespace Gameplay.Core.Adapters
         /// <summary>max(|linear|, |angular|·r) in domain units — compared against ε for rest.</summary>
         float GetSpeed(int bodyId);
 
+        /// <summary>
+        /// Linear velocity (domain units/s) of a body. Read at capture to seed the soft-settle glide so it
+        /// continues the fall's momentum instead of restarting from a dead stop (human 12:02 — no hitch).
+        /// </summary>
+        Vec2 GetVelocity(int bodyId);
+
         bool IsWithinBounds(int bodyId);
 
         void Despawn(int bodyId);

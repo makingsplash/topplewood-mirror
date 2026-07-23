@@ -22,9 +22,12 @@ namespace Gameplay.Core
         /// slot pose (game-designer: default ON everywhere; RFC 07 §2.2).</summary>
         public bool SnapToSlotEnabled { get; set; } = true;
 
-        /// <summary>Snap capture radius (world units, > PosTol 0.25 and < half the L5 slot spacing 1.0). A piece
-        /// landed grossly off-slot is NOT captured, so release ORDER stays the challenge.</summary>
-        public float SnapCaptureRadius { get; set; } = 0.5f;
+        /// <summary>Snap capture radius (world units). Kept in (PosTol 0.25, half the L5 slot spacing 1.0): a
+        /// piece landed grossly off-slot is NOT captured, so release ORDER stays the challenge, and it can never
+        /// reach a neighbouring slot. Lowered 0.5→0.3 so the assist engages nearer the slot instead of "starting
+        /// too early" while the piece is still well above it (human 12:02) — balancer to re-bless the value and
+        /// re-check L5 half-disc capture.</summary>
+        public float SnapCaptureRadius { get; set; } = 0.3f;
 
         /// <summary>Snap capture angle (rad, = 2× AngTol 15° = 30°). Disambiguates the two half-discs stacked at
         /// one point by rotation without being a "magnet at any angle".</summary>
@@ -45,14 +48,16 @@ namespace Gameplay.Core
         /// headless-deterministic (0.18 s ≈ 11 steps @ 1/60). game-balancer 13 §2.1 (A/B 0.12–0.25).</summary>
         public float SettleDurationSeconds { get; set; } = 0.18f;
 
-        /// <summary>Easing curve of the glide — SmootherStep (C2) leaves rest and enters the freeze without a
-        /// velocity pop. game-balancer 13 §2.2.</summary>
+        /// <summary>Easing curve of the settle — now drives the ROTATION correction only (game-balancer 13 §2.2).
+        /// Position no longer uses it: since the settle begins mid-fall (human 11:36), position is driven by a
+        /// critically-damped approach that preserves the fall velocity so there is no entry hitch (human 12:02),
+        /// which supersedes the fixed-curve position glide.</summary>
         public SettleEasing SettleEasing { get; set; } = SettleEasing.SmootherStep;
 
         /// <summary>Fraction of the landing error the glide removes (game-balancer 13 §2.3). CURRENTLY UNUSED —
-        /// human 11:36 moved the settle trigger into the fall and asked for minimal correction, so position now
-        /// homes to the exact slot and rotation turns only just enough to pass; the proportional-gain residual
-        /// model is superseded. Kept pending balancer re-confirmation (A/B 0.70–0.85 no longer wired).</summary>
+        /// human 11:36/12:02 moved the settle into the fall with velocity preservation; position is now driven by
+        /// a critically-damped approach whose small natural convergence residual carries the organic feel, so the
+        /// proportional-gain model is superseded. Kept pending balancer re-confirmation.</summary>
         public float SettleGain { get; set; } = 0.75f;
 
         /// <summary>Safety clamp on the proportional residual (game-balancer 13 §2.4). CURRENTLY UNUSED for the

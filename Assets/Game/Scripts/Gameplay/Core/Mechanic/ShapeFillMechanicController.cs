@@ -43,12 +43,16 @@ namespace Gameplay.Core.Mechanic
         private IDisposable _stateRestoredSub;
         private LevelData _level;
 
-        /// <summary>In-flight soft-settle glide for one piece: it is driven kinematically from Start to Target
-        /// over TotalSteps fixed steps, then frozen at Target (game-balancer 13 §1/§6).</summary>
+        /// <summary>In-flight soft-settle glide for one piece: driven kinematically toward the slot over
+        /// TotalSteps fixed steps. Position uses a critically-damped approach SEEDED with the piece's capture
+        /// velocity (VelX/VelY) so the settle continues the fall's momentum without a pop and never overshoots
+        /// (human 12:02); rotation is an eased minimal correction from StartRot to TargetRot (human 11:36).</summary>
         private sealed class Settle
         {
             public int BodyId;
-            public Vec2 StartPos;
+            public Vec2 Pos;   // current glide position (critically-damped state)
+            public float VelX; // preserved linear velocity (critically-damped state), seeded at capture
+            public float VelY;
             public float StartRot;
             public Vec2 TargetPos;
             public float TargetRot;
@@ -183,15 +187,22 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
-        /// Advance every in-flight soft-settle glide by one fixed step: drive the (kinematic) body along the
-        /// eased path from its capture pose onto the slot, then freeze it exactly at the target on the final
-        /// step. Duration is counted in fixed steps, so the glide is headless-deterministic (game-balancer 13
-        /// §6.1); the angular path is the symmetry-reduced shortest arc (§6.2).
+        /// Advance every in-flight soft-settle glide by one fixed step. Position is driven by a critically-damped
+        /// approach toward the slot SEEDED with the piece's capture velocity — it continues the fall's momentum
+        /// instead of restarting from a dead stop (human 12:02: no hitch), never overshoots the slot, and leaves
+        /// at most a tiny within-tolerance residual (the organic hand-placed feel, game-designer 12 §3.2).
+        /// Rotation is the eased minimal correction to the passing angle (human 11:36). The step count comes from
+        /// SettleDurationSeconds so the whole glide is headless-deterministic (game-balancer 13 §6.1).
         /// </summary>
         private void AdvanceSettling()
         {
             if (_settling.Count == 0)
                 return;
+
+            var dt = _tuning.FixedStep;
+            // Critically-damped time constant: the spring is tuned to converge well within the settle window
+            // (≈2× smoothTime). SettleDurationSeconds stays the balancer's single duration lever.
+            var smoothTime = _tuning.SettleDurationSeconds * 0.5f;
 
             _settleDone.Clear();
             foreach (var kv in _settling)
@@ -199,26 +210,51 @@ namespace Gameplay.Core.Mechanic
                 var s = kv.Value;
                 s.Step++;
 
-                Vec2 pos;
-                float rot;
-                if (s.Step >= s.TotalSteps)
-                {
-                    pos = s.TargetPos;
-                    rot = s.TargetRot;
-                    _settleDone.Add(kv.Key);
-                }
-                else
-                {
-                    var e = Ease(_tuning.SettleEasing, (float)s.Step / s.TotalSteps);
-                    pos = s.StartPos + (s.TargetPos - s.StartPos) * e;
-                    rot = s.StartRot + (s.TargetRot - s.StartRot) * e;
-                }
+                var px = SmoothDamp(s.Pos.X, s.TargetPos.X, ref s.VelX, smoothTime, dt);
+                var py = SmoothDamp(s.Pos.Y, s.TargetPos.Y, ref s.VelY, smoothTime, dt);
+                s.Pos = new Vec2(px, py);
 
-                _simulation.FreezeAt(s.BodyId, pos, rot);
+                var e = Ease(_tuning.SettleEasing, (float)s.Step / s.TotalSteps);
+                var rot = s.StartRot + (s.TargetRot - s.StartRot) * e;
+
+                _simulation.FreezeAt(s.BodyId, s.Pos, rot);
+
+                if (s.Step >= s.TotalSteps)
+                    _settleDone.Add(kv.Key);
             }
 
             foreach (var instanceId in _settleDone)
                 _settling.Remove(instanceId);
+        }
+
+        /// <summary>
+        /// Critically-damped smoothing toward <paramref name="target"/> that PRESERVES the incoming velocity
+        /// (seeded via <paramref name="velocity"/>) so the settle continues the fall without a pop, and never
+        /// overshoots (human 12:02). Same math as UnityEngine.Mathf.SmoothDamp, reimplemented in the Unity-free
+        /// domain (no maxSpeed lever); deterministic for a fixed <paramref name="dt"/>.
+        /// </summary>
+        private static float SmoothDamp(float current, float target, ref float velocity, float smoothTime, float dt)
+        {
+            if (smoothTime < 1e-4f)
+                smoothTime = 1e-4f;
+
+            var omega = 2f / smoothTime;
+            var x = omega * dt;
+            var exp = 1f / (1f + x + 0.48f * x * x + 0.235f * x * x * x);
+            var change = current - target;
+            var original = target;
+            var temp = (velocity + omega * change) * dt;
+            velocity = (velocity - omega * temp) * exp;
+            var output = target + (change + temp) * exp;
+
+            // Never overshoot: a preserved high velocity would otherwise carry the piece past the slot.
+            if ((original - current > 0f) == (output > original))
+            {
+                output = original;
+                velocity = (output - original) / dt;
+            }
+
+            return output;
         }
 
         private void UpdateFalling(PieceInstance piece, int bodyId, float dt)
@@ -268,11 +304,13 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
-        /// Kick off the soft-settle glide for a captured piece: claim the slot, kinematic-lock the body at its
-        /// current (possibly still-falling) capture pose right now (so contacts/gravity can't drift it before the
-        /// glide), mark the piece Placed (out of the Falling branch — the verdict is deferred while _settling is
-        /// non-empty), and record the eased path. The glide homes the position onto the slot and turns the
-        /// rotation the minimum amount needed to pass (human 11:36); game-balancer 13 §1/§6 for the timing/curve.
+        /// Kick off the soft-settle glide for a captured piece: read its capture velocity (BEFORE freezing, so
+        /// the glide can preserve the fall's momentum — human 12:02), claim the slot, kinematic-lock the body at
+        /// its current (possibly still-falling) capture pose right now (so contacts/gravity can't drift it before
+        /// the glide), mark it Placed (out of the Falling branch — the verdict is deferred while _settling is
+        /// non-empty), and record the path. The glide continues the momentum into the slot via a critically-damped
+        /// approach and turns the rotation the minimum amount needed to pass (human 11:36); game-balancer 13
+        /// §1/§6 for the timing.
         /// </summary>
         private void BeginSettle(PieceInstance piece, int bodyId, int slot)
         {
@@ -280,6 +318,7 @@ namespace Gameplay.Core.Mechanic
 
             var target = _level.Target.Slots[slot];
             var captured = _simulation.GetPose(bodyId);
+            var capturedVel = _simulation.GetVelocity(bodyId); // read before FreezeAt zeroes it
             var symmetryOrder = _typeByInstance[piece.InstanceId].SymmetryOrder;
 
             _simulation.FreezeAt(bodyId, captured.Position, captured.Rotation);
@@ -294,11 +333,13 @@ namespace Gameplay.Core.Mechanic
             _settling[piece.InstanceId] = new Settle
             {
                 BodyId = bodyId,
-                StartPos = captured.Position,
+                Pos = captured.Position,
+                // Seed the critically-damped glide with the capture velocity so it continues the fall instead of
+                // restarting from a dead stop (human 12:02: no hitch). The approach never overshoots the slot and
+                // leaves at most a tiny within-tolerance residual (the organic hand-placed feel, designer 12 §3.2).
+                VelX = capturedVel.X,
+                VelY = capturedVel.Y,
                 StartRot = captured.Rotation,
-                // Position homes to the exact slot: capture now happens mid-fall (up to SnapCaptureRadius above
-                // the slot), so a proportional residual would leave the piece visibly hovering. The organic,
-                // hand-placed feel is carried by the minimal-rotation residual below instead (human 11:36).
                 TargetPos = target.Position,
                 TargetRot = SettleTargetRotation(captured.Rotation, target.Rotation, symmetryOrder),
                 Step = 0,
