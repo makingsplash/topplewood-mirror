@@ -1505,6 +1505,75 @@
       "staticGeometry": [
         { "outline": [ { "x": -1.7, "y": -0.85 }, { "x": 1.7, "y": -0.85 }, { "x": 1.7, "y": -0.55 }, { "x": -1.7, "y": -0.55 } ] }
       ]
+    },
+    {
+      "levelId": "righttriangle_test",
+      "seed": 49,
+      "difficultyTier": 1,
+      "matchTolerance": { "posTol": 0.25, "angTol": 0.26179939 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "right_wedge", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 1, "height": 1 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": -0.5, "y": 0.5 } ],
+        "slots": [
+          { "kind": "right_wedge", "position": { "x": 0, "y": 0 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "right_wedge", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "outline": [ { "x": -1.0, "y": -0.8 }, { "x": 1.0, "y": -0.8 }, { "x": 1.0, "y": -0.5 }, { "x": -1.0, "y": -0.5 } ] }
+      ]
+    },
+    {
+      "levelId": "quarterdisc_test",
+      "seed": 50,
+      "difficultyTier": 1,
+      "matchTolerance": { "posTol": 0.25, "angTol": 0.26179939 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "corner_arc", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "quarterdisc", "radius": 1, "segments": 12 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": 0.49144, "y": -0.36947 }, { "x": 0.46593, "y": -0.24118 }, { "x": 0.42388, "y": -0.11732 }, { "x": 0.36603, "y": 0.0 }, { "x": 0.29335, "y": 0.10876 }, { "x": 0.20711, "y": 0.20711 }, { "x": 0.10876, "y": 0.29335 }, { "x": 0.0, "y": 0.36603 }, { "x": -0.11732, "y": 0.42388 }, { "x": -0.24118, "y": 0.46593 }, { "x": -0.36947, "y": 0.49144 }, { "x": -0.5, "y": 0.5 } ],
+        "slots": [
+          { "kind": "corner_arc", "position": { "x": 0, "y": 0 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "corner_arc", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "outline": [ { "x": -1.0, "y": -0.8 }, { "x": 1.0, "y": -0.8 }, { "x": 1.0, "y": -0.5 }, { "x": -1.0, "y": -0.5 } ] }
+      ]
+    },
+    {
+      "levelId": "gable_test",
+      "seed": 51,
+      "difficultyTier": 1,
+      "matchTolerance": { "posTol": 0.25, "angTol": 0.26179939 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "gable_block", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1, "height": 0.7, "apexHeight": 0.5 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.5, "y": -0.6 }, { "x": 0.5, "y": -0.6 }, { "x": 0.5, "y": 0.1 }, { "x": 0, "y": 0.6 }, { "x": -0.5, "y": 0.1 } ],
+        "slots": [
+          { "kind": "gable_block", "position": { "x": 0, "y": 0 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "gable_block", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "outline": [ { "x": -1.0, "y": -0.9 }, { "x": 1.0, "y": -0.9 }, { "x": 1.0, "y": -0.6 }, { "x": -1.0, "y": -0.6 } ] }
+      ]
     }
   ]
 }

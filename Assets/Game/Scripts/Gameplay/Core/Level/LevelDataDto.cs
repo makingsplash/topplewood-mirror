@@ -113,8 +113,10 @@ namespace Gameplay.Core
     }
 
     /// <summary>A convex primitive, reconstructed via the <see cref="Shape"/> factories (no raw vertex lists
-    /// to author). Discriminated by <c>primitive</c>: box | triangle | halfdisc | plank | trapezoid | parallelogram.
-    /// <c>topWidth</c> feeds trapezoid (top edge), <c>skew</c> feeds parallelogram (top-edge +X shift).</summary>
+    /// to author). Discriminated by <c>primitive</c>: box | triangle | halfdisc | plank | trapezoid |
+    /// parallelogram | righttriangle | quarterdisc | gable.
+    /// <c>topWidth</c> feeds trapezoid (top edge), <c>skew</c> feeds parallelogram (top-edge +X shift),
+    /// <c>apexHeight</c> feeds gable (roof height above the rectangular base).</summary>
     public sealed class ShapeDto
     {
         [JsonProperty("primitive")] public string Primitive { get; set; }
@@ -124,6 +126,7 @@ namespace Gameplay.Core
         [JsonProperty("segments")] public int Segments { get; set; } = 12;
         [JsonProperty("topWidth")] public float TopWidth { get; set; }   // trapezoid: top-edge width
         [JsonProperty("skew")] public float Skew { get; set; }           // parallelogram: top-edge +X shift
+        [JsonProperty("apexHeight")] public float ApexHeight { get; set; } // gable: roof height above the rectangular base
 
         public Shape ToDomain()
         {
@@ -151,6 +154,27 @@ namespace Gameplay.Core
                         throw new InvalidOperationException(
                             $"parallelogram needs positive width/height; got {Width}/{Height}.");
                     return Shape.Parallelogram(Width, Height, Skew);
+                }
+                case "righttriangle":
+                {
+                    if (Width <= 0f || Height <= 0f)
+                        throw new InvalidOperationException(
+                            $"righttriangle needs positive width/height; got {Width}/{Height}.");
+                    return Shape.RightTriangle(Width, Height);
+                }
+                case "quarterdisc":
+                {
+                    if (Radius <= 0f)
+                        throw new InvalidOperationException(
+                            $"quarterdisc needs positive radius; got {Radius}.");
+                    return Shape.QuarterDisc(Radius, Segments);
+                }
+                case "gable":
+                {
+                    if (Width <= 0f || Height <= 0f || ApexHeight <= 0f)
+                        throw new InvalidOperationException(
+                            $"gable needs positive width/height/apexHeight; got {Width}/{Height}/{ApexHeight}.");
+                    return Shape.Gable(Width, Height, ApexHeight);
                 }
                 default:
                     throw new InvalidOperationException($"Unknown shape primitive '{Primitive}'.");
