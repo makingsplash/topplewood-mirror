@@ -55,13 +55,25 @@ namespace Gameplay.DI
             builder.RegisterEntryPoint<GameControllerRunner>();
             // After the runner loads level 0, this resumes the persisted campaign index and drives WIN→next /
             // LOSS→retry reloads (TASK-009). Registered before the presenters so they render the resumed level.
+#if GPIE_DEVELOPMENT
+            // .AsSelf() also makes the same singleton resolvable by concrete type so the dev level-switch cheat
+            // (TASK-011) can inject it and drive DevJumpToLevel. Player builds keep interface-only registration.
+            builder.RegisterEntryPoint<CampaignProgressionController>().AsSelf();
+#else
             builder.RegisterEntryPoint<CampaignProgressionController>();
+#endif
             // Frames Camera.main to the level content (TASK-009, RFC 07 §1) so tall levels (L5) fit on screen
             // and every piece is tappable. Registered BEFORE TargetPreviewPresenter, which anchors to the
             // camera viewport — the camera must be framed first.
             builder.RegisterEntryPoint<CameraFramingPresenter>();
             builder.RegisterEntryPoint<ShapeFillPresenter>();
             builder.RegisterEntryPoint<TargetPreviewPresenter>();
+
+#if GPIE_DEVELOPMENT
+            // Dev/QA level-switch cheat overlay (TASK-011): editor/dev builds only, never in player builds.
+            // Injects CampaignProgressionController so jumps keep the campaign pointer in sync.
+            builder.RegisterEntryPoint<Gameplay.Dev.LevelCheatController>();
+#endif
         }
     }
 }
