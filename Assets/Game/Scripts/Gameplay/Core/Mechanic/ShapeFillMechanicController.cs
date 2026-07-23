@@ -28,11 +28,16 @@ namespace Gameplay.Core.Mechanic
         // Slots already claimed by a Placed piece this session — one slot, one piece (mirrors the evaluator's
         // greedy assignment) so the snap assist never sends two pieces to the same slot (RFC 07 §2.2).
         private readonly HashSet<int> _occupiedSlots = new();
-        // Pieces gliding from their landing pose to a within-tolerance target (soft-settle, game-balancer 13),
+        // Pieces gliding from their capture pose onto the slot (soft-settle, game-balancer 13 + human 11:36),
         // keyed by InstanceId. While this is non-empty the rest verdict is deferred so the figure is never
         // judged mid-glide (§6.4).
         private readonly Dictionary<int, Settle> _settling = new();
         private readonly List<int> _settleDone = new();
+
+        // Small angular guard (rad) kept under angTol so float error at the evaluator can't leave a
+        // minimally-corrected rotation on the failing side of the border (human 11:36). Sibling of the
+        // evaluator's own Eps.
+        private const float AngleMatchGuard = 1e-3f;
 
         private IDisposable _levelLoadedSub;
         private IDisposable _stateRestoredSub;
@@ -179,9 +184,9 @@ namespace Gameplay.Core.Mechanic
 
         /// <summary>
         /// Advance every in-flight soft-settle glide by one fixed step: drive the (kinematic) body along the
-        /// eased path from its landing pose to the within-tolerance target, then freeze it exactly at the target
-        /// on the final step. Duration is counted in fixed steps, so the glide is headless-deterministic
-        /// (game-balancer 13 §6.1); the angular path is the symmetry-reduced shortest arc (§6.2).
+        /// eased path from its capture pose onto the slot, then freeze it exactly at the target on the final
+        /// step. Duration is counted in fixed steps, so the glide is headless-deterministic (game-balancer 13
+        /// §6.1); the angular path is the symmetry-reduced shortest arc (§6.2).
         /// </summary>
         private void AdvanceSettling()
         {
@@ -227,6 +232,16 @@ namespace Gameplay.Core.Mechanic
                 return;
             }
 
+            // Soft-settle assist: begin the eased glide the moment the still-falling piece enters the capture
+            // window of a free slot — so the correction blends into the descent instead of playing as a delayed
+            // animation after the piece has already come to rest (human 11:36). No rest dwell is required.
+            var slot = FindSnapSlot(piece, bodyId);
+            if (slot >= 0)
+            {
+                BeginSettle(piece, bodyId, slot);
+                return;
+            }
+
             if (_simulation.GetSpeed(bodyId) < _tuning.RestSpeedEpsilon)
             {
                 piece.RestTimer += dt;
@@ -240,21 +255,13 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
-        /// Settle a piece at rest. When it landed within the capture window of a free slot (casual assist), begin
-        /// a short eased glide onto a within-tolerance pose (soft-settle — reads as the piece easing into place,
-        /// not a magnet snapping it; game-balancer 13). Otherwise freeze it exactly where it lies. Freezing
-        /// (kinematic) kills post-rest drift and makes the piece a rigid support the next drop cannot shove — RFC 07 §2.1.
+        /// A piece that came to rest without ever entering a slot's capture window gets no assist — freeze it
+        /// exactly where it lies. Freezing (kinematic) kills post-rest drift and makes the piece a rigid support
+        /// the next drop cannot shove (RFC 07 §2.1). Captured pieces are handled eagerly in UpdateFalling
+        /// (the soft-settle glide begins during the fall, human 11:36).
         /// </summary>
         private void Place(PieceInstance piece, int bodyId)
         {
-            var slot = FindSnapSlot(piece, bodyId);
-            if (slot >= 0)
-            {
-                BeginSettle(piece, bodyId, slot);
-                return;
-            }
-
-            // No capture: nothing to soften — freeze exactly where it lies.
             var pose = _simulation.GetPose(bodyId);
             FreezePlaced(piece, pose.Position, pose.Rotation);
             _simulation.FreezeAt(bodyId, pose.Position, pose.Rotation);
@@ -262,19 +269,20 @@ namespace Gameplay.Core.Mechanic
 
         /// <summary>
         /// Kick off the soft-settle glide for a captured piece: claim the slot, kinematic-lock the body at its
-        /// landing pose right now (so contacts can't drift it before the glide), mark the piece Placed (out of the
-        /// Falling branch — the verdict is deferred while _settling is non-empty), and record the eased path to a
-        /// within-tolerance target. game-balancer 13 §1/§6.
+        /// current (possibly still-falling) capture pose right now (so contacts/gravity can't drift it before the
+        /// glide), mark the piece Placed (out of the Falling branch — the verdict is deferred while _settling is
+        /// non-empty), and record the eased path. The glide homes the position onto the slot and turns the
+        /// rotation the minimum amount needed to pass (human 11:36); game-balancer 13 §1/§6 for the timing/curve.
         /// </summary>
         private void BeginSettle(PieceInstance piece, int bodyId, int slot)
         {
             _occupiedSlots.Add(slot);
 
             var target = _level.Target.Slots[slot];
-            var landed = _simulation.GetPose(bodyId);
+            var captured = _simulation.GetPose(bodyId);
             var symmetryOrder = _typeByInstance[piece.InstanceId].SymmetryOrder;
 
-            _simulation.FreezeAt(bodyId, landed.Position, landed.Rotation);
+            _simulation.FreezeAt(bodyId, captured.Position, captured.Rotation);
 
             piece.State = PieceLifecycle.Placed;
             _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Placed);
@@ -286,10 +294,13 @@ namespace Gameplay.Core.Mechanic
             _settling[piece.InstanceId] = new Settle
             {
                 BodyId = bodyId,
-                StartPos = landed.Position,
-                StartRot = landed.Rotation,
-                TargetPos = SettleTargetPosition(landed.Position, target.Position),
-                TargetRot = SettleTargetRotation(landed.Rotation, target.Rotation, symmetryOrder),
+                StartPos = captured.Position,
+                StartRot = captured.Rotation,
+                // Position homes to the exact slot: capture now happens mid-fall (up to SnapCaptureRadius above
+                // the slot), so a proportional residual would leave the piece visibly hovering. The organic,
+                // hand-placed feel is carried by the minimal-rotation residual below instead (human 11:36).
+                TargetPos = target.Position,
+                TargetRot = SettleTargetRotation(captured.Rotation, target.Rotation, symmetryOrder),
                 Step = 0,
                 TotalSteps = steps,
             };
@@ -306,52 +317,26 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
-        /// Settle target position: move a <c>SettleGain</c> fraction of the way from the landing pose toward the
-        /// slot, leaving a (1−gain) residual. The residual is additionally clamped to
-        /// <c>SettleMaxResidualFactor·posTol</c> so it never approaches the tolerance border (game-balancer 13 §2.3/§2.4).
+        /// Settle target rotation — the "minimally successful" angle (human 11:36): if the captured rotation
+        /// already matches within angTol, keep it exactly (no visible turn — reads as the piece landing at its
+        /// own natural angle); otherwise turn only just far enough, toward the slot along the symmetry-reduced
+        /// shortest arc, to bring the residual just inside angTol (guarded by <see cref="AngleMatchGuard"/> so
+        /// float error at the evaluator can't leave it on the failing side of the border).
         /// </summary>
-        private Vec2 SettleTargetPosition(Vec2 landed, Vec2 slot)
+        private float SettleTargetRotation(float captured, float slot, int symmetryOrder)
         {
-            var error = slot - landed;
-            var dist = error.Length;
-            if (dist <= 1e-6f)
-                return slot;
-
-            var maxResidual = _tuning.SettleMaxResidualFactor * _level.MatchTolerance.PosTol;
-            var gain = EffectiveGain(dist, maxResidual);
-            return landed + error * gain;
-        }
-
-        /// <summary>
-        /// Settle target rotation: rotate a <c>SettleGain</c> fraction of the symmetry-reduced shortest arc from
-        /// the landing angle toward the slot, staying near the landing angle (no full-period jump) and leaving a
-        /// (1−gain) residual that is guaranteed within angTol (game-balancer 13 §2.3/§6.2).
-        /// </summary>
-        private float SettleTargetRotation(float landed, float slot, int symmetryOrder)
-        {
-            var signed = SignedSymmetryReduce(landed - slot, symmetryOrder);
+            var signed = SignedSymmetryReduce(captured - slot, symmetryOrder);
             var mag = MathF.Abs(signed);
-            if (mag <= 1e-6f)
-                return landed;
 
-            var maxResidual = _tuning.SettleMaxResidualFactor * _level.MatchTolerance.AngTol;
-            var gain = EffectiveGain(mag, maxResidual);
-            return landed - signed * gain;
-        }
+            var angTol = _level.MatchTolerance.AngTol;
+            if (mag <= angTol)
+                return captured; // already a passing angle — leave it as it landed.
 
-        /// <summary>SettleGain, raised only if the proportional residual (1−gain)·error would exceed the safety
-        /// clamp; result is bound to [0, 1]. Higher gain ⇒ smaller residual.</summary>
-        private float EffectiveGain(float error, float maxResidual)
-        {
-            var gain = _tuning.SettleGain;
-            var clampGain = 1f - maxResidual / error;
-            if (clampGain > gain)
-                gain = clampGain;
-            if (gain < 0f)
-                gain = 0f;
-            else if (gain > 1f)
-                gain = 1f;
-            return gain;
+            var residual = angTol - AngleMatchGuard;
+            if (residual < 0f)
+                residual = 0f;
+            var correction = mag - residual;
+            return captured - MathF.Sign(signed) * correction;
         }
 
         /// <summary>Easing t∈[0,1]→[0,1]. SmootherStep (default) is C2 at both ends; the others are A/B alts.</summary>

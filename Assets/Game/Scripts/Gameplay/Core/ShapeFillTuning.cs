@@ -49,13 +49,14 @@ namespace Gameplay.Core
         /// velocity pop. game-balancer 13 §2.2.</summary>
         public SettleEasing SettleEasing { get; set; } = SettleEasing.SmootherStep;
 
-        /// <summary>Fraction of the landing error the glide removes; the (1−gain) remainder is an organic
-        /// residual kept inside tolerance so the build looks hand-placed, not grid-snapped. At 0.75 the worst
-        /// residual (landing at the capture edge) is 0.5·tol. game-balancer 13 §2.3 (A/B 0.70–0.85).</summary>
+        /// <summary>Fraction of the landing error the glide removes (game-balancer 13 §2.3). CURRENTLY UNUSED —
+        /// human 11:36 moved the settle trigger into the fall and asked for minimal correction, so position now
+        /// homes to the exact slot and rotation turns only just enough to pass; the proportional-gain residual
+        /// model is superseded. Kept pending balancer re-confirmation (A/B 0.70–0.85 no longer wired).</summary>
         public float SettleGain { get; set; } = 0.75f;
 
-        /// <summary>Safety clamp: the residual is additionally capped at this fraction of posTol/angTol, keeping
-        /// it clear of the tolerance border even if the capture window widens or gain rises. game-balancer 13 §2.4.</summary>
+        /// <summary>Safety clamp on the proportional residual (game-balancer 13 §2.4). CURRENTLY UNUSED for the
+        /// same reason as <see cref="SettleGain"/> — kept pending balancer re-confirmation.</summary>
         public float SettleMaxResidualFactor { get; set; } = 0.6f;
     }
 }
