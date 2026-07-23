@@ -1807,13 +1807,13 @@
         ]
       },
       "pieces": [
-        { "kind": "wedge", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0.384 },
+        { "kind": "wedge", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0.209 },
         { "kind": "cap", "startPosition": { "x": -0.15, "y": 4.5 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "outline": [ { "x": -0.9, "y": -0.8 }, { "x": 0.9, "y": -0.8 }, { "x": 0.9, "y": -0.5 }, { "x": -0.9, "y": -0.5 } ] },
-        { "outline": [ { "x": -0.65, "y": -0.5 }, { "x": -0.55, "y": -0.5 }, { "x": -0.55, "y": 0.45 }, { "x": -0.65, "y": 0.45 } ] },
-        { "outline": [ { "x": 0.55, "y": -0.5 }, { "x": 0.65, "y": -0.5 }, { "x": 0.65, "y": 0.45 }, { "x": 0.55, "y": 0.45 } ] }
+        { "outline": [ { "x": -0.78, "y": -0.5 }, { "x": -0.68, "y": -0.5 }, { "x": -0.68, "y": 0.45 }, { "x": -0.78, "y": 0.45 } ] },
+        { "outline": [ { "x": 0.68, "y": -0.5 }, { "x": 0.78, "y": -0.5 }, { "x": 0.78, "y": 0.45 }, { "x": 0.68, "y": 0.45 } ] }
       ]
     },
     {
@@ -1894,11 +1894,12 @@
       "pieces": [
         { "kind": "support", "startPosition": { "x": -0.9, "y": 3.0 }, "startRotation": 0 },
         { "kind": "support", "startPosition": { "x": 0.9, "y": 4.0 }, "startRotation": 0 },
-        { "kind": "deck", "startPosition": { "x": 0, "y": 5.5 }, "startRotation": 0.349 }
+        { "kind": "deck", "startPosition": { "x": 0, "y": 5.5 }, "startRotation": 0.209 }
       ],
       "staticGeometry": [
         { "outline": [ { "x": -1.3, "y": -0.5 }, { "x": 1.3, "y": -0.5 }, { "x": 1.3, "y": -0.3 }, { "x": -1.3, "y": -0.3 } ] },
-        { "outline": [ { "x": 0.95, "y": 0.3 }, { "x": 1.05, "y": 0.3 }, { "x": 1.05, "y": 0.75 }, { "x": 0.95, "y": 0.75 } ] }
+        { "outline": [ { "x": 0.95, "y": 0.3 }, { "x": 1.05, "y": 0.3 }, { "x": 1.05, "y": 0.75 }, { "x": 0.95, "y": 0.75 } ] },
+        { "outline": [ { "x": -1.05, "y": 0.3 }, { "x": -0.95, "y": 0.3 }, { "x": -0.95, "y": 0.75 }, { "x": -1.05, "y": 0.75 } ] }
       ]
     },
     {
@@ -2094,7 +2095,7 @@
         { "kind": "base", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
         { "kind": "mast", "startPosition": { "x": 0, "y": 4.5 }, "startRotation": 0 },
         { "kind": "cw", "startPosition": { "x": -0.5, "y": 6.0 }, "startRotation": 0 },
-        { "kind": "boom", "startPosition": { "x": 0, "y": 7.5 }, "startRotation": 0.419 },
+        { "kind": "boom", "startPosition": { "x": 0, "y": 7.5 }, "startRotation": 0.209 },
         { "kind": "hook", "startPosition": { "x": 0.7, "y": 9.0 }, "startRotation": 0 }
       ],
       "staticGeometry": [
