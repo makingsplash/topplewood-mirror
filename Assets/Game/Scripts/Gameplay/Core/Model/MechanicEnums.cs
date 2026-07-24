@@ -17,10 +17,11 @@ namespace Gameplay.Core
     }
 
     /// <summary>
-    /// How a level's placed pieces behave physically (TASK-021). <see cref="Assembly"/> is the canonical stack:
-    /// every piece freezes kinematic on rest (snap-to-slot + rigid support). <see cref="Balance"/> is the
-    /// seesaw class: the pivot beam is pinned to a damped world hinge and stays Dynamic (cranks under load),
-    /// snap/freeze are off, and the verdict waits for GLOBAL rest so a swinging beam is never judged mid-crank.
+    /// How a level's placed pieces behave physically (TASK-021, free-beam TASK-023). <see cref="Assembly"/> is the
+    /// canonical stack: every piece freezes kinematic on rest (snap-to-slot + rigid support). <see cref="Balance"/>
+    /// is the seesaw class: the beam is a FREE Dynamic body resting on the fulcrum (no hinge/pin/limits), loads are
+    /// released as synchronous groups (a coalescence window merges a pair-tap into one physics step), the in-fall
+    /// snap assist is off, and the verdict waits for GLOBAL rest so a swinging beam is never judged mid-swing.
     /// Default is Assembly — old levels and JSON without a physicsMode field are unchanged.
     /// </summary>
     public enum PhysicsMode

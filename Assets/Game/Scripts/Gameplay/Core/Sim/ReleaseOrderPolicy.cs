@@ -1,9 +1,12 @@
+using System.Collections.Generic;
+
 namespace Gameplay.Core.Sim
 {
     /// <summary>
     /// Core policy (RFC §4): releases Idle pieces in an explicit order of placement indices, rest-gated. The
     /// host feeds a concrete permutation; the cursor advances one release per call, skipping any index whose
-    /// piece is no longer Idle.
+    /// piece is no longer Idle. Always a SINGLE-element group (one piece per release) — the pre-TASK-023
+    /// behaviour, unchanged.
     /// </summary>
     public sealed class ReleaseOrderPolicy : ISimBotPolicy
     {
@@ -12,8 +15,9 @@ namespace Gameplay.Core.Sim
 
         public ReleaseOrderPolicy(int[] order) => _order = order;
 
-        public bool TryNextRelease(GameModel model, out Vec2 tapPoint)
+        public bool TryNextRelease(GameModel model, List<Vec2> taps)
         {
+            taps.Clear();
             while (_cursor < _order.Length)
             {
                 var placementIndex = _order[_cursor++];
@@ -21,11 +25,10 @@ namespace Gameplay.Core.Sim
                 if (piece == null)
                     continue;
 
-                tapPoint = SimGeometry.ShapeCentroidWorld(model.TypeFor(piece), piece.Position, piece.Rotation);
+                taps.Add(SimGeometry.ShapeCentroidWorld(model.TypeFor(piece), piece.Position, piece.Rotation));
                 return true;
             }
 
-            tapPoint = Vec2.Zero;
             return false;
         }
 

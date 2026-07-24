@@ -15,8 +15,10 @@ namespace Gameplay.Core
         public string Color { get; }
         public int SymmetryOrder { get; }
 
-        /// <summary>Balance-mode hinge beam (TASK-021): on rest it is world-pinned (Dynamic, damped) instead of
-        /// frozen kinematic, so weight on one side tilts it. Only meaningful when the level is PhysicsMode.Balance.</summary>
+        /// <summary>Balance-mode beam marker (TASK-021 → free-beam TASK-023): the piece is judged from its FREE
+        /// rest pose (never snapped to a slot) and stays Dynamic on rest so weight tilts it — the free beam resting
+        /// on the fulcrum. (TASK-021 world-pinned it via a hinge; the pin was removed with the pivot approach, but
+        /// the flag is retained as this "judged-from-pose, not snapped" marker.) Only meaningful when PhysicsMode.Balance.</summary>
         public bool Pivot { get; }
 
         public PieceType(string kind, Shape shape, MaterialProfile material, string color = null, int symmetryOrder = 1,

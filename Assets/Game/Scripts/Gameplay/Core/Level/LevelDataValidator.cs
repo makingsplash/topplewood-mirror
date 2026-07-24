@@ -48,10 +48,10 @@ namespace Gameplay.Core
         }
 
         /// <summary>
-        /// Balance-mode structural checks (TASK-021): the level must have at least one pivot piece, and every
-        /// pivot Kind must map to exactly ONE in-Bounds slot — the hinge anchor is a single point, so two slots
-        /// of a pivot Kind (or none) is a broken authoring, not a solvable level. Winnability under a live crank
-        /// is proven by level-sim, not here.
+        /// Balance-mode structural checks (TASK-021, free-beam TASK-023): the level must have at least one pivot
+        /// (beam) piece, and every pivot Kind must map to exactly ONE in-Bounds slot — the beam is judged against a
+        /// single rest/judge slot, so two slots of a pivot Kind (or none) is a broken authoring, not a solvable
+        /// level. Winnability under the live free beam is proven by level-sim, not here.
         /// </summary>
         private static void ValidateBalance(LevelData level, List<string> errors)
         {
@@ -83,11 +83,11 @@ namespace Gameplay.Core
                         }
 
                 if (count == 0)
-                    errors.Add($"Pivot kind '{kind}' has no target slot to anchor its hinge.");
+                    errors.Add($"Pivot kind '{kind}' has no target slot to judge its rest pose.");
                 else if (count > 1)
-                    errors.Add($"Pivot kind '{kind}' has {count} slots; a hinge needs exactly one anchor slot.");
+                    errors.Add($"Pivot kind '{kind}' has {count} slots; a beam needs exactly one judge slot.");
                 else if (!level.Bounds.Contains(anchor))
-                    errors.Add($"Pivot kind '{kind}' hinge anchor {anchor} is outside Bounds.");
+                    errors.Add($"Pivot kind '{kind}' beam judge slot {anchor} is outside Bounds.");
             }
         }
 

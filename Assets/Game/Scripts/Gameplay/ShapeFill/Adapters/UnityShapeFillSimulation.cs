@@ -181,6 +181,8 @@ namespace Gameplay.Adapters
             t.rotation = Quaternion.Euler(0f, 0f, deg);
         }
 
+        // RETAINED for the forward-vision catapult levels (TASK-021 vision); NO caller in the free-beam seesaw path
+        // (TASK-023 removed the pin from seesaws — the beam now rests free on the fulcrum).
         public void PinHinge(int bodyId, Vec2 anchor)
         {
             if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)

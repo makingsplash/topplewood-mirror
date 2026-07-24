@@ -17,6 +17,8 @@ namespace Gameplay.View
         private MeshRenderer _renderer;
         private MaterialPropertyBlock _mpb;
         private Color _baseColor = DefaultColor;
+        private PieceLifecycle _state = PieceLifecycle.Idle;
+        private bool _armed;
 
         public void Initialize(Shape shape, string colorHex)
         {
@@ -44,9 +46,26 @@ namespace Gameplay.View
 
         public void SetState(PieceLifecycle state)
         {
-            // Subtle feedback: dim while Idle (waiting for a tap), full colour once released/placed.
-            var color = state == PieceLifecycle.Idle ? _baseColor * 0.7f : _baseColor;
-            ApplyColor(color);
+            _state = state;
+            RefreshColor();
+        }
+
+        public void SetArmed(bool armed)
+        {
+            _armed = armed;
+            RefreshColor();
+        }
+
+        // Subtle feedback: dim while Idle (waiting for a tap), full colour once released/placed. When armed in the
+        // balance-mode coalescence group, brighten toward white to telegraph "waiting for its pair" (TASK-023).
+        private void RefreshColor()
+        {
+            if (_armed)
+            {
+                ApplyColor(Color.Lerp(_baseColor, Color.white, 0.4f));
+                return;
+            }
+            ApplyColor(_state == PieceLifecycle.Idle ? _baseColor * 0.7f : _baseColor);
         }
 
         public void Dispose()

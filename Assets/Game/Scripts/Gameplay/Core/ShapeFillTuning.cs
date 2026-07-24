@@ -73,9 +73,29 @@ namespace Gameplay.Core
         /// same reason as <see cref="SettleGain"/> — kept pending balancer re-confirmation.</summary>
         public float SettleMaxResidualFactor { get; set; } = 0.6f;
 
-        // ── Balance-mode knob (TASK-021). Only levels with PhysicsMode.Balance touch this. ──
+        // ── Balance-mode: synchronous group release (TASK-023). Only PhysicsMode.Balance touches these. On a free
+        //    beam the ONLY way to keep it level is to load both ends in the SAME physics step, so taps on separate
+        //    Idle pieces are buffered into a coalescence window and flushed as one synchronous release group. ──
 
-        /// <summary>Angular damping applied to a pivot beam when it is world-pinned by the balance hinge — drives
+        /// <summary>Coalescence window (in fixed steps) opened by the first balance-mode tap: further taps on OTHER
+        /// Idle pieces within the window join the same release group, and the whole group is released in ONE flush
+        /// step so a symmetric pair enters the physics synchronously (net torque ≈ 0 → the free beam stays level).
+        /// A single tap that lets the window expire releases one piece → the beam honestly tips → Lost (the
+        /// winnability gate is the physics, not an artificial check). ~10 steps ≈ 167 ms @ 1/60 (a comfortable
+        /// double-tap; designer W≈120–200 ms). UNVERIFIED — ⟨balancer⟩ tunes against level-sim (no "swallowed
+        /// tap" too low, no lag too high). Assembly levels never open the window (one tap = immediate release).</summary>
+        public int CoalesceWindowSteps { get; set; } = 10;
+
+        /// <summary>Max pieces in one synchronous release group (v1 = a pair). When this many distinct Idle pieces
+        /// have been tapped inside the window the group flushes IMMEDIATELY (minimal latency) instead of waiting
+        /// for the window to expire. Generalises cheaply to larger groups later; v1 is capped at 2.</summary>
+        public int MaxCoalesceGroup { get; set; } = 2;
+
+        // ── Balance-mode knob (TASK-021). PinHinge-only: retained for the forward-vision catapult levels; the
+        //    free-beam seesaws (TASK-023) no longer pin the beam, so these three levers are unused by them. ──
+
+        /// <summary>PinHinge-only (TASK-021), UNUSED by the TASK-023 free-beam seesaws. Angular damping applied to a
+        /// pivot beam when it is world-pinned by the balance hinge — drives
         /// the crank to ONE rest inside the sim step budget (no metastable knife-edge, no timeout) yet leaves a
         /// real overload visibly tipping the beam. Raised 2→4 (game-balancer 03 §2.3): with the pin now above the
         /// loaded CM (self-levelling pendulum, C2) the beam oscillates on the way to rest, so it needs firmer
@@ -84,7 +104,8 @@ namespace Gameplay.Core
         /// the balance verdict reuses <see cref="RestSpeedEpsilon"/>/<see cref="RestDurationSeconds"/>.</summary>
         public float BalanceAngularDamping { get; set; } = 4.0f;
 
-        /// <summary>Vertical offset (world units) that lifts the balance hinge pivot ABOVE the beam's rested centre
+        /// <summary>PinHinge-only (TASK-021), UNUSED by the TASK-023 free-beam seesaws. Vertical offset (world units)
+        /// that lifts the balance hinge pivot ABOVE the beam's rested centre
         /// so the pinned point sits above the loaded centre of mass — turning the seesaw into a self-levelling
         /// pendulum with a restoring torque toward horizontal (game-balancer 03 §2.1, C2). Pinning at the centre
         /// (offset 0) left the loaded CM above the pivot → inverted pendulum / neutral knife-edge → no restoring
@@ -93,7 +114,8 @@ namespace Gameplay.Core
         /// Starting value, UNVERIFIED — balancer sweep 0.45–0.75 (margin over CM: +0.44/+0.32/+0.22 for the 3 seesaws).</summary>
         public float BalancePivotAnchorOffsetY { get; set; } = 0.6f;
 
-        /// <summary>Angular limit (degrees, ±) applied to the balance hinge as physical end-stops so a single load
+        /// <summary>PinHinge-only (TASK-021), UNUSED by the TASK-023 free-beam seesaws. Angular limit (degrees, ±)
+        /// applied to the balance hinge as physical end-stops so a single load
         /// on the free-swinging beam cannot tilt it past the ~31° slip angle (friction 0.6) and slide off before its
         /// counter-load arrives (game-balancer 03 §2.2, C3). Horizontal (0°) stays inside the range so the win pose
         /// is reachable. <c>≤0</c> ⇒ limits OFF — kept generic for the forward-vision catapult levels where the beam
