@@ -10,10 +10,10 @@ namespace Gameplay.Dev
     /// <see cref="Update"/> (never inside OnGUI) so the level is not reloaded mid-layout. Editor/dev builds only
     /// (GPIE_DEVELOPMENT). Fonts/buttons/panel scale with screen height so the overlay stays readable and
     /// tappable on high-DPI devices.
-    /// Collapse/expand (TASK-015): the overlay starts <b>collapsed</b> into a small top-left widget
-    /// ('DEV: &lt;levelId&gt; i/N ▸') that shows the level name/index without covering the play field; clicking it
-    /// (or the '\' hotkey) expands the full panel, and clicking the header (or '\') collapses it again. The '['
-    /// / ']' switch hotkeys stay live in both states.
+    /// Collapse/expand (TASK-015, TASK-019): the overlay starts <b>collapsed</b> into a small fixed-size square
+    /// icon button ('≡') pinned to the top-left corner, so it never covers the play field; clicking it (or the '\'
+    /// hotkey) expands the full panel, and clicking the header (or '\') collapses it again. The level id and i/N
+    /// live only in the expanded panel. The '[' / ']' switch hotkeys stay live in both states.
     /// </summary>
     public sealed class LevelCheatOverlay : MonoBehaviour
     {
@@ -84,21 +84,18 @@ namespace Gameplay.Dev
             if (_overlayExpanded)
                 DrawExpandedPanel(scale, margin);
             else
-                DrawCollapsedWidget(margin);
+                DrawCollapsedWidget(scale, margin);
         }
 
-        // Compact top-left widget: one button that shows the current level id + i/N and expands on click. Sized to
-        // its own content so it never spans the screen and leaves the play field clear.
-        private void DrawCollapsedWidget(float margin)
+        // Compact top-left widget: a small fixed-size square icon button that expands the full panel on click.
+        // Fixed side (not content-sized) so it never spans the screen; the level id + i/N live in the expanded
+        // panel, not here. Drawn via GUI.Button on an explicit square Rect so IMGUI layout cannot stretch it.
+        private void DrawCollapsedWidget(float scale, float margin)
         {
-            var label = $"DEV: {_controller.CurrentLevelId}  {_controller.CurrentIndex + 1}/{_controller.LevelCount} ▸";
-            var size = _widgetStyle.CalcSize(new GUIContent(label));
+            var side = 44f * scale;
 
-            using (new GUILayout.AreaScope(new Rect(margin, margin, size.x, size.y)))
-            {
-                if (GUILayout.Button(label, _widgetStyle))
-                    _overlayExpanded = true;
-            }
+            if (GUI.Button(new Rect(margin, margin, side, side), "≡", _widgetStyle))
+                _overlayExpanded = true;
         }
 
         private void DrawExpandedPanel(float scale, float margin)
@@ -148,11 +145,14 @@ namespace Gameplay.Dev
 
             _builtScale = scale;
 
+            // Compact square icon style for the collapsed widget: no fixedHeight/padding (those would fight the
+            // explicit square Rect in DrawCollapsedWidget), just a centered bold glyph.
             _widgetStyle = new GUIStyle(GUI.skin.button)
             {
-                fontSize = Mathf.RoundToInt(22f * scale),
+                fontSize = Mathf.RoundToInt(24f * scale),
                 fontStyle = FontStyle.Bold,
-                fixedHeight = 58f * scale,
+                alignment = TextAnchor.MiddleCenter,
+                padding = new RectOffset(0, 0, 0, 0),
             };
             _headerStyle = new GUIStyle(GUI.skin.button)
             {
