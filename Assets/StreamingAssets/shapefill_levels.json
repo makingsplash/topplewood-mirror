@@ -9,7 +9,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wood_unit", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } }
+        { "color": "#E23B3B", "kind": "wood_unit", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": 0.5, "y": 1.5 }, { "x": -0.5, "y": 1.5 } ],
@@ -34,8 +34,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wood_unit", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
-        { "kind": "roof_tri", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1, "height": 1 } }
+        { "color": "#F2801D", "kind": "wood_unit", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
+        { "color": "#F4C20D", "kind": "roof_tri", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1, "height": 1 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": 0.5, "y": 0.5 }, { "x": 0, "y": 1.5 }, { "x": -0.5, "y": 0.5 } ],
@@ -60,7 +60,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "half_disc", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } }
+        { "color": "#F4C20D", "kind": "half_disc", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": 0.5, "y": 0.5 }, { "x": -0.5, "y": 0.5 } ],
@@ -87,8 +87,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wood_unit", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
-        { "kind": "roof_tri", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1, "height": 1 } }
+        { "color": "#4CAF50", "kind": "wood_unit", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
+        { "color": "#12A5A5", "kind": "roof_tri", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1, "height": 1 } }
       ],
       "target": {
         "outline": [ { "x": -1.025, "y": -0.5 }, { "x": 1.025, "y": -0.5 }, { "x": 1.025, "y": 0.5 }, { "x": 0.5, "y": 0.5 }, { "x": 0, "y": 1.5 }, { "x": -0.5, "y": 0.5 }, { "x": -1.025, "y": 0.5 } ],
@@ -115,9 +115,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wood_unit", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
-        { "kind": "half_disc", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } },
-        { "kind": "roof_tri", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1, "height": 1 } }
+        { "color": "#12A5A5", "kind": "wood_unit", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
+        { "color": "#2E7CD6", "kind": "half_disc", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } },
+        { "color": "#5B4FE0", "kind": "roof_tri", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1, "height": 1 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": 0.5, "y": 0.5 }, { "x": 0.5, "y": 1.5 }, { "x": 0, "y": 2.5 }, { "x": -0.5, "y": 1.5 }, { "x": -0.5, "y": 0.5 } ],
@@ -148,7 +148,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "crate", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2, "height": 2 } }
+        { "color": "#2E7CD6", "kind": "crate", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2, "height": 2 } }
       ],
       "target": {
         "outline": [ { "x": -1, "y": -1 }, { "x": 1, "y": -1 }, { "x": 1, "y": 1 }, { "x": -1, "y": 1 } ],
@@ -171,7 +171,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1, "height": 2 } }
+        { "color": "#5B4FE0", "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1, "height": 2 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -1 }, { "x": 0.5, "y": -1 }, { "x": 0.5, "y": 1 }, { "x": -0.5, "y": 1 } ],
@@ -194,7 +194,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wedge", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1 } }
+        { "color": "#B24BD1", "kind": "wedge", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1 } }
       ],
       "target": {
         "outline": [ { "x": -0.7, "y": -0.5 }, { "x": 0.7, "y": -0.5 }, { "x": 0.7, "y": 0.5 }, { "x": -0.7, "y": 0.5 } ],
@@ -217,7 +217,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "bar", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 1, "height": 1, "skew": 0.4 } }
+        { "color": "#E84B8A", "kind": "bar", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 1, "height": 1, "skew": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.9, "y": -0.5 }, { "x": 0.9, "y": 0.5 }, { "x": -0.5, "y": 0.5 } ],
@@ -240,7 +240,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "brick", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } }
+        { "color": "#8D6E4A", "kind": "brick", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } }
       ],
       "target": {
         "outline": [ { "x": -1.025, "y": -0.5 }, { "x": 1.025, "y": -0.5 }, { "x": 1.025, "y": 0.5 }, { "x": -1.025, "y": 0.5 } ],
@@ -265,8 +265,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "leg", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
-        { "kind": "cap", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } }
+        { "color": "#E23B3B", "kind": "leg", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
+        { "color": "#F2801D", "kind": "cap", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": 0.5, "y": 1.0 }, { "x": -0.5, "y": 1.0 } ],
@@ -291,8 +291,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.7, "height": 2 } },
-        { "kind": "sign", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.5 } }
+        { "color": "#F2801D", "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.7, "height": 2 } },
+        { "color": "#F4C20D", "kind": "sign", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -0.45, "y": -1 }, { "x": 0.45, "y": -1 }, { "x": 0.45, "y": 1.5 }, { "x": -0.45, "y": 1.5 } ],
@@ -317,8 +317,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "hull", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1 } },
-        { "kind": "sail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1, "height": 1 } }
+        { "color": "#F4C20D", "kind": "hull", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1 } },
+        { "color": "#4CAF50", "kind": "sail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1, "height": 1 } }
       ],
       "target": {
         "outline": [ { "x": -0.7, "y": -0.5 }, { "x": 0.7, "y": -0.5 }, { "x": 0.7, "y": 1.5 }, { "x": -0.7, "y": 1.5 } ],
@@ -343,7 +343,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "block", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.7 } }
+        { "color": "#4CAF50", "kind": "block", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.7 } }
       ],
       "target": {
         "outline": [ { "x": -0.35, "y": -0.35 }, { "x": 0.35, "y": -0.35 }, { "x": 0.35, "y": 1.75 }, { "x": -0.35, "y": 1.75 } ],
@@ -370,9 +370,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "pot", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.4 } },
-        { "kind": "trunk", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.5 } },
-        { "kind": "foliage", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1.6, "height": 1.4 } }
+        { "color": "#12A5A5", "kind": "pot", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.4 } },
+        { "color": "#2E7CD6", "kind": "trunk", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.5 } },
+        { "color": "#5B4FE0", "kind": "foliage", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1.6, "height": 1.4 } }
       ],
       "target": {
         "outline": [ { "x": -0.8, "y": -0.2 }, { "x": 0.8, "y": -0.2 }, { "x": 0.8, "y": 2.1 }, { "x": -0.8, "y": 2.1 } ],
@@ -399,8 +399,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wall", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
-        { "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 2.2, "height": 1.2 } }
+        { "color": "#2E7CD6", "kind": "wall", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
+        { "color": "#5B4FE0", "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 2.2, "height": 1.2 } }
       ],
       "target": {
         "outline": [ { "x": -1.1, "y": -0.5 }, { "x": 1.1, "y": -0.5 }, { "x": 1.1, "y": 1.7 }, { "x": -1.1, "y": 1.7 } ],
@@ -427,8 +427,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 1 } },
-        { "kind": "top", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.4, "height": 0.4 } }
+        { "color": "#5B4FE0", "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 1 } },
+        { "color": "#B24BD1", "kind": "top", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.4, "height": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -1.2, "y": -0.5 }, { "x": 1.2, "y": -0.5 }, { "x": 1.2, "y": 0.9 }, { "x": -1.2, "y": 0.9 } ],
@@ -455,10 +455,10 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "body", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.8, "height": 2 } },
-        { "kind": "nose", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.8, "height": 0.8 } },
-        { "kind": "fin_l", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.6, "height": 0.8, "skew": -0.4 } },
-        { "kind": "fin_r", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.6, "height": 0.8, "skew": 0.4 } }
+        { "color": "#B24BD1", "kind": "body", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.8, "height": 2 } },
+        { "color": "#E84B8A", "kind": "nose", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.8, "height": 0.8 } },
+        { "color": "#8D6E4A", "kind": "fin_l", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.6, "height": 0.8, "skew": -0.4 } },
+        { "color": "#E23B3B", "kind": "fin_r", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.6, "height": 0.8, "skew": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -1.5, "y": -1 }, { "x": 1.5, "y": -1 }, { "x": 1.5, "y": 1.8 }, { "x": -1.5, "y": 1.8 } ],
@@ -487,9 +487,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.35, "height": 0.8 } },
-        { "kind": "torso", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 1 } },
-        { "kind": "head", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.6 } }
+        { "color": "#E84B8A", "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.35, "height": 0.8 } },
+        { "color": "#8D6E4A", "kind": "torso", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 1 } },
+        { "color": "#E23B3B", "kind": "head", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": -0.6, "y": -0.4 }, { "x": 0.6, "y": -0.4 }, { "x": 0.6, "y": 2.0 }, { "x": -0.6, "y": 2.0 } ],
@@ -518,9 +518,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wheel", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.4, "segments": 12 } },
-        { "kind": "bed", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.6, "height": 0.6 } },
-        { "kind": "cab", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.6 } }
+        { "color": "#8D6E4A", "kind": "wheel", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.4, "segments": 12 } },
+        { "color": "#E23B3B", "kind": "bed", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.6, "height": 0.6 } },
+        { "color": "#F2801D", "kind": "cab", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": -1.0, "y": -0.4 }, { "x": 1.0, "y": -0.4 }, { "x": 1.0, "y": 1.2 }, { "x": -1.0, "y": 1.2 } ],
@@ -553,10 +553,10 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.5 } },
-        { "kind": "mast", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.7, "height": 2 } },
-        { "kind": "arm", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.4 } },
-        { "kind": "top", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.6 } }
+        { "color": "#E23B3B", "kind": "base", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.5 } },
+        { "color": "#F2801D", "kind": "mast", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.7, "height": 2 } },
+        { "color": "#F4C20D", "kind": "arm", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.4 } },
+        { "color": "#4CAF50", "kind": "top", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": -1.0, "y": -0.25 }, { "x": 1.0, "y": -0.25 }, { "x": 1.0, "y": 3.25 }, { "x": -1.0, "y": 3.25 } ],
@@ -585,9 +585,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "chin", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.6, "topWidth": 1.2, "height": 0.5 } },
-        { "kind": "head", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 1.0 } },
-        { "kind": "ear", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.5, "height": 0.5 } }
+        { "color": "#F2801D", "kind": "chin", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.6, "topWidth": 1.2, "height": 0.5 } },
+        { "color": "#F4C20D", "kind": "head", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 1.0 } },
+        { "color": "#4CAF50", "kind": "ear", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.5, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -0.8, "y": -0.25 }, { "x": 0.8, "y": -0.25 }, { "x": 0.8, "y": 1.75 }, { "x": -0.8, "y": 1.75 } ],
@@ -616,9 +616,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "pier", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 1.0 } },
-        { "kind": "arch", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } },
-        { "kind": "deck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.35 } }
+        { "color": "#F4C20D", "kind": "pier", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 1.0 } },
+        { "color": "#4CAF50", "kind": "arch", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } },
+        { "color": "#12A5A5", "kind": "deck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.35 } }
       ],
       "target": {
         "outline": [ { "x": -1.3, "y": -0.5 }, { "x": 1.3, "y": -0.5 }, { "x": 1.3, "y": 0.85 }, { "x": -1.3, "y": 0.85 } ],
@@ -647,9 +647,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "fulcrum", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.6, "height": 1.0 } },
-        { "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.3 } },
-        { "kind": "pan", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+        { "color": "#4CAF50", "kind": "fulcrum", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.6, "height": 1.0 } },
+        { "color": "#12A5A5", "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.3 } },
+        { "color": "#2E7CD6", "kind": "pan", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -1.3, "y": -0.5 }, { "x": 1.3, "y": -0.5 }, { "x": 1.3, "y": 1.3 }, { "x": -1.3, "y": 1.3 } ],
@@ -678,9 +678,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
-        { "kind": "architrave", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.4 } },
-        { "kind": "pediment", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 2.8, "height": 1.0 } }
+        { "color": "#12A5A5", "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
+        { "color": "#2E7CD6", "kind": "architrave", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.4 } },
+        { "color": "#5B4FE0", "kind": "pediment", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 2.8, "height": 1.0 } }
       ],
       "target": {
         "outline": [ { "x": -1.4, "y": -0.7 }, { "x": 1.4, "y": -0.7 }, { "x": 1.4, "y": 2.1 }, { "x": -1.4, "y": 2.1 } ],
@@ -713,9 +713,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wall", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
-        { "kind": "tower", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.5, "height": 1.4 } },
-        { "kind": "zubec", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+        { "color": "#2E7CD6", "kind": "wall", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1, "height": 1 } },
+        { "color": "#5B4FE0", "kind": "tower", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.5, "height": 1.4 } },
+        { "color": "#B24BD1", "kind": "zubec", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -1.025, "y": -0.5 }, { "x": 1.025, "y": -0.5 }, { "x": 1.025, "y": 2.4 }, { "x": -1.025, "y": 2.4 } ],
@@ -748,11 +748,11 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "t1", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 1.0, "height": 0.8 } },
-        { "kind": "t2", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.0, "topWidth": 0.7, "height": 0.8 } },
-        { "kind": "t3", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.7, "topWidth": 0.5, "height": 0.8 } },
-        { "kind": "lantern", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
-        { "kind": "dome", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.35, "segments": 12 } }
+        { "color": "#5B4FE0", "kind": "t1", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 1.0, "height": 0.8 } },
+        { "color": "#B24BD1", "kind": "t2", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.0, "topWidth": 0.7, "height": 0.8 } },
+        { "color": "#E84B8A", "kind": "t3", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.7, "topWidth": 0.5, "height": 0.8 } },
+        { "color": "#8D6E4A", "kind": "lantern", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "color": "#E23B3B", "kind": "dome", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.35, "segments": 12 } }
       ],
       "target": {
         "outline": [ { "x": -0.7, "y": -0.4 }, { "x": 0.7, "y": -0.4 }, { "x": 0.7, "y": 2.85 }, { "x": -0.7, "y": 2.85 } ],
@@ -783,10 +783,10 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wheel", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.4, "segments": 12 } },
-        { "kind": "frame", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.3 } },
-        { "kind": "cab", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.6 } },
-        { "kind": "hood", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.4 } }
+        { "color": "#B24BD1", "kind": "wheel", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.4, "segments": 12 } },
+        { "color": "#E84B8A", "kind": "frame", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.3 } },
+        { "color": "#8D6E4A", "kind": "cab", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.6 } },
+        { "color": "#E23B3B", "kind": "hood", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -1.0, "y": -0.4 }, { "x": 1.0, "y": -0.4 }, { "x": 1.0, "y": 0.9 }, { "x": -1.0, "y": 0.9 } ],
@@ -821,12 +821,12 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 0.8 } },
-        { "kind": "eave_wide", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.8, "height": 0.25 } },
-        { "kind": "tier", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.6 } },
-        { "kind": "eave_narrow", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.3, "height": 0.25 } },
-        { "kind": "top", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.5 } },
-        { "kind": "spire", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.5, "height": 0.5 } }
+        { "color": "#E84B8A", "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 0.8 } },
+        { "color": "#8D6E4A", "kind": "eave_wide", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.8, "height": 0.25 } },
+        { "color": "#E23B3B", "kind": "tier", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.6 } },
+        { "color": "#F2801D", "kind": "eave_narrow", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.3, "height": 0.25 } },
+        { "color": "#F4C20D", "kind": "top", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.5 } },
+        { "color": "#4CAF50", "kind": "spire", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.5, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -0.9, "y": -0.4 }, { "x": 0.9, "y": -0.4 }, { "x": 0.9, "y": 2.5 }, { "x": -0.9, "y": 2.5 } ],
@@ -859,12 +859,12 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "hull_l", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.9, "height": 0.5, "skew": -0.3 } },
-        { "kind": "hull_r", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.9, "height": 0.5, "skew": 0.3 } },
-        { "kind": "deck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.25 } },
-        { "kind": "mast", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.25, "height": 1.0 } },
-        { "kind": "sail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.8, "height": 0.8 } },
-        { "kind": "cabin", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.4 } }
+        { "color": "#8D6E4A", "kind": "hull_l", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.9, "height": 0.5, "skew": -0.3 } },
+        { "color": "#E23B3B", "kind": "hull_r", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.9, "height": 0.5, "skew": 0.3 } },
+        { "color": "#F2801D", "kind": "deck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.25 } },
+        { "color": "#F4C20D", "kind": "mast", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.25, "height": 1.0 } },
+        { "color": "#4CAF50", "kind": "sail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.8, "height": 0.8 } },
+        { "color": "#12A5A5", "kind": "cabin", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -1.65, "y": -0.25 }, { "x": 1.65, "y": -0.25 }, { "x": 1.65, "y": 1.5 }, { "x": -1.65, "y": 1.5 } ],
@@ -897,9 +897,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "pier", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.0 } },
-        { "kind": "arch", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.3, "segments": 12 } },
-        { "kind": "deck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.3, "height": 0.3 } }
+        { "color": "#E23B3B", "kind": "pier", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.0 } },
+        { "color": "#F2801D", "kind": "arch", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.3, "segments": 12 } },
+        { "color": "#F4C20D", "kind": "deck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.3, "height": 0.3 } }
       ],
       "target": {
         "outline": [ { "x": -1.3, "y": -0.5 }, { "x": 1.3, "y": -0.5 }, { "x": 1.3, "y": 0.8 }, { "x": -1.3, "y": 0.8 } ],
@@ -934,12 +934,12 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.5 } },
-        { "kind": "cab", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.5 } },
-        { "kind": "mast", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.5, "height": 2.0 } },
-        { "kind": "jib", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.35 } },
-        { "kind": "cw", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } },
-        { "kind": "hook", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.3, "height": 0.3 } }
+        { "color": "#F2801D", "kind": "base", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.5 } },
+        { "color": "#F4C20D", "kind": "cab", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.5 } },
+        { "color": "#4CAF50", "kind": "mast", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.5, "height": 2.0 } },
+        { "color": "#12A5A5", "kind": "jib", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.35 } },
+        { "color": "#2E7CD6", "kind": "cw", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } },
+        { "color": "#5B4FE0", "kind": "hook", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.3, "height": 0.3 } }
       ],
       "target": {
         "outline": [ { "x": -1.0, "y": -0.25 }, { "x": 1.0, "y": -0.25 }, { "x": 1.0, "y": 3.0 }, { "x": -1.0, "y": 3.0 } ],
@@ -974,11 +974,11 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
-        { "kind": "architrave", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.4 } },
-        { "kind": "belfry1", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.6 } },
-        { "kind": "belfry2", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.5 } },
-        { "kind": "spire", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.6, "height": 0.6 } }
+        { "color": "#F4C20D", "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
+        { "color": "#4CAF50", "kind": "architrave", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.4 } },
+        { "color": "#12A5A5", "kind": "belfry1", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.6 } },
+        { "color": "#2E7CD6", "kind": "belfry2", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.5 } },
+        { "color": "#5B4FE0", "kind": "spire", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.6, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": -1.4, "y": -0.7 }, { "x": 1.4, "y": -0.7 }, { "x": 1.4, "y": 2.8 }, { "x": -1.4, "y": 2.8 } ],
@@ -1015,10 +1015,10 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.35, "height": 0.8 } },
-        { "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.2, "height": 0.9 } },
-        { "kind": "head", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.8, "topWidth": 0.6, "height": 0.7 } },
-        { "kind": "ear", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.5, "height": 0.5 } }
+        { "color": "#4CAF50", "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.35, "height": 0.8 } },
+        { "color": "#12A5A5", "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.2, "height": 0.9 } },
+        { "color": "#2E7CD6", "kind": "head", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.8, "topWidth": 0.6, "height": 0.7 } },
+        { "color": "#5B4FE0", "kind": "ear", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.5, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -1.1, "y": -0.4 }, { "x": 1.1, "y": -0.4 }, { "x": 1.1, "y": 2.5 }, { "x": -1.1, "y": 2.5 } ],
@@ -1053,13 +1053,13 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "body_lower", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.6, "height": 0.9 } },
-        { "kind": "body_mid", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.6 } },
-        { "kind": "body_upper", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
-        { "kind": "nose", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.5, "height": 0.55 } },
-        { "kind": "booster", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.3, "height": 0.85 } },
-        { "kind": "fin_l", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.5, "height": 0.5, "skew": -0.4 } },
-        { "kind": "fin_r", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.5, "height": 0.5, "skew": 0.4 } }
+        { "color": "#12A5A5", "kind": "body_lower", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.6, "height": 0.9 } },
+        { "color": "#2E7CD6", "kind": "body_mid", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.6 } },
+        { "color": "#5B4FE0", "kind": "body_upper", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "color": "#B24BD1", "kind": "nose", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.5, "height": 0.55 } },
+        { "color": "#E84B8A", "kind": "booster", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.3, "height": 0.85 } },
+        { "color": "#8D6E4A", "kind": "fin_l", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.5, "height": 0.5, "skew": -0.4 } },
+        { "color": "#E23B3B", "kind": "fin_r", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "parallelogram", "width": 0.5, "height": 0.5, "skew": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -1.8, "y": -0.45 }, { "x": 1.8, "y": -0.45 }, { "x": 1.8, "y": 2.1 }, { "x": -1.8, "y": 2.1 } ],
@@ -1096,12 +1096,12 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.5 } },
-        { "kind": "shaft", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.5, "height": 1.5 } },
-        { "kind": "pediment", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.3 } },
-        { "kind": "clockface", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.8 } },
-        { "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.9, "topWidth": 0.3, "height": 0.5 } },
-        { "kind": "vane", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.3, "height": 0.4 } }
+        { "color": "#2E7CD6", "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.5 } },
+        { "color": "#5B4FE0", "kind": "shaft", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.5, "height": 1.5 } },
+        { "color": "#B24BD1", "kind": "pediment", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.3 } },
+        { "color": "#E84B8A", "kind": "clockface", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.8 } },
+        { "color": "#8D6E4A", "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.9, "topWidth": 0.3, "height": 0.5 } },
+        { "color": "#E23B3B", "kind": "vane", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.3, "height": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -0.65, "y": -0.25 }, { "x": 0.65, "y": -0.25 }, { "x": 0.65, "y": 3.75 }, { "x": -0.65, "y": 3.75 } ],
@@ -1136,12 +1136,12 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wheel", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.35, "segments": 12 } },
-        { "kind": "frame", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.2, "height": 0.3 } },
-        { "kind": "boiler", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.7 } },
-        { "kind": "cab", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.9 } },
-        { "kind": "chimney", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.25, "height": 0.5 } },
-        { "kind": "dome", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.3, "height": 0.2 } }
+        { "color": "#5B4FE0", "kind": "wheel", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.35, "segments": 12 } },
+        { "color": "#B24BD1", "kind": "frame", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.2, "height": 0.3 } },
+        { "color": "#E84B8A", "kind": "boiler", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.7 } },
+        { "color": "#8D6E4A", "kind": "cab", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.9 } },
+        { "color": "#E23B3B", "kind": "chimney", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.25, "height": 0.5 } },
+        { "color": "#F2801D", "kind": "dome", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.3, "height": 0.2 } }
       ],
       "target": {
         "outline": [ { "x": -1.25, "y": -0.35 }, { "x": 1.25, "y": -0.35 }, { "x": 1.25, "y": 1.5 }, { "x": -1.25, "y": 1.5 } ],
@@ -1184,11 +1184,11 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "pillar", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 1.2 } },
-        { "kind": "gate", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.0, "topWidth": 0.7, "height": 0.6 } },
-        { "kind": "wall_span", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.2, "height": 0.5 } },
-        { "kind": "tower_top", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.6 } },
-        { "kind": "zubec", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.35, "height": 0.35 } }
+        { "color": "#B24BD1", "kind": "pillar", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 1.2 } },
+        { "color": "#E84B8A", "kind": "gate", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.0, "topWidth": 0.7, "height": 0.6 } },
+        { "color": "#8D6E4A", "kind": "wall_span", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.2, "height": 0.5 } },
+        { "color": "#E23B3B", "kind": "tower_top", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.6 } },
+        { "color": "#F2801D", "kind": "zubec", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.35, "height": 0.35 } }
       ],
       "target": {
         "outline": [ { "x": -1.2, "y": -0.6 }, { "x": 1.2, "y": -0.6 }, { "x": 1.2, "y": 2.05 }, { "x": -1.2, "y": 2.05 } ],
@@ -1225,10 +1225,10 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
-        { "kind": "architrave", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.4 } },
-        { "kind": "pediment", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 2.8, "height": 1.0 } },
-        { "kind": "altar", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+        { "color": "#E84B8A", "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
+        { "color": "#8D6E4A", "kind": "architrave", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.4 } },
+        { "color": "#E23B3B", "kind": "pediment", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 2.8, "height": 1.0 } },
+        { "color": "#F2801D", "kind": "altar", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -1.85, "y": -0.7 }, { "x": 1.85, "y": -0.7 }, { "x": 1.85, "y": 2.1 }, { "x": -1.85, "y": 2.1 } ],
@@ -1265,10 +1265,10 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "pier", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.0 } },
-        { "kind": "deck_low", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
-        { "kind": "riser", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.7 } },
-        { "kind": "deck_high", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.4, "height": 0.3 } }
+        { "color": "#8D6E4A", "kind": "pier", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.0 } },
+        { "color": "#E23B3B", "kind": "deck_low", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
+        { "color": "#F2801D", "kind": "riser", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.7 } },
+        { "color": "#F4C20D", "kind": "deck_high", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.4, "height": 0.3 } }
       ],
       "target": {
         "outline": [ { "x": -1.4, "y": -0.5 }, { "x": 1.4, "y": -0.5 }, { "x": 1.4, "y": 1.8 }, { "x": -1.4, "y": 1.8 } ],
@@ -1305,11 +1305,11 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.3, "height": 1.0 } },
-        { "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.7 } },
-        { "kind": "neck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.35, "height": 1.3 } },
-        { "kind": "head", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.4 } },
-        { "kind": "horn", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.2, "height": 0.3 } }
+        { "color": "#E23B3B", "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.3, "height": 1.0 } },
+        { "color": "#F2801D", "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.7 } },
+        { "color": "#F4C20D", "kind": "neck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.35, "height": 1.3 } },
+        { "color": "#4CAF50", "kind": "head", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.4 } },
+        { "color": "#12A5A5", "kind": "horn", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.2, "height": 0.3 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.55, "y": -0.5 }, { "x": 0.55, "y": 3.2 }, { "x": -0.5, "y": 3.2 } ],
@@ -1344,13 +1344,13 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "roller", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.35, "segments": 12 } },
-        { "kind": "chassis", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.35 } },
-        { "kind": "cab", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.8 } },
-        { "kind": "cw", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
-        { "kind": "boom", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.4, "height": 0.3 } },
-        { "kind": "arm", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.9, "height": 0.25 } },
-        { "kind": "bucket", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.5, "topWidth": 0.3, "height": 0.4 } }
+        { "color": "#F2801D", "kind": "roller", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.35, "segments": 12 } },
+        { "color": "#F4C20D", "kind": "chassis", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.35 } },
+        { "color": "#4CAF50", "kind": "cab", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.8 } },
+        { "color": "#12A5A5", "kind": "cw", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "color": "#2E7CD6", "kind": "boom", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.4, "height": 0.3 } },
+        { "color": "#5B4FE0", "kind": "arm", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.9, "height": 0.25 } },
+        { "color": "#B24BD1", "kind": "bucket", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.5, "topWidth": 0.3, "height": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -1.05, "y": -0.35 }, { "x": 1.05, "y": -0.35 }, { "x": 1.05, "y": 1.7 }, { "x": -1.05, "y": 1.7 } ],
@@ -1391,12 +1391,12 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "tower_base", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.9, "height": 0.8 } },
-        { "kind": "gallery", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.0, "height": 0.2 } },
-        { "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.8 } },
-        { "kind": "cap", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.9, "topWidth": 0.5, "height": 0.4 } },
-        { "kind": "blade_bar", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.8, "height": 0.25 } },
-        { "kind": "sail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.4, "height": 0.4 } }
+        { "color": "#F4C20D", "kind": "tower_base", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.9, "height": 0.8 } },
+        { "color": "#4CAF50", "kind": "gallery", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.0, "height": 0.2 } },
+        { "color": "#12A5A5", "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.9, "height": 0.8 } },
+        { "color": "#2E7CD6", "kind": "cap", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.9, "topWidth": 0.5, "height": 0.4 } },
+        { "color": "#5B4FE0", "kind": "blade_bar", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.8, "height": 0.25 } },
+        { "color": "#B24BD1", "kind": "sail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.4, "height": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -0.9, "y": -0.4 }, { "x": 0.9, "y": -0.4 }, { "x": 0.9, "y": 2.45 }, { "x": -0.9, "y": 2.45 } ],
@@ -1431,12 +1431,12 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wall", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.9 } },
-        { "kind": "bucket_bar", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.2 } },
-        { "kind": "bucket", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } },
-        { "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.25, "height": 0.7 } },
-        { "kind": "roof_beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.8, "height": 0.2 } },
-        { "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1.8, "height": 0.6 } }
+        { "color": "#4CAF50", "kind": "wall", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.9 } },
+        { "color": "#12A5A5", "kind": "bucket_bar", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.2 } },
+        { "color": "#2E7CD6", "kind": "bucket", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } },
+        { "color": "#5B4FE0", "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.25, "height": 0.7 } },
+        { "color": "#B24BD1", "kind": "roof_beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.8, "height": 0.2 } },
+        { "color": "#E84B8A", "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1.8, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": -0.9, "y": -0.45 }, { "x": 0.9, "y": -0.45 }, { "x": 0.9, "y": 2.15 }, { "x": -0.9, "y": 2.15 } ],
@@ -1473,11 +1473,11 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "fulcrum", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1.1 } },
-        { "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
-        { "kind": "pan", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
-        { "kind": "weight", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } },
-        { "kind": "cap", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.3, "height": 0.3 } }
+        { "color": "#12A5A5", "kind": "fulcrum", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1.1 } },
+        { "color": "#2E7CD6", "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
+        { "color": "#5B4FE0", "kind": "pan", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "color": "#B24BD1", "kind": "weight", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } },
+        { "color": "#E84B8A", "kind": "cap", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.3, "height": 0.3 } }
       ],
       "target": {
         "outline": [ { "x": -1.4, "y": -0.55 }, { "x": 1.4, "y": -0.55 }, { "x": 1.4, "y": 2.1 }, { "x": -1.4, "y": 2.1 } ],
@@ -1514,8 +1514,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.8 } },
-        { "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1.4, "height": 0.7 } }
+        { "color": "#2E7CD6", "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.8 } },
+        { "color": "#5B4FE0", "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1.4, "height": 0.7 } }
       ],
       "target": {
         "outline": [ { "x": -0.7, "y": -0.4 }, { "x": 0.7, "y": -0.4 }, { "x": 0.7, "y": 1.1 }, { "x": -0.7, "y": 1.1 } ],
@@ -1540,8 +1540,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.7, "height": 2.0 } },
-        { "kind": "sign", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.8, "height": 0.6 } }
+        { "color": "#5B4FE0", "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.7, "height": 2.0 } },
+        { "color": "#B24BD1", "kind": "sign", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.8, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": -0.45, "y": -1.0 }, { "x": 0.45, "y": -1.0 }, { "x": 0.45, "y": 1.7 }, { "x": -0.45, "y": 1.7 } ],
@@ -1566,8 +1566,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "hull", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.9, "height": 1.0 } },
-        { "kind": "sail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.9, "height": 1.0 } }
+        { "color": "#B24BD1", "kind": "hull", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.9, "height": 1.0 } },
+        { "color": "#E84B8A", "kind": "sail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.9, "height": 1.0 } }
       ],
       "target": {
         "outline": [ { "x": -0.7, "y": -0.5 }, { "x": 0.7, "y": -0.5 }, { "x": 0.7, "y": 1.5 }, { "x": -0.7, "y": 1.5 } ],
@@ -1592,8 +1592,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "tumba", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.8 } },
-        { "kind": "cupola", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } }
+        { "color": "#E84B8A", "kind": "tumba", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.8 } },
+        { "color": "#8D6E4A", "kind": "cupola", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.5, "segments": 12 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.4 }, { "x": 0.5, "y": -0.4 }, { "x": 0.5, "y": 0.9 }, { "x": -0.5, "y": 0.9 } ],
@@ -1618,7 +1618,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "block", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.7 } }
+        { "color": "#8D6E4A", "kind": "block", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.7 } }
       ],
       "target": {
         "outline": [ { "x": -0.35, "y": -0.35 }, { "x": 0.35, "y": -0.35 }, { "x": 0.35, "y": 2.45 }, { "x": -0.35, "y": 2.45 } ],
@@ -1647,8 +1647,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
-        { "kind": "pediment", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.4, "height": 0.4, "apexHeight": 0.4 } }
+        { "color": "#E23B3B", "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
+        { "color": "#F2801D", "kind": "pediment", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.4, "height": 0.4, "apexHeight": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -0.7, "y": -0.7 }, { "x": 0.7, "y": -0.7 }, { "x": 0.7, "y": 1.6 }, { "x": -0.7, "y": 1.6 } ],
@@ -1675,9 +1675,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.4, "height": 2.0 } },
-        { "kind": "crossbar", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.3 } },
-        { "kind": "arrow", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.6, "height": 0.5 } }
+        { "color": "#F2801D", "kind": "post", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.4, "height": 2.0 } },
+        { "color": "#F4C20D", "kind": "crossbar", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.3 } },
+        { "color": "#4CAF50", "kind": "arrow", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.6, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -0.8, "y": -1.0 }, { "x": 0.8, "y": -1.0 }, { "x": 0.8, "y": 1.85 }, { "x": -0.8, "y": 1.85 } ],
@@ -1704,9 +1704,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "fuselage", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.4 } },
-        { "kind": "wing", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.55, "height": 0.5 } },
-        { "kind": "tail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.55, "height": 0.5 } }
+        { "color": "#F4C20D", "kind": "fuselage", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.4 } },
+        { "color": "#4CAF50", "kind": "wing", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.55, "height": 0.5 } },
+        { "color": "#12A5A5", "kind": "tail", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.55, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -1.0, "y": -0.2 }, { "x": 1.0, "y": -0.2 }, { "x": 1.0, "y": 0.75 }, { "x": -1.0, "y": 0.75 } ],
@@ -1735,8 +1735,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "hub", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.5 } },
-        { "kind": "blade", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.3, "height": 0.6 } }
+        { "color": "#4CAF50", "kind": "hub", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.5 } },
+        { "color": "#12A5A5", "kind": "blade", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.3, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": -0.75, "y": -0.25 }, { "x": 0.75, "y": -0.25 }, { "x": 0.75, "y": 0.85 }, { "x": -0.75, "y": 0.85 } ],
@@ -1767,9 +1767,9 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.8, "height": 0.8 } },
-        { "kind": "tower", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 1.2 } },
-        { "kind": "lamp", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.7, "height": 0.6 } }
+        { "color": "#12A5A5", "kind": "base", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.8, "height": 0.8 } },
+        { "color": "#2E7CD6", "kind": "tower", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 1.2 } },
+        { "color": "#5B4FE0", "kind": "lamp", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.7, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": -0.6, "y": -0.4 }, { "x": 0.6, "y": -0.4 }, { "x": 0.6, "y": 2.2 }, { "x": -0.6, "y": 2.2 } ],
@@ -1796,8 +1796,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "wedge", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 1.0, "height": 1.0 } },
-        { "kind": "cap", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.3 } }
+        { "color": "#2E7CD6", "kind": "wedge", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 1.0, "height": 1.0 } },
+        { "color": "#5B4FE0", "kind": "cap", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.3 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": 0.5, "y": 0.65 }, { "x": -0.5, "y": 0.65 } ],
@@ -1824,8 +1824,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.4 } },
-        { "kind": "gable", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.0, "height": 0.5, "apexHeight": 0.4 } }
+        { "color": "#5B4FE0", "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.4 } },
+        { "color": "#B24BD1", "kind": "gable", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.0, "height": 0.5, "apexHeight": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.2 }, { "x": 0.5, "y": -0.2 }, { "x": 0.5, "y": 1.1 }, { "x": -0.5, "y": 1.1 } ],
@@ -1852,8 +1852,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.3 } },
-        { "kind": "corner", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "quarterdisc", "radius": 1.0, "segments": 12 } }
+        { "color": "#B24BD1", "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.3 } },
+        { "color": "#E84B8A", "kind": "corner", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "quarterdisc", "radius": 1.0, "segments": 12 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.15 }, { "x": 0.5, "y": -0.15 }, { "x": 0.5, "y": 1.15 }, { "x": -0.5, "y": 1.15 } ],
@@ -1880,8 +1880,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "support", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.6 } },
-        { "kind": "deck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.3 } }
+        { "color": "#E84B8A", "kind": "support", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.6 } },
+        { "color": "#8D6E4A", "kind": "deck", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.3 } }
       ],
       "target": {
         "outline": [ { "x": -1.1, "y": -0.3 }, { "x": 1.1, "y": -0.3 }, { "x": 1.1, "y": 0.6 }, { "x": -1.1, "y": 0.6 } ],
@@ -1910,8 +1910,8 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.7 } },
-        { "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.0, "height": 0.4, "apexHeight": 0.4 } }
+        { "color": "#8D6E4A", "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.7 } },
+        { "color": "#E23B3B", "kind": "roof", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.0, "height": 0.4, "apexHeight": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.35 }, { "x": 0.5, "y": -0.35 }, { "x": 0.5, "y": 1.15 }, { "x": -0.5, "y": 1.15 } ],
@@ -1936,10 +1936,10 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "fulcrum", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1.1 } },
-        { "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
-        { "kind": "pan", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
-        { "kind": "weight", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } }
+        { "color": "#E23B3B", "kind": "fulcrum", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1.1 } },
+        { "color": "#F2801D", "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
+        { "color": "#F4C20D", "kind": "pan", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "color": "#4CAF50", "kind": "weight", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -1.4, "y": -0.55 }, { "x": 1.4, "y": -0.55 }, { "x": 1.4, "y": 1.85 }, { "x": -1.4, "y": 1.85 } ],
@@ -1972,7 +1972,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "domino", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.4, "height": 1.2 } }
+        { "color": "#F2801D", "kind": "domino", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.4, "height": 1.2 } }
       ],
       "target": {
         "outline": [ { "x": -0.9, "y": -0.6 }, { "x": 0.9, "y": -0.6 }, { "x": 0.9, "y": 0.6 }, { "x": -0.9, "y": 0.6 } ],
@@ -1999,10 +1999,10 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.9, "height": 0.8 } },
-        { "kind": "tower", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 1.0 } },
-        { "kind": "cap", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.3 } },
-        { "kind": "blade", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.3, "height": 0.6 } }
+        { "color": "#F4C20D", "kind": "base", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.9, "height": 0.8 } },
+        { "color": "#4CAF50", "kind": "tower", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 1.0 } },
+        { "color": "#12A5A5", "kind": "cap", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.3 } },
+        { "color": "#2E7CD6", "kind": "blade", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.3, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": -0.7, "y": -0.4 }, { "x": 0.7, "y": -0.4 }, { "x": 0.7, "y": 2.3 }, { "x": -0.7, "y": 2.3 } ],
@@ -2037,10 +2037,10 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
-        { "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.3 } },
-        { "kind": "pediment", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.2, "height": 0.4, "apexHeight": 0.4 } },
-        { "kind": "finial", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.4, "height": 0.5 } }
+        { "color": "#4CAF50", "kind": "column", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
+        { "color": "#12A5A5", "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.3 } },
+        { "color": "#2E7CD6", "kind": "pediment", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.2, "height": 0.4, "apexHeight": 0.4 } },
+        { "color": "#5B4FE0", "kind": "finial", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.4, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -0.8, "y": -0.7 }, { "x": 0.8, "y": -0.7 }, { "x": 0.8, "y": 2.1 }, { "x": -0.8, "y": 2.1 } ],
@@ -2075,7 +2075,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "right_wedge", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 1, "height": 1 } }
+        { "color": "#12A5A5", "kind": "right_wedge", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 1, "height": 1 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": -0.5, "y": 0.5 } ],
@@ -2098,7 +2098,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "corner_arc", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "quarterdisc", "radius": 1, "segments": 12 } }
+        { "color": "#2E7CD6", "kind": "corner_arc", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "quarterdisc", "radius": 1, "segments": 12 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": 0.49144, "y": -0.36947 }, { "x": 0.46593, "y": -0.24118 }, { "x": 0.42388, "y": -0.11732 }, { "x": 0.36603, "y": 0.0 }, { "x": 0.29335, "y": 0.10876 }, { "x": 0.20711, "y": 0.20711 }, { "x": 0.10876, "y": 0.29335 }, { "x": 0.0, "y": 0.36603 }, { "x": -0.11732, "y": 0.42388 }, { "x": -0.24118, "y": 0.46593 }, { "x": -0.36947, "y": 0.49144 }, { "x": -0.5, "y": 0.5 } ],
@@ -2121,7 +2121,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "gable_block", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1, "height": 0.7, "apexHeight": 0.5 } }
+        { "color": "#5B4FE0", "kind": "gable_block", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1, "height": 0.7, "apexHeight": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -0.6 }, { "x": 0.5, "y": -0.6 }, { "x": 0.5, "y": 0.1 }, { "x": 0, "y": 0.6 }, { "x": -0.5, "y": 0.1 } ],
