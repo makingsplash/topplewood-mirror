@@ -389,6 +389,45 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
+        /// Balance-mode final crisp-up (TASK-021 round-3, Failure B). Run once at global rest: for each settled
+        /// NON-pivot load, re-run the support-gate snap (<see cref="FindSnapSlot"/> — same capture window and greedy
+        /// nearest-slot assignment as the assembly assist) against its live rest pose; if it landed within a slot's
+        /// window, freeze it onto the exact slot pose and claim the slot. A level beam leaves each pan/weight/cap
+        /// stack sitting at its slot ⇒ every load captures ⇒ clean pose match ⇒ win; a tilted beam parks the loads
+        /// off-slot ⇒ FindSnapSlot misses them ⇒ the figure stays incomplete ⇒ correctly no win. This closes the gap
+        /// that free physics alone cannot: a pan resting ON the beam is never inside posTol of its authored slot.
+        ///
+        /// The pivot beam is deliberately NOT snapped — its match is judged from the free hinge rest pose, because
+        /// the crank angle IS the balance mechanic (a beam that settled tilted must fail on angle).
+        ///
+        /// Determinism: snapping ONLY at global rest (never mid-crank) keeps the pre-snap poses fixed-step
+        /// reproducible and the snap a deterministic pose assignment, so poseHash stays stable across repeats.
+        /// Freezing a load to Kinematic drops its gravitational load on the beam, but the whole field is already at
+        /// global rest and the verdict is decided on THIS same tick with no further physics step, so nothing drifts.
+        /// </summary>
+        private void BalanceSnapLoads()
+        {
+            foreach (var piece in _model.Pieces)
+            {
+                if (piece.State != PieceLifecycle.Placed)
+                    continue;
+                if (_typeByInstance[piece.InstanceId].Pivot)
+                    continue; // the pivot beam is judged from its free rest pose, never snapped
+                if (!_bodyByInstance.TryGetValue(piece.InstanceId, out var bodyId))
+                    continue;
+
+                var slot = FindSnapSlot(piece, bodyId);
+                if (slot < 0)
+                    continue;
+
+                _occupiedSlots.Add(slot);
+                var target = _level.Target.Slots[slot];
+                FreezePlaced(piece, target.Position, target.Rotation);
+                _simulation.FreezeAt(bodyId, target.Position, target.Rotation);
+            }
+        }
+
+        /// <summary>
         /// Kick off the soft-settle glide for a captured piece: read its capture velocity (BEFORE freezing, so
         /// the glide can preserve the fall's momentum — human 12:02), claim the slot, kinematic-lock the body at
         /// its current (possibly still-falling) capture pose right now (so contacts/gravity can't drift it before
@@ -557,8 +596,6 @@ namespace Gameplay.Core.Mechanic
         /// </summary>
         private void ResolveAtRest()
         {
-            var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
-
             var anyLost = false;
             var anyIdle = false;
             foreach (var piece in _model.Pieces)
@@ -566,6 +603,17 @@ namespace Gameplay.Core.Mechanic
                 if (piece.State == PieceLifecycle.Lost) anyLost = true;
                 else if (piece.State == PieceLifecycle.Idle) anyIdle = true;
             }
+
+            // Balance-mode final crisp-up (TASK-021 round-3, Failure B): the field has reached global rest with
+            // nothing left to place. The pivot beam is judged from its free rest pose, but the loads riding it are
+            // pure Dynamic physics with snap OFF — free physics parks a pan ON the beam, never inside its authored
+            // slot, so even a perfectly level beam scored medianMatchError ≈ posTol and never won. Snap the settled
+            // loads into their slots now (details in BalanceSnapLoads). Gated on !anyIdle so an in-progress game is
+            // never crisped early — canon §3 judges only at final rest.
+            if (_balanceMode && !anyIdle)
+                BalanceSnapLoads();
+
+            var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
 
             if (result.AllSlotsFilled && !anyLost)
             {

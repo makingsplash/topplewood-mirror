@@ -83,15 +83,11 @@ namespace Gameplay.Adapters
 
             var collider = go.AddComponent<PolygonCollider2D>();
             collider.points = ToPoints(type.Shape.Vertices);
-            collider.density = Mathf.Max(0.0001f, type.Material.Density);
             collider.sharedMaterial = new PhysicsMaterial2D($"mat_{type.Kind}")
             {
                 friction = type.Material.Friction,
                 bounciness = type.Material.Restitution,
             };
-            // Idle piece is physically absent: no collision so hanging pieces never block another's drop
-            // column (RFC §5.3). Release() re-enables the collider + gravity.
-            collider.enabled = false;
 
             var rb = go.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic;
@@ -99,6 +95,17 @@ namespace Gameplay.Adapters
             rb.gravityScale = 0f; // floating: at rest until released
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
+
+            // Density MUST be assigned after the auto-mass Dynamic body exists — Unity rejects Collider2D.density
+            // on a collider that has no attached dynamic auto-mass body ("Density cannot be set on the collider
+            // unless it is attached to a dynamic rigid-body that is using auto-mass"), which fired during setup on
+            // the balance multi-load levels and aborted their sim runs (TASK-021 round-3, SpawnFloating). The value
+            // is unchanged and every campaign density is 1.0 (the collider default), so the mass auto-computed when
+            // Release() enables the collider is byte-for-byte identical to before — the assembly path is untouched.
+            collider.density = Mathf.Max(0.0001f, type.Material.Density);
+            // Idle piece is physically absent: no collision so hanging pieces never block another's drop
+            // column (RFC §5.3). Release() re-enables the collider + gravity.
+            collider.enabled = false;
 
             var id = _nextId++;
             _bodies[id] = new Body
