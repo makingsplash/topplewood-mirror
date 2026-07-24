@@ -28,6 +28,16 @@ namespace Gameplay.Core.Sim
         // Reused per Step so the driver allocates nothing while pushing a release group (TASK-023 §5.4).
         private readonly List<Vec2> _tapScratch = new();
 
+        // Pre-glide residual metric (TASK-024 §5): the FIRST tick a piece flips to Placed its model pose is the
+        // physical rest pose captured BEFORE the soft-settle glide moves it, so snapshotting it there measures how
+        // far real contact torque actually righted the piece — not what the kinematic glide then faked. We track the
+        // worst (max) angular + positional residual to the nearest same-Kind slot over the run: a small angular
+        // value proves the torque did the turn; a positional value within SnapCaptureRadius proves the topple did
+        // not carry the piece out of its capture window (no Lost regress). Sim-only; the production path is untouched.
+        private readonly HashSet<int> _preGlideMeasured = new();
+        private float _maxPreGlideAngResidual;
+        private float _maxPreGlidePosErr;
+
         private GameOutcome _outcome = GameOutcome.None;
 
         public SimRun(LevelData level, IShapeFillSimulation simulation, ISimBotPolicy policy)
@@ -70,6 +80,67 @@ namespace Gameplay.Core.Sim
             }
 
             _controller.Tick(_clock.FixedStep);
+            MeasurePreGlideResiduals();
+        }
+
+        /// <summary>
+        /// Snapshot each piece's residual to its nearest same-Kind slot the FIRST tick it becomes Placed (TASK-024
+        /// §5). At that tick the model pose is the pre-glide physical rest pose (BeginSettle freezes and StartRot=
+        /// the rest pose; AdvanceSettling only moves it from the NEXT tick), so this measures the true post-torque
+        /// residual. Keeps the running max of angular (symmetry-reduced) and positional residual for the run.
+        /// </summary>
+        private void MeasurePreGlideResiduals()
+        {
+            var slots = _level.Target?.Slots;
+            if (slots == null || slots.Count == 0)
+                return;
+
+            foreach (var piece in _model.Pieces)
+            {
+                if (piece.State != PieceLifecycle.Placed)
+                    continue;
+                if (!_preGlideMeasured.Add(piece.InstanceId))
+                    continue; // already snapshotted on the tick it first turned Placed
+
+                var symmetryOrder = _model.TypeFor(piece).SymmetryOrder;
+                var bestPosErr = float.MaxValue;
+                var bestAng = 0f;
+                for (var s = 0; s < slots.Count; s++)
+                {
+                    var slot = slots[s];
+                    if (slot.Kind != piece.Kind)
+                        continue;
+
+                    var posErr = (slot.Position - piece.Position).Length;
+                    if (posErr < bestPosErr)
+                    {
+                        bestPosErr = posErr;
+                        bestAng = SymmetryReduce(piece.Rotation - slot.Rotation, symmetryOrder);
+                    }
+                }
+
+                if (bestPosErr == float.MaxValue)
+                    continue; // no same-Kind slot (should not happen for a matched level)
+
+                if (bestAng > _maxPreGlideAngResidual)
+                    _maxPreGlideAngResidual = bestAng;
+                if (bestPosErr > _maxPreGlidePosErr)
+                    _maxPreGlidePosErr = bestPosErr;
+            }
+        }
+
+        /// <summary>Symmetry-reduced magnitude of an angle delta — same reduction as the controller/evaluator so
+        /// the sim metric agrees with the snap window and the win check.</summary>
+        private static float SymmetryReduce(float delta, int symmetryOrder)
+        {
+            var order = symmetryOrder < 1 ? 1 : symmetryOrder;
+            var period = (2f * (float)Math.PI) / order;
+            var d = delta % period;
+            if (d > period * 0.5f)
+                d -= period;
+            else if (d < -period * 0.5f)
+                d += period;
+            return d < 0f ? -d : d;
         }
 
         public SimRunResult BuildResult(string policyId, string orderKey, int repeatIndex, int stepsToResolve)
@@ -91,7 +162,8 @@ namespace Gameplay.Core.Sim
 
             return new SimRunResult(_level.LevelId, _level.Seed, policyId, orderKey, repeatIndex,
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
-                match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model));
+                match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
+                _maxPreGlideAngResidual, _maxPreGlidePosErr);
         }
 
         public void Dispose()

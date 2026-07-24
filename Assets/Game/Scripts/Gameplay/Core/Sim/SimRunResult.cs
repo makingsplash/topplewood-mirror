@@ -20,10 +20,18 @@ namespace Gameplay.Core.Sim
         public readonly int SlotsTotal;
         public readonly int LostPieces;
         public readonly long PoseHash;
+        // TASK-024 §5: worst per-piece residual to the nearest same-Kind slot measured at the pre-glide physical
+        // rest pose (the tick a piece first turns Placed, before the soft-settle glide moves it). Angular is
+        // symmetry-reduced radians; positional is world units. Small angular ⇒ real contact torque did the turn (not
+        // the glide); positional within SnapCaptureRadius ⇒ the topple did not carry the piece out of its window.
+        // Zero on runs with no physical-settle pieces (flat assembly / balance) — interpretation is ⟨balancer⟩/⟨qa⟩.
+        public readonly float PreGlideAngResidual;
+        public readonly float PreGlidePosErr;
 
         public SimRunResult(string levelId, int seed, string policyId, string orderKey, int repeatIndex,
             bool solved, string outcome, int attemptsUsed, int stepsToResolve, float matchError,
-            int slotsFilled, int slotsTotal, int lostPieces, long poseHash)
+            int slotsFilled, int slotsTotal, int lostPieces, long poseHash,
+            float preGlideAngResidual, float preGlidePosErr)
         {
             LevelId = levelId;
             Seed = seed;
@@ -39,6 +47,8 @@ namespace Gameplay.Core.Sim
             SlotsTotal = slotsTotal;
             LostPieces = lostPieces;
             PoseHash = poseHash;
+            PreGlideAngResidual = preGlideAngResidual;
+            PreGlidePosErr = preGlidePosErr;
         }
     }
 }
