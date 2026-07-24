@@ -361,16 +361,20 @@ namespace Gameplay.Core.Mechanic
 
         /// <summary>
         /// Balance-mode landing for the pivot beam (TASK-021): it came to rest centred on the fulcrum, so pin a
-        /// world hinge at that rested centre and leave it Dynamic — from now on weight on one side cranks it and
+        /// world hinge over that rested centre and leave it Dynamic — from now on weight on one side cranks it and
         /// the balance damper drives it to a single deterministic rest. No angle correction, no freeze: the angle
-        /// is the mechanic. Pinning at the beam's own centre (not the authored slot point) is deliberate — an
-        /// off-centre pin would sit under a constant gravity torque and never balance unloaded; a symmetric drop
-        /// lands the centre on the fulcrum apex within posTol anyway.
+        /// is the mechanic. The pin is placed <see cref="ShapeFillTuning.BalancePivotAnchorOffsetY"/> ABOVE the
+        /// rested centre (not at it): pinning at the centre left the loaded centre of mass above the pivot → an
+        /// inverted pendulum with no restoring torque (neutral knife-edge → 0 reliable in sim, game-balancer 03).
+        /// Lifting the pivot above the loaded CM makes horizontal a STABLE equilibrium — the beam self-levels like
+        /// a real weighing balance. Kept on the beam's own X (a symmetric drop lands the centre on the fulcrum apex
+        /// within posTol) so the unloaded beam sits under no horizontal torque.
         /// </summary>
         private void PlacePivot(PieceInstance piece, int bodyId, BodyPose pose)
         {
             FreezePlaced(piece, pose.Position, pose.Rotation); // mark Placed + mirror pose (no physics freeze)
-            _simulation.PinHinge(bodyId, pose.Position);
+            var anchor = new Vec2(pose.Position.X, pose.Position.Y + _tuning.BalancePivotAnchorOffsetY);
+            _simulation.PinHinge(bodyId, anchor);
         }
 
         /// <summary>

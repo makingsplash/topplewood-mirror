@@ -194,9 +194,24 @@ namespace Gameplay.Adapters
             hinge.connectedAnchor = world;
             // Local point on the body that currently coincides with the world anchor → the hinge introduces no
             // positional jerk regardless of how the piece arrived at the anchor (drop / slide / future launch).
+            // The anchor sits above the beam's centre (controller lifts it by BalancePivotAnchorOffsetY) so the
+            // beam hangs as a self-levelling pendulum rather than balancing on a knife-edge.
             hinge.anchor = rb.transform.InverseTransformPoint(new Vector3(world.x, world.y, rb.transform.position.z));
             hinge.useMotor = false;
-            hinge.useLimits = false;
+            // Angular end-stops (balancer C3): cap the tilt below the ~31° slip angle so a single load can't slide
+            // off before its counter-load lands. Limits are measured from the hinge reference angle captured now,
+            // i.e. the rested ≈horizontal pose, so ±deg brackets horizontal and the win pose stays reachable.
+            // ≤0 disables limits — kept generic for the forward-vision catapult beams that must swing free.
+            var limitDeg = _tuning.BalanceHingeLimitDeg;
+            if (limitDeg > 0f)
+            {
+                hinge.useLimits = true;
+                hinge.limits = new JointAngleLimits2D { min = -limitDeg, max = limitDeg };
+            }
+            else
+            {
+                hinge.useLimits = false;
+            }
             body.Hinge = hinge;
         }
 
