@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Gameplay.Core.Sim
 {
     /// <summary>
@@ -13,10 +15,10 @@ namespace Gameplay.Core.Sim
 
         public SeededOrderPolicy(IGameplayRandom rng) => _rng = rng;
 
-        public bool TryNextRelease(GameModel model, out Vec2 tapPoint)
+        public bool TryNextRelease(GameModel model, List<Vec2> taps)
         {
             _inner ??= new ReleaseOrderPolicy(Permutations.Shuffled(model.Pieces.Count, _rng));
-            return _inner.TryNextRelease(model, out tapPoint);
+            return _inner.TryNextRelease(model, taps);
         }
     }
 }

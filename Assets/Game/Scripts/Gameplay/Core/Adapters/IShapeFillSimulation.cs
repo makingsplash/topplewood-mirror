@@ -30,8 +30,9 @@ namespace Gameplay.Core.Adapters
         void FreezeAt(int bodyId, Vec2 position, float rotation);
 
         /// <summary>
-        /// Pin a body to the world with a revolute hinge at <paramref name="anchor"/> (a world point, TASK-021
-        /// balance mode). Unlike <see cref="FreezeAt"/> the body stays Dynamic (gravity on, collider on) so weight
+        /// RETAINED for the forward-vision catapult levels (TASK-021 vision); NO caller in the free-beam seesaw
+        /// path (TASK-023 removed the pin from seesaws). Pin a body to the world with a revolute hinge at
+        /// <paramref name="anchor"/> (a world point). Unlike <see cref="FreezeAt"/> the body stays Dynamic so weight
         /// on one side cranks it around the anchor; a balance angular damper drives it to a single deterministic
         /// rest. Velocity is NOT zeroed (the contact impulse carries through). Pass the beam's own centre as the
         /// anchor so an unloaded beam balances (an off-centre pin would sit under a constant gravity torque). The

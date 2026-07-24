@@ -37,13 +37,25 @@ namespace Gameplay.Core.Mechanic
         private IDisposable _levelLoadedSub;
         private IDisposable _stateRestoredSub;
         private LevelData _level;
-        // Balance physics mode (TASK-021): the pivot beam is world-pinned by a damped hinge and stays Dynamic,
-        // snap-to-slot and freeze-on-rest are off, and the verdict waits for GLOBAL rest so a still-cranking
-        // beam is never judged. Assembly mode (66 levels) is byte-for-byte the pre-TASK-021 behaviour.
+        // Balance physics mode (TASK-021 → free-beam TASK-023): the beam is a FREE Dynamic body resting on the
+        // fulcrum (no world hinge/pin/limits), loads are released as synchronous groups (coalescence window), the
+        // in-fall snap assist is off, and the verdict waits for GLOBAL rest so a still-swinging beam is never
+        // judged. Assembly mode (66 levels) is byte-for-byte the pre-TASK-021 behaviour.
         private bool _balanceMode;
         // Time the whole field has stayed below the rest speed, in balance mode only — the verdict fires only
         // once it exceeds RestDurationSeconds (the beam and everything on it have stopped swinging).
         private float _globalRestTimer;
+
+        // ── Synchronous group release (TASK-023, balance-only). Taps on separate Idle pieces are buffered into a
+        //    coalescence group and released in ONE flush step so a symmetric pair enters the physics together and
+        //    the free beam stays level. Transient runtime state — NOT persisted. Assembly mode never touches it. ──
+        // InstanceIds tapped-and-armed, waiting for the flush.
+        private readonly List<int> _pendingRelease = new();
+        // >0 ⇒ the coalescence window is open (counts down in Tick).
+        private int _coalesceWindowStepsLeft;
+        // Last computed global-rest state, exposed via ReadyForNextRelease so the sim driver releases the next
+        // group only once the beam + loads have settled (balance) — recomputed each tick the field is not falling.
+        private bool _lastGlobalRestReached;
 
         /// <summary>In-flight soft-settle glide for one piece: driven kinematically toward the slot over
         /// TotalSteps fixed steps. Position uses a critically-damped approach SEEDED with the piece's capture
@@ -149,17 +161,81 @@ namespace Gameplay.Core.Mechanic
             if (hit == null)
                 return;
 
-            _simulation.Release(_bodyByInstance[hit.InstanceId]);
-            hit.State = PieceLifecycle.Falling;
-            hit.RestTimer = 0f;
-            _viewByInstance[hit.InstanceId].SetState(PieceLifecycle.Falling);
+            if (!_balanceMode)
+            {
+                // Assembly (66 levels): one tap = one immediate release — byte-for-byte the pre-TASK-023 path.
+                ReleasePiece(hit);
+                return;
+            }
+
+            // Balance (TASK-023): buffer the tap into the coalescence group instead of releasing now. The piece
+            // stays Idle in the model until the flush (PickIdlePieceAt must keep seeing it while the window is
+            // open), and the whole group releases synchronously in FlushPendingRelease so a symmetric pair enters
+            // the physics in the same step (net torque ≈ 0 → the free beam holds level).
+            if (_pendingRelease.Contains(hit.InstanceId))
+                return; // re-tap on an already-armed piece — ignore, not a duplicate
+
+            _pendingRelease.Add(hit.InstanceId);
+            if (_coalesceWindowStepsLeft <= 0)
+                _coalesceWindowStepsLeft = _tuning.CoalesceWindowSteps; // first tap opens the window
+            _viewByInstance[hit.InstanceId].SetArmed(true);
+
+            if (_pendingRelease.Count >= _tuning.MaxCoalesceGroup)
+                FlushPendingRelease(); // group full → release now (minimal latency)
+        }
+
+        /// <summary>Materialise one Idle piece into free fall (assembly path and every coalescence flush).</summary>
+        private void ReleasePiece(PieceInstance piece)
+        {
+            _simulation.Release(_bodyByInstance[piece.InstanceId]);
+            piece.State = PieceLifecycle.Falling;
+            piece.RestTimer = 0f;
+            _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Falling);
             _model.RegisterAttempt();
+        }
+
+        /// <summary>
+        /// Release the whole armed coalescence group in one shot (TASK-023 §2.2): every buffered piece becomes
+        /// physical NOW, so the next <c>_simulation.Step</c> integrates them together — a symmetric pair falls
+        /// synchronously. Order within the flush is irrelevant (no physics step runs between the Release calls),
+        /// which keeps the release deterministic. A group of one (base piece, or a lone tap whose window expired)
+        /// releases a single piece → on a seesaw that honestly tips the beam → Lost (the winnability gate).
+        /// </summary>
+        private void FlushPendingRelease()
+        {
+            foreach (var instanceId in _pendingRelease)
+            {
+                var piece = FindPiece(instanceId);
+                if (piece == null || piece.State != PieceLifecycle.Idle)
+                    continue;
+                ReleasePiece(piece);
+                _viewByInstance[instanceId].SetArmed(false);
+            }
+            _pendingRelease.Clear();
+            _coalesceWindowStepsLeft = 0;
+        }
+
+        private PieceInstance FindPiece(int instanceId)
+        {
+            foreach (var piece in _model.Pieces)
+                if (piece.InstanceId == instanceId)
+                    return piece;
+            return null;
         }
 
         public void Tick(float dt)
         {
             if (_model.CurrentPhase != GamePhase.Running)
                 return;
+
+            // Balance coalescence window (TASK-023): count it down and flush the armed group when it expires. A
+            // window that expires with a single armed piece still releases it (honest Lost — no artificial block).
+            if (_balanceMode && _coalesceWindowStepsLeft > 0)
+            {
+                _coalesceWindowStepsLeft--;
+                if (_coalesceWindowStepsLeft == 0)
+                    FlushPendingRelease();
+            }
 
             AdvanceSettling();
 
@@ -188,13 +264,44 @@ namespace Gameplay.Core.Mechanic
             if (anyFalling || _settling.Count > 0)
                 return;
 
-            // Balance mode: placed pieces stay Dynamic and keep cranking on the hinge, so "nothing Falling" is
-            // NOT yet rest. Hold the verdict until the whole field has been quiet for RestDurationSeconds, then
-            // judge the settled pose (beam within angTol of level ⇒ balanced). Assembly mode is unaffected.
-            if (_balanceMode && !GlobalRestReached(dt))
-                return;
+            // Balance mode: placed pieces stay Dynamic and keep swinging on the beam, so "nothing Falling" is NOT
+            // yet rest. Hold the verdict until the whole field has been quiet for RestDurationSeconds, then judge
+            // the settled pose (beam within angTol of level ⇒ balanced). _lastGlobalRestReached is cached here for
+            // ReadyForNextRelease (the sim's next-group gate). Assembly mode is unaffected.
+            if (_balanceMode)
+            {
+                _lastGlobalRestReached = GlobalRestReached(dt);
+                if (!_lastGlobalRestReached)
+                    return;
+            }
 
             ResolveAtRest();
+        }
+
+        /// <summary>
+        /// Field-readiness gate for the sim driver's next release group (TASK-023 §5.2) — encapsulates BOTH modes
+        /// so the sim never re-derives it. Never ready while anything is Falling. Assembly ≡ the old "no Falling
+        /// piece" quiet check (byte-for-byte). Balance additionally waits until the coalescence group has flushed
+        /// (nothing armed, window closed), no load is mid-settle, and the whole field has reached global rest — so
+        /// the next pair is released only onto a beam that has stopped swinging.
+        /// </summary>
+        public bool ReadyForNextRelease
+        {
+            get
+            {
+                foreach (var piece in _model.Pieces)
+                    if (piece.State == PieceLifecycle.Falling)
+                        return false;
+
+                if (!_balanceMode)
+                    return true; // assembly: identical to the pre-TASK-023 IsFieldQuiet
+
+                if (_pendingRelease.Count > 0 || _coalesceWindowStepsLeft > 0)
+                    return false; // a group is still arming
+                if (_settling.Count > 0)
+                    return false; // loads gliding onto slots — not settled yet
+                return _lastGlobalRestReached; // beam + loads have come to global rest
+            }
         }
 
         /// <summary>
@@ -312,8 +419,9 @@ namespace Gameplay.Core.Mechanic
             // lower slot is never grabbed by a higher one it merely passes through (the L1 two_cubes regress).
             // Physical & level-agnostic — no dependence on neighbouring slots' Kind/position.
             //
-            // Balance mode has NO snap assist (TASK-021): the crank IS the mechanic, so a piece must ride the
-            // real hinge physics onto the beam rather than being glided into an authored slot pose.
+            // Balance mode has NO in-fall snap assist (TASK-021 → free-beam TASK-023): the beam tilt IS the
+            // mechanic, so a piece must ride the real beam physics onto it rather than being glided into an
+            // authored slot pose mid-fall. Loads are crisped onto their slots only at global rest (BalanceSnapLoads).
             if (!_balanceMode && _simulation.HasSupportBelow(bodyId, _tuning.SnapSupportProbeDistance))
             {
                 var slot = FindSnapSlot(piece, bodyId);
@@ -348,10 +456,11 @@ namespace Gameplay.Core.Mechanic
 
             if (_balanceMode)
             {
-                if (_typeByInstance[piece.InstanceId].Pivot)
-                    PlacePivot(piece, bodyId, pose);   // beam → world-pinned hinge, stays Dynamic
-                else
-                    PlaceDynamic(piece, pose);         // load → marked Placed but keeps physics, rides the beam
+                // Free-beam (TASK-023): BOTH the pivot beam and the loads land as free Dynamic bodies judged from
+                // their rest pose — the beam is NO LONGER world-pinned (PlacePivot/PinHinge removed from the seesaw
+                // path). A single load honestly tips the free beam (Lost); a synchronous symmetric pair keeps it
+                // level. The Pivot flag is retained (it marks "judged from the free pose, never snapped").
+                PlaceDynamic(piece, pose);
                 return;
             }
 
@@ -360,28 +469,13 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
-        /// Balance-mode landing for the pivot beam (TASK-021): it came to rest centred on the fulcrum, so pin a
-        /// world hinge over that rested centre and leave it Dynamic — from now on weight on one side cranks it and
-        /// the balance damper drives it to a single deterministic rest. No angle correction, no freeze: the angle
-        /// is the mechanic. The pin is placed <see cref="ShapeFillTuning.BalancePivotAnchorOffsetY"/> ABOVE the
-        /// rested centre (not at it): pinning at the centre left the loaded centre of mass above the pivot → an
-        /// inverted pendulum with no restoring torque (neutral knife-edge → 0 reliable in sim, game-balancer 03).
-        /// Lifting the pivot above the loaded CM makes horizontal a STABLE equilibrium — the beam self-levels like
-        /// a real weighing balance. Kept on the beam's own X (a symmetric drop lands the centre on the fulcrum apex
-        /// within posTol) so the unloaded beam sits under no horizontal torque.
-        /// </summary>
-        private void PlacePivot(PieceInstance piece, int bodyId, BodyPose pose)
-        {
-            FreezePlaced(piece, pose.Position, pose.Rotation); // mark Placed + mirror pose (no physics freeze)
-            var anchor = new Vec2(pose.Position.X, pose.Position.Y + _tuning.BalancePivotAnchorOffsetY);
-            _simulation.PinHinge(bodyId, anchor);
-        }
-
-        /// <summary>
-        /// Balance-mode landing for a load piece (pan / weight / cap, TASK-021): mark it Placed so it counts
-        /// toward the verdict, but DO NOT freeze it — it stays Dynamic and rides the beam as it cranks, so the
-        /// figure is only complete once the whole field settles (the global rest gate in Tick). MirrorPose keeps
-        /// its model/view pose tracking the live body every tick.
+        /// Balance-mode landing for a free-beam body (TASK-023): the beam OR a load piece (pan / weight / cap).
+        /// Mark it Placed so it counts toward the verdict, but DO NOT freeze it — it stays Dynamic and rides the
+        /// physics as the beam swings, so the figure is only complete once the whole field settles (the global
+        /// rest gate in Tick). MirrorPose keeps its model/view pose tracking the live body every tick. The beam is
+        /// judged from this free rest pose (a tilted beam fails on angle); loads are crisped onto their slots at
+        /// global rest by <see cref="BalanceSnapLoads"/>. Supersedes the TASK-021 PlacePivot (world-pinned hinge),
+        /// removed with the pivot approach.
         /// </summary>
         private void PlaceDynamic(PieceInstance piece, BodyPose pose)
         {
@@ -400,10 +494,15 @@ namespace Gameplay.Core.Mechanic
         /// The pivot beam is deliberately NOT snapped — its match is judged from the free hinge rest pose, because
         /// the crank angle IS the balance mechanic (a beam that settled tilted must fail on angle).
         ///
-        /// Determinism: snapping ONLY at global rest (never mid-crank) keeps the pre-snap poses fixed-step
+        /// Determinism: snapping ONLY at global rest (never mid-swing) keeps the pre-snap poses fixed-step
         /// reproducible and the snap a deterministic pose assignment, so poseHash stays stable across repeats.
-        /// Freezing a load to Kinematic drops its gravitational load on the beam, but the whole field is already at
-        /// global rest and the verdict is decided on THIS same tick with no further physics step, so nothing drifts.
+        ///
+        /// TASK-023 §7 (playtest #3 "the loads glide in unphysically"): instead of an instant FreezeAt teleport,
+        /// each captured load begins the SAME soft-settle glide the assembly path uses (BeginSettle) — a short
+        /// critically-damped ease from its rest pose onto the exact slot pose. It reads as the piece settling into
+        /// place rather than a magnet snapping it. The verdict is deferred while any glide runs (ResolveAtRest
+        /// returns early on a non-empty _settling, mirroring the Tick settle gate), so the figure is never judged
+        /// mid-glide. The glide is a fixed step count (SettleDurationSeconds) → determinism intact, residual ≈ 0.
         /// </summary>
         private void BalanceSnapLoads()
         {
@@ -412,7 +511,9 @@ namespace Gameplay.Core.Mechanic
                 if (piece.State != PieceLifecycle.Placed)
                     continue;
                 if (_typeByInstance[piece.InstanceId].Pivot)
-                    continue; // the pivot beam is judged from its free rest pose, never snapped
+                    continue; // the free beam is judged from its rest pose, never snapped
+                if (_settling.ContainsKey(piece.InstanceId))
+                    continue; // already gliding onto its slot
                 if (!_bodyByInstance.TryGetValue(piece.InstanceId, out var bodyId))
                     continue;
 
@@ -420,10 +521,7 @@ namespace Gameplay.Core.Mechanic
                 if (slot < 0)
                     continue;
 
-                _occupiedSlots.Add(slot);
-                var target = _level.Target.Slots[slot];
-                FreezePlaced(piece, target.Position, target.Rotation);
-                _simulation.FreezeAt(bodyId, target.Position, target.Rotation);
+                BeginSettle(piece, bodyId, slot); // claims the slot + starts the eased glide (§7)
             }
         }
 
@@ -611,7 +709,14 @@ namespace Gameplay.Core.Mechanic
             // loads into their slots now (details in BalanceSnapLoads). Gated on !anyIdle so an in-progress game is
             // never crisped early — canon §3 judges only at final rest.
             if (_balanceMode && !anyIdle)
+            {
                 BalanceSnapLoads();
+                // §7: the snap now begins a soft-settle glide instead of an instant teleport, so if any load
+                // started gliding, defer the verdict until it completes (Tick's settle gate keeps ResolveAtRest
+                // from being re-entered until _settling drains). Determinism is intact — the glide is fixed-step.
+                if (_settling.Count > 0)
+                    return;
+            }
 
             var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
 
@@ -692,6 +797,9 @@ namespace Gameplay.Core.Mechanic
             _occupiedSlots.Clear();
             _settling.Clear();
             _globalRestTimer = 0f;
+            _pendingRelease.Clear();
+            _coalesceWindowStepsLeft = 0;
+            _lastGlobalRestReached = false;
         }
 
         public void Dispose()

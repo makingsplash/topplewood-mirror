@@ -9,6 +9,8 @@ namespace Gameplay.Core.Sim
 
         public void SetState(PieceLifecycle state) { }
 
+        public void SetArmed(bool armed) { }
+
         public void Dispose() { }
     }
 }

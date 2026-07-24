@@ -157,6 +157,37 @@ namespace Gameplay.Sim
                         }
                     }
 
+                    // Balance levels (TASK-023): the POSITIVE gate — synchronous pair-release (base one at a time,
+                    // then symmetric load pairs bottom-up) must be reliable + deterministic (identical poseHash over
+                    // repeats). The NEGATIVE gate needs no extra run: the release-order sweep above IS the "one piece
+                    // at a time" case and on a balance level must be stably NOT Won (owner's winnability rule). QA
+                    // bumps _repeats (≥20 for seesaws) for the reliability read.
+                    if (ok && level.PhysicsMode == PhysicsMode.Balance)
+                    {
+                        for (var r = 0; r < _repeats; r++)
+                        {
+                            var sim = new UnityShapeFillSimulation(_tuning);
+                            try
+                            {
+                                runs.Add(SimRun.Run(level, sim, new PairReleasePolicy(),
+                                    "pair-release", "pair", r, _maxSteps));
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.LogError($"[level-sim] {level.LevelId} pair-release run {r} threw: {e}");
+                                ok = false;
+                            }
+
+                            yield return null;
+
+                            if (!ok || WatchdogExpired())
+                            {
+                                ok = false;
+                                break;
+                            }
+                        }
+                    }
+
                     if (!ok)
                         break;
                 }

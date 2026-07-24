@@ -25,6 +25,8 @@ namespace Gameplay.Core.Sim
         private readonly PoseMatchEvaluator _match;
         private readonly LevelData _level;
         private readonly IDisposable _outcomeSub;
+        // Reused per Step so the driver allocates nothing while pushing a release group (TASK-023 §5.4).
+        private readonly List<Vec2> _tapScratch = new();
 
         private GameOutcome _outcome = GameOutcome.None;
 
@@ -53,14 +55,19 @@ namespace Gameplay.Core.Sim
         public long PoseHash() => SimPoseHash.Of(_model);
 
         /// <summary>
-        /// One driver iteration: if the field is quiet (no Falling piece), ask the policy to release the next
-        /// piece, then advance exactly one fixed physics step + mechanic tick.
+        /// One driver iteration: when the controller reports the field is ready for the next release group
+        /// (balance-aware — beam settled AND the coalescence window closed; assembly ≡ "no Falling piece"), ask
+        /// the policy for the next group and push ALL its taps in this SAME step so a synchronous pair enters the
+        /// physics together (TASK-023 §5.4). Then advance exactly one fixed physics step + mechanic tick.
         /// </summary>
         public void Step()
         {
-            if (_model.CurrentPhase == GamePhase.Running && IsFieldQuiet() &&
-                _policy.TryNextRelease(_model, out var tap))
-                _input.Push(tap);
+            if (_model.CurrentPhase == GamePhase.Running && _mechanic.ReadyForNextRelease &&
+                _policy.TryNextRelease(_model, _tapScratch))
+            {
+                foreach (var tap in _tapScratch)
+                    _input.Push(tap);
+            }
 
             _controller.Tick(_clock.FixedStep);
         }
@@ -85,16 +92,6 @@ namespace Gameplay.Core.Sim
             return new SimRunResult(_level.LevelId, _level.Seed, policyId, orderKey, repeatIndex,
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model));
-        }
-
-        private bool IsFieldQuiet()
-        {
-            foreach (var piece in _model.Pieces)
-            {
-                if (piece.State == PieceLifecycle.Falling)
-                    return false;
-            }
-            return true;
         }
 
         public void Dispose()

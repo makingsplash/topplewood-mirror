@@ -8,6 +8,12 @@ namespace Gameplay.Core.Adapters
     {
         void Sync(Vec2 position, float rotation);
         void SetState(PieceLifecycle state);
+
+        /// <summary>Telegraph that this Idle piece is armed and waiting in the balance-mode coalescence group —
+        /// it will release synchronously with its pair when the group flushes (TASK-023 §2.4). Cosmetic only:
+        /// the model stays Idle until the flush; headless views (sim) are no-ops.</summary>
+        void SetArmed(bool armed);
+
         void Dispose();
     }
 }

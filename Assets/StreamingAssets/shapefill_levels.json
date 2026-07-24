@@ -665,7 +665,7 @@
         { "kind": "fulcrum", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
         { "kind": "beam", "startPosition": { "x": 0, "y": 4.5 }, "startRotation": 0 },
         { "kind": "pan", "startPosition": { "x": -1.0, "y": 6.0 }, "startRotation": 0 },
-        { "kind": "pan", "startPosition": { "x": 1.0, "y": 7.5 }, "startRotation": 0 }
+        { "kind": "pan", "startPosition": { "x": 1.0, "y": 6.0 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "outline": [ { "x": -1.6, "y": -0.8 }, { "x": 1.6, "y": -0.8 }, { "x": 1.6, "y": -0.5 }, { "x": -1.6, "y": -0.5 } ] }
@@ -1498,11 +1498,11 @@
         { "kind": "fulcrum", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
         { "kind": "beam", "startPosition": { "x": 0, "y": 4.0 }, "startRotation": 0 },
         { "kind": "pan", "startPosition": { "x": -1.15, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "pan", "startPosition": { "x": 1.15, "y": 5.9 }, "startRotation": 0 },
+        { "kind": "pan", "startPosition": { "x": 1.15, "y": 5.0 }, "startRotation": 0 },
         { "kind": "weight", "startPosition": { "x": -1.15, "y": 6.8 }, "startRotation": 0 },
-        { "kind": "weight", "startPosition": { "x": 1.15, "y": 7.7 }, "startRotation": 0 },
+        { "kind": "weight", "startPosition": { "x": 1.15, "y": 6.8 }, "startRotation": 0 },
         { "kind": "cap", "startPosition": { "x": -1.15, "y": 8.6 }, "startRotation": 0 },
-        { "kind": "cap", "startPosition": { "x": 1.15, "y": 9.5 }, "startRotation": 0 }
+        { "kind": "cap", "startPosition": { "x": 1.15, "y": 8.6 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "outline": [ { "x": -1.7, "y": -0.85 }, { "x": 1.7, "y": -0.85 }, { "x": 1.7, "y": -0.55 }, { "x": -1.7, "y": -0.55 } ] }
@@ -1959,9 +1959,9 @@
         { "kind": "fulcrum", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
         { "kind": "beam", "startPosition": { "x": 0, "y": 4.0 }, "startRotation": 0 },
         { "kind": "pan", "startPosition": { "x": -1.15, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "pan", "startPosition": { "x": 1.15, "y": 5.9 }, "startRotation": 0 },
+        { "kind": "pan", "startPosition": { "x": 1.15, "y": 5.0 }, "startRotation": 0 },
         { "kind": "weight", "startPosition": { "x": -1.15, "y": 6.8 }, "startRotation": 0 },
-        { "kind": "weight", "startPosition": { "x": 1.15, "y": 7.7 }, "startRotation": 0 }
+        { "kind": "weight", "startPosition": { "x": 1.15, "y": 6.8 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "outline": [ { "x": -1.7, "y": -0.85 }, { "x": 1.7, "y": -0.85 }, { "x": 1.7, "y": -0.55 }, { "x": -1.7, "y": -0.55 } ] }
