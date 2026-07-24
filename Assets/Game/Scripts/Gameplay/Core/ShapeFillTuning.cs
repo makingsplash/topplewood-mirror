@@ -72,5 +72,15 @@ namespace Gameplay.Core
         /// <summary>Safety clamp on the proportional residual (game-balancer 13 §2.4). CURRENTLY UNUSED for the
         /// same reason as <see cref="SettleGain"/> — kept pending balancer re-confirmation.</summary>
         public float SettleMaxResidualFactor { get; set; } = 0.6f;
+
+        // ── Balance-mode knob (TASK-021). Only levels with PhysicsMode.Balance touch this. ──
+
+        /// <summary>Angular damping applied to a pivot beam when it is world-pinned by the balance hinge — the
+        /// SINGLE determinism lever for seesaw levels. It must be high enough that the crank converges to one
+        /// rest well inside the sim step budget (no metastable knife-edge, no timeout) yet low enough that a
+        /// real overload still visibly tips the beam. Starting value, UNVERIFIED — balancer tunes against
+        /// level-sim (identical poseHash over repeats) for balance_scale/seesaw_tip/grand_seesaw. The global
+        /// rest gate before the balance verdict reuses <see cref="RestSpeedEpsilon"/>/<see cref="RestDurationSeconds"/>.</summary>
+        public float BalanceAngularDamping { get; set; } = 2.0f;
     }
 }

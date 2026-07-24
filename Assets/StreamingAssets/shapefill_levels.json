@@ -643,12 +643,13 @@
       "levelId": "balance_scale",
       "seed": 27,
       "difficultyTier": 6,
+      "physicsMode": "balance",
       "matchTolerance": { "posTol": 0.30, "angTol": 0.43633 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "color": "#4CAF50", "kind": "fulcrum", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.6, "height": 1.0 } },
-        { "color": "#12A5A5", "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.3 } },
+        { "color": "#12A5A5", "kind": "beam", "symmetryOrder": 2, "pivot": true, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.3 } },
         { "color": "#2E7CD6", "kind": "pan", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
       ],
       "target": {
@@ -1469,12 +1470,13 @@
       "levelId": "grand_seesaw",
       "seed": 48,
       "difficultyTier": 8,
+      "physicsMode": "balance",
       "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "color": "#12A5A5", "kind": "fulcrum", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1.1 } },
-        { "color": "#2E7CD6", "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
+        { "color": "#2E7CD6", "kind": "beam", "symmetryOrder": 2, "pivot": true, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
         { "color": "#5B4FE0", "kind": "pan", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
         { "color": "#B24BD1", "kind": "weight", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } },
         { "color": "#E84B8A", "kind": "cap", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.3, "height": 0.3 } }
@@ -1932,12 +1934,13 @@
       "levelId": "seesaw_tip",
       "seed": 116,
       "difficultyTier": 9,
+      "physicsMode": "balance",
       "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "color": "#E23B3B", "kind": "fulcrum", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 1.1 } },
-        { "color": "#F2801D", "kind": "beam", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
+        { "color": "#F2801D", "kind": "beam", "symmetryOrder": 2, "pivot": true, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
         { "color": "#F4C20D", "kind": "pan", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
         { "color": "#4CAF50", "kind": "weight", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } }
       ],

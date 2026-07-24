@@ -15,13 +15,19 @@ namespace Gameplay.Core
         public string Color { get; }
         public int SymmetryOrder { get; }
 
-        public PieceType(string kind, Shape shape, MaterialProfile material, string color = null, int symmetryOrder = 1)
+        /// <summary>Balance-mode hinge beam (TASK-021): on rest it is world-pinned (Dynamic, damped) instead of
+        /// frozen kinematic, so weight on one side tilts it. Only meaningful when the level is PhysicsMode.Balance.</summary>
+        public bool Pivot { get; }
+
+        public PieceType(string kind, Shape shape, MaterialProfile material, string color = null, int symmetryOrder = 1,
+            bool pivot = false)
         {
             Kind = kind;
             Shape = shape;
             Material = material;
             Color = color;
             SymmetryOrder = symmetryOrder < 1 ? 1 : symmetryOrder;
+            Pivot = pivot;
         }
     }
 }

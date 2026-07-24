@@ -29,6 +29,16 @@ namespace Gameplay.Core.Adapters
         /// </summary>
         void FreezeAt(int bodyId, Vec2 position, float rotation);
 
+        /// <summary>
+        /// Pin a body to the world with a revolute hinge at <paramref name="anchor"/> (a world point, TASK-021
+        /// balance mode). Unlike <see cref="FreezeAt"/> the body stays Dynamic (gravity on, collider on) so weight
+        /// on one side cranks it around the anchor; a balance angular damper drives it to a single deterministic
+        /// rest. Velocity is NOT zeroed (the contact impulse carries through). Pass the beam's own centre as the
+        /// anchor so an unloaded beam balances (an off-centre pin would sit under a constant gravity torque). The
+        /// headless pose canvas has no physics, so it is a no-op there.
+        /// </summary>
+        void PinHinge(int bodyId, Vec2 anchor);
+
         BodyPose GetPose(int bodyId);
 
         /// <summary>max(|linear|, |angular|·r) in domain units — compared against ε for rest.</summary>

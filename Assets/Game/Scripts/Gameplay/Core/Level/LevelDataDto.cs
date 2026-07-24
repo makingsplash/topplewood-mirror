@@ -30,6 +30,7 @@ namespace Gameplay.Core
         [JsonProperty("bounds")] public RectDto Bounds { get; set; }
         [JsonProperty("gravity")] public Vec2Dto Gravity { get; set; }
         [JsonProperty("pieceTypes")] public List<PieceTypeDto> PieceTypes { get; set; } = new();
+        [JsonProperty("physicsMode")] public string PhysicsMode { get; set; } // null/absent → Assembly (TASK-021)
         [JsonProperty("target")] public TargetFigureDto Target { get; set; }
         [JsonProperty("pieces")] public List<PiecePlacementDto> Pieces { get; set; } = new();
         [JsonProperty("staticGeometry")] public List<PolygonDto> StaticGeometry { get; set; } = new();
@@ -75,7 +76,25 @@ namespace Gameplay.Core
                 Seed = Seed,
                 DifficultyTier = DifficultyTier,
                 Source = LevelSourceKind.Authored,
+                PhysicsMode = ParsePhysicsMode(PhysicsMode),
             };
+        }
+
+        /// <summary>Map the optional <c>physicsMode</c> string to the domain enum. Absent/empty → Assembly (the
+        /// canonical stack, so every existing level parses unchanged); an unknown value is a hard authoring
+        /// error (mirrors <see cref="ShapeDto"/>'s unknown-primitive throw).</summary>
+        private PhysicsMode ParsePhysicsMode(string raw)
+        {
+            if (string.IsNullOrEmpty(raw))
+                return Gameplay.Core.PhysicsMode.Assembly;
+            switch (raw)
+            {
+                case "assembly": return Gameplay.Core.PhysicsMode.Assembly;
+                case "balance": return Gameplay.Core.PhysicsMode.Balance;
+                default:
+                    throw new InvalidOperationException(
+                        $"Level '{LevelId}': unknown physicsMode '{raw}' (expected 'assembly' or 'balance').");
+            }
         }
     }
 
@@ -187,11 +206,12 @@ namespace Gameplay.Core
         [JsonProperty("kind")] public string Kind { get; set; }
         [JsonProperty("color")] public string Color { get; set; }
         [JsonProperty("symmetryOrder")] public int SymmetryOrder { get; set; } = 1;
+        [JsonProperty("pivot")] public bool Pivot { get; set; } // balance-mode hinge beam (TASK-021); default false
         [JsonProperty("material")] public MaterialProfileDto Material { get; set; }
         [JsonProperty("shape")] public ShapeDto Shape { get; set; }
 
         public PieceType ToDomain()
-            => new PieceType(Kind, Shape.ToDomain(), Material.ToDomain(), Color, SymmetryOrder);
+            => new PieceType(Kind, Shape.ToDomain(), Material.ToDomain(), Color, SymmetryOrder, Pivot);
     }
 
     public sealed class PiecePlacementDto
