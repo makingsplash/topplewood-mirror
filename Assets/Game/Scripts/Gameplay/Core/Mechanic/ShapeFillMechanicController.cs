@@ -34,11 +34,6 @@ namespace Gameplay.Core.Mechanic
         private readonly Dictionary<int, Settle> _settling = new();
         private readonly List<int> _settleDone = new();
 
-        // Small angular guard (rad) kept under angTol so float error at the evaluator can't leave a
-        // minimally-corrected rotation on the failing side of the border (human 11:36). Sibling of the
-        // evaluator's own Eps.
-        private const float AngleMatchGuard = 1e-3f;
-
         private IDisposable _levelLoadedSub;
         private IDisposable _stateRestoredSub;
         private LevelData _level;
@@ -46,7 +41,8 @@ namespace Gameplay.Core.Mechanic
         /// <summary>In-flight soft-settle glide for one piece: driven kinematically toward the slot over
         /// TotalSteps fixed steps. Position uses a critically-damped approach SEEDED with the piece's capture
         /// velocity (VelX/VelY) so the settle continues the fall's momentum without a pop and never overshoots
-        /// (human 12:02); rotation is an eased minimal correction from StartRot to TargetRot (human 11:36).</summary>
+        /// (human 12:02); rotation is an eased turn from StartRot to the slot's exact target angle TargetRot —
+        /// the piece visibly rotates its full landing tilt into the silhouette (human 2026-07-24).</summary>
         private sealed class Settle
         {
             public int BodyId;
@@ -191,8 +187,9 @@ namespace Gameplay.Core.Mechanic
         /// approach toward the slot SEEDED with the piece's capture velocity — it continues the fall's momentum
         /// instead of restarting from a dead stop (human 12:02: no hitch), never overshoots the slot, and leaves
         /// at most a tiny within-tolerance residual (the organic hand-placed feel, game-designer 12 §3.2).
-        /// Rotation is the eased minimal correction to the passing angle (human 11:36). The step count comes from
-        /// SettleDurationSeconds so the whole glide is headless-deterministic (game-balancer 13 §6.1).
+        /// Rotation is the eased turn onto the slot's exact target angle — the full landing tilt rotates into the
+        /// silhouette (human 2026-07-24). The step count comes from SettleDurationSeconds so the whole glide is
+        /// headless-deterministic (game-balancer 13 §6.1).
         /// </summary>
         private void AdvanceSettling()
         {
@@ -319,8 +316,8 @@ namespace Gameplay.Core.Mechanic
         /// its current (possibly still-falling) capture pose right now (so contacts/gravity can't drift it before
         /// the glide), mark it Placed (out of the Falling branch — the verdict is deferred while _settling is
         /// non-empty), and record the path. The glide continues the momentum into the slot via a critically-damped
-        /// approach and turns the rotation the minimum amount needed to pass (human 11:36); game-balancer 13
-        /// §1/§6 for the timing.
+        /// approach and turns the rotation onto the slot's exact target angle so the full tilt settles into the
+        /// silhouette (human 2026-07-24); game-balancer 13 §1/§6 for the timing.
         /// </summary>
         private void BeginSettle(PieceInstance piece, int bodyId, int slot)
         {
@@ -368,26 +365,16 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
-        /// Settle target rotation — the "minimally successful" angle (human 11:36): if the captured rotation
-        /// already matches within angTol, keep it exactly (no visible turn — reads as the piece landing at its
-        /// own natural angle); otherwise turn only just far enough, toward the slot along the symmetry-reduced
-        /// shortest arc, to bring the residual just inside angTol (guarded by <see cref="AngleMatchGuard"/> so
-        /// float error at the evaluator can't leave it on the failing side of the border).
+        /// Settle target rotation — the piece turns its FULL landing tilt to the slot's exact angle (the nearest
+        /// symmetry-equivalent along the shortest arc), so it VISIBLY rotates into the silhouette and sits clean
+        /// (human 2026-07-24: "должна физически поворачиваться … реально садится в силуэт"). Supersedes the old
+        /// "minimally successful angle" that left up to angTol of tilt (human 11:36) — reversed 2026-07-24. Settle
+        /// now drives the angle to the exact target; angTol only JUDGES the result, it is no longer a turn floor.
         /// </summary>
-        private float SettleTargetRotation(float captured, float slot, int symmetryOrder)
+        private static float SettleTargetRotation(float captured, float slot, int symmetryOrder)
         {
             var signed = SignedSymmetryReduce(captured - slot, symmetryOrder);
-            var mag = MathF.Abs(signed);
-
-            var angTol = _level.MatchTolerance.AngTol;
-            if (mag <= angTol)
-                return captured; // already a passing angle — leave it as it landed.
-
-            var residual = angTol - AngleMatchGuard;
-            if (residual < 0f)
-                residual = 0f;
-            var correction = mag - residual;
-            return captured - MathF.Sign(signed) * correction;
+            return captured - signed; // ≡ slot (mod symmetry), nearest to captured → visible turn = |signed|.
         }
 
         /// <summary>Easing t∈[0,1]→[0,1]. SmootherStep (default) is C2 at both ends; the others are A/B alts.</summary>

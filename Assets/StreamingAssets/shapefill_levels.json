@@ -1510,7 +1510,7 @@
       "levelId": "tilted_house",
       "seed": 101,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1536,7 +1536,7 @@
       "levelId": "crooked_signpost",
       "seed": 102,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1562,7 +1562,7 @@
       "levelId": "leaning_sail",
       "seed": 103,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1588,7 +1588,7 @@
       "levelId": "wonky_snowcap",
       "seed": 104,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1614,7 +1614,7 @@
       "levelId": "slanted_stack",
       "seed": 105,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1643,7 +1643,7 @@
       "levelId": "crooked_temple",
       "seed": 106,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1671,7 +1671,7 @@
       "levelId": "weathervane",
       "seed": 107,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1700,7 +1700,7 @@
       "levelId": "banking_biplane",
       "seed": 108,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1731,7 +1731,7 @@
       "levelId": "off_axis_pinwheel",
       "seed": 109,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1763,7 +1763,7 @@
       "levelId": "tilted_lighthouse",
       "seed": 110,
       "difficultyTier": 8,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1792,7 +1792,7 @@
       "levelId": "rocking_wedge",
       "seed": 111,
       "difficultyTier": 9,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1820,7 +1820,7 @@
       "levelId": "toppling_gable",
       "seed": 112,
       "difficultyTier": 9,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1848,7 +1848,7 @@
       "levelId": "corner_quadrant",
       "seed": 113,
       "difficultyTier": 9,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1876,7 +1876,7 @@
       "levelId": "pivot_bridge_deck",
       "seed": 114,
       "difficultyTier": 9,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1906,7 +1906,7 @@
       "levelId": "nudge_the_roof",
       "seed": 115,
       "difficultyTier": 9,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1932,7 +1932,7 @@
       "levelId": "seesaw_tip",
       "seed": 116,
       "difficultyTier": 9,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1968,7 +1968,7 @@
       "levelId": "domino_align",
       "seed": 117,
       "difficultyTier": 9,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -1995,7 +1995,7 @@
       "levelId": "grand_windmill",
       "seed": 118,
       "difficultyTier": 9,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
@@ -2033,7 +2033,7 @@
       "levelId": "clockwork_temple",
       "seed": 119,
       "difficultyTier": 9,
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.10 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
