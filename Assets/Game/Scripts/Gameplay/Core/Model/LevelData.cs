@@ -32,5 +32,10 @@ namespace Gameplay.Core
         public int Seed { get; set; }
         public int DifficultyTier { get; set; }
         public LevelSourceKind Source { get; set; } = LevelSourceKind.Authored;
+
+        /// <summary>Physics behaviour of placed pieces (TASK-021). Default <see cref="PhysicsMode.Assembly"/>
+        /// keeps the canonical freeze-on-rest stack; <see cref="PhysicsMode.Balance"/> switches the pivot beam
+        /// to a damped world hinge (snap/freeze off, verdict on global rest). See <see cref="PhysicsMode"/>.</summary>
+        public PhysicsMode PhysicsMode { get; set; } = PhysicsMode.Assembly;
     }
 }

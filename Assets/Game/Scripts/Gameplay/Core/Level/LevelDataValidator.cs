@@ -40,7 +40,55 @@ namespace Gameplay.Core
             if (level.Gravity.SqrLength <= 0f)
                 errors.Add("Gravity must be non-zero.");
 
+            // 6. Balance mode (TASK-021): structural shape of a seesaw level (winnability is level-sim's job).
+            if (level.PhysicsMode == PhysicsMode.Balance)
+                ValidateBalance(level, errors);
+
             return new ValidationResult(errors);
+        }
+
+        /// <summary>
+        /// Balance-mode structural checks (TASK-021): the level must have at least one pivot piece, and every
+        /// pivot Kind must map to exactly ONE in-Bounds slot — the hinge anchor is a single point, so two slots
+        /// of a pivot Kind (or none) is a broken authoring, not a solvable level. Winnability under a live crank
+        /// is proven by level-sim, not here.
+        /// </summary>
+        private static void ValidateBalance(LevelData level, List<string> errors)
+        {
+            if (level.Pieces == null)
+                return;
+
+            var pivotKinds = new HashSet<string>();
+            foreach (var placement in level.Pieces)
+                if (placement.Type != null && placement.Type.Pivot)
+                    pivotKinds.Add(placement.Type.Kind);
+
+            if (pivotKinds.Count == 0)
+            {
+                errors.Add("PhysicsMode.Balance requires at least one piece with pivot=true (the hinge beam).");
+                return;
+            }
+
+            var slots = level.Target?.Slots;
+            foreach (var kind in pivotKinds)
+            {
+                var count = 0;
+                var anchor = default(Vec2);
+                if (slots != null)
+                    foreach (var slot in slots)
+                        if (slot.Kind == kind)
+                        {
+                            count++;
+                            anchor = slot.Position;
+                        }
+
+                if (count == 0)
+                    errors.Add($"Pivot kind '{kind}' has no target slot to anchor its hinge.");
+                else if (count > 1)
+                    errors.Add($"Pivot kind '{kind}' has {count} slots; a hinge needs exactly one anchor slot.");
+                else if (!level.Bounds.Contains(anchor))
+                    errors.Add($"Pivot kind '{kind}' hinge anchor {anchor} is outside Bounds.");
+            }
         }
 
         private static void ValidateTarget(LevelData level, List<string> errors)

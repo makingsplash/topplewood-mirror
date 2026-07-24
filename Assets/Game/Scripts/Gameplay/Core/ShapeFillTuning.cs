@@ -72,5 +72,32 @@ namespace Gameplay.Core
         /// <summary>Safety clamp on the proportional residual (game-balancer 13 §2.4). CURRENTLY UNUSED for the
         /// same reason as <see cref="SettleGain"/> — kept pending balancer re-confirmation.</summary>
         public float SettleMaxResidualFactor { get; set; } = 0.6f;
+
+        // ── Balance-mode knob (TASK-021). Only levels with PhysicsMode.Balance touch this. ──
+
+        /// <summary>Angular damping applied to a pivot beam when it is world-pinned by the balance hinge — drives
+        /// the crank to ONE rest inside the sim step budget (no metastable knife-edge, no timeout) yet leaves a
+        /// real overload visibly tipping the beam. Raised 2→4 (game-balancer 03 §2.3): with the pin now above the
+        /// loaded CM (self-levelling pendulum, C2) the beam oscillates on the way to rest, so it needs firmer
+        /// damping to converge deterministically. UNVERIFIED — balancer tunes against level-sim (identical
+        /// poseHash over repeats) for balance_scale/seesaw_tip/grand_seesaw; sweep 3–8. The global rest gate before
+        /// the balance verdict reuses <see cref="RestSpeedEpsilon"/>/<see cref="RestDurationSeconds"/>.</summary>
+        public float BalanceAngularDamping { get; set; } = 4.0f;
+
+        /// <summary>Vertical offset (world units) that lifts the balance hinge pivot ABOVE the beam's rested centre
+        /// so the pinned point sits above the loaded centre of mass — turning the seesaw into a self-levelling
+        /// pendulum with a restoring torque toward horizontal (game-balancer 03 §2.1, C2). Pinning at the centre
+        /// (offset 0) left the loaded CM above the pivot → inverted pendulum / neutral knife-edge → no restoring
+        /// torque → 0 reliable. Applied in <see cref="Gameplay.Core.Mechanic.ShapeFillMechanicController"/> when it
+        /// hinges the beam; the adapter's InverseTransformPoint resolves the raised anchor with no positional jerk.
+        /// Starting value, UNVERIFIED — balancer sweep 0.45–0.75 (margin over CM: +0.44/+0.32/+0.22 for the 3 seesaws).</summary>
+        public float BalancePivotAnchorOffsetY { get; set; } = 0.6f;
+
+        /// <summary>Angular limit (degrees, ±) applied to the balance hinge as physical end-stops so a single load
+        /// on the free-swinging beam cannot tilt it past the ~31° slip angle (friction 0.6) and slide off before its
+        /// counter-load arrives (game-balancer 03 §2.2, C3). Horizontal (0°) stays inside the range so the win pose
+        /// is reachable. <c>≤0</c> ⇒ limits OFF — kept generic for the forward-vision catapult levels where the beam
+        /// must swing free. Starting value, UNVERIFIED — balancer sweep 10–18°.</summary>
+        public float BalanceHingeLimitDeg { get; set; } = 14f;
     }
 }

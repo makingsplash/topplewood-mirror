@@ -37,6 +37,13 @@ namespace Gameplay.Core.Mechanic
         private IDisposable _levelLoadedSub;
         private IDisposable _stateRestoredSub;
         private LevelData _level;
+        // Balance physics mode (TASK-021): the pivot beam is world-pinned by a damped hinge and stays Dynamic,
+        // snap-to-slot and freeze-on-rest are off, and the verdict waits for GLOBAL rest so a still-cranking
+        // beam is never judged. Assembly mode (66 levels) is byte-for-byte the pre-TASK-021 behaviour.
+        private bool _balanceMode;
+        // Time the whole field has stayed below the rest speed, in balance mode only — the verdict fires only
+        // once it exceeds RestDurationSeconds (the beam and everything on it have stopped swinging).
+        private float _globalRestTimer;
 
         /// <summary>In-flight soft-settle glide for one piece: driven kinematically toward the slot over
         /// TotalSteps fixed steps. Position uses a critically-damped approach SEEDED with the piece's capture
@@ -78,6 +85,7 @@ namespace Gameplay.Core.Mechanic
         private void OnLevelLoaded()
         {
             _level = _model.CurrentLevel;
+            _balanceMode = _level.PhysicsMode == PhysicsMode.Balance;
 
             var validation = _validator.Validate(_level);
             if (!validation.Ok)
@@ -106,6 +114,7 @@ namespace Gameplay.Core.Mechanic
         private void OnStateRestored()
         {
             _level = _model.CurrentLevel;
+            _balanceMode = _level.PhysicsMode == PhysicsMode.Balance;
 
             ClearRuntime();
             _simulation.Reset();
@@ -179,7 +188,34 @@ namespace Gameplay.Core.Mechanic
             if (anyFalling || _settling.Count > 0)
                 return;
 
+            // Balance mode: placed pieces stay Dynamic and keep cranking on the hinge, so "nothing Falling" is
+            // NOT yet rest. Hold the verdict until the whole field has been quiet for RestDurationSeconds, then
+            // judge the settled pose (beam within angTol of level ⇒ balanced). Assembly mode is unaffected.
+            if (_balanceMode && !GlobalRestReached(dt))
+                return;
+
             ResolveAtRest();
+        }
+
+        /// <summary>
+        /// True once EVERY live body has stayed below the rest speed for RestDurationSeconds (balance mode only).
+        /// A placed-but-Dynamic pivot beam and the loads riding it keep swinging after they leave the Falling
+        /// state; judging the figure before they settle would read a mid-crank pose (and a divergent poseHash).
+        /// Any body still moving resets the timer, so the gate reflects a genuine single global rest.
+        /// </summary>
+        private bool GlobalRestReached(float dt)
+        {
+            foreach (var bodyId in _bodyByInstance.Values)
+            {
+                if (_simulation.GetSpeed(bodyId) >= _tuning.RestSpeedEpsilon)
+                {
+                    _globalRestTimer = 0f;
+                    return false;
+                }
+            }
+
+            _globalRestTimer += dt;
+            return _globalRestTimer >= _tuning.RestDurationSeconds;
         }
 
         /// <summary>
@@ -275,7 +311,10 @@ namespace Gameplay.Core.Mechanic
             // empty space below, it keeps falling even through a slot's capture window, so a piece bound for a
             // lower slot is never grabbed by a higher one it merely passes through (the L1 two_cubes regress).
             // Physical & level-agnostic — no dependence on neighbouring slots' Kind/position.
-            if (_simulation.HasSupportBelow(bodyId, _tuning.SnapSupportProbeDistance))
+            //
+            // Balance mode has NO snap assist (TASK-021): the crank IS the mechanic, so a piece must ride the
+            // real hinge physics onto the beam rather than being glided into an authored slot pose.
+            if (!_balanceMode && _simulation.HasSupportBelow(bodyId, _tuning.SnapSupportProbeDistance))
             {
                 var slot = FindSnapSlot(piece, bodyId);
                 if (slot >= 0)
@@ -306,8 +345,86 @@ namespace Gameplay.Core.Mechanic
         private void Place(PieceInstance piece, int bodyId)
         {
             var pose = _simulation.GetPose(bodyId);
+
+            if (_balanceMode)
+            {
+                if (_typeByInstance[piece.InstanceId].Pivot)
+                    PlacePivot(piece, bodyId, pose);   // beam → world-pinned hinge, stays Dynamic
+                else
+                    PlaceDynamic(piece, pose);         // load → marked Placed but keeps physics, rides the beam
+                return;
+            }
+
             FreezePlaced(piece, pose.Position, pose.Rotation);
             _simulation.FreezeAt(bodyId, pose.Position, pose.Rotation);
+        }
+
+        /// <summary>
+        /// Balance-mode landing for the pivot beam (TASK-021): it came to rest centred on the fulcrum, so pin a
+        /// world hinge over that rested centre and leave it Dynamic — from now on weight on one side cranks it and
+        /// the balance damper drives it to a single deterministic rest. No angle correction, no freeze: the angle
+        /// is the mechanic. The pin is placed <see cref="ShapeFillTuning.BalancePivotAnchorOffsetY"/> ABOVE the
+        /// rested centre (not at it): pinning at the centre left the loaded centre of mass above the pivot → an
+        /// inverted pendulum with no restoring torque (neutral knife-edge → 0 reliable in sim, game-balancer 03).
+        /// Lifting the pivot above the loaded CM makes horizontal a STABLE equilibrium — the beam self-levels like
+        /// a real weighing balance. Kept on the beam's own X (a symmetric drop lands the centre on the fulcrum apex
+        /// within posTol) so the unloaded beam sits under no horizontal torque.
+        /// </summary>
+        private void PlacePivot(PieceInstance piece, int bodyId, BodyPose pose)
+        {
+            FreezePlaced(piece, pose.Position, pose.Rotation); // mark Placed + mirror pose (no physics freeze)
+            var anchor = new Vec2(pose.Position.X, pose.Position.Y + _tuning.BalancePivotAnchorOffsetY);
+            _simulation.PinHinge(bodyId, anchor);
+        }
+
+        /// <summary>
+        /// Balance-mode landing for a load piece (pan / weight / cap, TASK-021): mark it Placed so it counts
+        /// toward the verdict, but DO NOT freeze it — it stays Dynamic and rides the beam as it cranks, so the
+        /// figure is only complete once the whole field settles (the global rest gate in Tick). MirrorPose keeps
+        /// its model/view pose tracking the live body every tick.
+        /// </summary>
+        private void PlaceDynamic(PieceInstance piece, BodyPose pose)
+        {
+            FreezePlaced(piece, pose.Position, pose.Rotation);
+        }
+
+        /// <summary>
+        /// Balance-mode final crisp-up (TASK-021 round-3, Failure B). Run once at global rest: for each settled
+        /// NON-pivot load, re-run the support-gate snap (<see cref="FindSnapSlot"/> — same capture window and greedy
+        /// nearest-slot assignment as the assembly assist) against its live rest pose; if it landed within a slot's
+        /// window, freeze it onto the exact slot pose and claim the slot. A level beam leaves each pan/weight/cap
+        /// stack sitting at its slot ⇒ every load captures ⇒ clean pose match ⇒ win; a tilted beam parks the loads
+        /// off-slot ⇒ FindSnapSlot misses them ⇒ the figure stays incomplete ⇒ correctly no win. This closes the gap
+        /// that free physics alone cannot: a pan resting ON the beam is never inside posTol of its authored slot.
+        ///
+        /// The pivot beam is deliberately NOT snapped — its match is judged from the free hinge rest pose, because
+        /// the crank angle IS the balance mechanic (a beam that settled tilted must fail on angle).
+        ///
+        /// Determinism: snapping ONLY at global rest (never mid-crank) keeps the pre-snap poses fixed-step
+        /// reproducible and the snap a deterministic pose assignment, so poseHash stays stable across repeats.
+        /// Freezing a load to Kinematic drops its gravitational load on the beam, but the whole field is already at
+        /// global rest and the verdict is decided on THIS same tick with no further physics step, so nothing drifts.
+        /// </summary>
+        private void BalanceSnapLoads()
+        {
+            foreach (var piece in _model.Pieces)
+            {
+                if (piece.State != PieceLifecycle.Placed)
+                    continue;
+                if (_typeByInstance[piece.InstanceId].Pivot)
+                    continue; // the pivot beam is judged from its free rest pose, never snapped
+                if (!_bodyByInstance.TryGetValue(piece.InstanceId, out var bodyId))
+                    continue;
+
+                var slot = FindSnapSlot(piece, bodyId);
+                if (slot < 0)
+                    continue;
+
+                _occupiedSlots.Add(slot);
+                var target = _level.Target.Slots[slot];
+                FreezePlaced(piece, target.Position, target.Rotation);
+                _simulation.FreezeAt(bodyId, target.Position, target.Rotation);
+            }
         }
 
         /// <summary>
@@ -479,8 +596,6 @@ namespace Gameplay.Core.Mechanic
         /// </summary>
         private void ResolveAtRest()
         {
-            var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
-
             var anyLost = false;
             var anyIdle = false;
             foreach (var piece in _model.Pieces)
@@ -488,6 +603,17 @@ namespace Gameplay.Core.Mechanic
                 if (piece.State == PieceLifecycle.Lost) anyLost = true;
                 else if (piece.State == PieceLifecycle.Idle) anyIdle = true;
             }
+
+            // Balance-mode final crisp-up (TASK-021 round-3, Failure B): the field has reached global rest with
+            // nothing left to place. The pivot beam is judged from its free rest pose, but the loads riding it are
+            // pure Dynamic physics with snap OFF — free physics parks a pan ON the beam, never inside its authored
+            // slot, so even a perfectly level beam scored medianMatchError ≈ posTol and never won. Snap the settled
+            // loads into their slots now (details in BalanceSnapLoads). Gated on !anyIdle so an in-progress game is
+            // never crisped early — canon §3 judges only at final rest.
+            if (_balanceMode && !anyIdle)
+                BalanceSnapLoads();
+
+            var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
 
             if (result.AllSlotsFilled && !anyLost)
             {
@@ -565,6 +691,7 @@ namespace Gameplay.Core.Mechanic
             _typeByInstance.Clear();
             _occupiedSlots.Clear();
             _settling.Clear();
+            _globalRestTimer = 0f;
         }
 
         public void Dispose()

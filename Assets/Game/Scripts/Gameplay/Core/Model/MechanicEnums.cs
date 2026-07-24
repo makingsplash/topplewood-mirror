@@ -17,6 +17,19 @@ namespace Gameplay.Core
     }
 
     /// <summary>
+    /// How a level's placed pieces behave physically (TASK-021). <see cref="Assembly"/> is the canonical stack:
+    /// every piece freezes kinematic on rest (snap-to-slot + rigid support). <see cref="Balance"/> is the
+    /// seesaw class: the pivot beam is pinned to a damped world hinge and stays Dynamic (cranks under load),
+    /// snap/freeze are off, and the verdict waits for GLOBAL rest so a swinging beam is never judged mid-crank.
+    /// Default is Assembly — old levels and JSON without a physicsMode field are unchanged.
+    /// </summary>
+    public enum PhysicsMode
+    {
+        Assembly,
+        Balance,
+    }
+
+    /// <summary>
     /// Easing curve for the soft-settle glide (TASK-009, game-balancer 13 §2.2). SmootherStep is the default —
     /// its 1st AND 2nd derivatives are zero at both ends, so the glide flows out of rest and into the freeze
     /// with no visible velocity pop. SmoothStep / EaseOutCubic are A/B alternatives (game-balancer 13 §8).
