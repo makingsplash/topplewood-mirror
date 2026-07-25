@@ -1575,12 +1575,12 @@
         "outline": [ { "x": -0.7, "y": -0.5 }, { "x": 0.7, "y": -0.5 }, { "x": 0.7, "y": 1.5 }, { "x": -0.7, "y": 1.5 } ],
         "slots": [
           { "kind": "hull", "position": { "x": 0, "y": 0 }, "rotation": 0 },
-          { "kind": "sail", "position": { "x": 0, "y": 1.0 }, "rotation": 0 }
+          { "kind": "sail", "position": { "x": -0.241, "y": 1.0 }, "rotation": 0 }
         ]
       },
       "pieces": [
         { "kind": "hull", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
-        { "kind": "sail", "startPosition": { "x": 0.095, "y": 4.5 }, "startRotation": -0.244 }
+        { "kind": "sail", "startPosition": { "x": 0, "y": 4.5 }, "startRotation": -0.244 }
       ],
       "staticGeometry": [
         { "outline": [ { "x": -1.2, "y": -0.8 }, { "x": 1.2, "y": -0.8 }, { "x": 1.2, "y": -0.5 }, { "x": -1.2, "y": -0.5 } ] }
@@ -1893,12 +1893,12 @@
         "outline": [ { "x": -0.5, "y": -0.35 }, { "x": 0.5, "y": -0.35 }, { "x": 0.5, "y": 1.15 }, { "x": -0.5, "y": 1.15 } ],
         "slots": [
           { "kind": "base", "position": { "x": 0, "y": 0 }, "rotation": 0 },
-          { "kind": "roof", "position": { "x": 0, "y": 0.75 }, "rotation": 0 }
+          { "kind": "roof", "position": { "x": 0.282, "y": 0.75 }, "rotation": 0 }
         ]
       },
       "pieces": [
         { "kind": "base", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
-        { "kind": "roof", "startPosition": { "x": -0.086, "y": 4.5 }, "startRotation": 0.279 }
+        { "kind": "roof", "startPosition": { "x": 0, "y": 4.5 }, "startRotation": 0.279 }
       ],
       "staticGeometry": [
         { "outline": [ { "x": -1.0, "y": -0.65 }, { "x": 1.0, "y": -0.65 }, { "x": 1.0, "y": -0.35 }, { "x": -1.0, "y": -0.35 } ] }
