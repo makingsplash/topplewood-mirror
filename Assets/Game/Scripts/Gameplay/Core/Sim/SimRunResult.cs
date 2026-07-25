@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Gameplay.Core.Sim
 {
     /// <summary>
@@ -27,11 +29,16 @@ namespace Gameplay.Core.Sim
         // Zero on runs with no physical-settle pieces (flat assembly / balance) — interpretation is ⟨balancer⟩/⟨qa⟩.
         public readonly float PreGlideAngResidual;
         public readonly float PreGlidePosErr;
+        // TASK-025 STEP-1 (observability): every piece's final resolved pose (kind + world x/y + rotation + state) at
+        // the tick the run resolves (Won/Lost/Timeout — irrelevant). JSON-only (omitted from the CSV row: it is an
+        // array, not a scalar). Lets the balancer author silhouette slots FROM where the deterministic physics
+        // actually lands pieces, instead of blind trajectory-fitting (05 §9 request). Sim-only; production untouched.
+        public readonly IReadOnlyList<SimPiecePose> FinalPoses;
 
         public SimRunResult(string levelId, int seed, string policyId, string orderKey, int repeatIndex,
             bool solved, string outcome, int attemptsUsed, int stepsToResolve, float matchError,
             int slotsFilled, int slotsTotal, int lostPieces, long poseHash,
-            float preGlideAngResidual, float preGlidePosErr)
+            float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses)
         {
             LevelId = levelId;
             Seed = seed;
@@ -49,6 +56,31 @@ namespace Gameplay.Core.Sim
             PoseHash = poseHash;
             PreGlideAngResidual = preGlideAngResidual;
             PreGlidePosErr = preGlidePosErr;
+            FinalPoses = finalPoses;
+        }
+    }
+
+    /// <summary>
+    /// TASK-025 STEP-1: one piece's final pose in a sim run (kind + world position + rotation + life-cycle state).
+    /// Emitted per run so a human/balancer can read where the deterministic physics deposits each piece and author
+    /// slots to those observed rest points. Rotation is raw radians (NOT symmetry-reduced — this is a physical
+    /// reading, not a match residual). Sim-report data only; not part of the domain/production path.
+    /// </summary>
+    public readonly struct SimPiecePose
+    {
+        public readonly string Kind;
+        public readonly float X;
+        public readonly float Y;
+        public readonly float Rot;
+        public readonly string State;
+
+        public SimPiecePose(string kind, float x, float y, float rot, string state)
+        {
+            Kind = kind;
+            X = x;
+            Y = y;
+            Rot = rot;
+            State = state;
         }
     }
 }

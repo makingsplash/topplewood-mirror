@@ -146,6 +146,9 @@ namespace Gameplay.Core.Sim
         public SimRunResult BuildResult(string policyId, string orderKey, int repeatIndex, int stepsToResolve)
         {
             var placed = new List<PlacedPiece>();
+            // TASK-025 STEP-1: record EVERY piece's final pose (any state), so the balancer can author slots to the
+            // deterministic rest points physics produces (05 §9) rather than blind-fit trajectories.
+            var finalPoses = new List<SimPiecePose>();
             var lost = 0;
             foreach (var piece in _model.Pieces)
             {
@@ -154,6 +157,9 @@ namespace Gameplay.Core.Sim
                 else if (piece.State == PieceLifecycle.Placed)
                     placed.Add(new PlacedPiece(piece.Kind, piece.Position, piece.Rotation,
                         _model.TypeFor(piece).SymmetryOrder));
+
+                finalPoses.Add(new SimPiecePose(
+                    piece.Kind, piece.Position.X, piece.Position.Y, piece.Rotation, piece.State.ToString()));
             }
 
             var match = _match.Evaluate(_level.Target, placed, _level.MatchTolerance);
@@ -163,7 +169,7 @@ namespace Gameplay.Core.Sim
             return new SimRunResult(_level.LevelId, _level.Seed, policyId, orderKey, repeatIndex,
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
-                _maxPreGlideAngResidual, _maxPreGlidePosErr);
+                _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses);
         }
 
         public void Dispose()
