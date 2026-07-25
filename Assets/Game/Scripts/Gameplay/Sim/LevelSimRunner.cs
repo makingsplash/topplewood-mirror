@@ -90,7 +90,7 @@ namespace Gameplay.Sim
                     try
                     {
                         orders = SolveSweepPlan.BuildOrders(
-                            level.Pieces.Count, _maxFullPermute, _sampleCount, level.Seed, Debug.Log);
+                            TappableIndices(level), _maxFullPermute, _sampleCount, level.Seed, Debug.Log);
                     }
                     catch (Exception e)
                     {
@@ -441,6 +441,19 @@ namespace Gameplay.Sim
 #else
             Application.Quit(exitCode);
 #endif
+        }
+
+        // Placement indices of the TAPPABLE pieces (TASK-031 round-2): a preplaced lever/obstacle drops into the
+        // physics at t=0 and is never tap-released, so it must not appear in a release order (video_launcher: the
+        // stick is excluded → 3! = 6 orders over A/B/hammer). A level with no preplaced piece yields [0..count-1]
+        // → identity mapping in BuildOrders → byte-for-byte the pre-TASK-031 order set (other levels untouched).
+        private static IReadOnlyList<int> TappableIndices(LevelData level)
+        {
+            var indices = new List<int>(level.Pieces.Count);
+            for (var i = 0; i < level.Pieces.Count; i++)
+                if (!level.Pieces[i].Preplaced)
+                    indices.Add(i);
+            return indices;
         }
 
         private static int[] Identity(int n)

@@ -611,7 +611,9 @@ namespace Gameplay.Core.Mechanic
 
         /// <summary>
         /// Pure-physics crisp-at-rest (TASK-031d, opt-in <see cref="LevelData.FreezeLoadsAtRest"/>) — the variant-B
-        /// freeze (TASK-030) applied to a whole catapult/balance level. At global rest, for every settled non-pivot
+        /// freeze (TASK-030) applied to a whole catapult/balance level. Called ONLY at the FINAL global rest (round-2:
+        /// no piece Idle, no release pending — the caller bails on any intermediate rest), so every piece has stayed
+        /// Dynamic the whole level and this runs exactly once, on the settled field. For every settled non-pivot
         /// piece: claim its nearest same-Kind slot (greedy by position, mirroring <see cref="BalanceSnapLoads"/>) for
         /// the win check + slot monopoly, then FREEZE it EXACTLY at its physical rest pose — no glide, no position or
         /// angle correction. The piece must have reached the silhouette by real physics (falling, hitting, rotating,
@@ -825,22 +827,31 @@ namespace Gameplay.Core.Mechanic
                 else if (piece.State == PieceLifecycle.Idle) anyIdle = true;
             }
 
-            // Balance-mode final crisp-up (TASK-021 round-3, Failure B): the field has reached global rest with
-            // nothing left to place. The pivot beam is judged from its free rest pose, but the loads riding it are
-            // pure Dynamic physics with snap OFF — free physics parks a pan ON the beam, never inside its authored
-            // slot, so even a perfectly level beam scored medianMatchError ≈ posTol and never won. Snap the settled
-            // loads into their slots now (details in BalanceSnapLoads). Gated on !anyIdle so an in-progress game is
-            // never crisped early — canon §3 judges only at final rest.
-            if (_balanceMode && !anyIdle)
+            // Balance-mode crisp-up at global rest. Two paths, both judging only at final rest (canon §3):
+            //  • freezeLoadsAtRest (TASK-031 round-2, pure physics): everything stayed Dynamic; freeze in place ONLY
+            //    when the field is final (no Idle, no pending release) — see FreezeLoadsAtRest. Intermediate global
+            //    rests bail out untouched so a load can still be launched by a later tap.
+            //  • default (TASK-021 round-3, Failure B): the pivot beam is judged from its free rest pose, but the
+            //    loads riding it are pure Dynamic physics with snap OFF — free physics parks a pan ON the beam, never
+            //    inside its authored slot, so even a perfectly level beam scored medianMatchError ≈ posTol and never
+            //    won. Snap the settled loads into their slots now (details in BalanceSnapLoads), gated on !anyIdle so
+            //    an in-progress game is never crisped early.
+            if (_balanceMode)
             {
                 if (_level.FreezeLoadsAtRest)
                 {
-                    // Pure-physics crisp-at-rest (TASK-031d): freeze every load EXACTLY where physics parked it (no
-                    // glide, no pose/angle correction), claiming its nearest slot for the win check. Never fills
-                    // _settling, so the verdict is not deferred.
+                    // Pure-physics verdict (TASK-031 round-2): under freezeLoadsAtRest EVERY piece stays Dynamic the
+                    // whole level — nothing is frozen, claimed, or judged at an INTERMEDIATE global rest. While any
+                    // piece is still Idle (the player has taps left) OR a coalescence group is arming, the field is
+                    // not final: bail out without touching poses so a still-launchable load is never frozen mid-turn
+                    // (the owner's "B фризится на палке до удара" regress). Only once nothing is Idle and no release
+                    // is pending is the field truly final — then freeze every piece EXACTLY where physics parked it
+                    // (claiming its nearest slot for the win check) and greedy-match the live poses. No shift, ever.
+                    if (anyIdle || _pendingRelease.Count > 0 || _coalesceWindowStepsLeft > 0)
+                        return;
                     FreezeLoadsAtRest();
                 }
-                else
+                else if (!anyIdle)
                 {
                     BalanceSnapLoads();
                     // §7: the snap now begins a soft-settle glide instead of an instant teleport, so if any load
