@@ -91,9 +91,10 @@ namespace Gameplay.Core
             {
                 case "assembly": return Gameplay.Core.PhysicsMode.Assembly;
                 case "balance": return Gameplay.Core.PhysicsMode.Balance;
+                case "catapult": return Gameplay.Core.PhysicsMode.Catapult;
                 default:
                     throw new InvalidOperationException(
-                        $"Level '{LevelId}': unknown physicsMode '{raw}' (expected 'assembly' or 'balance').");
+                        $"Level '{LevelId}': unknown physicsMode '{raw}' (expected 'assembly', 'balance' or 'catapult').");
             }
         }
     }

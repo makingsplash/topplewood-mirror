@@ -40,8 +40,10 @@ namespace Gameplay.Core
             if (level.Gravity.SqrLength <= 0f)
                 errors.Add("Gravity must be non-zero.");
 
-            // 6. Balance mode (TASK-021): structural shape of a seesaw level (winnability is level-sim's job).
-            if (level.PhysicsMode == PhysicsMode.Balance)
+            // 6. Balance / Catapult mode: structural shape of a pivot-beam level (winnability is level-sim's job).
+            // A catapult (TASK-025) has the same structural invariant as a seesaw — exactly one pivot arm judged
+            // from one in-Bounds slot — so it reuses ValidateBalance.
+            if (level.PhysicsMode is PhysicsMode.Balance or PhysicsMode.Catapult)
                 ValidateBalance(level, errors);
 
             return new ValidationResult(errors);
