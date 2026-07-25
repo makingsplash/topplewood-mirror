@@ -114,9 +114,12 @@ namespace Gameplay.Core
         /// heavy damping during the ~0.15 s flip would kill the pebble's launch velocity → undershoot. 1.2 keeps
         /// enough convergence (arm settles to one poseHash with the boulder loading the near pocket) without stalling
         /// the flip. UNVERIFIED — balancer sweep 0.8–2.0 against level-sim (identical poseHash over R≥20 AND pebble
-        /// reaches the cradle). The global rest gate before the verdict reuses
-        /// <see cref="RestSpeedEpsilon"/>/<see cref="RestDurationSeconds"/>.</summary>
-        public float BalanceAngularDamping { get; set; } = 1.2f;
+        /// reaches the cradle). ROUND-2 empirical probe (game-balancer 05 §7): lowered 1.2→0.8 alongside the 15
+        /// probe levels — round-1 sim showed systematic undershoot (pebble lands 3.5–6 units short), attributed in
+        /// part to damping bleeding angular velocity during the flip; 0.8 is the low edge of the sweep, tested
+        /// globally in the same run. Revert to 1.2 if 0.8 breaks arm convergence to rest. The global rest gate before
+        /// the verdict reuses <see cref="RestSpeedEpsilon"/>/<see cref="RestDurationSeconds"/>.</summary>
+        public float BalanceAngularDamping { get; set; } = 0.8f;
 
         /// <summary>PinHinge-only. UNUSED by the current path: the catapult pins at the arm's OWN centre (offset 0,
         /// hardcoded in <see cref="Gameplay.Core.Mechanic.ShapeFillMechanicController"/>.PlacePivotCatapult per RFC 02
