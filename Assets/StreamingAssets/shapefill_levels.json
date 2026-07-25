@@ -2085,12 +2085,12 @@
         { "color": "#B24BD1", "kind": "boulder", "symmetryOrder": 4, "material": { "density": 2.5, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 1.0 } }
       ],
       "target": {
-        "outline": [ { "x": -1.6, "y": -0.5 }, { "x": 2.4, "y": -0.5 }, { "x": 2.4, "y": 1.9 }, { "x": -1.6, "y": 1.9 } ],
+        "outline": [ { "x": -3.0, "y": 3.55 }, { "x": 2.4, "y": 3.55 }, { "x": 2.4, "y": 4.6 }, { "x": -3.0, "y": 4.6 } ],
         "slots": [
-          { "kind": "fulcrum", "position": { "x": 0.06, "y": -0.35 }, "rotation": 0 },
-          { "kind": "arm", "position": { "x": 0.02, "y": -0.05 }, "rotation": 0 },
-          { "kind": "pebble", "position": { "x": 1.98, "y": -0.29 }, "rotation": 0 },
-          { "kind": "boulder", "position": { "x": -2.28, "y": 0.02 }, "rotation": 0 }
+          { "kind": "fulcrum", "position": { "x": 0.08, "y": 3.70 }, "rotation": 0 },
+          { "kind": "arm", "position": { "x": 0.02, "y": 4.00 }, "rotation": 0 },
+          { "kind": "pebble", "position": { "x": 1.78, "y": 3.77 }, "rotation": 0 },
+          { "kind": "boulder", "position": { "x": -2.28, "y": 4.07 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -2118,12 +2118,12 @@
         { "color": "#B24BD1", "kind": "boulder", "symmetryOrder": 4, "material": { "density": 2.5, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 1.0 } }
       ],
       "target": {
-        "outline": [ { "x": -1.6, "y": -0.5 }, { "x": 2.7, "y": -0.5 }, { "x": 2.7, "y": 1.9 }, { "x": -1.6, "y": 1.9 } ],
+        "outline": [ { "x": -3.0, "y": 3.55 }, { "x": 2.4, "y": 3.55 }, { "x": 2.4, "y": 4.6 }, { "x": -3.0, "y": 4.6 } ],
         "slots": [
-          { "kind": "fulcrum", "position": { "x": 0.06, "y": -0.35 }, "rotation": 0 },
-          { "kind": "arm", "position": { "x": 0.02, "y": -0.05 }, "rotation": 0 },
-          { "kind": "pebble", "position": { "x": 1.98, "y": -0.29 }, "rotation": 0 },
-          { "kind": "boulder", "position": { "x": -2.28, "y": 0.02 }, "rotation": 0 }
+          { "kind": "fulcrum", "position": { "x": 0.08, "y": 3.70 }, "rotation": 0 },
+          { "kind": "arm", "position": { "x": 0.02, "y": 4.00 }, "rotation": 0 },
+          { "kind": "pebble", "position": { "x": 1.79, "y": 3.76 }, "rotation": 0 },
+          { "kind": "boulder", "position": { "x": -2.27, "y": 4.07 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -2151,12 +2151,12 @@
         { "color": "#B24BD1", "kind": "boulder", "symmetryOrder": 4, "material": { "density": 2.5, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 1.0 } }
       ],
       "target": {
-        "outline": [ { "x": -1.6, "y": -0.5 }, { "x": 2.8, "y": -0.5 }, { "x": 2.8, "y": 1.9 }, { "x": -1.6, "y": 1.9 } ],
+        "outline": [ { "x": -3.0, "y": 3.55 }, { "x": 2.4, "y": 3.55 }, { "x": 2.4, "y": 4.6 }, { "x": -3.0, "y": 4.6 } ],
         "slots": [
-          { "kind": "fulcrum", "position": { "x": 0.08, "y": -0.35 }, "rotation": 0 },
-          { "kind": "arm", "position": { "x": 0.19, "y": -0.05 }, "rotation": 0 },
-          { "kind": "pebble", "position": { "x": 1.88, "y": -0.25 }, "rotation": 0 },
-          { "kind": "boulder", "position": { "x": -2.53, "y": 0.02 }, "rotation": 0 }
+          { "kind": "fulcrum", "position": { "x": 0.08, "y": 3.70 }, "rotation": 0 },
+          { "kind": "arm", "position": { "x": 0.02, "y": 4.00 }, "rotation": 0 },
+          { "kind": "pebble", "position": { "x": 1.79, "y": 3.76 }, "rotation": 0 },
+          { "kind": "boulder", "position": { "x": -2.27, "y": 4.07 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -2184,12 +2184,12 @@
         { "color": "#B24BD1", "kind": "boulder", "symmetryOrder": 4, "material": { "density": 2.5, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 1.0 } }
       ],
       "target": {
-        "outline": [ { "x": -1.6, "y": -0.5 }, { "x": 2.9, "y": -0.5 }, { "x": 2.9, "y": 1.9 }, { "x": -1.6, "y": 1.9 } ],
+        "outline": [ { "x": -3.0, "y": 3.55 }, { "x": 2.4, "y": 3.55 }, { "x": 2.4, "y": 4.6 }, { "x": -3.0, "y": 4.6 } ],
         "slots": [
-          { "kind": "fulcrum", "position": { "x": 0.05, "y": -0.33 }, "rotation": 0 },
-          { "kind": "arm", "position": { "x": 0.01, "y": -0.01 }, "rotation": 0 },
-          { "kind": "pebble", "position": { "x": 2.42, "y": -0.28 }, "rotation": 0 },
-          { "kind": "boulder", "position": { "x": -2.53, "y": 0.02 }, "rotation": 0 }
+          { "kind": "fulcrum", "position": { "x": 0.06, "y": 3.72 }, "rotation": 0 },
+          { "kind": "arm", "position": { "x": 0.05, "y": 4.04 }, "rotation": 0 },
+          { "kind": "pebble", "position": { "x": 1.87, "y": 3.76 }, "rotation": 0 },
+          { "kind": "boulder", "position": { "x": -2.30, "y": 4.07 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -2217,12 +2217,12 @@
         { "color": "#B24BD1", "kind": "boulder", "symmetryOrder": 4, "material": { "density": 2.5, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 1.0 } }
       ],
       "target": {
-        "outline": [ { "x": -2.1, "y": -0.5 }, { "x": 3.3, "y": -0.5 }, { "x": 3.3, "y": 1.9 }, { "x": -2.1, "y": 1.9 } ],
+        "outline": [ { "x": -3.0, "y": 3.55 }, { "x": 2.4, "y": 3.55 }, { "x": 2.4, "y": 4.6 }, { "x": -3.0, "y": 4.6 } ],
         "slots": [
-          { "kind": "fulcrum", "position": { "x": 0.08, "y": -0.35 }, "rotation": 0 },
-          { "kind": "arm", "position": { "x": 0.23, "y": -0.02 }, "rotation": 0 },
-          { "kind": "pebble", "position": { "x": 1.73, "y": -0.25 }, "rotation": 0 },
-          { "kind": "boulder", "position": { "x": -2.49, "y": 0.02 }, "rotation": 0 }
+          { "kind": "fulcrum", "position": { "x": 0.08, "y": 3.70 }, "rotation": 0 },
+          { "kind": "arm", "position": { "x": 0.02, "y": 4.00 }, "rotation": 0 },
+          { "kind": "pebble", "position": { "x": 1.78, "y": 3.76 }, "rotation": 0 },
+          { "kind": "boulder", "position": { "x": -2.27, "y": 4.07 }, "rotation": 0 }
         ]
       },
       "pieces": [
