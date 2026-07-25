@@ -24,6 +24,11 @@ namespace Gameplay.Core
         /// <summary>Floor / cradle geometry helping pieces settle (no longer a coverage container mould).</summary>
         public Polygon[] StaticGeometry { get; set; }
 
+        /// <summary>TASK-031c: optional render descriptors, parallel by index to <see cref="StaticGeometry"/> (a
+        /// static is invisible unless its descriptor sets <c>Visible</c>). Never drives the sim — the physics still
+        /// reads only <see cref="StaticGeometry"/>. May be null for old data; consumers guard on length.</summary>
+        public IReadOnlyList<StaticVisual> StaticVisuals { get; set; }
+
         /// <summary>Optional distractor pieces (mid/late tiers; MVP = empty). GAME_RULES §5.</summary>
         public IReadOnlyList<PiecePlacement> Decoys { get; set; }
 
@@ -37,5 +42,12 @@ namespace Gameplay.Core
         /// keeps the canonical freeze-on-rest stack; <see cref="PhysicsMode.Balance"/> switches the pivot beam
         /// to a damped world hinge (snap/freeze off, verdict on global rest). See <see cref="PhysicsMode"/>.</summary>
         public PhysicsMode PhysicsMode { get; set; } = PhysicsMode.Assembly;
+
+        /// <summary>TASK-031d (pure-physics, opt-in on Balance/Catapult). When true, at global rest each placed
+        /// non-pivot piece is frozen EXACTLY at its physical rest pose (claiming its nearest same-Kind slot for the
+        /// win check) instead of gliding onto the authored slot via <c>BalanceSnapLoads</c> — the piece must reach
+        /// the silhouette by real physics, and posTol/angTol only JUDGE the result. Default false keeps the existing
+        /// catapult/seesaw levels on the glide path byte-for-byte.</summary>
+        public bool FreezeLoadsAtRest { get; set; }
     }
 }

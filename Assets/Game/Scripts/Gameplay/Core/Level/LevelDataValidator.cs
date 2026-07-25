@@ -43,8 +43,11 @@ namespace Gameplay.Core
             // 6. Balance / Catapult mode: structural shape of a pivot-beam level (winnability is level-sim's job).
             // A catapult (TASK-025) has the same structural invariant as a seesaw — exactly one pivot arm judged
             // from one in-Bounds slot — so it reuses ValidateBalance.
+            // A pure-physics level (TASK-031d, freezeLoadsAtRest) may have no marked pivot at all — its lever is an
+            // unmarked preplaced piece judged from its physical rest pose, not a snapped pivot beam — so relax the
+            // "at least one pivot" requirement for it while keeping the strict check for the 5 catapult + 3 seesaw.
             if (level.PhysicsMode is PhysicsMode.Balance or PhysicsMode.Catapult)
-                ValidateBalance(level, errors);
+                ValidateBalance(level, errors, requirePivot: !level.FreezeLoadsAtRest);
 
             return new ValidationResult(errors);
         }
@@ -55,7 +58,7 @@ namespace Gameplay.Core
         /// single rest/judge slot, so two slots of a pivot Kind (or none) is a broken authoring, not a solvable
         /// level. Winnability under the live free beam is proven by level-sim, not here.
         /// </summary>
-        private static void ValidateBalance(LevelData level, List<string> errors)
+        private static void ValidateBalance(LevelData level, List<string> errors, bool requirePivot)
         {
             if (level.Pieces == null)
                 return;
@@ -67,7 +70,10 @@ namespace Gameplay.Core
 
             if (pivotKinds.Count == 0)
             {
-                errors.Add("PhysicsMode.Balance requires at least one piece with pivot=true (the hinge beam).");
+                // Pure-physics (freezeLoadsAtRest) tolerates no marked pivot: the lever is an unmarked preplaced
+                // piece judged from its rest pose. Otherwise a balance/catapult level with no hinge beam is broken.
+                if (requirePivot)
+                    errors.Add("PhysicsMode.Balance requires at least one piece with pivot=true (the hinge beam).");
                 return;
             }
 

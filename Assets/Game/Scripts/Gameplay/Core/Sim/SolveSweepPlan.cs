@@ -4,31 +4,53 @@ using System.Collections.Generic;
 namespace Gameplay.Core.Sim
 {
     /// <summary>
-    /// Builds the release orders to try for a level (RFC §4). For a small piece count it enumerates EVERY
-    /// permutation (exhaustive solvability proof); above the threshold it draws a seeded sample and logs the
-    /// fallback plus how many orders go uncovered — no silent cap.
+    /// Builds the release orders to try for a level (RFC §4). Orders are enumerated over the TAPPABLE pieces
+    /// only — a preplaced lever/obstacle (TASK-031b) is part of the physics from t=0, is never tap-released, and
+    /// so must not permute the release space (video_launcher: 3 tappable → 3! = 6 orders, not 4! = 24 with the
+    /// stick as a no-op index). <paramref name="tappableIndices"/> carries the placement indices to order (the
+    /// values ReleaseOrderPolicy matches on); for a level with no preplaced piece it is [0..count-1], so the
+    /// mapping is identity and the orders are byte-for-byte the pre-TASK-031 set. For a small tappable count it
+    /// enumerates EVERY permutation (exhaustive solvability proof); above the threshold it draws a seeded sample
+    /// and logs the fallback plus how many orders go uncovered — no silent cap.
     /// </summary>
     public static class SolveSweepPlan
     {
         public static IReadOnlyList<int[]> BuildOrders(
-            int pieceCount, int maxFullPermute, int sampleCount, int seed, Action<string> log)
+            IReadOnlyList<int> tappableIndices, int maxFullPermute, int sampleCount, int seed, Action<string> log)
         {
-            if (pieceCount <= maxFullPermute)
-                return Permutations.All(pieceCount);
+            var n = tappableIndices.Count;
+            if (n <= maxFullPermute)
+            {
+                var perms = Permutations.All(n);
+                var all = new List<int[]>(perms.Count);
+                foreach (var p in perms)
+                    all.Add(MapToPlacementIndices(p, tappableIndices));
+                return all;
+            }
 
             var rng = new DeterministicRandom(seed);
             var orders = new List<int[]>(sampleCount);
             var seen = new HashSet<string>();
             for (var i = 0; i < sampleCount; i++)
             {
-                var order = Permutations.Shuffled(pieceCount, rng);
+                var order = MapToPlacementIndices(Permutations.Shuffled(n, rng), tappableIndices);
                 if (seen.Add(string.Join("-", order)))
                     orders.Add(order);
             }
 
-            log?.Invoke($"[level-sim] {pieceCount} pieces > {maxFullPermute}: sampling {orders.Count} unique " +
-                        $"seeded orders of {FactorialText(pieceCount)} total permutations (FALLBACK — not exhaustive).");
+            log?.Invoke($"[level-sim] {n} tappable pieces > {maxFullPermute}: sampling {orders.Count} unique " +
+                        $"seeded orders of {FactorialText(n)} total permutations (FALLBACK — not exhaustive).");
             return orders;
+        }
+
+        /// <summary>Remap a positional permutation of [0..n) onto the actual placement indices of the tappable
+        /// pieces, so a preplaced piece's index never appears in a release order.</summary>
+        private static int[] MapToPlacementIndices(int[] positional, IReadOnlyList<int> tappableIndices)
+        {
+            var mapped = new int[positional.Length];
+            for (var i = 0; i < positional.Length; i++)
+                mapped[i] = tappableIndices[positional[i]];
+            return mapped;
         }
 
         private static string FactorialText(int n)

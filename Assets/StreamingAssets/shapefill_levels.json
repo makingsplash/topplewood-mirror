@@ -2234,6 +2234,46 @@
       "staticGeometry": [
         { "outline": [ { "x": -3.5, "y": 2.75 }, { "x": 3.5, "y": 2.75 }, { "x": 3.5, "y": 3.55 }, { "x": -3.5, "y": 3.55 } ] }
       ]
+    },
+    {
+      "levelId": "video_launcher",
+      "seed": 57,
+      "difficultyTier": 10,
+      "physicsMode": "catapult",
+      "freezeLoadsAtRest": true,
+      "matchTolerance": { "posTol": 0.30, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#2E7CD6", "kind": "ball", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.5, "segments": 24 } },
+        { "color": "#2FA84F", "kind": "hammer", "symmetryOrder": 24, "material": { "density": 2.6, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.8, "segments": 24 } },
+        { "color": "#35C759", "kind": "stick", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 4.0, "height": 0.4 } }
+      ],
+      "target": {
+        "outline": [ { "x": -3.2, "y": 0 }, { "x": -1.9, "y": 0 }, { "x": -1.9, "y": 2.1 }, { "x": -3.2, "y": 2.1 } ],
+        "slots": [
+          { "kind": "ball", "position": { "x": -2.55, "y": 0.5 }, "rotation": 0 },
+          { "kind": "ball", "position": { "x": -2.55, "y": 1.5 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "ball", "startPosition": { "x": -2.55, "y": 5.5 }, "startRotation": 0 },
+        { "kind": "ball", "startPosition": { "x": 2.05, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "hammer", "startPosition": { "x": -0.25, "y": 7.6 }, "startRotation": 0 },
+        { "kind": "stick", "startPosition": { "x": 1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.5, "y": 0 }, { "x": -3.15, "y": 0 }, { "x": -3.15, "y": 8 }, { "x": -3.5, "y": 8 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.15, "y": -0.3 }, { "x": -1.95, "y": -0.3 }, { "x": -1.95, "y": 0 }, { "x": -3.15, "y": 0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.95, "y": 0 }, { "x": -1.8, "y": 0 }, { "x": -1.8, "y": 1.6 }, { "x": -1.95, "y": 1.6 } ] },
+        { "outline": [ { "x": -1.8, "y": -3.3 }, { "x": 0.9, "y": -3.3 }, { "x": 0.9, "y": -3.0 }, { "x": -1.8, "y": -3.0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.9, "y": -3.0 }, { "x": 3.5, "y": -3.0 }, { "x": 3.5, "y": 0.9 }, { "x": 0.9, "y": 0.9 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 2.6, "y": 5.5 }, { "x": 3.5, "y": 5.5 }, { "x": 3.5, "y": 9 }, { "x": 2.6, "y": 9 } ] },
+        { "outline": [ { "x": -1.95, "y": -3.0 }, { "x": -1.8, "y": -3.0 }, { "x": -1.8, "y": 0 }, { "x": -1.95, "y": 0 } ] },
+        { "outline": [ { "x": -3.15, "y": -3.0 }, { "x": -1.95, "y": -3.0 }, { "x": -1.95, "y": -0.3 }, { "x": -3.15, "y": -0.3 } ] },
+        { "outline": [ { "x": -3.5, "y": -3.0 }, { "x": -3.15, "y": -3.0 }, { "x": -3.15, "y": 0 }, { "x": -3.5, "y": 0 } ] },
+        { "outline": [ { "x": -3.5, "y": -3.6 }, { "x": 3.5, "y": -3.6 }, { "x": 3.5, "y": -3.3 }, { "x": -3.5, "y": -3.3 } ] }
+      ]
     }
   ]
 }

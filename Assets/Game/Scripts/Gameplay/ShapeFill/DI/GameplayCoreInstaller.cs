@@ -66,6 +66,8 @@ namespace Gameplay.DI
             // and every piece is tappable. Registered BEFORE TargetPreviewPresenter, which anchors to the
             // camera viewport — the camera must be framed first.
             builder.RegisterEntryPoint<CameraFramingPresenter>();
+            // Renders opt-in VISIBLE static geometry (TASK-031c); no-op for levels without visuals.
+            builder.RegisterEntryPoint<StaticGeometryPresenter>();
             builder.RegisterEntryPoint<ShapeFillPresenter>();
             builder.RegisterEntryPoint<TargetPreviewPresenter>();
 
