@@ -34,11 +34,13 @@ namespace Gameplay.Core.Mechanic
         private readonly Dictionary<int, Settle> _settling = new();
         private readonly List<int> _settleDone = new();
         // Pieces whose authored start tilt is large enough to be righted by REAL contact torque (TASK-024): they
-        // SKIP the in-fall first-contact snap, stay Dynamic while gravity rotates them to rest, and are crisped
-        // into their slot only on rest (Place → BeginSettle) — the visible turn is physics, the glide only
-        // micro-finishes the residual. Flat pieces (start ≈ slot angle) are absent here and keep the byte-for-byte
-        // in-fall path. Transient: recomputed deterministically from the level data on every spawn/restore, never
-        // persisted. Keyed by InstanceId. Mirrors the balance path's crisp-at-rest, scoped to tilted pieces only.
+        // SKIP the in-fall first-contact snap, stay Dynamic while gravity rotates them to rest, and — since TASK-030
+        // variant B — are FROZEN EXACTLY AT their physical rest pose (Place → freeze-at-rest, no glide, no angle
+        // correction). The whole visible turn is physics; the piece must land in the silhouette by falling, hitting,
+        // rotating and sliding, and posTol/angTol only JUDGE the result (owner: remove the "пододвигание" nudge). We
+        // still claim the nearest same-Kind slot for the win check + slot monopoly. Flat pieces (start ≈ slot angle)
+        // are absent here and keep the byte-for-byte in-fall path. Transient: recomputed deterministically from the
+        // level data on every spawn/restore, never persisted. Keyed by InstanceId. Scoped to tilted pieces only.
         private readonly HashSet<int> _needsPhysicalSettle = new();
 
         private IDisposable _levelLoadedSub;
@@ -77,9 +79,9 @@ namespace Gameplay.Core.Mechanic
         /// TotalSteps fixed steps. Position uses a critically-damped approach SEEDED with the piece's capture
         /// velocity (VelX/VelY) so the settle continues the fall's momentum without a pop and never overshoots
         /// (human 12:02); rotation is an eased turn from StartRot to the slot's exact target angle TargetRot. For an
-        /// in-fall capture the piece visibly rotates its full landing tilt into the silhouette (human 2026-07-24);
-        /// for a physical-settle capture (TASK-024) StartRot is the already-righted rest angle, so this turn is only
-        /// the tiny post-torque residual — the visible rotation was done by real contact torque during the fall.</summary>
+        /// in-fall capture the piece visibly rotates its full landing tilt into the silhouette (human 2026-07-24).
+        /// Since TASK-030 variant B this glide is used ONLY by the assembly in-fall snap (flat pieces) and the
+        /// balance crisp-at-rest (BalanceSnapLoads) — tilted physical-settle pieces are frozen at rest with NO glide.</summary>
         private sealed class Settle
         {
             public int BodyId;
@@ -460,9 +462,9 @@ namespace Gameplay.Core.Mechanic
             // Physical-settle pieces (TASK-024) ALSO skip the in-fall snap: an authored-tilt piece captured on
             // first contact would be frozen mid-tilt and glided kinematically — the player sees kinematics, not
             // physics (owner complaint 2026-07-24). Instead it stays Dynamic so contact gravity honestly rights it,
-            // and it is captured only at rest below (rest-dwell → Place → the crisp-at-rest snap). While it is still
-            // rotating, GetSpeed (max(|lin|,|ang|·r)) stays above ε on the angular term, so RestTimer never
-            // accumulates and it is not placed prematurely.
+            // and it is frozen only at rest below (rest-dwell → Place → freeze-at-rest, TASK-030 variant B: NO glide,
+            // no angle correction). While it is still rotating, GetSpeed (max(|lin|,|ang|·r)) stays above ε on the
+            // angular term, so RestTimer never accumulates and it is not placed prematurely.
             if (!_balanceMode && !NeedsPhysicalSettle(piece) &&
                 _simulation.HasSupportBelow(bodyId, _tuning.SnapSupportProbeDistance))
             {
@@ -491,7 +493,8 @@ namespace Gameplay.Core.Mechanic
         /// exactly where it lies. Freezing (kinematic) kills post-rest drift and makes the piece a rigid support
         /// the next drop cannot shove (RFC 07 §2.1). Flat pieces captured in-fall are handled eagerly in
         /// UpdateFalling (the soft-settle glide begins during the fall, human 11:36). Physical-settle pieces
-        /// (TASK-024) reach here after contact torque has righted them to rest, and are crisped into their slot now.
+        /// (TASK-024 → TASK-030 variant B) reach here after contact torque has righted them to rest, and are frozen
+        /// exactly at that rest pose — no glide, no angle correction (they only claim their slot for the win check).
         /// </summary>
         private void Place(PieceInstance piece, int bodyId)
         {
@@ -509,21 +512,23 @@ namespace Gameplay.Core.Mechanic
                 return;
             }
 
-            // Physical-settle piece (TASK-024): it skipped the in-fall snap and has now come to physical rest after
-            // contact torque righted its authored tilt. Crisp it into its slot from this rest pose via the SAME
-            // soft-settle glide the assembly path uses (mirrors BalanceSnapLoads) — BeginSettle claims the slot and
-            // reads the rest pose as StartRot, so the glide's angular component is only the tiny post-torque
-            // residual (an invisible micro-finish to the exact target; the visible turn was physics). Both position
-            // AND angle are crisped from this one rest pose, so they stay consistent (ticket Q4). A piece that
-            // settled outside every capture window (honest miss) falls through to the freeze-where-it-lies path.
+            // Physical-settle piece (TASK-024 → TASK-030 variant B, owner playtest 2026-07-25): it skipped the
+            // in-fall snap and has now come to physical rest after contact torque righted its authored tilt. FREEZE
+            // IT EXACTLY WHERE PHYSICS LEFT IT — no pose or angle correction, neither instant nor glided. The old
+            // micro-finish glide (BeginSettle) is removed for tilted pieces: the owner saw it "nudge" the piece onto
+            // its slot 0.3-0.5 s after landing, which reads as non-physics ("пододвигание"). The piece must land in
+            // the silhouette purely by falling-hitting-rotating-sliding under physics. We still CLAIM the nearest
+            // free same-Kind slot (greedy by position via FindSnapSlot, mirroring BalanceSnapLoads) so the win check
+            // and slot monopoly still map one piece to one slot — but the pose stays the physical rest pose and
+            // simply falls through to the freeze-where-it-lies path below. The slot tolerances (posTol/angTol) are
+            // now genuinely judge-only. A piece that settled outside every capture window (honest miss) claims
+            // nothing and still freezes where it lies. Stable kinematic support for the next piece (§3) is intact —
+            // freezing at rest still turns it into a rigid body the next drop cannot shove.
             if (NeedsPhysicalSettle(piece))
             {
                 var slot = FindSnapSlot(piece, bodyId);
                 if (slot >= 0)
-                {
-                    BeginSettle(piece, bodyId, slot);
-                    return;
-                }
+                    _occupiedSlots.Add(slot);
             }
 
             FreezePlaced(piece, pose.Position, pose.Rotation);
@@ -594,11 +599,11 @@ namespace Gameplay.Core.Mechanic
         /// the glide), mark it Placed (out of the Falling branch — the verdict is deferred while _settling is
         /// non-empty), and record the path. The glide continues the momentum into the slot via a critically-damped
         /// approach and turns the rotation onto the slot's exact target angle so the full tilt settles into the
-        /// silhouette (human 2026-07-24); game-balancer 13 §1/§6 for the timing. Called from three places with the
-        /// SAME body: the assembly in-fall snap (flat pieces, mid-fall capture pose), the balance crisp-at-rest
-        /// (BalanceSnapLoads), and the TASK-024 physical-settle crisp-at-rest (Place). For the last two the capture
-        /// pose is a physical REST pose (velocity ≈ 0, angle already righted by contact torque), so the angular
-        /// glide is only the tiny post-torque residual — an invisible micro-finish onto the exact target.
+        /// silhouette (human 2026-07-24); game-balancer 13 §1/§6 for the timing. Called from two places with the
+        /// SAME body: the assembly in-fall snap (flat pieces, mid-fall capture pose) and the balance crisp-at-rest
+        /// (BalanceSnapLoads, capture pose ≈ a physical REST pose so the angular glide is a tiny residual). Tilted
+        /// physical-settle pieces do NOT use this glide since TASK-030 variant B — they freeze at their rest pose
+        /// in Place with no correction, so the whole visible turn is real contact torque.
         /// </summary>
         private void BeginSettle(PieceInstance piece, int bodyId, int slot)
         {
