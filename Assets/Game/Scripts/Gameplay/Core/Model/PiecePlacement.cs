@@ -11,11 +11,17 @@ namespace Gameplay.Core
         public readonly Vec2 StartPosition;
         public readonly float StartRotation;
 
-        public PiecePlacement(PieceType type, Vec2 startPosition, float startRotation = 0f)
+        /// <summary>TASK-031b: when true, this piece is spawned Dynamic ON the field at t=0 (a lever/obstacle that
+        /// is part of the physics from the start) instead of hanging Idle to be tapped. It is never tap-releasable
+        /// and never counts as a player attempt; the release ORDER puzzle is over the remaining Idle pieces.</summary>
+        public readonly bool Preplaced;
+
+        public PiecePlacement(PieceType type, Vec2 startPosition, float startRotation = 0f, bool preplaced = false)
         {
             Type = type;
             StartPosition = startPosition;
             StartRotation = startRotation;
+            Preplaced = preplaced;
         }
     }
 }

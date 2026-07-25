@@ -31,6 +31,7 @@ namespace Gameplay.Core
         [JsonProperty("gravity")] public Vec2Dto Gravity { get; set; }
         [JsonProperty("pieceTypes")] public List<PieceTypeDto> PieceTypes { get; set; } = new();
         [JsonProperty("physicsMode")] public string PhysicsMode { get; set; } // null/absent → Assembly (TASK-021)
+        [JsonProperty("freezeLoadsAtRest")] public bool FreezeLoadsAtRest { get; set; } // absent → false (TASK-031d)
         [JsonProperty("target")] public TargetFigureDto Target { get; set; }
         [JsonProperty("pieces")] public List<PiecePlacementDto> Pieces { get; set; } = new();
         [JsonProperty("staticGeometry")] public List<PolygonDto> StaticGeometry { get; set; } = new();
@@ -56,12 +57,16 @@ namespace Gameplay.Core
                 if (!types.TryGetValue(p.Kind, out var type))
                     throw new InvalidOperationException(
                         $"Level '{LevelId}': piece references unknown kind '{p.Kind}'.");
-                pieces.Add(new PiecePlacement(type, p.StartPosition.ToDomain(), p.StartRotation));
+                pieces.Add(new PiecePlacement(type, p.StartPosition.ToDomain(), p.StartRotation, p.Preplaced));
             }
 
             var statics = new Polygon[StaticGeometry.Count];
+            var visuals = new StaticVisual[StaticGeometry.Count];
             for (var i = 0; i < StaticGeometry.Count; i++)
+            {
                 statics[i] = StaticGeometry[i].ToDomain();
+                visuals[i] = new StaticVisual(StaticGeometry[i].Visible, StaticGeometry[i].Color);
+            }
 
             return new LevelData
             {
@@ -70,6 +75,7 @@ namespace Gameplay.Core
                 Pieces = pieces,
                 MatchTolerance = MatchTolerance.ToDomain(),
                 StaticGeometry = statics,
+                StaticVisuals = visuals,
                 Decoys = null,
                 Bounds = Bounds.ToDomain(),
                 Gravity = Gravity.ToDomain(),
@@ -77,6 +83,7 @@ namespace Gameplay.Core
                 DifficultyTier = DifficultyTier,
                 Source = LevelSourceKind.Authored,
                 PhysicsMode = ParsePhysicsMode(PhysicsMode),
+                FreezeLoadsAtRest = FreezeLoadsAtRest,
             };
         }
 
@@ -134,7 +141,7 @@ namespace Gameplay.Core
 
     /// <summary>A convex primitive, reconstructed via the <see cref="Shape"/> factories (no raw vertex lists
     /// to author). Discriminated by <c>primitive</c>: box | triangle | halfdisc | plank | trapezoid |
-    /// parallelogram | righttriangle | quarterdisc | gable.
+    /// parallelogram | righttriangle | quarterdisc | gable | circle.
     /// <c>topWidth</c> feeds trapezoid (top edge), <c>skew</c> feeds parallelogram (top-edge +X shift),
     /// <c>apexHeight</c> feeds gable (roof height above the rectangular base).</summary>
     public sealed class ShapeDto
@@ -155,6 +162,12 @@ namespace Gameplay.Core
                 case "box": return Shape.Box(Width, Height);
                 case "triangle": return Shape.Triangle(Width, Height);
                 case "halfdisc": return Shape.HalfDisc(Radius, Segments);
+                case "circle":
+                {
+                    if (Radius <= 0f)
+                        throw new InvalidOperationException($"circle needs positive radius; got {Radius}.");
+                    return Shape.Circle(Radius, Segments);
+                }
                 case "plank":
                 {
                     var w = Width > 0f ? Width : 1f;
@@ -220,6 +233,7 @@ namespace Gameplay.Core
         [JsonProperty("kind")] public string Kind { get; set; }
         [JsonProperty("startPosition")] public Vec2Dto StartPosition { get; set; }
         [JsonProperty("startRotation")] public float StartRotation { get; set; }
+        [JsonProperty("preplaced")] public bool Preplaced { get; set; } // absent → false (TASK-031b)
     }
 
     public sealed class TargetSlotDto
@@ -246,6 +260,8 @@ namespace Gameplay.Core
     public sealed class PolygonDto
     {
         [JsonProperty("outline")] public List<Vec2Dto> Outline { get; set; } = new();
+        [JsonProperty("visible")] public bool Visible { get; set; }        // absent → false (TASK-031c)
+        [JsonProperty("color")] public string Color { get; set; }          // absent → null → view default
 
         public Polygon ToDomain()
         {

@@ -5,7 +5,7 @@ namespace Gameplay.Core
     /// polygons / primitives (RFC R4) so a single <c>PolygonCollider2D</c> maps cleanly and the
     /// point-in-shape test used by coverage stays a cheap convex check.
     /// Catalogue: box, triangle, halfdisc, plank, trapezoid, parallelogram, righttriangle, quarterdisc,
-    /// gable — all convex; concave polyominoes (L/T/S/Z/J) are a future increment (multi-path collider +
+    /// gable, circle — all convex; concave polyominoes (L/T/S/Z/J) are a future increment (multi-path collider +
     /// ear-clipping mesh).
     /// </summary>
     public sealed class Shape
@@ -67,6 +67,27 @@ namespace Gameplay.Core
         /// <summary>Rectangle plank (I-beam / 1×2 domino). Same geometry family as <see cref="Box"/>; a distinct
         /// primitive/kind for authoring clarity and its own symmetry (order 2, not 4). CCW.</summary>
         public static Shape Plank(float width, float height) => Box(width, height);
+
+        /// <summary>
+        /// Full disc of radius <paramref name="radius"/>, approximated by a regular <paramref name="segments"/>-gon
+        /// (CCW, NO centre vertex — a clean convex N-gon, so the single <c>PolygonCollider2D</c> and the convex-fan
+        /// mesh apply exactly as for every other primitive; nothing in sim/mesh is special-cased, TASK-031). Author a
+        /// matching high <c>symmetryOrder</c> (e.g. 24) so the pose match ignores rotation (a round piece has no
+        /// meaningful angle). Valid for radius &gt; 0; segments is clamped to ≥3.
+        /// </summary>
+        public static Shape Circle(float radius, int segments = 24)
+        {
+            if (segments < 3)
+                segments = 3;
+
+            var verts = new Vec2[segments];
+            for (var i = 0; i < segments; i++)
+            {
+                var a = 2f * System.MathF.PI * i / segments; // 0..2π, CCW
+                verts[i] = new Vec2(radius * System.MathF.Cos(a), radius * System.MathF.Sin(a));
+            }
+            return new Shape(verts);
+        }
 
         /// <summary>Isosceles trapezoid, bbox centred on origin (<paramref name="bottomWidth"/> along the bottom),
         /// CCW. Convex for positive dims. Symmetry order 1.</summary>

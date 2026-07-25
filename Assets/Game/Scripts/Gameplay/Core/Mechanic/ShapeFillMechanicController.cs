@@ -135,8 +135,15 @@ namespace Gameplay.Core.Mechanic
             _model.SetPhase(GamePhase.Running);
 
             // Pre-place every piece Idle (floating, non-colliding) at its authored start pose (RFC §3/§5.3).
+            // A preplaced piece (TASK-031b) instead spawns Dynamic on the field right now — it is a lever/obstacle
+            // in the physics from t=0, never a tap target.
             foreach (var piece in _model.Pieces)
-                SpawnIdle(piece);
+            {
+                if (_level.Pieces[piece.PlacementIndex].Preplaced)
+                    SpawnPreplaced(piece);
+                else
+                    SpawnIdle(piece);
+            }
         }
 
         /// <summary>
@@ -158,6 +165,16 @@ namespace Gameplay.Core.Mechanic
             {
                 if (piece.State == PieceLifecycle.Lost)
                     continue;
+
+                // A preplaced piece (TASK-031b) that has not yet settled must re-enter Dynamic (falling), NOT
+                // floating-Idle — otherwise the restore would make the level lever tap-releasable. (Campaign flow
+                // only snapshots at rest, so in prod a preplaced piece restores as Placed and takes the branch
+                // below; this keeps the QA save/load round-trip correct.)
+                if (piece.State != PieceLifecycle.Placed && _level.Pieces[piece.PlacementIndex].Preplaced)
+                {
+                    SpawnPreplaced(piece);
+                    continue;
+                }
 
                 var type = _model.TypeFor(piece);
                 var bodyId = piece.State == PieceLifecycle.Placed
@@ -593,6 +610,41 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
+        /// Pure-physics crisp-at-rest (TASK-031d, opt-in <see cref="LevelData.FreezeLoadsAtRest"/>) — the variant-B
+        /// freeze (TASK-030) applied to a whole catapult/balance level. At global rest, for every settled non-pivot
+        /// piece: claim its nearest same-Kind slot (greedy by position, mirroring <see cref="BalanceSnapLoads"/>) for
+        /// the win check + slot monopoly, then FREEZE it EXACTLY at its physical rest pose — no glide, no position or
+        /// angle correction. The piece must have reached the silhouette by real physics (falling, hitting, rotating,
+        /// launching); posTol/angTol only JUDGE the result. A piece that settled outside every capture window (a
+        /// launched load in the pit) claims nothing and simply freezes where it lies. Unlike BalanceSnapLoads this
+        /// never fills <c>_settling</c>, so the verdict is not deferred. The pivot beam, if any, is left judged from
+        /// its free rest pose (this level's lever is an unmarked preplaced piece, so nothing is skipped here).
+        ///
+        /// Determinism: freezing only at global rest (never mid-swing) with no physics step between the reads keeps
+        /// the pose assignment reproducible, so poseHash stays stable (same argument as BalanceSnapLoads).
+        /// </summary>
+        private void FreezeLoadsAtRest()
+        {
+            foreach (var piece in _model.Pieces)
+            {
+                if (piece.State != PieceLifecycle.Placed)
+                    continue;
+                if (_typeByInstance[piece.InstanceId].Pivot)
+                    continue; // a marked pivot beam is judged from its free rest pose, never frozen onto a slot
+                if (!_bodyByInstance.TryGetValue(piece.InstanceId, out var bodyId))
+                    continue;
+
+                var pose = _simulation.GetPose(bodyId);
+                var slot = FindSnapSlot(piece, bodyId);
+                if (slot >= 0)
+                    _occupiedSlots.Add(slot);
+
+                _simulation.FreezeAt(bodyId, pose.Position, pose.Rotation);
+                FreezePlaced(piece, pose.Position, pose.Rotation);
+            }
+        }
+
+        /// <summary>
         /// Kick off the soft-settle glide for a captured piece: read its capture velocity (BEFORE freezing, so
         /// the glide can preserve the fall's momentum — human 12:02), claim the slot, kinematic-lock the body at
         /// its current (possibly still-falling) capture pose right now (so contacts/gravity can't drift it before
@@ -781,12 +833,22 @@ namespace Gameplay.Core.Mechanic
             // never crisped early — canon §3 judges only at final rest.
             if (_balanceMode && !anyIdle)
             {
-                BalanceSnapLoads();
-                // §7: the snap now begins a soft-settle glide instead of an instant teleport, so if any load
-                // started gliding, defer the verdict until it completes (Tick's settle gate keeps ResolveAtRest
-                // from being re-entered until _settling drains). Determinism is intact — the glide is fixed-step.
-                if (_settling.Count > 0)
-                    return;
+                if (_level.FreezeLoadsAtRest)
+                {
+                    // Pure-physics crisp-at-rest (TASK-031d): freeze every load EXACTLY where physics parked it (no
+                    // glide, no pose/angle correction), claiming its nearest slot for the win check. Never fills
+                    // _settling, so the verdict is not deferred.
+                    FreezeLoadsAtRest();
+                }
+                else
+                {
+                    BalanceSnapLoads();
+                    // §7: the snap now begins a soft-settle glide instead of an instant teleport, so if any load
+                    // started gliding, defer the verdict until it completes (Tick's settle gate keeps ResolveAtRest
+                    // from being re-entered until _settling drains). Determinism is intact — the glide is fixed-step.
+                    if (_settling.Count > 0)
+                        return;
+                }
             }
 
             var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
@@ -855,6 +917,33 @@ namespace Gameplay.Core.Mechanic
 
             var view = _viewFactory.Create(type);
             view.SetState(PieceLifecycle.Idle);
+            view.Sync(piece.Position, piece.Rotation);
+            _viewByInstance[piece.InstanceId] = view;
+        }
+
+        /// <summary>
+        /// Spawn a preplaced piece (TASK-031b): identical body/view/classification setup to <see cref="SpawnIdle"/>,
+        /// but the body is RELEASED immediately so it drops into the physics at t=0 (Falling), NOT hung Idle. It is
+        /// therefore never picked by <see cref="PickIdlePieceAt"/> (Idle-only), never awaited as a tap, and — unlike
+        /// <see cref="ReleasePiece"/> — does NOT count a player attempt (it is level furniture, not a move). From
+        /// here it follows the ordinary fall→rest→Place path; in balance/catapult it lands as a free Dynamic body
+        /// (PlaceDynamic) so a later drop can pivot it.
+        /// </summary>
+        private void SpawnPreplaced(PieceInstance piece)
+        {
+            var type = _model.TypeFor(piece);
+            var bodyId = _simulation.SpawnFloating(type, piece.Position, piece.Rotation);
+
+            _bodyByInstance[piece.InstanceId] = bodyId;
+            _typeByInstance[piece.InstanceId] = type;
+            RegisterPhysicalSettle(piece, type);
+
+            _simulation.Release(bodyId);
+            piece.State = PieceLifecycle.Falling;
+            piece.RestTimer = 0f;
+
+            var view = _viewFactory.Create(type);
+            view.SetState(PieceLifecycle.Falling);
             view.Sync(piece.Position, piece.Rotation);
             _viewByInstance[piece.InstanceId] = view;
         }
