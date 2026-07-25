@@ -2246,8 +2246,8 @@
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "color": "#2E7CD6", "kind": "ball", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.5, "segments": 24 } },
-        { "color": "#2FA84F", "kind": "hammer", "symmetryOrder": 24, "material": { "density": 2.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.8, "segments": 24 } },
-        { "color": "#35C759", "kind": "stick", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 4.0, "height": 0.4 } }
+        { "color": "#2FA84F", "kind": "hammer", "symmetryOrder": 24, "material": { "density": 3.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.8, "segments": 24 } },
+        { "color": "#35C759", "kind": "stick", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 4.0, "height": 0.3 } }
       ],
       "target": {
         "outline": [ { "x": -3.2, "y": 0 }, { "x": -1.9, "y": 0 }, { "x": -1.9, "y": 2.1 }, { "x": -3.2, "y": 2.1 } ],
@@ -2258,8 +2258,8 @@
       },
       "pieces": [
         { "kind": "ball", "startPosition": { "x": -2.55, "y": 5.5 }, "startRotation": 0 },
-        { "kind": "ball", "startPosition": { "x": 1.9, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "hammer", "startPosition": { "x": -0.9, "y": 6.5 }, "startRotation": 0 },
+        { "kind": "ball", "startPosition": { "x": 2.45, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "hammer", "startPosition": { "x": -1.1, "y": 7.5 }, "startRotation": 0 },
         { "kind": "stick", "startPosition": { "x": 0.7, "y": 1.35 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
