@@ -33,6 +33,13 @@ namespace Gameplay.Core.Mechanic
         // judged mid-glide (§6.4).
         private readonly Dictionary<int, Settle> _settling = new();
         private readonly List<int> _settleDone = new();
+        // Pieces whose authored start tilt is large enough to be righted by REAL contact torque (TASK-024): they
+        // SKIP the in-fall first-contact snap, stay Dynamic while gravity rotates them to rest, and are crisped
+        // into their slot only on rest (Place → BeginSettle) — the visible turn is physics, the glide only
+        // micro-finishes the residual. Flat pieces (start ≈ slot angle) are absent here and keep the byte-for-byte
+        // in-fall path. Transient: recomputed deterministically from the level data on every spawn/restore, never
+        // persisted. Keyed by InstanceId. Mirrors the balance path's crisp-at-rest, scoped to tilted pieces only.
+        private readonly HashSet<int> _needsPhysicalSettle = new();
 
         private IDisposable _levelLoadedSub;
         private IDisposable _stateRestoredSub;
@@ -60,8 +67,10 @@ namespace Gameplay.Core.Mechanic
         /// <summary>In-flight soft-settle glide for one piece: driven kinematically toward the slot over
         /// TotalSteps fixed steps. Position uses a critically-damped approach SEEDED with the piece's capture
         /// velocity (VelX/VelY) so the settle continues the fall's momentum without a pop and never overshoots
-        /// (human 12:02); rotation is an eased turn from StartRot to the slot's exact target angle TargetRot —
-        /// the piece visibly rotates its full landing tilt into the silhouette (human 2026-07-24).</summary>
+        /// (human 12:02); rotation is an eased turn from StartRot to the slot's exact target angle TargetRot. For an
+        /// in-fall capture the piece visibly rotates its full landing tilt into the silhouette (human 2026-07-24);
+        /// for a physical-settle capture (TASK-024) StartRot is the already-righted rest angle, so this turn is only
+        /// the tiny post-torque residual — the visible rotation was done by real contact torque during the fall.</summary>
         private sealed class Settle
         {
             public int BodyId;
@@ -144,6 +153,10 @@ namespace Gameplay.Core.Mechanic
 
                 _bodyByInstance[piece.InstanceId] = bodyId;
                 _typeByInstance[piece.InstanceId] = type;
+                // Placed pieces have already come to rest (settled kinematic) — they never re-enter the fall path,
+                // so only non-Placed pieces need the TASK-024 physical-settle classification recomputed.
+                if (piece.State != PieceLifecycle.Placed)
+                    RegisterPhysicalSettle(piece, type);
 
                 var view = _viewFactory.Create(type);
                 view.SetState(piece.State);
@@ -422,7 +435,15 @@ namespace Gameplay.Core.Mechanic
             // Balance mode has NO in-fall snap assist (TASK-021 → free-beam TASK-023): the beam tilt IS the
             // mechanic, so a piece must ride the real beam physics onto it rather than being glided into an
             // authored slot pose mid-fall. Loads are crisped onto their slots only at global rest (BalanceSnapLoads).
-            if (!_balanceMode && _simulation.HasSupportBelow(bodyId, _tuning.SnapSupportProbeDistance))
+            //
+            // Physical-settle pieces (TASK-024) ALSO skip the in-fall snap: an authored-tilt piece captured on
+            // first contact would be frozen mid-tilt and glided kinematically — the player sees kinematics, not
+            // physics (owner complaint 2026-07-24). Instead it stays Dynamic so contact gravity honestly rights it,
+            // and it is captured only at rest below (rest-dwell → Place → the crisp-at-rest snap). While it is still
+            // rotating, GetSpeed (max(|lin|,|ang|·r)) stays above ε on the angular term, so RestTimer never
+            // accumulates and it is not placed prematurely.
+            if (!_balanceMode && !NeedsPhysicalSettle(piece) &&
+                _simulation.HasSupportBelow(bodyId, _tuning.SnapSupportProbeDistance))
             {
                 var slot = FindSnapSlot(piece, bodyId);
                 if (slot >= 0)
@@ -447,8 +468,9 @@ namespace Gameplay.Core.Mechanic
         /// <summary>
         /// A piece that came to rest without ever entering a slot's capture window gets no assist — freeze it
         /// exactly where it lies. Freezing (kinematic) kills post-rest drift and makes the piece a rigid support
-        /// the next drop cannot shove (RFC 07 §2.1). Captured pieces are handled eagerly in UpdateFalling
-        /// (the soft-settle glide begins during the fall, human 11:36).
+        /// the next drop cannot shove (RFC 07 §2.1). Flat pieces captured in-fall are handled eagerly in
+        /// UpdateFalling (the soft-settle glide begins during the fall, human 11:36). Physical-settle pieces
+        /// (TASK-024) reach here after contact torque has righted them to rest, and are crisped into their slot now.
         /// </summary>
         private void Place(PieceInstance piece, int bodyId)
         {
@@ -462,6 +484,23 @@ namespace Gameplay.Core.Mechanic
                 // level. The Pivot flag is retained (it marks "judged from the free pose, never snapped").
                 PlaceDynamic(piece, pose);
                 return;
+            }
+
+            // Physical-settle piece (TASK-024): it skipped the in-fall snap and has now come to physical rest after
+            // contact torque righted its authored tilt. Crisp it into its slot from this rest pose via the SAME
+            // soft-settle glide the assembly path uses (mirrors BalanceSnapLoads) — BeginSettle claims the slot and
+            // reads the rest pose as StartRot, so the glide's angular component is only the tiny post-torque
+            // residual (an invisible micro-finish to the exact target; the visible turn was physics). Both position
+            // AND angle are crisped from this one rest pose, so they stay consistent (ticket Q4). A piece that
+            // settled outside every capture window (honest miss) falls through to the freeze-where-it-lies path.
+            if (NeedsPhysicalSettle(piece))
+            {
+                var slot = FindSnapSlot(piece, bodyId);
+                if (slot >= 0)
+                {
+                    BeginSettle(piece, bodyId, slot);
+                    return;
+                }
             }
 
             FreezePlaced(piece, pose.Position, pose.Rotation);
@@ -532,7 +571,11 @@ namespace Gameplay.Core.Mechanic
         /// the glide), mark it Placed (out of the Falling branch — the verdict is deferred while _settling is
         /// non-empty), and record the path. The glide continues the momentum into the slot via a critically-damped
         /// approach and turns the rotation onto the slot's exact target angle so the full tilt settles into the
-        /// silhouette (human 2026-07-24); game-balancer 13 §1/§6 for the timing.
+        /// silhouette (human 2026-07-24); game-balancer 13 §1/§6 for the timing. Called from three places with the
+        /// SAME body: the assembly in-fall snap (flat pieces, mid-fall capture pose), the balance crisp-at-rest
+        /// (BalanceSnapLoads), and the TASK-024 physical-settle crisp-at-rest (Place). For the last two the capture
+        /// pose is a physical REST pose (velocity ≈ 0, angle already righted by contact torque), so the angular
+        /// glide is only the tiny post-torque residual — an invisible micro-finish onto the exact target.
         /// </summary>
         private void BeginSettle(PieceInstance piece, int bodyId, int slot)
         {
@@ -780,12 +823,59 @@ namespace Gameplay.Core.Mechanic
 
             _bodyByInstance[piece.InstanceId] = bodyId;
             _typeByInstance[piece.InstanceId] = type;
+            RegisterPhysicalSettle(piece, type);
 
             var view = _viewFactory.Create(type);
             view.SetState(PieceLifecycle.Idle);
             view.Sync(piece.Position, piece.Rotation);
             _viewByInstance[piece.InstanceId] = view;
         }
+
+        /// <summary>
+        /// Classify a piece for the TASK-024 physical-settle path at spawn: if its authored start rotation differs
+        /// from its NEAREST same-Kind slot's angle by more than <see cref="ShapeFillTuning.PhysicalSettleTiltThreshold"/>
+        /// (symmetry-reduced, using the evaluator's reduction so snap/win agree), it is flagged so it skips the
+        /// in-fall snap and is righted by real contact torque before being crisped at rest. Flat pieces (start ≈
+        /// slot angle) are never flagged → byte-for-byte the pre-TASK-024 in-fall path. Deterministic from the
+        /// level data (no persisted state), so it is safe to recompute on every spawn/restore.
+        /// </summary>
+        private void RegisterPhysicalSettle(PieceInstance piece, PieceType type)
+        {
+            var slots = _level?.Target?.Slots;
+            if (slots == null || slots.Count == 0)
+                return;
+
+            // Nearest same-Kind slot to the authored start pose = the slot this piece is dropped for (levels author
+            // a near-straight drop above the target, RFC §1). Its angle is what the piece must rotate onto.
+            var bestPosSqr = float.MaxValue;
+            var nearestRot = 0f;
+            var found = false;
+            for (var s = 0; s < slots.Count; s++)
+            {
+                var slot = slots[s];
+                if (slot.Kind != piece.Kind)
+                    continue;
+
+                var posSqr = (slot.Position - piece.Position).SqrLength;
+                if (posSqr < bestPosSqr)
+                {
+                    bestPosSqr = posSqr;
+                    nearestRot = slot.Rotation;
+                    found = true;
+                }
+            }
+
+            if (!found)
+                return;
+
+            var residual = SymmetryReduce(piece.Rotation - nearestRot, type.SymmetryOrder);
+            if (residual > _tuning.PhysicalSettleTiltThreshold)
+                _needsPhysicalSettle.Add(piece.InstanceId);
+        }
+
+        /// <summary>True when the piece was flagged at spawn to settle on real contact torque (TASK-024).</summary>
+        private bool NeedsPhysicalSettle(PieceInstance piece)
+            => _needsPhysicalSettle.Contains(piece.InstanceId);
 
         private void ClearRuntime()
         {
@@ -796,6 +886,7 @@ namespace Gameplay.Core.Mechanic
             _typeByInstance.Clear();
             _occupiedSlots.Clear();
             _settling.Clear();
+            _needsPhysicalSettle.Clear();
             _globalRestTimer = 0f;
             _pendingRelease.Clear();
             _coalesceWindowStepsLeft = 0;

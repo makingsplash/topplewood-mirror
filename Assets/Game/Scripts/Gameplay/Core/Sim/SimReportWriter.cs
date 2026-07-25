@@ -13,7 +13,7 @@ namespace Gameplay.Core.Sim
     {
         private const string Header =
             "levelId,seed,policyId,orderKey,repeatIndex,solved,outcome,attemptsUsed,stepsToResolve," +
-            "matchError,slotsFilled,slotsTotal,lostPieces,poseHash";
+            "matchError,slotsFilled,slotsTotal,lostPieces,poseHash,preGlideAngResidual,preGlidePosErr";
 
         public static string BuildCsv(IReadOnlyList<SimRunResult> runs)
         {
@@ -34,7 +34,9 @@ namespace Gameplay.Core.Sim
                     .Append(r.SlotsFilled).Append(',')
                     .Append(r.SlotsTotal).Append(',')
                     .Append(r.LostPieces).Append(',')
-                    .Append(r.PoseHash).Append('\n');
+                    .Append(r.PoseHash).Append(',')
+                    .Append(F(r.PreGlideAngResidual)).Append(',')
+                    .Append(F(r.PreGlidePosErr)).Append('\n');
             }
             return sb.ToString();
         }

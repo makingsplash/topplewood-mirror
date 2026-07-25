@@ -33,6 +33,16 @@ namespace Gameplay.Core
         /// one point by rotation without being a "magnet at any angle".</summary>
         public float SnapCaptureAngle { get; set; } = 0.5236f;
 
+        /// <summary>Minimum authored start-tilt (rad) that makes a piece settle on REAL contact torque instead of
+        /// being snap-captured on first contact (TASK-024). On spawn a piece whose start rotation differs from its
+        /// nearest same-Kind slot by more than this (symmetry-reduced) is flagged <c>NeedsPhysicalSettle</c>: it
+        /// SKIPS the in-fall snap and stays Dynamic, so contact gravity honestly rights it to rest before the snap
+        /// crisps it into the slot (the visible turn is physics, the glide only micro-finishes the residual). Kept
+        /// above float/settling noise yet well below the authored rotation-pack minimum (~12°): a flat assembly
+        /// piece (start ≈ slot angle) stays under it and takes the byte-for-byte in-fall path. Starting value ~0.05
+        /// rad ≈ 3°, UNVERIFIED — ⟨balancer⟩ confirms all 19 rotation levels classify as tilted, flat bases do not.</summary>
+        public float PhysicalSettleTiltThreshold { get; set; } = 0.05f;
+
         /// <summary>Support-probe gap (world units) for the snap gate (TASK-010, human 2026-07-23 15:20). Snap
         /// captures a slot only once the piece has support this close beneath its lower edge (floor or an
         /// already-settled body) — i.e. it is about to sit down, not still free-falling. Kept small so a piece
