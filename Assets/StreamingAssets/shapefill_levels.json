@@ -2088,9 +2088,9 @@
         "outline": [ { "x": -1.6, "y": -0.5 }, { "x": 2.4, "y": -0.5 }, { "x": 2.4, "y": 1.9 }, { "x": -1.6, "y": 1.9 } ],
         "slots": [
           { "kind": "fulcrum", "position": { "x": 0, "y": 0 }, "rotation": 0 },
-          { "kind": "arm", "position": { "x": 0, "y": 0.68 }, "rotation": 0.085 },
+          { "kind": "arm", "position": { "x": 0, "y": 0.68 }, "rotation": 0.018 },
           { "kind": "pebble", "position": { "x": 2.00, "y": -0.29 }, "rotation": 0 },
-          { "kind": "boulder", "position": { "x": -0.81, "y": 1.27 }, "rotation": 0.086 }
+          { "kind": "boulder", "position": { "x": -2.70, "y": 0.02 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -2161,9 +2161,9 @@
         "outline": [ { "x": -1.6, "y": -0.5 }, { "x": 2.8, "y": -0.5 }, { "x": 2.8, "y": 1.9 }, { "x": -1.6, "y": 1.9 } ],
         "slots": [
           { "kind": "fulcrum", "position": { "x": 0, "y": 0 }, "rotation": 0 },
-          { "kind": "arm", "position": { "x": 0, "y": 0.68 }, "rotation": 0.079 },
+          { "kind": "arm", "position": { "x": 0, "y": 0.68 }, "rotation": 0.013 },
           { "kind": "pebble", "position": { "x": 2.26, "y": -0.29 }, "rotation": 0 },
-          { "kind": "boulder", "position": { "x": -0.87, "y": 1.28 }, "rotation": 0.083 }
+          { "kind": "boulder", "position": { "x": -2.54, "y": 0.02 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -2234,9 +2234,9 @@
         "outline": [ { "x": -2.1, "y": -0.5 }, { "x": 3.3, "y": -0.5 }, { "x": 3.3, "y": 1.9 }, { "x": -2.1, "y": 1.9 } ],
         "slots": [
           { "kind": "fulcrum", "position": { "x": 0, "y": 0 }, "rotation": 0 },
-          { "kind": "arm", "position": { "x": 0, "y": 0.68 }, "rotation": 0.252 },
+          { "kind": "arm", "position": { "x": 0, "y": 0.68 }, "rotation": -0.01 },
           { "kind": "pebble", "position": { "x": 2.82, "y": -0.19 }, "rotation": 0 },
-          { "kind": "boulder", "position": { "x": -1.39, "y": 1.01 }, "rotation": 0.365 }
+          { "kind": "boulder", "position": { "x": -3.03, "y": 0.02 }, "rotation": 0 }
         ]
       },
       "pieces": [
