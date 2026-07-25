@@ -49,11 +49,14 @@ namespace Gameplay.Core.Mechanic
         // in-fall snap assist is off, and the verdict waits for GLOBAL rest so a still-swinging beam is never
         // judged. Assembly mode (66 levels) is byte-for-byte the pre-TASK-021 behaviour.
         private bool _balanceMode;
-        // Catapult sub-mode of balance (TASK-025): _balanceMode is ALSO true here, so the whole free-body machinery
-        // (no in-fall snap, PlaceDynamic loads, global-rest verdict, BalanceSnapLoads) runs unchanged. _catapultMode
-        // adds only the two catapult deltas: the pivot arm is world-pinned on rest (PinHinge, limit-free free swing —
-        // a boulder slam flips it and launches the pebble), and coalescence is suppressed so the charge→overload
-        // chain is released as sequential SINGLE taps (the seesaw pair path _balanceMode && !_catapultMode is intact).
+        // Catapult sub-mode of balance (TASK-025 → de-pinned TASK-027): _balanceMode is ALSO true here, so the whole
+        // free-body machinery (no in-fall snap, PlaceDynamic for arm+loads, global-rest verdict, BalanceSnapLoads)
+        // runs unchanged. After TASK-027 the pivot arm is NO LONGER world-pinned — the owner playtest rejected the
+        // pin as a "helper": the arm now rests as a FREE Dynamic body on a LOW fulcrum, its tilt limited by the
+        // NATURAL ground-stop (a small cube tilts it until the far end touches the ground; a boulder then flips it
+        // around the ridge and launches the pebble). So _catapultMode now adds only ONE delta: coalescence is
+        // suppressed so the charge→overload chain is released as sequential SINGLE taps (the seesaw pair path
+        // _balanceMode && !_catapultMode is intact).
         private bool _catapultMode;
         // Time the whole field has stayed below the rest speed, in balance mode only — the verdict fires only
         // once it exceeds RestDurationSeconds (the beam and everything on it have stopped swinging).
@@ -496,19 +499,12 @@ namespace Gameplay.Core.Mechanic
 
             if (_balanceMode)
             {
-                // Catapult (TASK-025): the pivot arm has come to rest on the fulcrum ridge. World-pin it there so the
-                // subsequent boulder slam flips it around the ridge and launches the pebble (PlacePivotCatapult). The
-                // loads are NOT pinned — they take the free-beam PlaceDynamic path below like any seesaw load.
-                if (_catapultMode && _typeByInstance[piece.InstanceId].Pivot)
-                {
-                    PlacePivotCatapult(piece, bodyId, pose);
-                    return;
-                }
-
-                // Free-beam (TASK-023): BOTH the pivot beam and the loads land as free Dynamic bodies judged from
-                // their rest pose — the beam is NO LONGER world-pinned (PlacePivot/PinHinge removed from the seesaw
-                // path). A single load honestly tips the free beam (Lost); a synchronous symmetric pair keeps it
-                // level. The Pivot flag is retained (it marks "judged from the free pose, never snapped").
+                // Free-beam (TASK-023, extended to catapults TASK-027): BOTH the pivot beam/arm and the loads land as
+                // free Dynamic bodies judged from their rest pose — nothing is world-pinned. On a seesaw a single load
+                // honestly tips the free beam (Lost) while a synchronous symmetric pair keeps it level; on a catapult
+                // the free arm rests on a LOW fulcrum with its tilt limited by the natural ground-stop, and the boulder
+                // slam flips it around the ridge to launch the pebble (the pin was removed as an owner-rejected helper,
+                // TASK-027). The Pivot flag is retained (it marks "judged from the free rest pose, never snapped").
                 PlaceDynamic(piece, pose);
                 return;
             }
@@ -546,24 +542,6 @@ namespace Gameplay.Core.Mechanic
         private void PlaceDynamic(PieceInstance piece, BodyPose pose)
         {
             FreezePlaced(piece, pose.Position, pose.Rotation);
-        }
-
-        /// <summary>
-        /// Catapult-mode landing for the pivot ARM (TASK-025): the arm has settled on the fulcrum ridge, so mark it
-        /// Placed (mirroring the free-beam PlaceDynamic — model/view only, NO FreezeAt) and then world-pin it with a
-        /// limit-free <see cref="IShapeFillSimulation.PinHinge"/> at its OWN rest centre (anchor = pose.Position,
-        /// offset 0 per RFC 02 §1.3). PinHinge keeps the body Dynamic and does NOT zero velocity, so the pin holds
-        /// only the arm's position (it can never be knocked off the ridge) while leaving rotation free — the boulder
-        /// slam that follows cranks the arm around the ridge and flings the pebble off the far end. Unlike the removed
-        /// TASK-021 self-levelling pin (anchor lifted above the CM), offset 0 leaves NO restoring torque, so the arm
-        /// holds the post-launch tilt the near stop-curb + boulder in the pocket give it — its rest pose IS the final
-        /// silhouette (the Pivot flag keeps BalanceSnapLoads from snapping it; it is judged from that free pose). The
-        /// arm is the ONLY caller of PinHinge, so the seesaws and assembly are byte-for-byte untouched.
-        /// </summary>
-        private void PlacePivotCatapult(PieceInstance piece, int bodyId, BodyPose pose)
-        {
-            FreezePlaced(piece, pose.Position, pose.Rotation);
-            _simulation.PinHinge(bodyId, pose.Position);
         }
 
         /// <summary>

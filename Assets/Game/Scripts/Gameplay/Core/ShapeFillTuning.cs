@@ -101,41 +101,30 @@ namespace Gameplay.Core
         /// for the window to expire. Generalises cheaply to larger groups later; v1 is capped at 2.</summary>
         public int MaxCoalesceGroup { get; set; } = 2;
 
-        // ── PinHinge levers (TASK-021 → catapult TASK-025). PinHinge-only: the free-beam seesaws (TASK-023) no
-        //    longer pin the beam, so the ONLY reader of these three is the catapult pivot arm (the sole PinHinge
-        //    caller, ShapeFillMechanicController.PlacePivotCatapult). Retuning them touches CATAPULT ONLY — the
-        //    seesaws and assembly are byte-for-byte unaffected (they never call PinHinge). ──
+        // ── PinHinge levers (TASK-021 → catapult TASK-025 → de-pinned TASK-027). FULLY UNUSED after TASK-027: the
+        //    catapult arm was de-pinned to a free Dynamic body on a low fulcrum (owner playtest rejected the pin as a
+        //    "helper"), so PinHinge now has NO caller at all and these three levers read by no code path. Retained,
+        //    NOT deleted — config back-compat (old JSON may still carry them) + a historical lever set that would be
+        //    re-wired verbatim if a pinned mode ever returns. Do NOT delete. Values left at their last-tuned numbers. ──
 
-        /// <summary>PinHinge-only. USED by the catapult pivot arm (TASK-025); UNUSED by the TASK-023 free-beam
-        /// seesaws (they never pin). Angular damping applied to the pinned arm — drives the crank to ONE rest inside
-        /// the sim step budget (no metastable knife-edge, no timeout) yet must NOT bleed off the launch impulse.
-        /// Lowered 4.0→1.2 (game-balancer 03 §5): the TASK-021 value 4.0 was tuned for a self-levelling seesaw
-        /// pendulum (pin above the CM), but the catapult pins at the arm centre (offset 0) for a limit-free swing, so
-        /// heavy damping during the ~0.15 s flip would kill the pebble's launch velocity → undershoot. 1.2 keeps
-        /// enough convergence (arm settles to one poseHash with the boulder loading the near pocket) without stalling
-        /// the flip. UNVERIFIED — balancer sweep 0.8–2.0 against level-sim (identical poseHash over R≥20 AND pebble
-        /// reaches the cradle). ROUND-2 empirical probe (game-balancer 05 §7): lowered 1.2→0.8 alongside the 15
-        /// probe levels — round-1 sim showed systematic undershoot (pebble lands 3.5–6 units short), attributed in
-        /// part to damping bleeding angular velocity during the flip; 0.8 is the low edge of the sweep, tested
-        /// globally in the same run. Revert to 1.2 if 0.8 breaks arm convergence to rest. The global rest gate before
-        /// the verdict reuses <see cref="RestSpeedEpsilon"/>/<see cref="RestDurationSeconds"/>.</summary>
+        /// <summary>PinHinge-only — UNUSED after TASK-027 (catapult de-pinned to a free-beam ground-stop; PinHinge has
+        /// no caller). Angular damping formerly applied to the pinned catapult arm to drive the crank to ONE rest
+        /// inside the sim step budget without bleeding off the launch impulse. Retained: re-wired verbatim if a pinned
+        /// mode ever returns. Do NOT delete. (History: 4.0→1.2 in game-balancer 03 §5 for the offset-0 limit-free pin,
+        /// then 1.2→0.8 in game-balancer 05 §7 to fight launch undershoot.)</summary>
         public float BalanceAngularDamping { get; set; } = 0.8f;
 
-        /// <summary>PinHinge-only. UNUSED by the current path: the catapult pins at the arm's OWN centre (offset 0,
-        /// hardcoded in <see cref="Gameplay.Core.Mechanic.ShapeFillMechanicController"/>.PlacePivotCatapult per RFC 02
-        /// §1.3) so the arm holds its post-launch tilt (final silhouette) with no restoring torque, and the TASK-023
-        /// seesaws never pin. Retained as the historical self-levelling lever (lifted the hinge above the loaded CM
-        /// for a seesaw pendulum). If the balancer's §9 metastability fallback is ever taken (empty arm should settle
-        /// back to level), a small offset would be re-wired here — but the accepted path is offset 0.</summary>
+        /// <summary>PinHinge-only — UNUSED after TASK-027 (catapult de-pinned; PinHinge has no caller). Was already
+        /// UNUSED by the accepted TASK-025 path (the catapult pinned at the arm's OWN centre, offset 0). Retained as
+        /// the historical self-levelling lever (lifted the hinge above the loaded CM for a seesaw pendulum). Do NOT
+        /// delete — re-wired verbatim if a pinned mode ever returns.</summary>
         public float BalancePivotAnchorOffsetY { get; set; } = 0.6f;
 
-        /// <summary>PinHinge-only. USED by the catapult pivot arm (TASK-025); UNUSED by the TASK-023 free-beam
-        /// seesaws (they never pin). Angular limit (degrees, ±) applied to the hinge as physical end-stops.
-        /// <c>≤0</c> ⇒ limits OFF (free full swing). Set 14→0 (RFC 02 §1.1/§8): the catapult arm MUST swing free —
-        /// a limit would clamp the 40°+ launch flip and reintroduce the playtest-1 "fake ±14° end-stop" complaint.
-        /// The catapult holds its rest tilt via the near stop-curb + boulder in the pocket, not via a hinge limit.
-        /// (Historical: 14° was a TASK-021 seesaw end-stop keeping a single load below the ~31° slip angle before its
-        /// counter-load arrived — irrelevant now that seesaws are free-beam and don't pin.)</summary>
+        /// <summary>PinHinge-only — UNUSED after TASK-027 (catapult de-pinned; PinHinge has no caller). Angular limit
+        /// (degrees, ±) formerly applied to the hinge as physical end-stops (<c>≤0</c> ⇒ limits OFF). Set to 0 for the
+        /// catapult (the arm had to swing free for the launch flip); now that the arm is a free body its tilt is
+        /// limited by the natural ground-stop, not a hinge limit. Retained: re-wired verbatim if a pinned mode ever
+        /// returns. Do NOT delete.</summary>
         public float BalanceHingeLimitDeg { get; set; } = 0f;
     }
 }

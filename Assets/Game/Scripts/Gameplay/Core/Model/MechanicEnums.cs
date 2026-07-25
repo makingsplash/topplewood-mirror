@@ -17,18 +17,19 @@ namespace Gameplay.Core
     }
 
     /// <summary>
-    /// How a level's placed pieces behave physically (TASK-021, free-beam TASK-023, catapult TASK-025).
-    /// <see cref="Assembly"/> is the canonical stack: every piece freezes kinematic on rest (snap-to-slot + rigid
-    /// support). <see cref="Balance"/> is the seesaw class: the beam is a FREE Dynamic body resting on the fulcrum
-    /// (no hinge/pin/limits), loads are released as synchronous groups (a coalescence window merges a pair-tap into
-    /// one physics step), the in-fall snap assist is off, and the verdict waits for GLOBAL rest so a swinging beam is
-    /// never judged mid-swing. <see cref="Catapult"/> is the decisive-lever sub-class of balance (TASK-025): it
-    /// REUSES the balance free-body machinery (no in-fall snap, loads are free Dynamic, verdict at global rest,
-    /// BalanceSnapLoads crisps the non-pivot loads), but the pivot arm is world-pinned on rest via a limit-free
-    /// <c>PinHinge</c> at its own centre (position held, rotation free) so a heavy boulder dropped on the near end
-    /// flips the arm and LAUNCHES the light pebble off the far end into a raised cradle; coalescence is suppressed so
-    /// the charge→overload chain is released as sequential SINGLE taps. Default is Assembly — old levels and JSON
-    /// without a physicsMode field are unchanged.
+    /// How a level's placed pieces behave physically (TASK-021, free-beam TASK-023, catapult TASK-025 → de-pinned
+    /// TASK-027). <see cref="Assembly"/> is the canonical stack: every piece freezes kinematic on rest (snap-to-slot
+    /// + rigid support). <see cref="Balance"/> is the seesaw class: the beam is a FREE Dynamic body resting on the
+    /// fulcrum (no hinge/pin/limits), loads are released as synchronous groups (a coalescence window merges a pair-tap
+    /// into one physics step), the in-fall snap assist is off, and the verdict waits for GLOBAL rest so a swinging beam
+    /// is never judged mid-swing. <see cref="Catapult"/> is the decisive-lever sub-class of balance (TASK-025): it
+    /// REUSES the balance free-body machinery (no in-fall snap, arm+loads are free Dynamic, verdict at global rest,
+    /// BalanceSnapLoads crisps the non-pivot loads). After TASK-027 the pivot arm is NO LONGER pinned (owner playtest
+    /// rejected the pin as a "helper"): it rests as a free body on a LOW fulcrum, its charge tilt limited by the
+    /// natural ground-stop (a small cube tilts it until the far end touches the ground), and a heavy boulder dropped
+    /// on the raised near end flips the arm around the ridge and LAUNCHES the light pebble off the far end; coalescence
+    /// is suppressed so the charge→overload chain is released as sequential SINGLE taps. Default is Assembly — old
+    /// levels and JSON without a physicsMode field are unchanged.
     /// </summary>
     public enum PhysicsMode
     {
