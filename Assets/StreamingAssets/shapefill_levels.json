@@ -1580,7 +1580,7 @@
       },
       "pieces": [
         { "kind": "hull", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
-        { "kind": "sail", "startPosition": { "x": 0.153, "y": 4.5 }, "startRotation": -0.244 }
+        { "kind": "sail", "startPosition": { "x": 0.095, "y": 4.5 }, "startRotation": -0.244 }
       ],
       "staticGeometry": [
         { "outline": [ { "x": -1.2, "y": -0.8 }, { "x": 1.2, "y": -0.8 }, { "x": 1.2, "y": -0.5 }, { "x": -1.2, "y": -0.5 } ] }
@@ -1720,15 +1720,15 @@
         "outline": [ { "x": -1.0, "y": -0.2 }, { "x": 1.0, "y": -0.2 }, { "x": 1.0, "y": 0.75 }, { "x": -1.0, "y": 0.75 } ],
         "slots": [
           { "kind": "fuselage", "position": { "x": 0, "y": 0 }, "rotation": 0 },
-          { "kind": "wing", "position": { "x": -0.545, "y": 0.45 }, "rotation": 0 },
-          { "kind": "wing", "position": { "x": -0.207, "y": 0.45 }, "rotation": 0 },
+          { "kind": "wing", "position": { "x": -0.65, "y": 0.45 }, "rotation": 0 },
+          { "kind": "wing", "position": { "x": 0.0, "y": 0.45 }, "rotation": 0 },
           { "kind": "tail", "position": { "x": 0.65, "y": 0.45 }, "rotation": 0 }
         ]
       },
       "pieces": [
         { "kind": "fuselage", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
-        { "kind": "wing", "startPosition": { "x": -0.522, "y": 4.5 }, "startRotation": 0.314 },
-        { "kind": "wing", "startPosition": { "x": -0.079, "y": 6.0 }, "startRotation": -0.314 },
+        { "kind": "wing", "startPosition": { "x": -0.65, "y": 4.5 }, "startRotation": 0.314 },
+        { "kind": "wing", "startPosition": { "x": 0.0, "y": 6.0 }, "startRotation": -0.314 },
         { "kind": "tail", "startPosition": { "x": 0.65, "y": 7.5 }, "startRotation": 0.279 }
       ],
       "staticGeometry": [
@@ -1778,7 +1778,7 @@
       "target": {
         "outline": [ { "x": -0.5, "y": -0.5 }, { "x": 0.5, "y": -0.5 }, { "x": 0.5, "y": 0.65 }, { "x": -0.5, "y": 0.65 } ],
         "slots": [
-          { "kind": "wedge", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "wedge", "position": { "x": 0.166, "y": 0 }, "rotation": 0 },
           { "kind": "cap", "position": { "x": -0.15, "y": 0.65 }, "rotation": 0 }
         ]
       },
@@ -1898,7 +1898,7 @@
       },
       "pieces": [
         { "kind": "base", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
-        { "kind": "roof", "startPosition": { "x": -0.163, "y": 4.5 }, "startRotation": 0.279 }
+        { "kind": "roof", "startPosition": { "x": -0.086, "y": 4.5 }, "startRotation": 0.279 }
       ],
       "staticGeometry": [
         { "outline": [ { "x": -1.0, "y": -0.65 }, { "x": 1.0, "y": -0.65 }, { "x": 1.0, "y": -0.35 }, { "x": -1.0, "y": -0.35 } ] }
