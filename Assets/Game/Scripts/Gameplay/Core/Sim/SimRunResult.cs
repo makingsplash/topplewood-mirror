@@ -34,11 +34,18 @@ namespace Gameplay.Core.Sim
         // array, not a scalar). Lets the balancer author silhouette slots FROM where the deterministic physics
         // actually lands pieces, instead of blind trajectory-fitting (05 §9 request). Sim-only; production untouched.
         public readonly IReadOnlyList<SimPiecePose> FinalPoses;
+        // TASK-026 STEP-1 (observability): each physical-settle piece's raw pose at its capture tick (the tick it
+        // first turns Placed, BEFORE the soft-settle glide moves it) — the same snapshot the PreGlide* scalars are
+        // read from, but the full (kind, x, y, rot) VECTOR instead of the worst scalar. Lets the owner diff rest − slot
+        // per piece and precompensate the tilted-piece start so physics itself lands the slot. JSON-only (an array,
+        // omitted from the CSV row like FinalPoses). Empty on runs with no physical-settle pieces. Sim-only.
+        public readonly IReadOnlyList<SimPiecePose> PreGlidePoses;
 
         public SimRunResult(string levelId, int seed, string policyId, string orderKey, int repeatIndex,
             bool solved, string outcome, int attemptsUsed, int stepsToResolve, float matchError,
             int slotsFilled, int slotsTotal, int lostPieces, long poseHash,
-            float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses)
+            float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses,
+            IReadOnlyList<SimPiecePose> preGlidePoses)
         {
             LevelId = levelId;
             Seed = seed;
@@ -57,6 +64,7 @@ namespace Gameplay.Core.Sim
             PreGlideAngResidual = preGlideAngResidual;
             PreGlidePosErr = preGlidePosErr;
             FinalPoses = finalPoses;
+            PreGlidePoses = preGlidePoses;
         }
     }
 
