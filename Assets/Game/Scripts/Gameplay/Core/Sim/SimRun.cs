@@ -37,6 +37,11 @@ namespace Gameplay.Core.Sim
         private readonly HashSet<int> _preGlideMeasured = new();
         private float _maxPreGlideAngResidual;
         private float _maxPreGlidePosErr;
+        // TASK-026 STEP-1 (observability): every piece's raw pose (kind + world x/y + rotation) at the SAME capture
+        // tick the scalars above are read — the first tick it flips Placed, the pre-glide physical rest pose before
+        // the soft-settle glide moves it. Where the scalars answer "how far off", this answers "off in which
+        // direction" (the rest − slot VECTOR the owner needs to precompensate starts). Sim-only; production untouched.
+        private readonly List<SimPiecePose> _preGlidePoses = new();
 
         private GameOutcome _outcome = GameOutcome.None;
 
@@ -101,6 +106,11 @@ namespace Gameplay.Core.Sim
                     continue;
                 if (!_preGlideMeasured.Add(piece.InstanceId))
                     continue; // already snapshotted on the tick it first turned Placed
+
+                // TASK-026 STEP-1: record the raw pre-glide pose at this same capture tick (before the glide moves
+                // it). State is Placed by definition here; kept for shape-parity with FinalPoses.
+                _preGlidePoses.Add(new SimPiecePose(
+                    piece.Kind, piece.Position.X, piece.Position.Y, piece.Rotation, piece.State.ToString()));
 
                 var symmetryOrder = _model.TypeFor(piece).SymmetryOrder;
                 var bestPosErr = float.MaxValue;
@@ -169,7 +179,7 @@ namespace Gameplay.Core.Sim
             return new SimRunResult(_level.LevelId, _level.Seed, policyId, orderKey, repeatIndex,
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
-                _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses);
+                _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses);
         }
 
         public void Dispose()
