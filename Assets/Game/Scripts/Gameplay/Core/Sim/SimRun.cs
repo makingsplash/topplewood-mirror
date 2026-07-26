@@ -179,14 +179,15 @@ namespace Gameplay.Core.Sim
             var solved = _outcome == GameOutcome.Won;
             var outcome = _outcome == GameOutcome.None ? "Timeout" : _outcome.ToString();
 
-            ComputeHonestyMetrics(out var intersectingPairs, out var maxPenetration, out var unsupportedPlaced);
+            ComputeHonestyMetrics(out var intersectingPairs, out var maxPenetration, out var unsupportedPlaced,
+                out var worst);
 
             return new SimRunResult(_level.LevelId, _level.Seed, policyId, orderKey, repeatIndex,
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
                 _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses,
                 intersectingPairs, maxPenetration, unsupportedPlaced,
-                _mechanic.SnapRejectsByOverlap, _mechanic.SnapRejectsBySupport);
+                _mechanic.SnapRejectsByOverlap, _mechanic.SnapRejectsBySupport, worst);
         }
 
         /// <summary>
@@ -206,7 +207,8 @@ namespace Gameplay.Core.Sim
         /// Convex-only SAT (all pieces + the rectangular floor/cradle statics are convex); no shipped level authors a
         /// concave floor. Sim-only; the production path never runs this.
         /// </summary>
-        private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration, out int unsupportedPlaced)
+        private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration,
+            out int unsupportedPlaced, out WorstOverlapPair worst)
         {
             var epsilon = _tuning.OverlapTolerance;       // the SINGLE shared constant, == the controller gate's
             const float supportProbe = 0.05f;             // a gap this small beneath a piece counts as "resting on"
@@ -214,25 +216,40 @@ namespace Gameplay.Core.Sim
             intersectingPairs = 0;
             maxPenetration = 0f;
             unsupportedPlaced = 0;
+            worst = WorstOverlapPair.None;
 
             var polys = new List<Vec2[]>();
             var ids = new List<int>();
+            var kinds = new List<string>();
             foreach (var piece in _model.Pieces)
             {
                 if (piece.State != PieceLifecycle.Placed)
                     continue;
                 polys.Add(Geometry.WorldVertices(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation));
                 ids.Add(piece.InstanceId);
+                kinds.Add(piece.Kind);
             }
 
             for (var i = 0; i < polys.Count; i++)
             {
                 for (var j = i + 1; j < polys.Count; j++)
                 {
+                    var penetration = Geometry.ConvexPenetration(polys[i], polys[j]);
+                    var baseline = _mechanic.OverlapAllowance(ids[i], ids[j]);
                     // Overshoot above what the DESIGN authored for this specific pair of claimed slots.
-                    var overshoot = Geometry.ConvexPenetration(polys[i], polys[j]) - _mechanic.OverlapAllowance(ids[i], ids[j]);
+                    var overshoot = penetration - baseline;
                     if (overshoot > maxPenetration)
+                    {
                         maxPenetration = overshoot;
+                        // TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.2 — "не гадай, добавь детали худшей пары"):
+                        // record the pair driving the worst overshoot so a run flagged on CANON is diagnosable —
+                        // raw penetration vs. applied baseline distinguishes physical-settle slop (pen ≈ baseline +
+                        // small) from a cross-mapping (baseline for the wrong slot pair), and the two claimed slots
+                        // + kinds pin exactly which same-kind instances mis-mapped.
+                        worst = new WorstOverlapPair(
+                            kinds[i], kinds[j], penetration, baseline,
+                            _mechanic.ClaimedSlot(ids[i]), _mechanic.ClaimedSlot(ids[j]));
+                    }
                     if (overshoot > epsilon)
                         intersectingPairs++;
                 }

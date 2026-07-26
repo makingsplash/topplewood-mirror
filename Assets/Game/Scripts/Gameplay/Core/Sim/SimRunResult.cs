@@ -55,6 +55,13 @@ namespace Gameplay.Core.Sim
         // a CANONICAL run is the diagnostic that pins WHICH clamp mis-fired on which level (e.g. owl's ear).
         public readonly int SnapRejectsByOverlap;
         public readonly int SnapRejectsBySupport;
+        // TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.2 — "НЕ ГАДАЙ: добавь per-run детали худшей пары"): the pair of
+        // Placed pieces driving MaxPenetration this run — kinds, raw SAT penetration, the authored baseline applied to
+        // them, and both claimed slot indices. On a CANON run flagged by the detector this row answers WHY without a
+        // second sweep: penetration ≈ baseline + a small slop ⇒ real physical-settle slop above baseline (calibrate ε);
+        // baseline that belongs to a different slot pair (unexpected slotA/slotB for the two same-kind kinds) ⇒ a
+        // cross-mapping to fix. Zeroed/-1 when no Placed pair overlaps at all (Worst == None).
+        public readonly WorstOverlapPair WorstPair;
 
         public SimRunResult(string levelId, int seed, string policyId, string orderKey, int repeatIndex,
             bool solved, string outcome, int attemptsUsed, int stepsToResolve, float matchError,
@@ -62,7 +69,7 @@ namespace Gameplay.Core.Sim
             float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses,
             IReadOnlyList<SimPiecePose> preGlidePoses,
             int intersectingPairs, float maxPenetration, int unsupportedPlaced,
-            int snapRejectsByOverlap, int snapRejectsBySupport)
+            int snapRejectsByOverlap, int snapRejectsBySupport, WorstOverlapPair worstPair)
         {
             LevelId = levelId;
             Seed = seed;
@@ -87,7 +94,39 @@ namespace Gameplay.Core.Sim
             UnsupportedPlaced = unsupportedPlaced;
             SnapRejectsByOverlap = snapRejectsByOverlap;
             SnapRejectsBySupport = snapRejectsBySupport;
+            WorstPair = worstPair;
         }
+    }
+
+    /// <summary>
+    /// TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.2): the Placed pair with the largest overshoot above its authored
+    /// baseline in a sim run — the diagnostic the owner asked for so a detector hit on CANON is explained by data, not
+    /// a guess. <see cref="Penetration"/> is the raw SAT depth; <see cref="Baseline"/> is the authored overlap the
+    /// controller applied to this pair (via <c>OverlapAllowance</c>); <see cref="SlotA"/>/<see cref="SlotB"/> are the
+    /// slots each piece claimed (-1 if none). A canon hit with Penetration ≈ Baseline + small residual ⇒ physical-
+    /// settle slop (calibrate ε); an unexpected slot pair for two same-kind kinds ⇒ a cross-mapping to fix. Sim-only.
+    /// </summary>
+    public readonly struct WorstOverlapPair
+    {
+        public readonly string KindA;
+        public readonly string KindB;
+        public readonly float Penetration;
+        public readonly float Baseline;
+        public readonly int SlotA;
+        public readonly int SlotB;
+
+        public WorstOverlapPair(string kindA, string kindB, float penetration, float baseline, int slotA, int slotB)
+        {
+            KindA = kindA;
+            KindB = kindB;
+            Penetration = penetration;
+            Baseline = baseline;
+            SlotA = slotA;
+            SlotB = slotB;
+        }
+
+        /// <summary>Sentinel for a run with no overlapping Placed pair — empty kinds, zero depths, -1 slots.</summary>
+        public static WorstOverlapPair None => new("", "", 0f, 0f, -1, -1);
     }
 
     /// <summary>

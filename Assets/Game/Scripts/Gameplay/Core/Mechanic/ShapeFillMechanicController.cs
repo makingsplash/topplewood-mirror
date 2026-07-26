@@ -569,6 +569,18 @@ namespace Gameplay.Core.Mechanic
             if (OverlapsAnyPlacedBeyondBaseline(restVerts, piece.InstanceId, restSlot))
                 return;
 
+            // TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.1 — the main residual of the user "невидимая опора" bug):
+            // the in-fall snap already carries a support gate, but freeze-at-rest through THIS path did not — so a
+            // piece momentarily resting on a still-Dynamic (Falling) neighbour was frozen, and once that neighbour
+            // drove away the frozen piece hung in mid-air. Only a static or an already-Placed piece is PERMANENT
+            // support; a Falling piece is not (IsPoseSupported credits statics + Placed only). Not supported → stay
+            // Dynamic and keep settling; a wrong order that never gains real support just times out (an honest
+            // un-winnable order) rather than cementing a floating pose. In canon a piece always rests on a
+            // static/Placed piece by the time it stops (releases resolve bottom-up), so this passes → assembly stays
+            // byte-for-byte. Balance mode returned early above (PlaceDynamic), so this only gates the assembly freeze.
+            if (!IsPoseSupported(restVerts))
+                return;
+
             // Physical-settle piece (TASK-024 → TASK-030 variant B, owner playtest 2026-07-25): it skipped the
             // in-fall snap and has now come to physical rest after contact torque righted its authored tilt. FREEZE
             // IT EXACTLY WHERE PHYSICS LEFT IT — no pose or angle correction, neither instant nor glided. The old
@@ -641,11 +653,13 @@ namespace Gameplay.Core.Mechanic
                 if (!_bodyByInstance.TryGetValue(piece.InstanceId, out var bodyId))
                     continue;
 
-                // Balance crisp: kept byte-for-byte (enforceHonesty: false). Balance poses come from real free-body
-                // physics judged at global rest; the assembly honesty gate (baselined off the piece's authored slot,
-                // not the free beam's live rest pose) does not apply here. The sim detector still measures balance
-                // final poses, so a genuine balance interpenetration would surface as its own (non-TASK-042) issue.
-                var slot = FindSnapSlot(piece, bodyId, enforceHonesty: false);
+                // TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.3): the balance crisp obeys the SAME admissibility as
+                // the assembly in-fall snap (enforceHonesty: true). On a LEVEL beam every load already rests at its
+                // authored slot pose on the (Placed) beam, so both clamps pass by construction → canon crisps exactly
+                // as before. On a TILTED beam the authored slot pose would drive the load through / hang it above the
+                // displaced beam, so the support+baseline gate rejects the snap and the load honestly stays at its
+                // physical rest pose (owner: "снап тянет грузы в слоты сквозь наклонённую балку" — pen up to 0.08).
+                var slot = FindSnapSlot(piece, bodyId, enforceHonesty: true);
                 if (slot < 0)
                     continue;
 
@@ -998,6 +1012,11 @@ namespace Gameplay.Core.Mechanic
         /// 0 when either is slot-less. Public read-only for the sim; never mutates state.</summary>
         public float OverlapAllowance(int instanceIdA, int instanceIdB) =>
             SlotBaselineBetween(SlotOf(instanceIdA), SlotOf(instanceIdB));
+
+        /// <summary>The slot index a Placed piece claimed, or -1 if it never claimed one — read by the sim's
+        /// worst-pair diagnostic (TASK-042 gate-v2 pt.2) so the report shows which slots a flagged pair mapped to
+        /// (the owner's cross-mapping vs. slop question). Never mutates state.</summary>
+        public int ClaimedSlot(int instanceId) => SlotOf(instanceId);
 
         /// <summary>Number of snap candidates rejected this run because the slot pose interpenetrated a placed piece
         /// beyond the authored baseline. Non-zero on a canonical run flags a baseline the load-time bake under-counts
