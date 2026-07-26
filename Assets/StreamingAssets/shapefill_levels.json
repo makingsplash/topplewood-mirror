@@ -433,7 +433,7 @@
         { "kind": "base", "startPosition": { "x": 2.5, "y": 1.0 }, "startRotation": 0 },
         { "kind": "tower", "startPosition": { "x": 2.5, "y": 2.7 }, "startRotation": 0 },
         { "kind": "lamp", "startPosition": { "x": -2.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "hammer", "startPosition": { "x": 0.25, "y": 7.7 }, "startRotation": 0 },
+        { "kind": "hammer", "startPosition": { "x": 0.25, "y": 8.0 }, "startRotation": 0 },
         { "kind": "stick", "startPosition": { "x": -1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
@@ -443,8 +443,7 @@
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.8, "y": -3.3 }, { "x": 1.95, "y": -3.3 }, { "x": 1.95, "y": 1.0 }, { "x": 1.8, "y": 1.0 } ] },
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.95, "y": -0.3 }, { "x": 3.4, "y": -0.3 }, { "x": 3.4, "y": 0 }, { "x": 1.95, "y": 0 } ] },
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.6, "y": 1.8 }, { "x": 1.9, "y": 1.8 }, { "x": 1.9, "y": 2.05 }, { "x": 1.6, "y": 2.05 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 3.1, "y": 1.8 }, { "x": 3.4, "y": 1.8 }, { "x": 3.4, "y": 3.6 }, { "x": 3.1, "y": 3.6 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.85, "y": 3.6 }, { "x": 3.25, "y": 3.6 }, { "x": 3.25, "y": 3.9 }, { "x": 1.85, "y": 3.9 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 3.1, "y": 1.8 }, { "x": 3.4, "y": 1.8 }, { "x": 3.4, "y": 5.5 }, { "x": 3.1, "y": 5.5 } ] }
       ]
     },
     {
@@ -475,7 +474,7 @@
         { "kind": "body_low", "startPosition": { "x": -2.5, "y": 1.0 }, "startRotation": 0 },
         { "kind": "body_mid", "startPosition": { "x": -2.5, "y": 2.6 }, "startRotation": 0 },
         { "kind": "head", "startPosition": { "x": 2.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "hammer", "startPosition": { "x": -0.25, "y": 8.3 }, "startRotation": 0 },
+        { "kind": "hammer", "startPosition": { "x": -0.25, "y": 8.15 }, "startRotation": 0 },
         { "kind": "stick", "startPosition": { "x": 1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
@@ -484,9 +483,8 @@
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 2.6, "y": 5.5 }, { "x": 3.5, "y": 5.5 }, { "x": 3.5, "y": 9 }, { "x": 2.6, "y": 9 } ] },
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.95, "y": -3.3 }, { "x": -1.8, "y": -3.3 }, { "x": -1.8, "y": 1.5 }, { "x": -1.95, "y": 1.5 } ] },
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.35, "y": -0.3 }, { "x": -1.95, "y": -0.3 }, { "x": -1.95, "y": 0 }, { "x": -3.35, "y": 0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.45, "y": 1.6 }, { "x": -3.15, "y": 1.6 }, { "x": -3.15, "y": 3.4 }, { "x": -3.45, "y": 3.4 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.85, "y": 1.6 }, { "x": -1.55, "y": 1.6 }, { "x": -1.55, "y": 1.85 }, { "x": -1.85, "y": 1.85 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.15, "y": 3.5 }, { "x": -1.9, "y": 3.5 }, { "x": -1.9, "y": 3.85 }, { "x": -3.15, "y": 3.85 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.45, "y": 1.6 }, { "x": -3.15, "y": 1.6 }, { "x": -3.15, "y": 5.5 }, { "x": -3.45, "y": 5.5 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.85, "y": 1.6 }, { "x": -1.55, "y": 1.6 }, { "x": -1.55, "y": 1.85 }, { "x": -1.85, "y": 1.85 } ] }
       ]
     },
     {
