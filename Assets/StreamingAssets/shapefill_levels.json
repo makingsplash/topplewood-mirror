@@ -516,7 +516,7 @@
         { "kind": "trunk", "startPosition": { "x": -2.6, "y": 2.0 }, "startRotation": 0 },
         { "kind": "crown", "startPosition": { "x": -2.6, "y": 3.0 }, "startRotation": 0 },
         { "kind": "apple", "startPosition": { "x": 2.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "hammer", "startPosition": { "x": 0.15, "y": 9.2 }, "startRotation": 0 },
+        { "kind": "hammer", "startPosition": { "x": 0.15, "y": 9.5 }, "startRotation": 0 },
         { "kind": "stick", "startPosition": { "x": 1.9, "y": 1.2 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
