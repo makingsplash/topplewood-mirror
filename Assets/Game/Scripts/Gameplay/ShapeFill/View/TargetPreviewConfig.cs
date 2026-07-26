@@ -9,13 +9,24 @@ namespace Gameplay.View
     /// </summary>
     public sealed class TargetPreviewConfig
     {
-        /// <summary>Uniform scale of the preview figure (≈0.5 = "half size", ticket request).</summary>
+        /// <summary>
+        /// Uniform-scale CEILING of the preview figure (TASK-033): ≈0.5 = "half size" cap. The view auto-fits
+        /// the figure into the reserved top band (<see cref="CameraFramingConfig.PreviewBandFraction"/>) and
+        /// never scales ABOVE this; tall/wide figures shrink below it so the card lies fully inside the band.
+        /// </summary>
         public float Scale = 0.5f;
+
+        /// <summary>Lower clamp on the auto-fit scale (TASK-033) so the preview card never collapses to a dot.</summary>
+        public float MinScale = 0.15f;
 
         /// <summary>Horizontal viewport anchor of the preview frame (0..1, start: centre).</summary>
         public float AnchorViewportX = 0.5f;
 
-        /// <summary>Vertical viewport anchor of the preview frame (0..1, start: near top).</summary>
+        /// <summary>
+        /// Vertical viewport anchor of the preview frame (0..1). The view DERIVES the anchor from the reserved
+        /// band centre (<c>1 − PreviewBandFraction/2</c>, TASK-033); at band=0.20 that is 0.90, identical to
+        /// this legacy default — kept as a fine-tune fallback only.
+        /// </summary>
         public float AnchorViewportY = 0.9f;
 
         /// <summary>Distance passed to <c>Camera.ViewportToWorldPoint</c> (ortho: any value &gt; near).</summary>

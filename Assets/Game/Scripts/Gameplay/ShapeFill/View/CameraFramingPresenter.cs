@@ -58,11 +58,18 @@ namespace Gameplay.View
             var halfW = (max.X - min.X) * 0.5f;
             var aspect = camera.aspect <= 0f ? 1f : camera.aspect;
 
-            // Ortho size = half the viewport height; fit both axes (width via aspect), pad, then clamp.
-            camera.orthographicSize = Mathf.Max(_config.MinOrthoSize, Mathf.Max(halfH, halfW / aspect) + _config.Margin);
+            // Reserve the top PreviewBandFraction of the viewport for the target-preview overlay (TASK-033):
+            // fit the content into the LOWER (1 - band) of the viewport height (full width is unaffected —
+            // the band is top-only). Then raise the camera by size*band so the content sits in the lower band
+            // and the top band stays empty for the preview card. Both bounds get ≥ Margin of clearance.
+            var usable = Mathf.Clamp(1f - _config.PreviewBandFraction, 0.1f, 1f);
+            var sizeForHeight = (halfH + _config.Margin) / usable;   // content height must fit the usable lower band
+            var sizeForWidth = (halfW / aspect) + _config.Margin;    // width uses the full viewport
+            var size = Mathf.Max(_config.MinOrthoSize, Mathf.Max(sizeForHeight, sizeForWidth));
+            camera.orthographicSize = size;
 
             var t = camera.transform;
-            t.position = new Vector3(centerX, centerY, t.position.z);
+            t.position = new Vector3(centerX, centerY + size * _config.PreviewBandFraction, t.position.z);
         }
 
         /// <summary>Union AABB (world space) of every piece's start silhouette, the target slots and the static
