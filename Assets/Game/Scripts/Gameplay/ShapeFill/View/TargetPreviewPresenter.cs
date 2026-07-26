@@ -17,13 +17,18 @@ namespace Gameplay.View
     {
         private readonly GameModel _model;
         private readonly TargetPreviewConfig _config;
+        private readonly CameraFramingConfig _framingConfig;
         private IDisposable _subscription;
         private GameObject _preview;
 
-        public TargetPreviewPresenter(GameModel model, TargetPreviewConfig config)
+        // Reads CameraFramingConfig so the preview knows the reserved top band (TASK-033) — the framing config
+        // is the single source of truth for the band. Both configs are already RegisterInstance'd, so
+        // VContainer resolves this extra ctor parameter without a new registration.
+        public TargetPreviewPresenter(GameModel model, TargetPreviewConfig config, CameraFramingConfig framingConfig)
         {
             _model = model;
             _config = config;
+            _framingConfig = framingConfig;
         }
 
         public void Start()
@@ -45,7 +50,8 @@ namespace Gameplay.View
 
             _preview = new GameObject("TargetPreview");
             _preview.AddComponent<TargetPreviewView>()
-                .Initialize(level.Target, BuildKindMap(level), _config, UnityEngine.Camera.main);
+                .Initialize(level.Target, BuildKindMap(level), _config, UnityEngine.Camera.main,
+                    _framingConfig.PreviewBandFraction);
         }
 
         // The preview shows the target only, so map from the pieces the player is given (Decoys are not

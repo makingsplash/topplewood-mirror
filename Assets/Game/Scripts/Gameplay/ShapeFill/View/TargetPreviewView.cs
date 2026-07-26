@@ -19,26 +19,46 @@ namespace Gameplay.View
             TargetFigure target,
             IReadOnlyDictionary<string, PieceType> kinds,
             TargetPreviewConfig config,
-            UnityEngine.Camera camera)
+            UnityEngine.Camera camera,
+            float previewBandFraction)
         {
             if (target?.Slots == null || kinds == null || config == null)
                 return;
 
-            var figureCenter = ComputeCenter(target);
+            ComputeExtent(target, out var figureCenter, out var figureSize);
 
             var t = transform;
             if (camera != null)
             {
+                // Anchor to the CENTRE of the reserved top band (TASK-033): the framing presenter keeps the
+                // top PreviewBandFraction of the viewport empty for this card. band=0.20 ⇒ viewportY=0.90
+                // (identical to the legacy default, so no positional regression).
+                var band = Mathf.Clamp01(previewBandFraction);
+                var anchorViewportY = 1f - band * 0.5f;
                 var anchor = camera.ViewportToWorldPoint(
-                    new Vector3(config.AnchorViewportX, config.AnchorViewportY, config.CameraDistance));
+                    new Vector3(config.AnchorViewportX, anchorViewportY, config.CameraDistance));
                 anchor.z = config.ZPlane;
                 t.position = anchor;
+
+                // Auto-fit into the band: config.Scale is the CEILING, never exceeded. Shrink so the figure
+                // bbox (with padding) lies fully inside the band's world extents; clamp to MinScale.
+                var orthoSize = camera.orthographicSize;
+                var aspect = camera.aspect <= 0f ? 1f : camera.aspect;
+                var bandWorldH = band * 2f * orthoSize;
+                var bandWorldW = 2f * orthoSize * aspect;
+                const float pad = 0.85f; // keep the card off the band edges
+                var fit = Mathf.Min(
+                    bandWorldW * pad / Mathf.Max(figureSize.x, 1e-3f),
+                    bandWorldH * pad / Mathf.Max(figureSize.y, 1e-3f));
+                var scale = Mathf.Clamp(Mathf.Min(config.Scale, fit), config.MinScale, config.Scale);
+                t.localScale = Vector3.one * scale;
             }
             else
             {
+                // Bringup fallback (no Camera.main): keep legacy behaviour so the preview never crashes.
                 t.position = new Vector3(0f, 0f, config.ZPlane);
+                t.localScale = Vector3.one * config.Scale;
             }
-            t.localScale = Vector3.one * config.Scale;
 
             foreach (var slot in target.Slots)
             {
@@ -74,8 +94,11 @@ namespace Gameplay.View
             }
         }
 
-        /// <summary>Centre of the figure's bounding box, preferring the union outline; falls back to slots.</summary>
-        private static Vector2 ComputeCenter(TargetFigure target)
+        /// <summary>
+        /// Centre AND size of the figure's bounding box, preferring the union outline; falls back to slots
+        /// (TASK-033: the size feeds the band auto-fit). Size is zero when the target has no geometry.
+        /// </summary>
+        private static void ComputeExtent(TargetFigure target, out Vector2 center, out Vector2 size)
         {
             var minX = float.MaxValue;
             var minY = float.MaxValue;
@@ -107,7 +130,16 @@ namespace Gameplay.View
                 any = target.Slots.Count > 0;
             }
 
-            return any ? new Vector2((minX + maxX) * 0.5f, (minY + maxY) * 0.5f) : Vector2.zero;
+            if (any)
+            {
+                center = new Vector2((minX + maxX) * 0.5f, (minY + maxY) * 0.5f);
+                size = new Vector2(maxX - minX, maxY - minY);
+            }
+            else
+            {
+                center = Vector2.zero;
+                size = Vector2.zero;
+            }
         }
     }
 }
