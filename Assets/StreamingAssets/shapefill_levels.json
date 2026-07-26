@@ -433,7 +433,7 @@
         { "kind": "base", "startPosition": { "x": 2.5, "y": 1.0 }, "startRotation": 0 },
         { "kind": "tower", "startPosition": { "x": 2.5, "y": 2.7 }, "startRotation": 0 },
         { "kind": "lamp", "startPosition": { "x": -2.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "hammer", "startPosition": { "x": 0.25, "y": 8.0 }, "startRotation": 0 },
+        { "kind": "hammer", "startPosition": { "x": 0.25, "y": 8.5 }, "startRotation": 0 },
         { "kind": "stick", "startPosition": { "x": -1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
