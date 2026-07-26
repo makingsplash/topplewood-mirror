@@ -25,6 +25,11 @@ namespace Gameplay.Core.Mechanic
         private readonly Dictionary<int, IPieceView> _viewByInstance = new();
         private readonly Dictionary<int, PieceType> _typeByInstance = new();
         private readonly List<PlacedPiece> _placedScratch = new();
+        // TASK-042 gate-v4: per-rest scratch for BalanceSnapLoads' two-pass commit — the settled loads that WOULD
+        // crisp (with the slot each reserved) and a hypothetical Placed set (loads moved to their slot poses) the win
+        // pre-check evaluates before committing the glides. Transient, cleared on each use, never persisted.
+        private readonly List<SnapCandidate> _snapCandidates = new();
+        private readonly List<PlacedPiece> _snapProbeScratch = new();
         // Slots already claimed by a Placed piece this session — one slot, one piece (mirrors the evaluator's
         // greedy assignment) so the snap assist never sends two pieces to the same slot (RFC 07 §2.2).
         private readonly HashSet<int> _occupiedSlots = new();
@@ -49,6 +54,12 @@ namespace Gameplay.Core.Mechanic
         // the owner's requested proof that the freeze path is covered; 0 in canon (a canon piece always rests on a
         // static/Placed piece by the time it stops). Reset per level in ClearRuntime.
         private int _freezeRejectsBySupport;
+        // TASK-042 gate-v4 (owner 2026-07-26 21:13): how many times BalanceSnapLoads declined to crisp the loads
+        // this run because snapping them would NOT solve the figure (a losing single-tap order — a tilted beam or a
+        // load in the pit leaves a slot unfilled). Non-zero in the owner's 125 losing grand_seesaw orders is the proof
+        // the load-snap is now a WIN-only finalization; 0 on a canonical pair-release (which always solves). Reset in
+        // ClearRuntime.
+        private int _balanceSnapSkips;
         // Pieces gliding from their capture pose onto the slot (soft-settle, game-balancer 13 + human 11:36),
         // keyed by InstanceId. While this is non-empty the rest verdict is deferred so the figure is never
         // judged mid-glide (§6.4).
@@ -114,6 +125,22 @@ namespace Gameplay.Core.Mechanic
             public float TargetRot;
             public int Step;
             public int TotalSteps;
+        }
+
+        /// <summary>A settled balance load and the slot it would crisp onto, gathered by <see cref="BalanceSnapLoads"/>
+        /// (TASK-042 gate-v4) before it decides whether crisping the whole set would solve the figure.</summary>
+        private readonly struct SnapCandidate
+        {
+            public readonly PieceInstance Piece;
+            public readonly int BodyId;
+            public readonly int Slot;
+
+            public SnapCandidate(PieceInstance piece, int bodyId, int slot)
+            {
+                Piece = piece;
+                BodyId = bodyId;
+                Slot = slot;
+            }
         }
 
         public ShapeFillMechanicController(
@@ -641,6 +668,13 @@ namespace Gameplay.Core.Mechanic
         /// off-slot ⇒ FindSnapSlot misses them ⇒ the figure stays incomplete ⇒ correctly no win. This closes the gap
         /// that free physics alone cannot: a pan resting ON the beam is never inside posTol of its authored slot.
         ///
+        /// TASK-042 gate-v4 (owner 2026-07-26 21:13): the crisp is committed ONLY when it finalizes a SOLVED figure.
+        /// Gather every load that would snap first, then commit the glides only if that tentative set fills all slots
+        /// (WouldSnapSolve) and no piece is Lost; otherwise release the reservations and snap nothing. A losing order
+        /// (a tilted beam parks a cap off-slot, a load lands in the pit) then leaves the loads at their physical rest
+        /// poses instead of pulling one into its level-beam slot in mid-air (the owner's residual unsup=1). Canon
+        /// wins were already valid snaps, so committing them is byte-for-byte unchanged.
+        ///
         /// The pivot beam is deliberately NOT snapped — its match is judged from the free hinge rest pose, because
         /// the crank angle IS the balance mechanic (a beam that settled tilted must fail on angle).
         ///
@@ -654,8 +688,12 @@ namespace Gameplay.Core.Mechanic
         /// returns early on a non-empty _settling, mirroring the Tick settle gate), so the figure is never judged
         /// mid-glide. The glide is a fixed step count (SettleDurationSeconds) → determinism intact, residual ≈ 0.
         /// </summary>
-        private void BalanceSnapLoads()
+        private void BalanceSnapLoads(bool anyLost)
         {
+            // Pass 1 — gather the loads that WOULD crisp, reserving each one's slot exactly as the original per-piece
+            // loop did (ClaimSlot updates _occupiedSlots + _slotByInstance, so a later same-Kind load's baseline
+            // lookups see the earlier claim — the admissibility state evolves identically). No pose is moved yet.
+            _snapCandidates.Clear();
             foreach (var piece in _model.Pieces)
             {
                 if (piece.State != PieceLifecycle.Placed)
@@ -677,8 +715,81 @@ namespace Gameplay.Core.Mechanic
                 if (slot < 0)
                     continue;
 
-                BeginSettle(piece, bodyId, slot); // claims the slot + starts the eased glide (§7)
+                ClaimSlot(piece, slot); // reserve so a later same-Kind load can't pick the same slot (as before)
+                _snapCandidates.Add(new SnapCandidate(piece, bodyId, slot));
             }
+
+            if (_snapCandidates.Count == 0)
+                return;
+
+            // TASK-042 gate-v4 (owner 2026-07-26 21:13): the load crisp is the FINALIZATION of a solved silhouette,
+            // not an unconditional pull. Commit the glides only when snapping every gathered load would SOLVE the
+            // figure (all slots filled, none Lost). On a losing single-tap order the tentative snap leaves a slot
+            // unfilled — a tilted beam parks a cap off-slot, a launched load lands in the pit — so we release the
+            // claims and snap NOTHING: the loads stay at their physical rest poses and ResolveAtRest scores Lost from
+            // the real geometry (owner: a left cap was pulled into its level-beam slot ~0.2 above the tilted beam on a
+            // Lost order → unsup=1). On a canonical pair-release every load already rests at its slot on a level beam,
+            // so the tentative set solves → the exact same glides commit → poseHash stays byte-for-byte identical.
+            if (anyLost || !WouldSnapSolve())
+            {
+                foreach (var c in _snapCandidates)
+                    ReleaseClaim(c.Piece, c.Slot);
+                _balanceSnapSkips++;
+                return;
+            }
+
+            // Pass 2 — commit: begin the eased glide for each gathered load (BeginSettle re-claims idempotently).
+            foreach (var c in _snapCandidates)
+                BeginSettle(c.Piece, c.BodyId, c.Slot);
+        }
+
+        /// <summary>TASK-042 gate-v4 win pre-check: would crisping the gathered <see cref="_snapCandidates"/> onto
+        /// their slots solve the figure? Builds the hypothetical Placed set — each candidate load at its exact slot
+        /// pose (posErr/angErr ≈ 0 → matches), every other Placed piece (the free beam) at its physical rest pose —
+        /// and asks the same evaluator ResolveAtRest uses. This is exactly the post-glide field the verdict will see,
+        /// so a true result means the commit wins and a false result means it would leave the figure incomplete (a
+        /// losing order). Pure — mutates no controller state.</summary>
+        private bool WouldSnapSolve()
+        {
+            _snapProbeScratch.Clear();
+            foreach (var piece in _model.Pieces)
+            {
+                if (piece.State != PieceLifecycle.Placed)
+                    continue;
+                var type = _typeByInstance[piece.InstanceId];
+                if (TryCandidateSlotPose(piece.InstanceId, out var pos, out var rot))
+                    _snapProbeScratch.Add(new PlacedPiece(piece.Kind, pos, rot, type.SymmetryOrder));
+                else
+                    _snapProbeScratch.Add(new PlacedPiece(piece.Kind, piece.Position, piece.Rotation, type.SymmetryOrder));
+            }
+            return _match.Evaluate(_level.Target, _snapProbeScratch, _level.MatchTolerance).AllSlotsFilled;
+        }
+
+        /// <summary>The exact slot pose a gathered candidate would crisp onto, or false when the piece is not a
+        /// candidate. Linear over the tiny candidate list.</summary>
+        private bool TryCandidateSlotPose(int instanceId, out Vec2 pos, out float rot)
+        {
+            foreach (var c in _snapCandidates)
+            {
+                if (c.Piece.InstanceId != instanceId)
+                    continue;
+                var slot = _level.Target.Slots[c.Slot];
+                pos = slot.Position;
+                rot = slot.Rotation;
+                return true;
+            }
+            pos = default;
+            rot = 0f;
+            return false;
+        }
+
+        /// <summary>Undo a pass-1 slot reservation when the crisp is not committed (a losing order). Every candidate
+        /// slot was unoccupied before pass 1 claimed it (FindSnapSlot skips occupied slots) and a balance load holds
+        /// no prior claim (PlaceDynamic never claims), so removing both entries restores the pre-call state exactly.</summary>
+        private void ReleaseClaim(PieceInstance piece, int slot)
+        {
+            _occupiedSlots.Remove(slot);
+            _slotByInstance.Remove(piece.InstanceId);
         }
 
         /// <summary>
@@ -1048,6 +1159,12 @@ namespace Gameplay.Core.Mechanic
         /// <see cref="ClearRuntime"/>.</summary>
         public int FreezeRejectsBySupport => _freezeRejectsBySupport;
 
+        /// <summary>Number of times BalanceSnapLoads declined to crisp the loads this run because snapping them would
+        /// not solve the figure (TASK-042 gate-v4). Non-zero across the owner's losing single-tap orders proves the
+        /// load crisp is now a win-only finalization; 0 on a canonical pair-release. Reset per level in
+        /// <see cref="ClearRuntime"/>.</summary>
+        public int BalanceSnapSkips => _balanceSnapSkips;
+
         /// <summary>
         /// Bake the authored-baseline overlap map (TASK-042): with each Kind's shape placed at its exact slot pose,
         /// the pairwise SAT penetration of every two slots. This is the overlap the DESIGN intends (0 for disjoint
@@ -1166,7 +1283,7 @@ namespace Gameplay.Core.Mechanic
                 }
                 else if (!anyIdle)
                 {
-                    BalanceSnapLoads();
+                    BalanceSnapLoads(anyLost); // gate-v4: crisp only if it solves the figure (else loads stay put)
                     // §7: the snap now begins a soft-settle glide instead of an instant teleport, so if any load
                     // started gliding, defer the verdict until it completes (Tick's settle gate keeps ResolveAtRest
                     // from being re-entered until _settling drains). Determinism is intact — the glide is fixed-step.
@@ -1330,6 +1447,7 @@ namespace Gameplay.Core.Mechanic
             _snapRejectsByOverlap = 0;
             _snapRejectsBySupport = 0;
             _freezeRejectsBySupport = 0;
+            _balanceSnapSkips = 0;
             _settling.Clear();
             _needsPhysicalSettle.Clear();
             _globalRestTimer = 0f;

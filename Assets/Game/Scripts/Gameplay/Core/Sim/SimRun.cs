@@ -188,7 +188,7 @@ namespace Gameplay.Core.Sim
                 _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses,
                 intersectingPairs, maxPenetration, unsupportedPlaced,
                 _mechanic.SnapRejectsByOverlap, _mechanic.SnapRejectsBySupport,
-                _mechanic.FreezeRejectsBySupport, worst);
+                _mechanic.FreezeRejectsBySupport, _mechanic.BalanceSnapSkips, worst);
         }
 
         /// <summary>

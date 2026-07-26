@@ -15,7 +15,7 @@ namespace Gameplay.Core.Sim
             "levelId,seed,policyId,orderKey,repeatIndex,solved,outcome,attemptsUsed,stepsToResolve," +
             "matchError,slotsFilled,slotsTotal,lostPieces,poseHash,preGlideAngResidual,preGlidePosErr," +
             "intersectingPairs,maxPenetration,unsupportedPlaced,snapRejectsByOverlap,snapRejectsBySupport," +
-            "freezeRejectsBySupport," +
+            "freezeRejectsBySupport,balanceSnapSkips," +
             "worstPairKindA,worstPairKindB,worstPairPenetration,worstPairBaseline,worstPairSlotA,worstPairSlotB";
 
         public static string BuildCsv(IReadOnlyList<SimRunResult> runs)
@@ -46,6 +46,7 @@ namespace Gameplay.Core.Sim
                     .Append(r.SnapRejectsByOverlap).Append(',')
                     .Append(r.SnapRejectsBySupport).Append(',')
                     .Append(r.FreezeRejectsBySupport).Append(',')
+                    .Append(r.BalanceSnapSkips).Append(',')
                     .Append(r.WorstPair.KindA).Append(',')
                     .Append(r.WorstPair.KindB).Append(',')
                     .Append(F(r.WorstPair.Penetration)).Append(',')

@@ -59,6 +59,11 @@ namespace Gameplay.Core.Sim
         // freeze-at-rest attempts the controller's Place support-guard rejected this run. Non-zero in a wrong order is
         // the owner's proof the FREEZE path (not just the snap path) is support-gated; 0 on canon.
         public readonly int FreezeRejectsBySupport;
+        // TASK-042 gate-v4 (owner 2026-07-26 21:13): how many times the balance load-crisp declined to snap this run
+        // because snapping would not solve the figure. Non-zero across the owner's 125 losing single-tap grand_seesaw
+        // orders is the proof the crisp is now a win-only finalization (loads stay at physical rest ⇒ unsupported=0);
+        // 0 on a canonical pair-release (which always solves).
+        public readonly int BalanceSnapSkips;
         // TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.2 — "НЕ ГАДАЙ: добавь per-run детали худшей пары"): the pair of
         // Placed pieces driving MaxPenetration this run — kinds, raw SAT penetration, the authored baseline applied to
         // them, and both claimed slot indices. On a CANON run flagged by the detector this row answers WHY without a
@@ -74,7 +79,7 @@ namespace Gameplay.Core.Sim
             IReadOnlyList<SimPiecePose> preGlidePoses,
             int intersectingPairs, float maxPenetration, int unsupportedPlaced,
             int snapRejectsByOverlap, int snapRejectsBySupport, int freezeRejectsBySupport,
-            WorstOverlapPair worstPair)
+            int balanceSnapSkips, WorstOverlapPair worstPair)
         {
             LevelId = levelId;
             Seed = seed;
@@ -100,6 +105,7 @@ namespace Gameplay.Core.Sim
             SnapRejectsByOverlap = snapRejectsByOverlap;
             SnapRejectsBySupport = snapRejectsBySupport;
             FreezeRejectsBySupport = freezeRejectsBySupport;
+            BalanceSnapSkips = balanceSnapSkips;
             WorstPair = worstPair;
         }
     }
