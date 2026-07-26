@@ -55,6 +55,10 @@ namespace Gameplay.Core.Sim
         // a CANONICAL run is the diagnostic that pins WHICH clamp mis-fired on which level (e.g. owl's ear).
         public readonly int SnapRejectsByOverlap;
         public readonly int SnapRejectsBySupport;
+        // TASK-042 gate-v3 (owner 2026-07-26 20:55, pt.1): freeze-path counterpart of SnapRejectsBySupport — how many
+        // freeze-at-rest attempts the controller's Place support-guard rejected this run. Non-zero in a wrong order is
+        // the owner's proof the FREEZE path (not just the snap path) is support-gated; 0 on canon.
+        public readonly int FreezeRejectsBySupport;
         // TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.2 — "НЕ ГАДАЙ: добавь per-run детали худшей пары"): the pair of
         // Placed pieces driving MaxPenetration this run — kinds, raw SAT penetration, the authored baseline applied to
         // them, and both claimed slot indices. On a CANON run flagged by the detector this row answers WHY without a
@@ -69,7 +73,8 @@ namespace Gameplay.Core.Sim
             float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses,
             IReadOnlyList<SimPiecePose> preGlidePoses,
             int intersectingPairs, float maxPenetration, int unsupportedPlaced,
-            int snapRejectsByOverlap, int snapRejectsBySupport, WorstOverlapPair worstPair)
+            int snapRejectsByOverlap, int snapRejectsBySupport, int freezeRejectsBySupport,
+            WorstOverlapPair worstPair)
         {
             LevelId = levelId;
             Seed = seed;
@@ -94,6 +99,7 @@ namespace Gameplay.Core.Sim
             UnsupportedPlaced = unsupportedPlaced;
             SnapRejectsByOverlap = snapRejectsByOverlap;
             SnapRejectsBySupport = snapRejectsBySupport;
+            FreezeRejectsBySupport = freezeRejectsBySupport;
             WorstPair = worstPair;
         }
     }

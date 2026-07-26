@@ -43,6 +43,12 @@ namespace Gameplay.Core.Mechanic
         // (a design overlap the baseline under-counts, vs. a slot the bot could not support). Read by the sim.
         private int _snapRejectsByOverlap;
         private int _snapRejectsBySupport;
+        // TASK-042 gate-v3 (owner 2026-07-26 20:55, pt.1): how many freeze-at-rest attempts the Place support-guard
+        // rejected this run — the freeze-path counterpart of _snapRejectsBySupport (which covers the in-fall/settle
+        // path). Together they prove BOTH assembly paths into Placed are support-gated. Non-zero in a wrong order is
+        // the owner's requested proof that the freeze path is covered; 0 in canon (a canon piece always rests on a
+        // static/Placed piece by the time it stops). Reset per level in ClearRuntime.
+        private int _freezeRejectsBySupport;
         // Pieces gliding from their capture pose onto the slot (soft-settle, game-balancer 13 + human 11:36),
         // keyed by InstanceId. While this is non-empty the rest verdict is deferred so the figure is never
         // judged mid-glide (§6.4).
@@ -578,8 +584,16 @@ namespace Gameplay.Core.Mechanic
             // un-winnable order) rather than cementing a floating pose. In canon a piece always rests on a
             // static/Placed piece by the time it stops (releases resolve bottom-up), so this passes → assembly stays
             // byte-for-byte. Balance mode returned early above (PlaceDynamic), so this only gates the assembly freeze.
+            //
+            // gate-v3 (owner 2026-07-26 20:55): count the rejection. IsPoseSupported now shares its probe with the sim
+            // detector (SnapSupportProbeDistance — see SimRun.ComputeHonestyMetrics), so a pose this guard accepts as
+            // "landed" is grounded in the detector too, and any pose it rejects here stays Dynamic instead of freezing
+            // in air. The count is the owner's proof the freeze path is covered.
             if (!IsPoseSupported(restVerts))
+            {
+                _freezeRejectsBySupport++;
                 return;
+            }
 
             // Physical-settle piece (TASK-024 → TASK-030 variant B, owner playtest 2026-07-25): it skipped the
             // in-fall snap and has now come to physical rest after contact torque righted its authored tilt. FREEZE
@@ -1028,6 +1042,12 @@ namespace Gameplay.Core.Mechanic
         /// reach with support in place. Reset per level in <see cref="ClearRuntime"/>.</summary>
         public int SnapRejectsBySupport => _snapRejectsBySupport;
 
+        /// <summary>Number of freeze-at-rest attempts the Place support-guard rejected this run (TASK-042 gate-v3).
+        /// The freeze-path counterpart of <see cref="SnapRejectsBySupport"/>: non-zero in a wrong order proves the
+        /// freeze path is support-gated (owner's coverage proof); 0 on a canonical run. Reset per level in
+        /// <see cref="ClearRuntime"/>.</summary>
+        public int FreezeRejectsBySupport => _freezeRejectsBySupport;
+
         /// <summary>
         /// Bake the authored-baseline overlap map (TASK-042): with each Kind's shape placed at its exact slot pose,
         /// the pairwise SAT penetration of every two slots. This is the overlap the DESIGN intends (0 for disjoint
@@ -1309,6 +1329,7 @@ namespace Gameplay.Core.Mechanic
             _slotByInstance.Clear();
             _snapRejectsByOverlap = 0;
             _snapRejectsBySupport = 0;
+            _freezeRejectsBySupport = 0;
             _settling.Clear();
             _needsPhysicalSettle.Clear();
             _globalRestTimer = 0f;

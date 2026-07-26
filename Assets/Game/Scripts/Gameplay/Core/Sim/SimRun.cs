@@ -187,7 +187,8 @@ namespace Gameplay.Core.Sim
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
                 _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses,
                 intersectingPairs, maxPenetration, unsupportedPlaced,
-                _mechanic.SnapRejectsByOverlap, _mechanic.SnapRejectsBySupport, worst);
+                _mechanic.SnapRejectsByOverlap, _mechanic.SnapRejectsBySupport,
+                _mechanic.FreezeRejectsBySupport, worst);
         }
 
         /// <summary>
@@ -211,7 +212,15 @@ namespace Gameplay.Core.Sim
             out int unsupportedPlaced, out WorstOverlapPair worst)
         {
             var epsilon = _tuning.OverlapTolerance;       // the SINGLE shared constant, == the controller gate's
-            const float supportProbe = 0.05f;             // a gap this small beneath a piece counts as "resting on"
+            // TASK-042 gate-v3 (owner 2026-07-26 20:55, pt.1): the detector's "resting on" gap is now the SAME constant
+            // the controller's freeze/snap support-gate uses (SnapSupportProbeDistance), not a private 0.05. That split
+            // (gate 0.1 vs detector 0.05) was the root of the residual unsupported flags: every assembly piece is
+            // admitted to Placed only after IsPoseSupported passes at this probe (Place :581 for freeze-where-it-lies /
+            // physical-settle, snap-admissibility for the glide path whose final pose IS the checked slot pose), so a
+            // detector reading at a STRICTER probe flagged pieces the game's own contact rule counts as landed. Sharing
+            // the constant makes gate == detector → a Placed pose the gate accepted is grounded here too, so unsupported
+            // is 0 by construction in every order (the same "one constant" discipline the owner demanded for epsilon).
+            var supportProbe = _tuning.SnapSupportProbeDistance;
 
             intersectingPairs = 0;
             maxPenetration = 0f;

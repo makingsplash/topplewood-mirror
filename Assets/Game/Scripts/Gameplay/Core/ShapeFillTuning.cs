@@ -67,10 +67,14 @@ namespace Gameplay.Core
         /// <summary>The single interpenetration epsilon (world units) shared by BOTH the controller honesty gate AND
         /// the sim honesty detector, so the gate and the proof always agree (owner: "порог guard и порог детектора
         /// должны быть ОДНОЙ константой"). A pose is dishonest only when its convex penetration exceeds the pair's
-        /// authored baseline overlap by MORE than this — above the Box2D rest slop (~0.005) so a clean canonical
-        /// contact is never flagged, far below a gross wrong-order overlap (candles through the plate ≈0.25).
-        /// ⟨qa/balancer⟩ to re-bless once the owner's full sweep pins the residual slop above baseline.</summary>
-        public float OverlapTolerance { get; set; } = 0.01f;
+        /// authored baseline overlap by MORE than this. Raised 0.01→0.05 after the owner's gate-v3 sweep
+        /// (2026-07-26 20:55): the worst-pair diagnostic pinned every CANON flag at baseline≈0, pen 0.023–0.033 —
+        /// honest Box2D rest slip under load of pieces frozen in their PHYSICAL rest pose (variant B), NOT a
+        /// cross-mapping. 0.05 clears the measured canon slop (max giraffe/excavator 0.0326) with margin, while a
+        /// gross wrong-order overlap (candles through the plate ≈0.25, any real user float ≥0.1) still trips both the
+        /// gate and the detector. The freeze-overlap-guard reads the SAME 0.05, so it never rejects that honest canon
+        /// slip (owner's regress caveat). ⟨qa/balancer⟩ to re-bless once a wider sweep re-pins the slop ceiling.</summary>
+        public float OverlapTolerance { get; set; } = 0.05f;
 
         /// <summary>Linear damping applied on Release — light, does not stall the drop.</summary>
         public float ReleaseLinearDrag { get; set; } = 0.5f;
