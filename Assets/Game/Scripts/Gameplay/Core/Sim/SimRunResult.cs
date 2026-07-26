@@ -40,12 +40,22 @@ namespace Gameplay.Core.Sim
         // per piece and precompensate the tilted-piece start so physics itself lands the slot. JSON-only (an array,
         // omitted from the CSV row like FinalPoses). Empty on runs with no physical-settle pieces. Sim-only.
         public readonly IReadOnlyList<SimPiecePose> PreGlidePoses;
+        // TASK-042 honesty detector: physical-fidelity checks over the FINAL settled poses, the proof the owner's bug
+        // (interpenetration + freeze-in-air) is gone in EVERY release order. IntersectingPairs = count of Placed piece
+        // pairs whose SAT penetration exceeds 0.01 world units (touching/epsilon is not an intersection). MaxPenetration
+        // = the worst such depth (0 ⇒ clean). UnsupportedPlaced = count of Placed pieces with nothing (floor or a lower
+        // Placed piece) within a small gap beneath them — i.e. frozen on an "invisible support". Pass criterion (any
+        // order): all three are 0. Sim-only measurement; the controller's honesty gate is what enforces it.
+        public readonly int IntersectingPairs;
+        public readonly float MaxPenetration;
+        public readonly int UnsupportedPlaced;
 
         public SimRunResult(string levelId, int seed, string policyId, string orderKey, int repeatIndex,
             bool solved, string outcome, int attemptsUsed, int stepsToResolve, float matchError,
             int slotsFilled, int slotsTotal, int lostPieces, long poseHash,
             float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses,
-            IReadOnlyList<SimPiecePose> preGlidePoses)
+            IReadOnlyList<SimPiecePose> preGlidePoses,
+            int intersectingPairs, float maxPenetration, int unsupportedPlaced)
         {
             LevelId = levelId;
             Seed = seed;
@@ -65,6 +75,9 @@ namespace Gameplay.Core.Sim
             PreGlidePosErr = preGlidePosErr;
             FinalPoses = finalPoses;
             PreGlidePoses = preGlidePoses;
+            IntersectingPairs = intersectingPairs;
+            MaxPenetration = maxPenetration;
+            UnsupportedPlaced = unsupportedPlaced;
         }
     }
 

@@ -529,6 +529,15 @@ namespace Gameplay.Core.Mechanic
                 return;
             }
 
+            // TASK-042 honesty guard: never CEMENT a rest pose that interpenetrates an already-frozen piece (a
+            // tunnelling / momentary-jam artifact — the owner's "взаимопроникновение"). Leave the piece Dynamic so
+            // contacts push it out; if it can never settle clean the order just times out (an honest un-winnable
+            // wrong order), it never freezes an intersecting pose. A clean canonical rest (touching contacts ≤ slop)
+            // never overlaps beyond OverlapTolerance, so this passes untouched → assembly is byte-for-byte the same.
+            var restVerts = Geometry.WorldVertices(_typeByInstance[piece.InstanceId].Shape, pose.Position, pose.Rotation);
+            if (OverlapsAnyPlaced(restVerts, piece.InstanceId, _tuning.OverlapTolerance))
+                return;
+
             // Physical-settle piece (TASK-024 → TASK-030 variant B, owner playtest 2026-07-25): it skipped the
             // in-fall snap and has now come to physical rest after contact torque righted its authored tilt. FREEZE
             // IT EXACTLY WHERE PHYSICS LEFT IT — no pose or angle correction, neither instant nor glided. The old
@@ -772,6 +781,12 @@ namespace Gameplay.Core.Mechanic
                 if (angErr > _tuning.SnapCaptureAngle)
                     continue;
 
+                // TASK-042 honesty gate: reject a slot whose exact pose would lift the piece off its support or
+                // drive it through an already-placed piece (see IsSnapPoseAdmissible). In a correct order the
+                // silhouette slots are non-overlapping + supported so this always passes (assembly unchanged).
+                if (!IsSnapPoseAdmissible(piece, slot, pose))
+                    continue;
+
                 if (posErr < bestPosErr)
                 {
                     bestPosErr = posErr;
@@ -780,6 +795,43 @@ namespace Gameplay.Core.Mechanic
             }
 
             return best;
+        }
+
+        /// <summary>
+        /// TASK-042 honesty gate for a candidate snap. The snap crisps a piece onto <paramref name="slot"/>'s exact
+        /// pose, so that pose must be physically admissible from the piece's current rest: it must not LIFT the piece
+        /// off its support onto an invisible platform (owner: "детали замирают в воздухе"), and it must not drive the
+        /// piece THROUGH an already-placed piece (owner: candles interpenetrating the plate). In a correct order the
+        /// slot poses are the non-overlapping, supported silhouette, so this always passes → assembly is unchanged.
+        /// </summary>
+        private bool IsSnapPoseAdmissible(PieceInstance piece, TargetSlot slot, BodyPose current)
+        {
+            // No upward magnet: the snap may only settle a piece DOWN/laterally onto its real support, never hoist it.
+            if (slot.Position.Y - current.Position.Y > _tuning.SnapMaxLift)
+                return false;
+
+            // No interpenetration: the piece at the slot pose must not overlap an already-placed piece beyond slop.
+            var verts = Geometry.WorldVertices(_typeByInstance[piece.InstanceId].Shape, slot.Position, slot.Rotation);
+            return !OverlapsAnyPlaced(verts, piece.InstanceId, _tuning.OverlapTolerance);
+        }
+
+        /// <summary>True when <paramref name="verts"/> penetrates any Placed piece (other than
+        /// <paramref name="selfId"/>) by more than <paramref name="tol"/> — the settled/gliding figure the
+        /// interpenetration invariant is measured against (TASK-042). Idle (collider off) and Falling (still moving)
+        /// pieces are not part of the settled figure and are excluded.</summary>
+        private bool OverlapsAnyPlaced(Vec2[] verts, int selfId, float tol)
+        {
+            foreach (var other in _model.Pieces)
+            {
+                if (other.InstanceId == selfId || other.State != PieceLifecycle.Placed)
+                    continue;
+                if (!_typeByInstance.TryGetValue(other.InstanceId, out var otherType))
+                    continue;
+                var otherVerts = Geometry.WorldVertices(otherType.Shape, other.Position, other.Rotation);
+                if (Geometry.ConvexPenetration(verts, otherVerts) > tol)
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>

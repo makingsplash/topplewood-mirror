@@ -176,10 +176,107 @@ namespace Gameplay.Core.Sim
             var solved = _outcome == GameOutcome.Won;
             var outcome = _outcome == GameOutcome.None ? "Timeout" : _outcome.ToString();
 
+            ComputeHonestyMetrics(out var intersectingPairs, out var maxPenetration, out var unsupportedPlaced);
+
             return new SimRunResult(_level.LevelId, _level.Seed, policyId, orderKey, repeatIndex,
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
-                _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses);
+                _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses,
+                intersectingPairs, maxPenetration, unsupportedPlaced);
+        }
+
+        /// <summary>
+        /// TASK-042 honesty detector — the owner's proof that physics stays honest in EVERY release order. Over the
+        /// FINAL settled (Placed) poses it measures: (a) interpenetration — pairs of pieces whose convex SAT
+        /// penetration exceeds <c>OverlapEpsilon</c> (touching ≤ ε is fine), plus the worst depth; and (b)
+        /// freeze-in-air — Placed pieces with nothing (floor static or a LOWER Placed piece) within
+        /// <c>SupportProbe</c> beneath them, i.e. resting on an invisible support. A clean order reports 0/0/0.
+        /// Convex-only SAT (all pieces + the rectangular floor/cradle statics are convex); a piece resting on a
+        /// concave static would be under-counted as unsupported — conservative for a diagnostic, and no shipped
+        /// level authors a concave floor. Sim-only; the production path never runs this.
+        /// </summary>
+        private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration, out int unsupportedPlaced)
+        {
+            const float overlapEpsilon = 0.01f; // brief: touching / epsilon ≤ 0.01 is NOT an intersection
+            const float supportProbe = 0.05f;    // a gap this small beneath a piece counts as "resting on"
+
+            intersectingPairs = 0;
+            maxPenetration = 0f;
+            unsupportedPlaced = 0;
+
+            var polys = new List<Vec2[]>();
+            var centroidY = new List<float>();
+            foreach (var piece in _model.Pieces)
+            {
+                if (piece.State != PieceLifecycle.Placed)
+                    continue;
+                var verts = Geometry.WorldVertices(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation);
+                polys.Add(verts);
+                centroidY.Add(CentroidY(verts));
+            }
+
+            for (var i = 0; i < polys.Count; i++)
+            {
+                for (var j = i + 1; j < polys.Count; j++)
+                {
+                    var pen = Geometry.ConvexPenetration(polys[i], polys[j]);
+                    if (pen > maxPenetration)
+                        maxPenetration = pen;
+                    if (pen > overlapEpsilon)
+                        intersectingPairs++;
+                }
+            }
+
+            var statics = _level.StaticGeometry;
+            for (var i = 0; i < polys.Count; i++)
+            {
+                var lowered = ShiftDown(polys[i], supportProbe);
+                if (SupportedByStatic(lowered, statics) || SupportedByLowerPlaced(lowered, polys, centroidY, i))
+                    continue;
+                unsupportedPlaced++;
+            }
+        }
+
+        private static bool SupportedByStatic(Vec2[] lowered, Polygon[] statics)
+        {
+            if (statics == null)
+                return false;
+            foreach (var s in statics)
+            {
+                if (s?.Outline == null || s.Outline.Length < 3)
+                    continue;
+                if (Geometry.ConvexPenetration(lowered, s.Outline) > 0f)
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool SupportedByLowerPlaced(Vec2[] lowered, List<Vec2[]> polys, List<float> centroidY, int self)
+        {
+            for (var k = 0; k < polys.Count; k++)
+            {
+                if (k == self || centroidY[k] >= centroidY[self])
+                    continue; // only a piece whose centroid is below can be a support
+                if (Geometry.ConvexPenetration(lowered, polys[k]) > 0f)
+                    return true;
+            }
+            return false;
+        }
+
+        private static float CentroidY(Vec2[] verts)
+        {
+            var sum = 0f;
+            foreach (var v in verts)
+                sum += v.Y;
+            return sum / verts.Length;
+        }
+
+        private static Vec2[] ShiftDown(Vec2[] verts, float d)
+        {
+            var r = new Vec2[verts.Length];
+            for (var i = 0; i < verts.Length; i++)
+                r[i] = new Vec2(verts[i].X, verts[i].Y - d);
+            return r;
         }
 
         public void Dispose()

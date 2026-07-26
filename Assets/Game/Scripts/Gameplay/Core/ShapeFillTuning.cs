@@ -52,6 +52,25 @@ namespace Gameplay.Core
         /// on the contact frame; QA/balancer to re-bless.</summary>
         public float SnapSupportProbeDistance { get; set; } = 0.1f;
 
+        // ── Honesty gate (TASK-042). The snap assist crisps a piece onto its authored slot pose; in a WRONG release
+        //    order that ideal pose can cut THROUGH an already-placed piece (candles snapped down into the plate) or
+        //    hang ABOVE the piece's real support (snapped up onto an invisible platform). These two clamps keep the
+        //    snap — and the freeze-where-it-lies path — physically admissible so the settled figure never
+        //    interpenetrates or floats. In a CORRECT order the target poses are the (non-overlapping, supported)
+        //    silhouette, so both clamps always pass → the assembly path is byte-for-byte unchanged. ──
+
+        /// <summary>Max penetration (world units) tolerated between a snap-target / rest pose and an already-Placed
+        /// piece before the pose is rejected as interpenetration. Above the Box2D rest slop (~0.005) so a clean
+        /// canonical stack (touching contacts) is never rejected, yet far below a gross wrong-order overlap
+        /// (candles through the plate ≈0.25). ⟨qa/balancer⟩ to re-bless.</summary>
+        public float OverlapTolerance { get; set; } = 0.02f;
+
+        /// <summary>Max upward distance (world units) the snap assist may lift a piece onto its slot. A canonical
+        /// piece lands at/above its slot and snaps DOWN/laterally onto real support (lift ≤ 0), so this stays tiny;
+        /// it blocks the wrong-order case where the snap would MAGNETISE a piece UP off its support into the slot,
+        /// leaving it hanging on an invisible support (owner bug 2026-07-26). ⟨qa/balancer⟩ to re-bless.</summary>
+        public float SnapMaxLift { get; set; } = 0.05f;
+
         /// <summary>Linear damping applied on Release — light, does not stall the drop.</summary>
         public float ReleaseLinearDrag { get; set; } = 0.5f;
 
