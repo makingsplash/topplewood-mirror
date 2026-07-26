@@ -49,13 +49,20 @@ namespace Gameplay.Core.Sim
         public readonly int IntersectingPairs;
         public readonly float MaxPenetration;
         public readonly int UnsupportedPlaced;
+        // TASK-042 reason-counters (owner: "добавь reason-счётчики в сим, не гадай"): how many snap candidates the
+        // controller honesty gate rejected this run, split by cause — a slot pose overlapping a placed piece beyond
+        // the authored baseline (ByOverlap) vs. one with no static/placed support beneath it (BySupport). Non-zero on
+        // a CANONICAL run is the diagnostic that pins WHICH clamp mis-fired on which level (e.g. owl's ear).
+        public readonly int SnapRejectsByOverlap;
+        public readonly int SnapRejectsBySupport;
 
         public SimRunResult(string levelId, int seed, string policyId, string orderKey, int repeatIndex,
             bool solved, string outcome, int attemptsUsed, int stepsToResolve, float matchError,
             int slotsFilled, int slotsTotal, int lostPieces, long poseHash,
             float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses,
             IReadOnlyList<SimPiecePose> preGlidePoses,
-            int intersectingPairs, float maxPenetration, int unsupportedPlaced)
+            int intersectingPairs, float maxPenetration, int unsupportedPlaced,
+            int snapRejectsByOverlap, int snapRejectsBySupport)
         {
             LevelId = levelId;
             Seed = seed;
@@ -78,6 +85,8 @@ namespace Gameplay.Core.Sim
             IntersectingPairs = intersectingPairs;
             MaxPenetration = maxPenetration;
             UnsupportedPlaced = unsupportedPlaced;
+            SnapRejectsByOverlap = snapRejectsByOverlap;
+            SnapRejectsBySupport = snapRejectsBySupport;
         }
     }
 

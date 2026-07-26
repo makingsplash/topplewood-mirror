@@ -24,6 +24,9 @@ namespace Gameplay.Core.Sim
         private readonly ShapeFillMechanicController _mechanic;
         private readonly PoseMatchEvaluator _match;
         private readonly LevelData _level;
+        // Shared with the controller so the honesty detector's interpenetration epsilon is the SAME constant as the
+        // gate's (owner: "порог guard и порог детектора должны быть ОДНОЙ константой", TASK-042).
+        private readonly ShapeFillTuning _tuning;
         private readonly IDisposable _outcomeSub;
         // Reused per Step so the driver allocates nothing while pushing a release group (TASK-023 §5.4).
         private readonly List<Vec2> _tapScratch = new();
@@ -50,14 +53,14 @@ namespace Gameplay.Core.Sim
             _level = level;
             _policy = policy;
 
-            var tuning = new ShapeFillTuning();
+            _tuning = new ShapeFillTuning();
             _model = new GameModel();
             _match = new PoseMatchEvaluator();
-            _clock = new GameplayClock(tuning.FixedStep);
+            _clock = new GameplayClock(_tuning.FixedStep);
             _input = new SimBotInputSource();
 
             _mechanic = new ShapeFillMechanicController(
-                _model, simulation, _match, new LevelDataValidator(), new NullPieceViewFactory(), tuning);
+                _model, simulation, _match, new LevelDataValidator(), new NullPieceViewFactory(), _tuning);
             _controller = new GameController(
                 new FixedLevelSource(level), _model, _mechanic, simulation, _clock, _input);
 
@@ -182,59 +185,105 @@ namespace Gameplay.Core.Sim
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
                 _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses,
-                intersectingPairs, maxPenetration, unsupportedPlaced);
+                intersectingPairs, maxPenetration, unsupportedPlaced,
+                _mechanic.SnapRejectsByOverlap, _mechanic.SnapRejectsBySupport);
         }
 
         /// <summary>
-        /// TASK-042 honesty detector — the owner's proof that physics stays honest in EVERY release order. Over the
-        /// FINAL settled (Placed) poses it measures: (a) interpenetration — pairs of pieces whose convex SAT
-        /// penetration exceeds <c>OverlapEpsilon</c> (touching ≤ ε is fine), plus the worst depth; and (b)
-        /// freeze-in-air — Placed pieces with nothing (floor static or a LOWER Placed piece) within
-        /// <c>SupportProbe</c> beneath them, i.e. resting on an invisible support. A clean order reports 0/0/0.
-        /// Convex-only SAT (all pieces + the rectangular floor/cradle statics are convex); a piece resting on a
-        /// concave static would be under-counted as unsupported — conservative for a diagnostic, and no shipped
-        /// level authors a concave floor. Sim-only; the production path never runs this.
+        /// TASK-042 honesty detector (revised after the owner gate-FAIL 2026-07-26) — the owner's proof that physics
+        /// stays honest in EVERY release order. Over the FINAL settled (Placed) poses it measures:
+        /// (a) INTERPENETRATION — pairs of pieces whose convex SAT penetration exceeds their AUTHORED baseline
+        ///     overlap (the same per-pair design overlap the controller gate uses, via <c>OverlapAllowance</c>) by
+        ///     more than the shared <c>OverlapTolerance</c> epsilon. Measuring the OVERSHOOT above baseline — not raw
+        ///     penetration — is what stops authored micro-overlaps (owl's ear in the head, birthday_cake's touching
+        ///     tiers) from being false-flagged, and keeps guard-threshold == detector-threshold (owner's demand).
+        ///     <c>maxPenetration</c> is the worst such overshoot (0 ⇒ every contact is within design + slop).
+        /// (b) FREEZE-IN-AIR — Placed pieces not TRANSITIVELY grounded: a piece is grounded if, dropped by
+        ///     <c>SupportProbe</c>, it touches a static OR an already-grounded piece (iterated to a fixed point). This
+        ///     credits a load resting on a free beam that rests on a fulcrum-static (grand_seesaw), and lateral /
+        ///     tilted contact (church) — the v1 "centroid strictly below" rule wrongly flagged both. A mutually-
+        ///     touching pair with no path to a static never grounds, so a real float is still caught.
+        /// Convex-only SAT (all pieces + the rectangular floor/cradle statics are convex); no shipped level authors a
+        /// concave floor. Sim-only; the production path never runs this.
         /// </summary>
         private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration, out int unsupportedPlaced)
         {
-            const float overlapEpsilon = 0.01f; // brief: touching / epsilon ≤ 0.01 is NOT an intersection
-            const float supportProbe = 0.05f;    // a gap this small beneath a piece counts as "resting on"
+            var epsilon = _tuning.OverlapTolerance;       // the SINGLE shared constant, == the controller gate's
+            const float supportProbe = 0.05f;             // a gap this small beneath a piece counts as "resting on"
 
             intersectingPairs = 0;
             maxPenetration = 0f;
             unsupportedPlaced = 0;
 
             var polys = new List<Vec2[]>();
-            var centroidY = new List<float>();
+            var ids = new List<int>();
             foreach (var piece in _model.Pieces)
             {
                 if (piece.State != PieceLifecycle.Placed)
                     continue;
-                var verts = Geometry.WorldVertices(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation);
-                polys.Add(verts);
-                centroidY.Add(CentroidY(verts));
+                polys.Add(Geometry.WorldVertices(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation));
+                ids.Add(piece.InstanceId);
             }
 
             for (var i = 0; i < polys.Count; i++)
             {
                 for (var j = i + 1; j < polys.Count; j++)
                 {
-                    var pen = Geometry.ConvexPenetration(polys[i], polys[j]);
-                    if (pen > maxPenetration)
-                        maxPenetration = pen;
-                    if (pen > overlapEpsilon)
+                    // Overshoot above what the DESIGN authored for this specific pair of claimed slots.
+                    var overshoot = Geometry.ConvexPenetration(polys[i], polys[j]) - _mechanic.OverlapAllowance(ids[i], ids[j]);
+                    if (overshoot > maxPenetration)
+                        maxPenetration = overshoot;
+                    if (overshoot > epsilon)
                         intersectingPairs++;
                 }
             }
 
+            unsupportedPlaced = CountUngrounded(polys, supportProbe);
+        }
+
+        /// <summary>Count Placed pieces that are NOT transitively grounded (TASK-042). Seeds groundedness from the
+        /// statics, then propagates: any not-yet-grounded piece that, dropped by <paramref name="supportProbe"/>,
+        /// touches an already-grounded piece becomes grounded — iterated until the set stops growing. Direction-
+        /// agnostic (credits lateral / tilted contact), yet a cluster with no path to a static stays ungrounded.</summary>
+        private int CountUngrounded(List<Vec2[]> polys, float supportProbe)
+        {
             var statics = _level.StaticGeometry;
+            var grounded = new bool[polys.Count];
+            var lowered = new Vec2[polys.Count][];
+            var remaining = 0;
             for (var i = 0; i < polys.Count; i++)
             {
-                var lowered = ShiftDown(polys[i], supportProbe);
-                if (SupportedByStatic(lowered, statics) || SupportedByLowerPlaced(lowered, polys, centroidY, i))
-                    continue;
-                unsupportedPlaced++;
+                lowered[i] = ShiftDown(polys[i], supportProbe);
+                if (SupportedByStatic(lowered[i], statics))
+                    grounded[i] = true;
+                else
+                    remaining++;
             }
+
+            var changed = true;
+            while (changed && remaining > 0)
+            {
+                changed = false;
+                for (var i = 0; i < polys.Count; i++)
+                {
+                    if (grounded[i])
+                        continue;
+                    for (var k = 0; k < polys.Count; k++)
+                    {
+                        if (k == i || !grounded[k])
+                            continue;
+                        if (Geometry.ConvexPenetration(lowered[i], polys[k]) > 0f)
+                        {
+                            grounded[i] = true;
+                            remaining--;
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return remaining;
         }
 
         private static bool SupportedByStatic(Vec2[] lowered, Polygon[] statics)
@@ -249,26 +298,6 @@ namespace Gameplay.Core.Sim
                     return true;
             }
             return false;
-        }
-
-        private static bool SupportedByLowerPlaced(Vec2[] lowered, List<Vec2[]> polys, List<float> centroidY, int self)
-        {
-            for (var k = 0; k < polys.Count; k++)
-            {
-                if (k == self || centroidY[k] >= centroidY[self])
-                    continue; // only a piece whose centroid is below can be a support
-                if (Geometry.ConvexPenetration(lowered, polys[k]) > 0f)
-                    return true;
-            }
-            return false;
-        }
-
-        private static float CentroidY(Vec2[] verts)
-        {
-            var sum = 0f;
-            foreach (var v in verts)
-                sum += v.Y;
-            return sum / verts.Length;
         }
 
         private static Vec2[] ShiftDown(Vec2[] verts, float d)

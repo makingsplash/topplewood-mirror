@@ -52,24 +52,25 @@ namespace Gameplay.Core
         /// on the contact frame; QA/balancer to re-bless.</summary>
         public float SnapSupportProbeDistance { get; set; } = 0.1f;
 
-        // ── Honesty gate (TASK-042). The snap assist crisps a piece onto its authored slot pose; in a WRONG release
-        //    order that ideal pose can cut THROUGH an already-placed piece (candles snapped down into the plate) or
-        //    hang ABOVE the piece's real support (snapped up onto an invisible platform). These two clamps keep the
-        //    snap — and the freeze-where-it-lies path — physically admissible so the settled figure never
-        //    interpenetrates or floats. In a CORRECT order the target poses are the (non-overlapping, supported)
-        //    silhouette, so both clamps always pass → the assembly path is byte-for-byte unchanged. ──
+        // ── Honesty gate (TASK-042, revised after owner gate-FAIL 2026-07-26). The snap assist crisps a piece onto
+        //    its authored slot pose; in a WRONG release order that ideal pose can cut THROUGH an already-placed piece
+        //    (candles snapped down into the plate) or hang ABOVE the piece's real support (snapped up onto an
+        //    invisible platform). The gate keeps the snap — and the freeze-where-it-lies path — physically admissible
+        //    on TWO axes: (a) interpenetration must not exceed the AUTHORED baseline overlap of the two slots
+        //    (baked at load, per pair) by more than OverlapTolerance; and (b) the target pose must rest on real
+        //    support (a static or an already-placed piece within SnapSupportProbeDistance beneath it — replaces the
+        //    v1 absolute SnapMaxLift, which mis-rejected canon pieces that legitimately snap up a small distance onto
+        //    genuine support). Because the admissible overlap is the DESIGN baseline, a correct order — whose target
+        //    poses ARE the authored silhouette (baseline + solver slop) — passes by construction on EVERY level,
+        //    including authored micro-overlaps (owl's ear sunk into the head). ──
 
-        /// <summary>Max penetration (world units) tolerated between a snap-target / rest pose and an already-Placed
-        /// piece before the pose is rejected as interpenetration. Above the Box2D rest slop (~0.005) so a clean
-        /// canonical stack (touching contacts) is never rejected, yet far below a gross wrong-order overlap
-        /// (candles through the plate ≈0.25). ⟨qa/balancer⟩ to re-bless.</summary>
-        public float OverlapTolerance { get; set; } = 0.02f;
-
-        /// <summary>Max upward distance (world units) the snap assist may lift a piece onto its slot. A canonical
-        /// piece lands at/above its slot and snaps DOWN/laterally onto real support (lift ≤ 0), so this stays tiny;
-        /// it blocks the wrong-order case where the snap would MAGNETISE a piece UP off its support into the slot,
-        /// leaving it hanging on an invisible support (owner bug 2026-07-26). ⟨qa/balancer⟩ to re-bless.</summary>
-        public float SnapMaxLift { get; set; } = 0.05f;
+        /// <summary>The single interpenetration epsilon (world units) shared by BOTH the controller honesty gate AND
+        /// the sim honesty detector, so the gate and the proof always agree (owner: "порог guard и порог детектора
+        /// должны быть ОДНОЙ константой"). A pose is dishonest only when its convex penetration exceeds the pair's
+        /// authored baseline overlap by MORE than this — above the Box2D rest slop (~0.005) so a clean canonical
+        /// contact is never flagged, far below a gross wrong-order overlap (candles through the plate ≈0.25).
+        /// ⟨qa/balancer⟩ to re-bless once the owner's full sweep pins the residual slop above baseline.</summary>
+        public float OverlapTolerance { get; set; } = 0.01f;
 
         /// <summary>Linear damping applied on Release — light, does not stall the drop.</summary>
         public float ReleaseLinearDrag { get; set; } = 0.5f;

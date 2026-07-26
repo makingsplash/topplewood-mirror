@@ -14,7 +14,7 @@ namespace Gameplay.Core.Sim
         private const string Header =
             "levelId,seed,policyId,orderKey,repeatIndex,solved,outcome,attemptsUsed,stepsToResolve," +
             "matchError,slotsFilled,slotsTotal,lostPieces,poseHash,preGlideAngResidual,preGlidePosErr," +
-            "intersectingPairs,maxPenetration,unsupportedPlaced";
+            "intersectingPairs,maxPenetration,unsupportedPlaced,snapRejectsByOverlap,snapRejectsBySupport";
 
         public static string BuildCsv(IReadOnlyList<SimRunResult> runs)
         {
@@ -40,7 +40,9 @@ namespace Gameplay.Core.Sim
                     .Append(F(r.PreGlidePosErr)).Append(',')
                     .Append(r.IntersectingPairs).Append(',')
                     .Append(F(r.MaxPenetration)).Append(',')
-                    .Append(r.UnsupportedPlaced).Append('\n');
+                    .Append(r.UnsupportedPlaced).Append(',')
+                    .Append(r.SnapRejectsByOverlap).Append(',')
+                    .Append(r.SnapRejectsBySupport).Append('\n');
             }
             return sb.ToString();
         }
