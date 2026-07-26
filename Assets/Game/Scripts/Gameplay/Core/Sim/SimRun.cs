@@ -24,6 +24,9 @@ namespace Gameplay.Core.Sim
         private readonly ShapeFillMechanicController _mechanic;
         private readonly PoseMatchEvaluator _match;
         private readonly LevelData _level;
+        // Shared with the controller so the honesty detector's interpenetration epsilon is the SAME constant as the
+        // gate's (owner: "порог guard и порог детектора должны быть ОДНОЙ константой", TASK-042).
+        private readonly ShapeFillTuning _tuning;
         private readonly IDisposable _outcomeSub;
         // Reused per Step so the driver allocates nothing while pushing a release group (TASK-023 §5.4).
         private readonly List<Vec2> _tapScratch = new();
@@ -50,14 +53,14 @@ namespace Gameplay.Core.Sim
             _level = level;
             _policy = policy;
 
-            var tuning = new ShapeFillTuning();
+            _tuning = new ShapeFillTuning();
             _model = new GameModel();
             _match = new PoseMatchEvaluator();
-            _clock = new GameplayClock(tuning.FixedStep);
+            _clock = new GameplayClock(_tuning.FixedStep);
             _input = new SimBotInputSource();
 
             _mechanic = new ShapeFillMechanicController(
-                _model, simulation, _match, new LevelDataValidator(), new NullPieceViewFactory(), tuning);
+                _model, simulation, _match, new LevelDataValidator(), new NullPieceViewFactory(), _tuning);
             _controller = new GameController(
                 new FixedLevelSource(level), _model, _mechanic, simulation, _clock, _input);
 
@@ -176,10 +179,159 @@ namespace Gameplay.Core.Sim
             var solved = _outcome == GameOutcome.Won;
             var outcome = _outcome == GameOutcome.None ? "Timeout" : _outcome.ToString();
 
+            ComputeHonestyMetrics(out var intersectingPairs, out var maxPenetration, out var unsupportedPlaced,
+                out var worst);
+
             return new SimRunResult(_level.LevelId, _level.Seed, policyId, orderKey, repeatIndex,
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
-                _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses);
+                _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses,
+                intersectingPairs, maxPenetration, unsupportedPlaced,
+                _mechanic.SnapRejectsByOverlap, _mechanic.SnapRejectsBySupport,
+                _mechanic.FreezeRejectsBySupport, _mechanic.BalanceSnapSkips, worst);
+        }
+
+        /// <summary>
+        /// TASK-042 honesty detector (revised after the owner gate-FAIL 2026-07-26) — the owner's proof that physics
+        /// stays honest in EVERY release order. Over the FINAL settled (Placed) poses it measures:
+        /// (a) INTERPENETRATION — pairs of pieces whose convex SAT penetration exceeds their AUTHORED baseline
+        ///     overlap (the same per-pair design overlap the controller gate uses, via <c>OverlapAllowance</c>) by
+        ///     more than the shared <c>OverlapTolerance</c> epsilon. Measuring the OVERSHOOT above baseline — not raw
+        ///     penetration — is what stops authored micro-overlaps (owl's ear in the head, birthday_cake's touching
+        ///     tiers) from being false-flagged, and keeps guard-threshold == detector-threshold (owner's demand).
+        ///     <c>maxPenetration</c> is the worst such overshoot (0 ⇒ every contact is within design + slop).
+        /// (b) FREEZE-IN-AIR — Placed pieces not TRANSITIVELY grounded: a piece is grounded if, dropped by
+        ///     <c>SupportProbe</c>, it touches a static OR an already-grounded piece (iterated to a fixed point). This
+        ///     credits a load resting on a free beam that rests on a fulcrum-static (grand_seesaw), and lateral /
+        ///     tilted contact (church) — the v1 "centroid strictly below" rule wrongly flagged both. A mutually-
+        ///     touching pair with no path to a static never grounds, so a real float is still caught.
+        /// Convex-only SAT (all pieces + the rectangular floor/cradle statics are convex); no shipped level authors a
+        /// concave floor. Sim-only; the production path never runs this.
+        /// </summary>
+        private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration,
+            out int unsupportedPlaced, out WorstOverlapPair worst)
+        {
+            var epsilon = _tuning.OverlapTolerance;       // the SINGLE shared constant, == the controller gate's
+            // TASK-042 gate-v3 (owner 2026-07-26 20:55, pt.1): the detector's "resting on" gap is now the SAME constant
+            // the controller's freeze/snap support-gate uses (SnapSupportProbeDistance), not a private 0.05. That split
+            // (gate 0.1 vs detector 0.05) was the root of the residual unsupported flags: every assembly piece is
+            // admitted to Placed only after IsPoseSupported passes at this probe (Place :581 for freeze-where-it-lies /
+            // physical-settle, snap-admissibility for the glide path whose final pose IS the checked slot pose), so a
+            // detector reading at a STRICTER probe flagged pieces the game's own contact rule counts as landed. Sharing
+            // the constant makes gate == detector → a Placed pose the gate accepted is grounded here too, so unsupported
+            // is 0 by construction in every order (the same "one constant" discipline the owner demanded for epsilon).
+            var supportProbe = _tuning.SnapSupportProbeDistance;
+
+            intersectingPairs = 0;
+            maxPenetration = 0f;
+            unsupportedPlaced = 0;
+            worst = WorstOverlapPair.None;
+
+            var polys = new List<Vec2[]>();
+            var ids = new List<int>();
+            var kinds = new List<string>();
+            foreach (var piece in _model.Pieces)
+            {
+                if (piece.State != PieceLifecycle.Placed)
+                    continue;
+                polys.Add(Geometry.WorldVertices(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation));
+                ids.Add(piece.InstanceId);
+                kinds.Add(piece.Kind);
+            }
+
+            for (var i = 0; i < polys.Count; i++)
+            {
+                for (var j = i + 1; j < polys.Count; j++)
+                {
+                    var penetration = Geometry.ConvexPenetration(polys[i], polys[j]);
+                    var baseline = _mechanic.OverlapAllowance(ids[i], ids[j]);
+                    // Overshoot above what the DESIGN authored for this specific pair of claimed slots.
+                    var overshoot = penetration - baseline;
+                    if (overshoot > maxPenetration)
+                    {
+                        maxPenetration = overshoot;
+                        // TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.2 — "не гадай, добавь детали худшей пары"):
+                        // record the pair driving the worst overshoot so a run flagged on CANON is diagnosable —
+                        // raw penetration vs. applied baseline distinguishes physical-settle slop (pen ≈ baseline +
+                        // small) from a cross-mapping (baseline for the wrong slot pair), and the two claimed slots
+                        // + kinds pin exactly which same-kind instances mis-mapped.
+                        worst = new WorstOverlapPair(
+                            kinds[i], kinds[j], penetration, baseline,
+                            _mechanic.ClaimedSlot(ids[i]), _mechanic.ClaimedSlot(ids[j]));
+                    }
+                    if (overshoot > epsilon)
+                        intersectingPairs++;
+                }
+            }
+
+            unsupportedPlaced = CountUngrounded(polys, supportProbe);
+        }
+
+        /// <summary>Count Placed pieces that are NOT transitively grounded (TASK-042). Seeds groundedness from the
+        /// statics, then propagates: any not-yet-grounded piece that, dropped by <paramref name="supportProbe"/>,
+        /// touches an already-grounded piece becomes grounded — iterated until the set stops growing. Direction-
+        /// agnostic (credits lateral / tilted contact), yet a cluster with no path to a static stays ungrounded.</summary>
+        private int CountUngrounded(List<Vec2[]> polys, float supportProbe)
+        {
+            var statics = _level.StaticGeometry;
+            var grounded = new bool[polys.Count];
+            var lowered = new Vec2[polys.Count][];
+            var remaining = 0;
+            for (var i = 0; i < polys.Count; i++)
+            {
+                lowered[i] = ShiftDown(polys[i], supportProbe);
+                if (SupportedByStatic(lowered[i], statics))
+                    grounded[i] = true;
+                else
+                    remaining++;
+            }
+
+            var changed = true;
+            while (changed && remaining > 0)
+            {
+                changed = false;
+                for (var i = 0; i < polys.Count; i++)
+                {
+                    if (grounded[i])
+                        continue;
+                    for (var k = 0; k < polys.Count; k++)
+                    {
+                        if (k == i || !grounded[k])
+                            continue;
+                        if (Geometry.ConvexPenetration(lowered[i], polys[k]) > 0f)
+                        {
+                            grounded[i] = true;
+                            remaining--;
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return remaining;
+        }
+
+        private static bool SupportedByStatic(Vec2[] lowered, Polygon[] statics)
+        {
+            if (statics == null)
+                return false;
+            foreach (var s in statics)
+            {
+                if (s?.Outline == null || s.Outline.Length < 3)
+                    continue;
+                if (Geometry.ConvexPenetration(lowered, s.Outline) > 0f)
+                    return true;
+            }
+            return false;
+        }
+
+        private static Vec2[] ShiftDown(Vec2[] verts, float d)
+        {
+            var r = new Vec2[verts.Length];
+            for (var i = 0; i < verts.Length; i++)
+                r[i] = new Vec2(verts[i].X, verts[i].Y - d);
+            return r;
         }
 
         public void Dispose()

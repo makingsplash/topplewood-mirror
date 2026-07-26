@@ -52,6 +52,30 @@ namespace Gameplay.Core
         /// on the contact frame; QA/balancer to re-bless.</summary>
         public float SnapSupportProbeDistance { get; set; } = 0.1f;
 
+        // ── Honesty gate (TASK-042, revised after owner gate-FAIL 2026-07-26). The snap assist crisps a piece onto
+        //    its authored slot pose; in a WRONG release order that ideal pose can cut THROUGH an already-placed piece
+        //    (candles snapped down into the plate) or hang ABOVE the piece's real support (snapped up onto an
+        //    invisible platform). The gate keeps the snap — and the freeze-where-it-lies path — physically admissible
+        //    on TWO axes: (a) interpenetration must not exceed the AUTHORED baseline overlap of the two slots
+        //    (baked at load, per pair) by more than OverlapTolerance; and (b) the target pose must rest on real
+        //    support (a static or an already-placed piece within SnapSupportProbeDistance beneath it — replaces the
+        //    v1 absolute SnapMaxLift, which mis-rejected canon pieces that legitimately snap up a small distance onto
+        //    genuine support). Because the admissible overlap is the DESIGN baseline, a correct order — whose target
+        //    poses ARE the authored silhouette (baseline + solver slop) — passes by construction on EVERY level,
+        //    including authored micro-overlaps (owl's ear sunk into the head). ──
+
+        /// <summary>The single interpenetration epsilon (world units) shared by BOTH the controller honesty gate AND
+        /// the sim honesty detector, so the gate and the proof always agree (owner: "порог guard и порог детектора
+        /// должны быть ОДНОЙ константой"). A pose is dishonest only when its convex penetration exceeds the pair's
+        /// authored baseline overlap by MORE than this. Raised 0.01→0.05 after the owner's gate-v3 sweep
+        /// (2026-07-26 20:55): the worst-pair diagnostic pinned every CANON flag at baseline≈0, pen 0.023–0.033 —
+        /// honest Box2D rest slip under load of pieces frozen in their PHYSICAL rest pose (variant B), NOT a
+        /// cross-mapping. 0.05 clears the measured canon slop (max giraffe/excavator 0.0326) with margin, while a
+        /// gross wrong-order overlap (candles through the plate ≈0.25, any real user float ≥0.1) still trips both the
+        /// gate and the detector. The freeze-overlap-guard reads the SAME 0.05, so it never rejects that honest canon
+        /// slip (owner's regress caveat). ⟨qa/balancer⟩ to re-bless once a wider sweep re-pins the slop ceiling.</summary>
+        public float OverlapTolerance { get; set; } = 0.05f;
+
         /// <summary>Linear damping applied on Release — light, does not stall the drop.</summary>
         public float ReleaseLinearDrag { get; set; } = 0.5f;
 

@@ -13,7 +13,10 @@ namespace Gameplay.Core.Sim
     {
         private const string Header =
             "levelId,seed,policyId,orderKey,repeatIndex,solved,outcome,attemptsUsed,stepsToResolve," +
-            "matchError,slotsFilled,slotsTotal,lostPieces,poseHash,preGlideAngResidual,preGlidePosErr";
+            "matchError,slotsFilled,slotsTotal,lostPieces,poseHash,preGlideAngResidual,preGlidePosErr," +
+            "intersectingPairs,maxPenetration,unsupportedPlaced,snapRejectsByOverlap,snapRejectsBySupport," +
+            "freezeRejectsBySupport,balanceSnapSkips," +
+            "worstPairKindA,worstPairKindB,worstPairPenetration,worstPairBaseline,worstPairSlotA,worstPairSlotB";
 
         public static string BuildCsv(IReadOnlyList<SimRunResult> runs)
         {
@@ -36,7 +39,20 @@ namespace Gameplay.Core.Sim
                     .Append(r.LostPieces).Append(',')
                     .Append(r.PoseHash).Append(',')
                     .Append(F(r.PreGlideAngResidual)).Append(',')
-                    .Append(F(r.PreGlidePosErr)).Append('\n');
+                    .Append(F(r.PreGlidePosErr)).Append(',')
+                    .Append(r.IntersectingPairs).Append(',')
+                    .Append(F(r.MaxPenetration)).Append(',')
+                    .Append(r.UnsupportedPlaced).Append(',')
+                    .Append(r.SnapRejectsByOverlap).Append(',')
+                    .Append(r.SnapRejectsBySupport).Append(',')
+                    .Append(r.FreezeRejectsBySupport).Append(',')
+                    .Append(r.BalanceSnapSkips).Append(',')
+                    .Append(r.WorstPair.KindA).Append(',')
+                    .Append(r.WorstPair.KindB).Append(',')
+                    .Append(F(r.WorstPair.Penetration)).Append(',')
+                    .Append(F(r.WorstPair.Baseline)).Append(',')
+                    .Append(r.WorstPair.SlotA).Append(',')
+                    .Append(r.WorstPair.SlotB).Append('\n');
             }
             return sb.ToString();
         }
