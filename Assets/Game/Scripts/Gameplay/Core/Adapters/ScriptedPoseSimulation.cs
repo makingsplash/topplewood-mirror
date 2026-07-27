@@ -54,10 +54,6 @@ namespace Gameplay.Core.Adapters
             }
         }
 
-        // No physics on the pose canvas — the balance hinge (TASK-021) is a no-op; QA drives any crank explicitly
-        // via SetPose/SetSpeed. RETAINED, NO CALLER after TASK-027 (catapult de-pinned to a free-beam ground-stop).
-        public void PinHinge(int bodyId, Vec2 anchor) { }
-
         public BodyPose GetPose(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Pose : default;
         public float GetSpeed(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Speed : 0f;
         public Vec2 GetVelocity(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Velocity : Vec2.Zero;

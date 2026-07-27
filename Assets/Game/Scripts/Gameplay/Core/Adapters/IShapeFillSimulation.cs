@@ -29,19 +29,6 @@ namespace Gameplay.Core.Adapters
         /// </summary>
         void FreezeAt(int bodyId, Vec2 position, float rotation);
 
-        /// <summary>
-        /// RETAINED, NO CALLER after TASK-027: TASK-025 used this to pin the catapult arm, but the owner playtest
-        /// rejected the pin as a "helper" and TASK-027 de-pinned the arm to a free Dynamic body on a low fulcrum
-        /// (natural ground-stop). Kept in the interface + both impls (retained-infra) so a pinned mode can be re-wired
-        /// without touching the seam. Pin a body to the world with a revolute hinge at
-        /// <paramref name="anchor"/> (a world point). Unlike <see cref="FreezeAt"/> the body stays Dynamic so weight
-        /// on one side cranks it around the anchor; a balance angular damper drives it to a single deterministic
-        /// rest. Velocity is NOT zeroed (the contact impulse carries through). Pass the beam's own centre as the
-        /// anchor so an unloaded beam balances (an off-centre pin would sit under a constant gravity torque). The
-        /// headless pose canvas has no physics, so it is a no-op there.
-        /// </summary>
-        void PinHinge(int bodyId, Vec2 anchor);
-
         BodyPose GetPose(int bodyId);
 
         /// <summary>max(|linear|, |angular|·r) in domain units — compared against ε for rest.</summary>

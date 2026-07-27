@@ -174,7 +174,7 @@
       "seed": 48,
       "difficultyTier": 8,
       "physicsMode": "balance",
-      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633, "rigidityTol": 0.15 },
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [

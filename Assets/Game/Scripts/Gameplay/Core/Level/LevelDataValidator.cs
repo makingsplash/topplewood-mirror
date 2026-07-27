@@ -28,11 +28,13 @@ namespace Gameplay.Core
             // 3. Kind coverage: for every slot Kind there must be at least as many pieces of that Kind.
             ValidateKindCoverage(level, errors);
 
-            // 4. Tolerance: PosTol > 0, AngTol ≥ 0.
+            // 4. Tolerance: PosTol > 0, AngTol ≥ 0, RigidityTol ≥ 0 (0 = constraint off, TASK-043).
             if (level.MatchTolerance.PosTol <= 0f)
                 errors.Add($"MatchTolerance.PosTol must be > 0; was {level.MatchTolerance.PosTol}.");
             if (level.MatchTolerance.AngTol < 0f)
                 errors.Add($"MatchTolerance.AngTol must be ≥ 0; was {level.MatchTolerance.AngTol}.");
+            if (level.MatchTolerance.RigidityTol < 0f)
+                errors.Add($"MatchTolerance.RigidityTol must be ≥ 0; was {level.MatchTolerance.RigidityTol}.");
 
             // 5. Bounds / gravity.
             if (level.Bounds.IsDegenerate)

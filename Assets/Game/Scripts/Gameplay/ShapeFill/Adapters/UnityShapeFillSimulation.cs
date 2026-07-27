@@ -19,9 +19,6 @@ namespace Gameplay.Adapters
             public Rigidbody2D Rigidbody;
             public Collider2D Collider;
             public float Radius;
-            // Balance-mode revolute pin to the world (TASK-021); null for the ordinary freeze-on-rest path. Held
-            // only so the joint is explicit — Destroy(gameObject) in Despawn/Reset tears it down with the body.
-            public HingeJoint2D Hinge;
         }
 
         private readonly Dictionary<int, Body> _bodies = new();
@@ -179,49 +176,6 @@ namespace Gameplay.Adapters
             var t = rb.transform;
             t.position = new Vector3(position.X, position.Y, t.position.z);
             t.rotation = Quaternion.Euler(0f, 0f, deg);
-        }
-
-        // RETAINED, NO CALLER after TASK-027 (the catapult arm was de-pinned to a free Dynamic body on a low fulcrum;
-        // the owner playtest rejected the pin as a "helper"). Kept as retained-infra so a pinned mode can be re-wired.
-        public void PinHinge(int bodyId, Vec2 anchor)
-        {
-            if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)
-                return;
-            var rb = body.Rigidbody;
-            // Stay Dynamic (opposite of FreezeAt): weight on one side must crank the beam around the anchor.
-            rb.bodyType = RigidbodyType2D.Dynamic;
-            rb.gravityScale = 1f;
-            // Angular damping is the single determinism lever: the crank must converge to ONE rest inside the sim
-            // step budget without stalling (balancer tunes BalanceAngularDamping). Linear damping keeps the light
-            // release drag. Velocity is preserved so the landing impulse carries through (no pop).
-            rb.angularDamping = _tuning.BalanceAngularDamping;
-
-            var world = new Vector2(anchor.X, anchor.Y);
-            var hinge = rb.gameObject.AddComponent<HingeJoint2D>();
-            hinge.connectedBody = null;                 // pinned to the world, not another body
-            hinge.autoConfigureConnectedAnchor = false;
-            hinge.connectedAnchor = world;
-            // Local point on the body that currently coincides with the world anchor → the hinge introduces no
-            // positional jerk regardless of how the piece arrived at the anchor (drop / slide / future launch).
-            // The anchor sits above the beam's centre (controller lifts it by BalancePivotAnchorOffsetY) so the
-            // beam hangs as a self-levelling pendulum rather than balancing on a knife-edge.
-            hinge.anchor = rb.transform.InverseTransformPoint(new Vector3(world.x, world.y, rb.transform.position.z));
-            hinge.useMotor = false;
-            // Angular end-stops (balancer C3): cap the tilt below the ~31° slip angle so a single load can't slide
-            // off before its counter-load lands. Limits are measured from the hinge reference angle captured now,
-            // i.e. the rested ≈horizontal pose, so ±deg brackets horizontal and the win pose stays reachable.
-            // ≤0 disables limits — kept generic for the forward-vision catapult beams that must swing free.
-            var limitDeg = _tuning.BalanceHingeLimitDeg;
-            if (limitDeg > 0f)
-            {
-                hinge.useLimits = true;
-                hinge.limits = new JointAngleLimits2D { min = -limitDeg, max = limitDeg };
-            }
-            else
-            {
-                hinge.useLimits = false;
-            }
-            body.Hinge = hinge;
         }
 
         public BodyPose GetPose(int bodyId)
