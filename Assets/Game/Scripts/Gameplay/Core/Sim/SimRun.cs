@@ -217,7 +217,9 @@ namespace Gameplay.Core.Sim
         ///     <c>SupportProbe</c>, it touches a static OR an already-grounded piece (iterated to a fixed point). This
         ///     credits a load resting on a free beam that rests on a fulcrum-static (grand_seesaw), and lateral /
         ///     tilted contact (church) — the v1 "centroid strictly below" rule wrongly flagged both. A mutually-
-        ///     touching pair with no path to a static never grounds, so a real float is still caught.
+        ///     touching pair with no path to a static never grounds, so a real float is still caught. Pieces that have
+        ///     fallen OUT of <see cref="_level"/>.Bounds are excluded (TASK-043): they are escapees in free fall (a
+        ///     pathological Timeout, e.g. grand_seesaw with the fulcrum never released), not dishonest mid-air freezes.
         /// Convex-only SAT (all pieces + the rectangular floor/cradle statics are convex); no shipped level authors a
         /// concave floor. Sim-only; the production path never runs this.
         /// </summary>
@@ -242,6 +244,11 @@ namespace Gameplay.Core.Sim
             // Each Placed piece's nearest same-Kind slot (the sim-local equivalent of the controller's removed
             // ClaimedSlot) — used to look up the authored baseline overlap and to report the worst pair.
             var slotOf = new List<int>();
+            // TASK-043 detector-fidelity fix: which Placed pieces are still inside the world Bounds. A piece that has
+            // fallen OUT of Bounds (grand_seesaw fulcrum-not-released Timeout: the beam+loads free-fall to y≈-600) is
+            // an escapee in free fall, NOT a dishonest mid-air freeze — it must not be counted as unsupported. Uses
+            // the SAME _level.Bounds the falling-state gate uses (IShapeFillSimulation.IsWithinBounds), so the two agree.
+            var inBounds = new List<bool>();
             foreach (var piece in _model.Pieces)
             {
                 if (piece.State != PieceLifecycle.Placed)
@@ -249,6 +256,7 @@ namespace Gameplay.Core.Sim
                 polys.Add(Geometry.WorldVertices(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation));
                 kinds.Add(piece.Kind);
                 slotOf.Add(NearestSameKindSlot(piece.Kind, piece.Position));
+                inBounds.Add(_level.Bounds.Contains(piece.Position));
             }
 
             for (var i = 0; i < polys.Count; i++)
@@ -273,7 +281,7 @@ namespace Gameplay.Core.Sim
                 }
             }
 
-            unsupportedPlaced = CountUngrounded(polys, supportProbe);
+            unsupportedPlaced = CountUngrounded(polys, supportProbe, inBounds);
         }
 
         /// <summary>Bake the authored-baseline overlap map once (TASK-043, moved sim-side from the controller): with
@@ -357,7 +365,7 @@ namespace Gameplay.Core.Sim
         /// statics, then propagates: any not-yet-grounded piece that, dropped by <paramref name="supportProbe"/>,
         /// touches an already-grounded piece becomes grounded — iterated until the set stops growing. Direction-
         /// agnostic (credits lateral / tilted contact), yet a cluster with no path to a static stays ungrounded.</summary>
-        private int CountUngrounded(List<Vec2[]> polys, float supportProbe)
+        private int CountUngrounded(List<Vec2[]> polys, float supportProbe, List<bool> inBounds)
         {
             var statics = _level.StaticGeometry;
             var grounded = new bool[polys.Count];
@@ -365,6 +373,12 @@ namespace Gameplay.Core.Sim
             var remaining = 0;
             for (var i = 0; i < polys.Count; i++)
             {
+                // TASK-043: a Placed piece that has escaped the world Bounds is in free fall (pathological Timeout,
+                // not an air-freeze) — drop it from the grounding graph entirely: neither required to be supported
+                // (never added to remaining) nor allowed to serve as support for another piece (never grounded, so
+                // never picked as an anchor k below). lowered[i] stays null and is only read for in-Bounds pieces.
+                if (!inBounds[i])
+                    continue;
                 lowered[i] = ShiftDown(polys[i], supportProbe);
                 if (SupportedByStatic(lowered[i], statics))
                     grounded[i] = true;
@@ -378,7 +392,7 @@ namespace Gameplay.Core.Sim
                 changed = false;
                 for (var i = 0; i < polys.Count; i++)
                 {
-                    if (grounded[i])
+                    if (grounded[i] || !inBounds[i])
                         continue;
                     for (var k = 0; k < polys.Count; k++)
                     {
