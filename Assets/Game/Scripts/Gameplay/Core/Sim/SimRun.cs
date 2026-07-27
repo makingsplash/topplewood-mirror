@@ -24,10 +24,25 @@ namespace Gameplay.Core.Sim
         private readonly ShapeFillMechanicController _mechanic;
         private readonly PoseMatchEvaluator _match;
         private readonly LevelData _level;
-        // Shared with the controller so the honesty detector's interpenetration epsilon is the SAME constant as the
-        // gate's (owner: "порог guard и порог детектора должны быть ОДНОЙ константой", TASK-042).
+        // Passed to the mechanic and used here for FixedStep. TASK-043: it no longer carries the honesty-detector
+        // tolerances — the assist layer (and its shared gate constants) were removed, so the detector below owns its
+        // own sim-local constants (DetectorEpsilon / DetectorSupportProbe).
         private readonly ShapeFillTuning _tuning;
         private readonly IDisposable _outcomeSub;
+
+        // TASK-043: the honesty detector's authored-baseline overlap map, computed SIM-LOCALLY (the controller no
+        // longer owns it after the assist-layer removal). Same bake as the old controller BuildSlotBaseline: pairwise
+        // SAT penetration of every two target slots with each Kind's shape at its exact slot pose — the overlap the
+        // DESIGN intends (0 for disjoint slots, small positive for authored nestings). Built once, lazily. So the
+        // detector still measures OVERSHOOT above the authored baseline, keeping authored micro-overlaps from being
+        // false-flagged, but with zero coupling to the controller.
+        private float[,] _slotBaseline;
+        // TASK-043: the detector's own tolerances, now sim-local constants (they used to live on ShapeFillTuning and
+        // be shared with the controller gate, both removed with the assist layer). Values carried over verbatim:
+        // DetectorEpsilon is the interpenetration overshoot above baseline that counts as dishonest; DetectorSupportProbe
+        // is the drop distance a Placed piece must touch static/placed support within to count as grounded.
+        private const float DetectorEpsilon = 0.05f;
+        private const float DetectorSupportProbe = 0.1f;
         // Reused per Step so the driver allocates nothing while pushing a release group (TASK-023 §5.4).
         private readonly List<Vec2> _tapScratch = new();
 
@@ -186,41 +201,38 @@ namespace Gameplay.Core.Sim
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
                 _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses,
-                intersectingPairs, maxPenetration, unsupportedPlaced,
-                _mechanic.SnapRejectsByOverlap, _mechanic.SnapRejectsBySupport,
-                _mechanic.FreezeRejectsBySupport, _mechanic.BalanceSnapSkips, worst);
+                intersectingPairs, maxPenetration, unsupportedPlaced, worst);
         }
 
         /// <summary>
-        /// TASK-042 honesty detector (revised after the owner gate-FAIL 2026-07-26) — the owner's proof that physics
-        /// stays honest in EVERY release order. Over the FINAL settled (Placed) poses it measures:
+        /// TASK-042 honesty detector — the owner's proof that physics stays honest in EVERY release order — now fully
+        /// SIM-LOCAL (TASK-043 decoupled it from the removed controller assist layer, but its checks are unchanged).
+        /// Over the FINAL settled (Placed) poses it measures:
         /// (a) INTERPENETRATION — pairs of pieces whose convex SAT penetration exceeds their AUTHORED baseline
-        ///     overlap (the same per-pair design overlap the controller gate uses, via <c>OverlapAllowance</c>) by
-        ///     more than the shared <c>OverlapTolerance</c> epsilon. Measuring the OVERSHOOT above baseline — not raw
-        ///     penetration — is what stops authored micro-overlaps (owl's ear in the head, birthday_cake's touching
-        ///     tiers) from being false-flagged, and keeps guard-threshold == detector-threshold (owner's demand).
-        ///     <c>maxPenetration</c> is the worst such overshoot (0 ⇒ every contact is within design + slop).
+        ///     overlap (the sim-local per-pair design overlap baked in <see cref="EnsureSlotBaseline"/>) by more than
+        ///     the <c>DetectorEpsilon</c> constant. Measuring the OVERSHOOT above baseline — not raw penetration — is
+        ///     what stops authored micro-overlaps (owl's ear in the head, birthday_cake's touching tiers) from being
+        ///     false-flagged. <c>maxPenetration</c> is the worst such overshoot (0 ⇒ every contact is within design + slop).
         /// (b) FREEZE-IN-AIR — Placed pieces not TRANSITIVELY grounded: a piece is grounded if, dropped by
         ///     <c>SupportProbe</c>, it touches a static OR an already-grounded piece (iterated to a fixed point). This
         ///     credits a load resting on a free beam that rests on a fulcrum-static (grand_seesaw), and lateral /
         ///     tilted contact (church) — the v1 "centroid strictly below" rule wrongly flagged both. A mutually-
-        ///     touching pair with no path to a static never grounds, so a real float is still caught.
+        ///     touching pair with no path to a static never grounds, so a real float is still caught. Pieces that have
+        ///     fallen OUT of <see cref="_level"/>.Bounds are excluded (TASK-043): they are escapees in free fall (a
+        ///     pathological Timeout, e.g. grand_seesaw with the fulcrum never released), not dishonest mid-air freezes.
         /// Convex-only SAT (all pieces + the rectangular floor/cradle statics are convex); no shipped level authors a
         /// concave floor. Sim-only; the production path never runs this.
         /// </summary>
         private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration,
             out int unsupportedPlaced, out WorstOverlapPair worst)
         {
-            var epsilon = _tuning.OverlapTolerance;       // the SINGLE shared constant, == the controller gate's
-            // TASK-042 gate-v3 (owner 2026-07-26 20:55, pt.1): the detector's "resting on" gap is now the SAME constant
-            // the controller's freeze/snap support-gate uses (SnapSupportProbeDistance), not a private 0.05. That split
-            // (gate 0.1 vs detector 0.05) was the root of the residual unsupported flags: every assembly piece is
-            // admitted to Placed only after IsPoseSupported passes at this probe (Place :581 for freeze-where-it-lies /
-            // physical-settle, snap-admissibility for the glide path whose final pose IS the checked slot pose), so a
-            // detector reading at a STRICTER probe flagged pieces the game's own contact rule counts as landed. Sharing
-            // the constant makes gate == detector → a Placed pose the gate accepted is grounded here too, so unsupported
-            // is 0 by construction in every order (the same "one constant" discipline the owner demanded for epsilon).
-            var supportProbe = _tuning.SnapSupportProbeDistance;
+            // TASK-043: both tolerances are now sim-local constants (the shared ShapeFillTuning knobs were removed
+            // with the assist layer). epsilon = the interpenetration overshoot above the authored baseline that
+            // counts as dishonest; supportProbe = the drop gap a Placed piece must touch static/placed support within.
+            const float epsilon = DetectorEpsilon;
+            const float supportProbe = DetectorSupportProbe;
+
+            EnsureSlotBaseline();
 
             intersectingPairs = 0;
             maxPenetration = 0f;
@@ -228,15 +240,23 @@ namespace Gameplay.Core.Sim
             worst = WorstOverlapPair.None;
 
             var polys = new List<Vec2[]>();
-            var ids = new List<int>();
             var kinds = new List<string>();
+            // Each Placed piece's nearest same-Kind slot (the sim-local equivalent of the controller's removed
+            // ClaimedSlot) — used to look up the authored baseline overlap and to report the worst pair.
+            var slotOf = new List<int>();
+            // TASK-043 detector-fidelity fix: which Placed pieces are still inside the world Bounds. A piece that has
+            // fallen OUT of Bounds (grand_seesaw fulcrum-not-released Timeout: the beam+loads free-fall to y≈-600) is
+            // an escapee in free fall, NOT a dishonest mid-air freeze — it must not be counted as unsupported. Uses
+            // the SAME _level.Bounds the falling-state gate uses (IShapeFillSimulation.IsWithinBounds), so the two agree.
+            var inBounds = new List<bool>();
             foreach (var piece in _model.Pieces)
             {
                 if (piece.State != PieceLifecycle.Placed)
                     continue;
                 polys.Add(Geometry.WorldVertices(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation));
-                ids.Add(piece.InstanceId);
                 kinds.Add(piece.Kind);
+                slotOf.Add(NearestSameKindSlot(piece.Kind, piece.Position));
+                inBounds.Add(_level.Bounds.Contains(piece.Position));
             }
 
             for (var i = 0; i < polys.Count; i++)
@@ -244,34 +264,108 @@ namespace Gameplay.Core.Sim
                 for (var j = i + 1; j < polys.Count; j++)
                 {
                     var penetration = Geometry.ConvexPenetration(polys[i], polys[j]);
-                    var baseline = _mechanic.OverlapAllowance(ids[i], ids[j]);
-                    // Overshoot above what the DESIGN authored for this specific pair of claimed slots.
+                    var baseline = SlotBaselineBetween(slotOf[i], slotOf[j]);
+                    // Overshoot above what the DESIGN authored for this specific pair of nearest slots.
                     var overshoot = penetration - baseline;
                     if (overshoot > maxPenetration)
                     {
                         maxPenetration = overshoot;
-                        // TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.2 — "не гадай, добавь детали худшей пары"):
-                        // record the pair driving the worst overshoot so a run flagged on CANON is diagnosable —
-                        // raw penetration vs. applied baseline distinguishes physical-settle slop (pen ≈ baseline +
-                        // small) from a cross-mapping (baseline for the wrong slot pair), and the two claimed slots
-                        // + kinds pin exactly which same-kind instances mis-mapped.
-                        worst = new WorstOverlapPair(
-                            kinds[i], kinds[j], penetration, baseline,
-                            _mechanic.ClaimedSlot(ids[i]), _mechanic.ClaimedSlot(ids[j]));
+                        // TASK-042 gate-v2 diagnostic: record the pair driving the worst overshoot so a run flagged on
+                        // CANON is diagnosable — raw penetration vs. applied baseline distinguishes physical rest slop
+                        // (pen ≈ baseline + small) from a cross-mapping, and the two slots + kinds pin which same-kind
+                        // instances mis-mapped.
+                        worst = new WorstOverlapPair(kinds[i], kinds[j], penetration, baseline, slotOf[i], slotOf[j]);
                     }
                     if (overshoot > epsilon)
                         intersectingPairs++;
                 }
             }
 
-            unsupportedPlaced = CountUngrounded(polys, supportProbe);
+            unsupportedPlaced = CountUngrounded(polys, supportProbe, inBounds);
+        }
+
+        /// <summary>Bake the authored-baseline overlap map once (TASK-043, moved sim-side from the controller): with
+        /// each Kind's shape at its exact slot pose, the pairwise SAT penetration of every two slots. This is the
+        /// overlap the DESIGN intends (0 for disjoint slots, a small positive for authored nestings), so the detector
+        /// measures OVERSHOOT above it and the canonical silhouette is never false-flagged.</summary>
+        private void EnsureSlotBaseline()
+        {
+            if (_slotBaseline != null)
+                return;
+
+            var slots = _level.Target?.Slots;
+            var count = slots?.Count ?? 0;
+            _slotBaseline = new float[count, count];
+            if (count == 0)
+                return;
+
+            // Kind → shape, from the pieces the level defines (each slot Kind has a matching piece type).
+            var shapeByKind = new Dictionary<string, Shape>();
+            foreach (var piece in _model.Pieces)
+            {
+                var type = _model.TypeFor(piece);
+                if (type != null && !shapeByKind.ContainsKey(type.Kind))
+                    shapeByKind[type.Kind] = type.Shape;
+            }
+
+            var worldVerts = new Vec2[count][];
+            for (var i = 0; i < count; i++)
+                if (shapeByKind.TryGetValue(slots[i].Kind, out var shape))
+                    worldVerts[i] = Geometry.WorldVertices(shape, slots[i].Position, slots[i].Rotation);
+
+            for (var i = 0; i < count; i++)
+            {
+                if (worldVerts[i] == null)
+                    continue;
+                for (var j = i + 1; j < count; j++)
+                {
+                    if (worldVerts[j] == null)
+                        continue;
+                    var pen = Geometry.ConvexPenetration(worldVerts[i], worldVerts[j]);
+                    _slotBaseline[i, j] = pen;
+                    _slotBaseline[j, i] = pen;
+                }
+            }
+        }
+
+        /// <summary>Authored (design) overlap between two slots — 0 when either index is out of range.</summary>
+        private float SlotBaselineBetween(int a, int b)
+        {
+            if (_slotBaseline == null || a < 0 || b < 0 ||
+                a >= _slotBaseline.GetLength(0) || b >= _slotBaseline.GetLength(1))
+                return 0f;
+            return _slotBaseline[a, b];
+        }
+
+        /// <summary>Nearest same-Kind slot to a position (ignores occupancy — the detector only needs a baseline
+        /// reference, not a one-slot-one-piece assignment), or -1 when none matches.</summary>
+        private int NearestSameKindSlot(string kind, Vec2 pos)
+        {
+            var slots = _level.Target?.Slots;
+            if (slots == null)
+                return -1;
+
+            var best = -1;
+            var bestErr = float.MaxValue;
+            for (var s = 0; s < slots.Count; s++)
+            {
+                if (slots[s].Kind != kind)
+                    continue;
+                var err = (slots[s].Position - pos).Length;
+                if (err < bestErr)
+                {
+                    bestErr = err;
+                    best = s;
+                }
+            }
+            return best;
         }
 
         /// <summary>Count Placed pieces that are NOT transitively grounded (TASK-042). Seeds groundedness from the
         /// statics, then propagates: any not-yet-grounded piece that, dropped by <paramref name="supportProbe"/>,
         /// touches an already-grounded piece becomes grounded — iterated until the set stops growing. Direction-
         /// agnostic (credits lateral / tilted contact), yet a cluster with no path to a static stays ungrounded.</summary>
-        private int CountUngrounded(List<Vec2[]> polys, float supportProbe)
+        private int CountUngrounded(List<Vec2[]> polys, float supportProbe, List<bool> inBounds)
         {
             var statics = _level.StaticGeometry;
             var grounded = new bool[polys.Count];
@@ -279,6 +373,12 @@ namespace Gameplay.Core.Sim
             var remaining = 0;
             for (var i = 0; i < polys.Count; i++)
             {
+                // TASK-043: a Placed piece that has escaped the world Bounds is in free fall (pathological Timeout,
+                // not an air-freeze) — drop it from the grounding graph entirely: neither required to be supported
+                // (never added to remaining) nor allowed to serve as support for another piece (never grounded, so
+                // never picked as an anchor k below). lowered[i] stays null and is only read for in-Bounds pieces.
+                if (!inBounds[i])
+                    continue;
                 lowered[i] = ShiftDown(polys[i], supportProbe);
                 if (SupportedByStatic(lowered[i], statics))
                     grounded[i] = true;
@@ -292,7 +392,7 @@ namespace Gameplay.Core.Sim
                 changed = false;
                 for (var i = 0; i < polys.Count; i++)
                 {
-                    if (grounded[i])
+                    if (grounded[i] || !inBounds[i])
                         continue;
                     for (var k = 0; k < polys.Count; k++)
                     {

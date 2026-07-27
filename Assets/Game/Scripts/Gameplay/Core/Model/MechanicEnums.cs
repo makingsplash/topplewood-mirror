@@ -37,16 +37,4 @@ namespace Gameplay.Core
         Balance,
         Catapult,
     }
-
-    /// <summary>
-    /// Easing curve for the soft-settle glide (TASK-009, game-balancer 13 §2.2). SmootherStep is the default —
-    /// its 1st AND 2nd derivatives are zero at both ends, so the glide flows out of rest and into the freeze
-    /// with no visible velocity pop. SmoothStep / EaseOutCubic are A/B alternatives (game-balancer 13 §8).
-    /// </summary>
-    public enum SettleEasing
-    {
-        SmootherStep,
-        SmoothStep,
-        EaseOutCubic,
-    }
 }

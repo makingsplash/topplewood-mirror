@@ -9,6 +9,13 @@ namespace Gameplay.Core
     /// <c>posErr ≤ posTol</c> AND symmetry-reduced <c>angErr ≤ angTol</c>. A slot is filled when it gets an
     /// admissible piece. Greedy is sufficient for MVP layouts (few pieces, pieces above their slots, generous
     /// tolerance); optimal assignment (Hungarian) is deferred (TECH_DEBT) if QA/level-sim finds false negatives.
+    ///
+    /// TASK-043 adds a rigidity constraint (RFC §2). After the assist layer was removed the win is judged from
+    /// physical rest poses, so the absolute per-piece tolerances above can no longer distinguish a genuinely
+    /// assembled figure from one that collapsed with every piece still inside its own generous tolerance. When
+    /// <c>tol.RigidityTol &gt; 0</c> the match additionally requires the spread of the matched pieces' residual
+    /// vectors (<c>piece_i − slot_i</c>, including the pivot) to stay within that bound; a large spread means the
+    /// figure is internally deformed and the silhouette is NOT considered assembled.
     /// </summary>
     public sealed class PoseMatchEvaluator : IMatchEvaluator
     {
@@ -58,6 +65,8 @@ namespace Gameplay.Core
 
             var slotsFilled = 0;
             var totalError = 0f;
+            // Residual vector (piece − slot) of each matched pair — the rigidity spread is measured over these.
+            var residuals = new List<Vec2>(slotsTotal);
             foreach (var c in candidates)
             {
                 if (slotUsed[c.Slot] || pieceUsed[c.Piece])
@@ -66,9 +75,35 @@ namespace Gameplay.Core
                 pieceUsed[c.Piece] = true;
                 slotsFilled++;
                 totalError += c.Error;
+                residuals.Add(placed[c.Piece].Position - slots[c.Slot].Position);
             }
 
-            return new MatchResult(slotsFilled == slotsTotal, slotsFilled, slotsTotal, totalError);
+            var assembled = slotsFilled == slotsTotal;
+
+            // Rigidity constraint (TASK-043 §2): the figure is only assembled when the pairwise spread of the
+            // residual vectors stays within RigidityTol. Translation-invariant (a uniform shift has zero spread —
+            // that is PosTol's job), so it measures INTERNAL deformation: a canonical rest has all residuals ≈
+            // equal (spread ≈ solver slop), a collapsed figure has residuals pulling in opposite directions
+            // (large spread). n ≤ 1 residual ⇒ spread 0 ⇒ never blocks. Off when RigidityTol ≤ 0 (default).
+            if (assembled && tol.RigidityTol > 0f && RigidityViolation(residuals) > tol.RigidityTol)
+                assembled = false;
+
+            return new MatchResult(assembled, slotsFilled, slotsTotal, totalError);
+        }
+
+        /// <summary>Max pairwise distance between residual vectors — the internal-deformation spread (TASK-043 §2).
+        /// O(n²) over the handful of matched pieces. Zero for 0 or 1 residual.</summary>
+        private static float RigidityViolation(List<Vec2> residuals)
+        {
+            var worst = 0f;
+            for (var i = 0; i < residuals.Count; i++)
+                for (var j = i + 1; j < residuals.Count; j++)
+                {
+                    var spread = (residuals[i] - residuals[j]).Length;
+                    if (spread > worst)
+                        worst = spread;
+                }
+            return worst;
         }
 
         /// <summary>
