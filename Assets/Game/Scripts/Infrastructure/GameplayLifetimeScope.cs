@@ -4,6 +4,7 @@ using Gameplay.Adapters;
 using Gameplay.Core;
 using Gameplay.DI;
 using Gameplay.Sequence.DI;
+using Gameplay.Tutorial;
 using Services;
 using Services.Gameplay;
 using SGS.Services.Date_Time;
@@ -42,7 +43,15 @@ namespace Game.Code.Infrastructure
             builder.Register<IInputBlockersHandler, InputBlockersHandler>(Lifetime.Singleton);
 
             // Production input source (moved out of GameplayCoreInstaller, RFC §2.3): IInputService-backed.
-            builder.Register<IGameplayInputSource, InputServiceGameplayInputSource>(Lifetime.Singleton);
+            // Wrapped by the tutorial input decorator (TASK-049): register the concrete source by itself, then
+            // bind IGameplayInputSource to the decorator that consults the tutorial input gate. Prod is the easy
+            // case (the concrete is not an entry point), so the swap is a plain pair (human 15:21 DI note).
+            builder.Register<InputServiceGameplayInputSource>(Lifetime.Singleton);
+            builder.Register<IGameplayInputSource>(
+                resolver => new TutorialGatedInputSource(
+                    resolver.Resolve<InputServiceGameplayInputSource>(),
+                    resolver.Resolve<ITutorialInputGate>()),
+                Lifetime.Singleton);
 
             builder.RegisterInstance(Data.Configs.Core).AsSelf();
 
@@ -51,6 +60,13 @@ namespace Game.Code.Infrastructure
             // lifecycle prefs-flush (pause/focus/quit → SaveDataIfChanged).
             builder.Register<ICampaignStore, MetaCampaignStore>(Lifetime.Singleton);
             builder.RegisterEntryPoint<SaveManager>();
+
+            // Tutorial system prod impls (TASK-049): completion on the SDK-canon Data.Meta.CompletedTutorials,
+            // gate on Data.Debug.DisableTutorial, funnel via the SayKit tutorial analytics. Context-independent
+            // parts (input gate, view stub, definition, runner) live in GameplayCoreInstaller.
+            builder.Register<ITutorialProgressStore, MetaTutorialProgressStore>(Lifetime.Singleton);
+            builder.Register<ITutorialGate, ProdTutorialGate>(Lifetime.Singleton);
+            builder.Register<ITutorialAnalytics, SayKitTutorialAnalytics>(Lifetime.Singleton);
 
             RegisterSessionServices(builder);
         }
