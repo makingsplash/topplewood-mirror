@@ -23,6 +23,12 @@ namespace Game.Editor.McpBridge
     {
         public object result;
         public string error;
+
+        // Envelope-level identity: which working tree actually answered. Stamped in
+        // WriteResponse so EVERY response (not just ping) self-identifies its tree,
+        // letting a client refuse data from a foreign tree that grabbed the shared
+        // port 18711. See TASK-045.
+        public string projectPath;
     }
 
     [InitializeOnLoad]
@@ -34,10 +40,20 @@ namespace Game.Editor.McpBridge
         private static readonly Queue<Action> _mainThreadQueue = new();
         private static bool _running;
 
+        // Self-heal watchdog throttle (Fix B, TASK-045). Editor seconds
+        // (EditorApplication.timeSinceStartup) of the earliest allowed rebind retry.
+        private const double RebindBackoffSeconds = 4.0;
+        private static double _nextRebindAt;
+
         static McpBridgeServer()
         {
+            // Fix A (TASK-045): a batch-mode instance (e.g. the sim worktree launched by
+            // run-sim.sh with -batchmode) needs no interactive bridge and must NOT grab the
+            // shared port 18711 — otherwise it answers the client from a foreign tree and a
+            // code role silently "confirms compilation" in the wrong worktree.
+            if (Application.isBatchMode) return;
             if (!McpBridgeConfig.Enabled) return;
-            EditorApplication.update += ProcessMainThreadQueue;
+            EditorApplication.update += OnEditorUpdate;
             // Cleanly release our own listen socket before every domain reload, so the
             // editor never contends with a stale copy of itself across recompiles.
             AssemblyReloadEvents.beforeAssemblyReload += Stop;
@@ -168,6 +184,17 @@ namespace Game.Editor.McpBridge
                 catch (Exception ex)
                 {
                     if (_running) Debug.LogError($"[McpBridge] Listener error: {ex.Message}");
+
+                    // Fix B addendum (TASK-045, owner comment 13:17 #1). If the listener is no
+                    // longer alive but _running is still true, retrying GetContext() would spin a
+                    // hot loop logging every iteration AND the stuck _running=true would block the
+                    // watchdog (its trigger is !_running) from ever rebinding. Tear the flag down
+                    // and break so the watchdog (TryRebind) re-Start()s a fresh listener.
+                    if (_listener == null || !_listener.IsListening)
+                    {
+                        _running = false;
+                        break;
+                    }
                 }
             }
         }
@@ -250,6 +277,11 @@ namespace Game.Editor.McpBridge
         {
             try
             {
+                // Fix C Unity-half (TASK-045). Stamp the answering tree into every response
+                // envelope so a client can detect (and refuse) a foreign tree that grabbed the
+                // shared port. Read off the listener/threadpool thread, consistent with the ping
+                // handler which already reads Application.dataPath off the main thread.
+                data.projectPath = Application.dataPath;
                 var json = JsonConvert.SerializeObject(data);
                 var buffer = Encoding.UTF8.GetBytes(json);
                 response.ContentLength64 = buffer.Length;
@@ -262,6 +294,12 @@ namespace Game.Editor.McpBridge
             }
         }
 
+        private static void OnEditorUpdate()
+        {
+            ProcessMainThreadQueue();
+            TryRebind();
+        }
+
         private static void ProcessMainThreadQueue()
         {
             while (_mainThreadQueue.Count > 0)
@@ -269,6 +307,21 @@ namespace Game.Editor.McpBridge
                 var action = _mainThreadQueue.Dequeue();
                 action?.Invoke();
             }
+        }
+
+        // Self-heal watchdog (Fix B, TASK-045). If the bridge is down while it should be up,
+        // periodically re-Start() it so the editor recovers on its own instead of waiting for
+        // a random recompile (bind otherwise happens only on domain reload via
+        // [InitializeOnLoad]). Throttled by RebindBackoffSeconds so we don't hammer the port if
+        // it is legitimately held by someone else. Start() is idempotent (`if (_running) return`)
+        // and already carries its own 4-attempt worker-freeing retry — this just re-invokes it.
+        private static void TryRebind()
+        {
+            if (_running) return;
+            if (!McpBridgeConfig.Enabled || Application.isBatchMode) return;
+            if (EditorApplication.timeSinceStartup < _nextRebindAt) return;
+            _nextRebindAt = EditorApplication.timeSinceStartup + RebindBackoffSeconds;
+            Start();
         }
 
         // Current git branch of the working copy (for tools that need to warn when
