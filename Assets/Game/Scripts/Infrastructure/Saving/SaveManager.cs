@@ -1,7 +1,7 @@
 using System;
 using DataStorage;
-using Gameplay.Core;
 using Infrastructure.ApplicationTriggers;
+using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 using UnityEngine;
 using VContainer.Unity;
 using Game.Services.LogService;
@@ -9,28 +9,26 @@ using Game.Services.LogService;
 namespace Game.Infrastructure.Saving
 {
     /// <summary>
-    /// Autosave lifecycle skeleton: hooks app pause/focus/quit triggers and throttles saves.
-    /// The concrete "what to save" was gameplay-specific and was removed with the TileSort game;
-    /// plug the new game's save call into <see cref="SaveProgress"/>.
+    /// Lifecycle prefs-flush (TASK-044): hooks app pause/focus/quit and throttles a durable PlayerPrefs flush.
+    /// The old in-level snapshot save was retired (BUG-2, write-only), so "what to save" is now simply all
+    /// dirty PlayerPrefs (gold/hearts/campaign pointer/…) via the Say wrapper. The campaign WIN already flushes
+    /// its own checkpoint; this is the belt-and-suspenders flush that catches backgrounding.
     /// </summary>
     public sealed class SaveManager : IInitializable, IDisposable
     {
         private readonly IApplicationTriggers _applicationTriggers;
         private readonly ILogService _logService;
-        private readonly IProgressSaver _progressSaver;
 
         private float _lastSaveTime;
         private const float TimeBetweenSave = 1f;
 
         public SaveManager(
             IApplicationTriggers applicationTriggers,
-            ILogService logService,
-            IProgressSaver progressSaver
+            ILogService logService
         )
         {
             _applicationTriggers = applicationTriggers;
             _logService = logService;
-            _progressSaver = progressSaver;
         }
 
         public void Initialize()
@@ -78,8 +76,8 @@ namespace Game.Infrastructure.Saving
 
             _lastSaveTime = Time.realtimeSinceStartup;
 
-            _progressSaver.Save();
-            _logService.Log(LogLevel.Info, $"Autosave tick. Delta = {delta}", LogCategory.SaveManager);
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
+            _logService.Log(LogLevel.Info, $"Prefs flush tick. Delta = {delta}", LogCategory.SaveManager);
         }
     }
 }

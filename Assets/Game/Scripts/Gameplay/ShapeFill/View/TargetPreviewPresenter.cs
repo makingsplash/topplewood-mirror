@@ -11,7 +11,7 @@ namespace Gameplay.View
     /// Builds the target preview overlay when a level loads (RFC §4.1, GAME_RULES §7). Mirrors
     /// <see cref="ShapeFillPresenter"/>: observes <see cref="GameModel"/> only, so the domain stays
     /// view-agnostic. The preview depends solely on the level's target + piece types, not on piece
-    /// runtime state, so it ignores StateRestored — the save snapshot never rebuilds it (RFC §4.1, §8).
+    /// runtime state, so it is rebuilt only on level load (TASK-044 retired the in-level save snapshot).
     /// </summary>
     public sealed class TargetPreviewPresenter : IStartable, IDisposable
     {

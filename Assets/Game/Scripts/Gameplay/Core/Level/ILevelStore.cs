@@ -3,7 +3,7 @@ namespace Gameplay.Core
     /// <summary>
     /// Raw-text source seam for authored level content (TASK-009). Keeps <see cref="JsonLevelSource"/>
     /// Unity-free (domain discipline, overview §Слои): the concrete reader (StreamingAssets file / cloud)
-    /// is a Unity-side adapter behind this interface, mirroring the <see cref="IShapeFillSaveStore"/> pattern.
+    /// is a Unity-side adapter behind this interface (the seam/adapter split used across the domain).
     /// </summary>
     public interface ILevelStore
     {

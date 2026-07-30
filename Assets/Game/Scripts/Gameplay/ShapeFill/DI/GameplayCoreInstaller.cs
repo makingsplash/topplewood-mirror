@@ -35,9 +35,9 @@ namespace Gameplay.DI
             builder.Register<ILevelStore, StreamingAssetsLevelStore>(Lifetime.Singleton);
             builder.Register<ILevelSource, JsonLevelSource>(Lifetime.Singleton);
 
-            // Campaign progression + meta-pointer persistence (TASK-009). ICampaignStore is separate from the
-            // in-level IShapeFillSaveStore; only the level number is saved (kill mid-level = level from scratch).
-            builder.Register<ICampaignStore, FileCampaignStore>(Lifetime.Singleton);
+            // ICampaignStore is bound by the hosting scope (TASK-044): prod MetaCampaignStore writes the SDK-canon
+            // Data.Meta.CurrentLevel; bringup PrefsCampaignStore owns its own PlayerPrefsInt (needs only Init).
+            // Kept out of this context-independent core installer, exactly like IGameplayInputSource (RFC §2.3).
 
             // Physics adapter: one instance seen as both the generic seam and the shape_fill contract.
             builder.Register<UnityShapeFillSimulation>(Lifetime.Singleton)
