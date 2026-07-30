@@ -45,6 +45,7 @@ namespace Gameplay.Dev
 
         private DebugItemsConfig _config;
         private DDMMain _menu;
+        private GameObject _eventSystem;
 
         public BringupDebugMenuHost(
             ILevelSource levelSource, GameModel model, CampaignProgressionController campaign, ICampaignStore store)
@@ -61,8 +62,11 @@ namespace Gameplay.Dev
         {
             // The DDM "Console" button (DDMMain.MainMenuContent) calls SRDebug.Instance → NRE if SRDebug was
             // never initialized. bringup skips the LoadingGame bootstrap that normally inits it (LoadingGame.cs:98),
-            // so guard-init it here. SRDebug.Init is not self-idempotent (it re-registers unconditionally), so
-            // gate on its own IsInitialized flag — a second init (prod boot → then enter bringup) is skipped.
+            // so guard-init it here. The IsInitialized gate is a cheap defensive/self-documenting guard, NOT a
+            // correctness requirement: SRDebug.Init is in fact idempotent — SRServiceManager.RegisterAssembly
+            // (early-returns if _assemblies already contains it) and RegisterService (early-returns on an identical
+            // registered service) both short-circuit, so a redundant second init (prod boot → then enter bringup)
+            // is a harmless no-op even without the gate.
             if (!SRDebug.IsInitialized)
                 SRDebug.Init();
 
@@ -106,8 +110,8 @@ namespace Gameplay.Dev
             if (UnityEngine.Object.FindFirstObjectByType<EventSystem>() != null)
                 return;
 
-            var go = new GameObject("[Dev] EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
-            UnityEngine.Object.DontDestroyOnLoad(go);
+            _eventSystem = new GameObject("[Dev] EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+            UnityEngine.Object.DontDestroyOnLoad(_eventSystem);
         }
 
         // Content generator handed the live DDMContext by DDMMain — mirrors the retired overlay's UX.
@@ -146,6 +150,14 @@ namespace Gameplay.Dev
             if (_menu != null)
                 UnityEngine.Object.Destroy(_menu.gameObject);
             _menu = null;
+
+            // Destroy ONLY the EventSystem we created ourselves: it is DontDestroyOnLoad, so without this it
+            // leaks for the whole play session. _eventSystem is non-null exactly when EnsureEventSystem created
+            // one; if it found a pre-existing EventSystem instead, _eventSystem stayed null and we must not touch
+            // someone else's object.
+            if (_eventSystem != null)
+                UnityEngine.Object.Destroy(_eventSystem);
+            _eventSystem = null;
         }
     }
 }
