@@ -14,6 +14,12 @@ namespace Gameplay.Tutorial
     /// tutorial (RFC §7 invariant 2). On each <see cref="GameModel.LevelLoaded"/> it re-evaluates the gate and
     /// (re)starts the tour from step 0 when eligible — so a LOSS reload of the tutorial level replays the tour,
     /// and completion is persisted only after the LAST step (mid-tour LOSS ⇒ tour repeats, RFC §Q4).
+    ///
+    /// A synchronously-completing step is supported by design: a step that observes a <c>ReactiveProperty</c>
+    /// (e.g. <see cref="GameModel.Phase"/>/<see cref="GameModel.Outcome"/>, which replay their current value on
+    /// Subscribe) can fire completion INSIDE <see cref="ITutorialStep.Enter"/>'s Subscribe call. Advancement is
+    /// therefore reentrancy-safe: a completion that arrives during arming is deferred to the arming loop instead
+    /// of recursing, so the next step's subscription is never overwritten and orphaned (QA §4/C).
     /// </summary>
     public sealed class TutorialRunner : IStartable, IDisposable
     {
@@ -35,6 +41,12 @@ namespace Gameplay.Tutorial
         private IDisposable _stepSubscription;
         private TutorialContext _context;
         private int _stepIndex;
+
+        // Reentrancy guard for a step that completes synchronously during Enter's Subscribe (see class summary):
+        // OnStepCompleted then sets _advancePending instead of recursing, and the PlayCurrentStep loop advances
+        // only after _stepSubscription has been safely assigned.
+        private bool _arming;
+        private bool _advancePending;
 
         public TutorialRunner(
             GameModel model,
@@ -94,26 +106,47 @@ namespace Gameplay.Tutorial
 
         private void PlayCurrentStep()
         {
-            if (_stepIndex >= _definition.Steps.Count)
+            // Loop rather than recurse so a step that completes synchronously (during Subscribe, below) advances
+            // here — AFTER its subscription is assigned to _stepSubscription — instead of re-entering and letting
+            // the next step's subscription be overwritten by the just-assigned dead one.
+            while (true)
             {
-                CompleteTutorial();
-                return;
+                if (_stepIndex >= _definition.Steps.Count)
+                {
+                    CompleteTutorial();
+                    return;
+                }
+
+                var step = _definition.Steps[_stepIndex];
+                _analytics.LogStep(_definition.Id, step.Id);
+
+                _stepSubscription?.Dispose();
+                _advancePending = false;
+                _arming = true;
+                // Take(1): the runner owns "advance on first completion" so steps can return any completion stream.
+                _stepSubscription = step.Enter(_context)
+                    .Take(1)
+                    .Subscribe(_ => OnStepCompleted(step));
+                _arming = false;
+
+                // Asynchronous completion (the common case): return and wait for the emission to call back.
+                if (!_advancePending)
+                    return;
+                // Synchronous completion fired inside Subscribe: OnStepCompleted already ran Exit + advanced the
+                // index, so loop to arm the next step now that _stepSubscription points at this (finished) one.
             }
-
-            var step = _definition.Steps[_stepIndex];
-            _analytics.LogStep(_definition.Id, step.Id);
-
-            _stepSubscription?.Dispose();
-            // Take(1): the runner owns "advance on first completion" so steps can return any completion stream.
-            _stepSubscription = step.Enter(_context)
-                .Take(1)
-                .Subscribe(_ => AdvanceStep(step));
         }
 
-        private void AdvanceStep(ITutorialStep step)
+        private void OnStepCompleted(ITutorialStep step)
         {
             step.Exit(_context);
             _stepIndex++;
+            if (_arming)
+            {
+                // Completed synchronously during arming — defer to the PlayCurrentStep loop (see above).
+                _advancePending = true;
+                return;
+            }
             PlayCurrentStep();
         }
 

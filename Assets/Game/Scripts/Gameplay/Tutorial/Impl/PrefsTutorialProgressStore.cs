@@ -5,10 +5,14 @@ using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 namespace Gameplay.Tutorial
 {
     /// <summary>
-    /// Bringup <see cref="ITutorialProgressStore"/> (TASK-049 RFC §Q1): the R5-isolated scene raises no
-    /// <c>Data</c>/<c>SayData</c>, so it owns its own <see cref="PlayerPrefsListString"/> on a fresh key
-    /// <c>Tutorial.Completed</c> (default empty ⇒ no migration). Shares the real prefs backend the bringup scope
-    /// Inits, so completion survives Stop→Play. Each mutation flushes durably, mirroring the campaign store.
+    /// Bringup <see cref="ITutorialProgressStore"/> (TASK-049 RFC §Q1). Owns its own
+    /// <see cref="PlayerPrefsListString"/> on a SEPARATE key <c>Tutorial.Completed</c> (default empty ⇒ no
+    /// migration) — deliberately, NOT merely because the R5-isolated scene raises no <c>Data</c>/<c>SayData</c>.
+    /// A separate key isolates FTUE: dev-replaying the tour in the gray-box scene must NOT mark the tutorial
+    /// completed for the real player. This is the OPPOSITE of <c>PrefsCampaignStore</c>, which deliberately shares
+    /// the real canon key <c>Meta.CurrentLevel</c> so campaign progress carries between bringup and prod — there
+    /// carry-over is wanted; here it is not. Shares the real prefs backend the bringup scope Inits, so completion
+    /// survives Stop→Play. Each mutation flushes durably, mirroring the campaign store's flush discipline.
     /// </summary>
     public sealed class PrefsTutorialProgressStore : ITutorialProgressStore
     {

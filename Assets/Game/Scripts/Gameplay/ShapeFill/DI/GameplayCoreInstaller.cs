@@ -83,7 +83,7 @@ namespace Gameplay.DI
             builder.Register<ITutorialInputGate, TutorialInputGate>(Lifetime.Singleton);
             builder.Register<ITutorialView, LoggingTutorialView>(Lifetime.Singleton);
             builder.RegisterInstance(new TutorialDefinition(
-                "first_tutorial", new ITutorialStep[] { new ReleaseFirstPieceStep() }));
+                "first_tutorial", new ITutorialStep[] { new FirstTapStep() }));
             builder.RegisterEntryPoint<TutorialRunner>();
             // NOTE: the dev level-switch cheat is NOT registered here. This core installer is context-independent
             // (shared with prod), and prod raises its own GameDebugMenu via LoadingGame — registering a cheat here
