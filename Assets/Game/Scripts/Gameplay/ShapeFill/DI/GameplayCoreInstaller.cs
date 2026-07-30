@@ -70,12 +70,10 @@ namespace Gameplay.DI
             builder.RegisterEntryPoint<StaticGeometryPresenter>();
             builder.RegisterEntryPoint<ShapeFillPresenter>();
             builder.RegisterEntryPoint<TargetPreviewPresenter>();
-
-#if GPIE_DEVELOPMENT
-            // Dev/QA level-switch cheat overlay (TASK-011): editor/dev builds only, never in player builds.
-            // Injects CampaignProgressionController so jumps keep the campaign pointer in sync.
-            builder.RegisterEntryPoint<Gameplay.Dev.LevelCheatController>();
-#endif
+            // NOTE: the dev level-switch cheat is NOT registered here. This core installer is context-independent
+            // (shared with prod), and prod raises its own GameDebugMenu via LoadingGame — registering a cheat here
+            // would spawn a SECOND menu in prod. The bringup-only DDM host is registered by
+            // ShapeFillBringupLifetimeScope instead (TASK-047).
         }
     }
 }

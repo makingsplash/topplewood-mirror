@@ -43,5 +43,13 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
         // Data.Debug-gated SaveManager). No in-level snapshot — kill mid-level reopens the level from scratch.
         builder.Register<ICampaignStore, PrefsCampaignStore>(Lifetime.Singleton);
         builder.RegisterEntryPoint<BringupPrefsFlush>();
+
+#if GPIE_DEVELOPMENT
+        // Dev/QA level-switch cheat (TASK-047): the reachable SayKit DynamicDebugMenu UI, hosted inside this
+        // bringup scope so it can inject CampaignProgressionController by ordinary DI (replaces the removed IMGUI
+        // overlay). Registered HERE, not in the context-independent GameplayCoreInstaller, because prod raises its
+        // own GameDebugMenu via LoadingGame — a core-installer registration would spawn a SECOND menu in prod.
+        builder.RegisterEntryPoint<Gameplay.Dev.BringupDebugMenuHost>();
+#endif
     }
 }
