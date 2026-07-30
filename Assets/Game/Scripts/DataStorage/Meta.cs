@@ -18,10 +18,6 @@ namespace DataStorage
         // 0-based level index in levels config, calculated from CurrentLevel on level start
         public PlayerPrefsInt CurrentLevelIndex => SayData.Meta.CurrentLevelIndex;
 
-        // TASK-044: one-shot gate for the legacy campaign-file → prefs migration (CampaignFileMigration). Set
-        // true after the first import so it never re-runs; foreign/old prefs schemas migrate via new markers.
-        public readonly PlayerPrefsBool MigratedCampaignFileV1 = new ("Meta.MigratedCampaignFileV1", false);
-
         /// <summary>
         /// for modify this field pls use TutorialsDataManager
         /// </summary>

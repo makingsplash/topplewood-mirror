@@ -16,11 +16,9 @@ namespace Gameplay.Adapters
     public sealed class PrefsCampaignStore : ICampaignStore
     {
         private readonly PlayerPrefsInt _currentLevel = new("Meta.CurrentLevel", 1);
-        private readonly PlayerPrefsBool _migratedMarker = new("Meta.MigratedCampaignFileV1", false);
 
         public int ReadLevelIndex()
         {
-            CampaignFileMigration.RunIfNeeded(_currentLevel, _migratedMarker);
             return _currentLevel.Value - 1;
         }
 
