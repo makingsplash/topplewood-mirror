@@ -151,6 +151,11 @@ namespace Gameplay.Core
             var pieceCounts = new Dictionary<string, int>();
             foreach (var placement in level.Pieces)
             {
+                // TASK-054: an expendable piece is a tool that may leave the field by design, so it does NOT
+                // guarantee a slot can be filled — count only ESSENTIAL pieces toward coverage. Back-compat:
+                // levels with no expendable piece count every piece, exactly as before.
+                if (placement.Expendable)
+                    continue;
                 var kind = placement.Type?.Kind;
                 if (kind == null)
                     continue;
@@ -161,7 +166,7 @@ namespace Gameplay.Core
             {
                 pieceCounts.TryGetValue(kv.Key, out var have);
                 if (have < kv.Value)
-                    errors.Add($"Kind '{kv.Key}': {kv.Value} slot(s) but only {have} piece(s) — unwinnable.");
+                    errors.Add($"Kind '{kv.Key}': {kv.Value} slot(s) but only {have} ESSENTIAL piece(s) — unwinnable.");
             }
         }
     }

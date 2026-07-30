@@ -193,6 +193,11 @@ namespace Gameplay.Core.Mechanic
             return null;
         }
 
+        /// <summary>TASK-054: the single source of truth for "is this piece a tool that may be lost freely?".
+        /// Read from <see cref="LevelData"/> via PlacementIndex — exactly as OnLevelLoaded reads Preplaced — so
+        /// PieceInstance stays a clean runtime model (no new save field). Absent flag → false → essential.</summary>
+        private bool IsExpendable(PieceInstance piece) => _level.Pieces[piece.PlacementIndex].Expendable;
+
         public void Tick(float dt)
         {
             if (_model.CurrentPhase != GamePhase.Running)
@@ -211,6 +216,13 @@ namespace Gameplay.Core.Mechanic
 
             foreach (var piece in _model.Pieces)
             {
+                // Losing an ESSENTIAL piece past the bounds resolves the level Lost immediately inside
+                // UpdateFalling (TASK-054 §3). Once that fires the phase leaves Running, so the remaining
+                // iterations must NOT keep mutating the model: bail out before MirrorPose can drag a resolved
+                // model, and before a second simultaneous loss double-Resolves in the same tick.
+                if (_model.CurrentPhase != GamePhase.Running)
+                    return;
+
                 if (!_bodyByInstance.TryGetValue(piece.InstanceId, out var bodyId))
                     continue;
 
@@ -297,6 +309,11 @@ namespace Gameplay.Core.Mechanic
                 _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Lost);
                 _simulation.Despawn(bodyId);
                 _bodyByInstance.Remove(piece.InstanceId);
+                // TASK-054: losing an ESSENTIAL piece (part of the target figure) is terminal — no later event can
+                // bring it back, so fail NOW rather than waiting for global rest. The caller's Tick loop early-exits
+                // once the phase leaves Running (above). An EXPENDABLE piece (a tool) may leave the field freely.
+                if (!IsExpendable(piece))
+                    _model.Resolve(GameOutcome.Lost);
                 return;
             }
 
@@ -409,11 +426,15 @@ namespace Gameplay.Core.Mechanic
         /// </summary>
         private void ResolveAtRest()
         {
-            var anyLost = false;
+            // TASK-054: only an ESSENTIAL Lost piece blocks the win (an expendable tool may leave the field). After
+            // §3 an essential piece never survives Lost to this point — it already resolved the level in UpdateFalling
+            // — so anyEssentialLost is defensively false here; the branch keeps the win-gate self-consistent and
+            // survives a hypothetical move back to a rest-time verdict. Expendable Lost pieces no longer veto the win.
+            var anyEssentialLost = false;
             var anyIdle = false;
             foreach (var piece in _model.Pieces)
             {
-                if (piece.State == PieceLifecycle.Lost) anyLost = true;
+                if (piece.State == PieceLifecycle.Lost) { if (!IsExpendable(piece)) anyEssentialLost = true; }
                 else if (piece.State == PieceLifecycle.Idle) anyIdle = true;
             }
 
@@ -433,7 +454,7 @@ namespace Gameplay.Core.Mechanic
 
             var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
 
-            if (result.AllSlotsFilled && !anyLost)
+            if (result.AllSlotsFilled && !anyEssentialLost)
             {
                 _model.Resolve(GameOutcome.Won);
                 return;
