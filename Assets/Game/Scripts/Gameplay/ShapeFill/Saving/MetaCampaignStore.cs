@@ -12,14 +12,12 @@ namespace Gameplay.Adapters
     /// <c>Data.Meta.CurrentLevel</c> INSTANCE (never a second <c>PlayerPrefsInt</c> on the same key) so those
     /// readers see the fresh value without a <c>Refresh</c> (RFC risk R1). 0-based campaign index maps as
     /// <c>index = CurrentLevel.Value - 1</c>. <see cref="WriteLevelIndex"/> flushes to disk immediately — a
-    /// durable WIN checkpoint that survives a kill without a normal exit (RFC §8). The one-time file→prefs
-    /// migration runs on first read (RFC §5).
+    /// durable WIN checkpoint that survives a kill without a normal exit (RFC §8).
     /// </summary>
     public sealed class MetaCampaignStore : ICampaignStore
     {
         public int ReadLevelIndex()
         {
-            CampaignFileMigration.RunIfNeeded(Data.Meta.CurrentLevel, Data.Meta.MigratedCampaignFileV1);
             return Data.Meta.CurrentLevel.Value - 1;
         }
 
