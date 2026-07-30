@@ -1,15 +1,3 @@
-namespace Gameplay.Core
-{
-    /// <summary>
-    /// Persistence sink seam for the shape_fill snapshot JSON (RFC §4.1). The domain writes/reads an
-    /// opaque string; the concrete store (file / PlayerPrefs / cloud) is a Unity-side adapter, swappable
-    /// behind this interface (TECH_DEBT: file → PlayerPrefs/cloud).
-    /// </summary>
-    public interface IShapeFillSaveStore
-    {
-        void Write(string json);
-        string Read();
-        bool Exists();
-        void Clear();
-    }
-}
+// TASK-044: RETIRED — the in-level snapshot save/restore contour was removed (write-only dead code, BUG-2).
+// This file is emptied to a type-free stub only because file deletion (git rm) was unavailable to the
+// implementer this session; it must be deleted together with its .meta. See 02-dev-implementer.md.

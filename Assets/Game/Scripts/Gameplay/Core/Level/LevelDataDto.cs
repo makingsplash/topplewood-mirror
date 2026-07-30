@@ -9,7 +9,7 @@ namespace Gameplay.Core
     /// domain <see cref="LevelData"/>. Newtonsoft with stable field names, Unity-free. The human mandate
     /// (comment 15:04) — "levels are hardcoded, design a storage system and assemble levels in it" — is met
     /// by hand-authored JSON in StreamingAssets (see <c>shapefill_levels.json</c>) mapped here to the domain.
-    /// One file groups the small related POCOs (mirrors <c>GameSnapshot.cs</c>).
+    /// One file groups the small related POCOs.
     /// </summary>
     public sealed class CampaignFileDto
     {

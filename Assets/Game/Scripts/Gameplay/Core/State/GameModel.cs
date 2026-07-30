@@ -14,16 +14,12 @@ namespace Gameplay.Core
         private readonly ReactiveProperty<GameOutcome> _outcome = new(GameOutcome.None);
         private readonly Subject<Unit> _levelLoaded = new();
         private readonly Subject<Unit> _levelResolved = new();
-        private readonly Subject<Unit> _stateRestored = new();
         private readonly List<PieceInstance> _pieces = new();
 
         public ReadOnlyReactiveProperty<GamePhase> Phase => _phase;
         public ReadOnlyReactiveProperty<GameOutcome> Outcome => _outcome;
         public Observable<Unit> LevelLoaded => _levelLoaded;
         public Observable<Unit> LevelResolved => _levelResolved;
-
-        /// <summary>Fires after a snapshot is restored so the mechanic can rebuild bodies/views (RFC §8).</summary>
-        public Observable<Unit> StateRestored => _stateRestored;
 
         public LevelData CurrentLevel { get; private set; }
         public IReadOnlyList<PieceInstance> Pieces => _pieces;
@@ -68,65 +64,6 @@ namespace Gameplay.Core
             _outcome.Value = outcome;
             _phase.Value = outcome == GameOutcome.Won ? GamePhase.Won : GamePhase.Lost;
             _levelResolved.OnNext(Unit.Default);
-        }
-
-        public IGameSnapshot CaptureState()
-        {
-            var snapshot = new GameSnapshot
-            {
-                LevelId = CurrentLevel?.LevelId,
-                Phase = _phase.Value,
-                AttemptsUsed = AttemptsUsed,
-            };
-
-            foreach (var piece in _pieces)
-            {
-                snapshot.Pieces.Add(new PieceSnapshot
-                {
-                    InstanceId = piece.InstanceId,
-                    PlacementIndex = piece.PlacementIndex,
-                    Kind = piece.Kind,
-                    State = piece.State,
-                    PosX = piece.Position.X,
-                    PosY = piece.Position.Y,
-                    Rot = piece.Rotation,
-                });
-            }
-
-            return snapshot;
-        }
-
-        /// <summary>
-        /// Restore a v3 snapshot onto the already-loaded level. Older/foreign schema is ignored (forward
-        /// migration = fresh level), matching the forgiving design and RFC §8.
-        /// </summary>
-        public bool RestoreState(IGameSnapshot snapshot)
-        {
-            if (snapshot is not GameSnapshot v3 || v3.SchemaVersion != GameSnapshot.CurrentSchemaVersion)
-                return false;
-            if (CurrentLevel == null || v3.LevelId != CurrentLevel.LevelId)
-                return false;
-
-            AttemptsUsed = v3.AttemptsUsed;
-
-            var byId = new Dictionary<int, PieceSnapshot>(v3.Pieces.Count);
-            foreach (var p in v3.Pieces)
-                byId[p.InstanceId] = p;
-
-            foreach (var piece in _pieces)
-            {
-                if (!byId.TryGetValue(piece.InstanceId, out var saved))
-                    continue;
-                // A piece persisted mid-fall returns to Idle (save-at-rest policy, RFC §8).
-                piece.State = saved.State == PieceLifecycle.Falling ? PieceLifecycle.Idle : saved.State;
-                piece.Position = new Vec2(saved.PosX, saved.PosY);
-                piece.Rotation = saved.Rot;
-                piece.RestTimer = 0f;
-            }
-
-            _phase.Value = v3.Phase;
-            _stateRestored.OnNext(Unit.Default);
-            return true;
         }
     }
 }

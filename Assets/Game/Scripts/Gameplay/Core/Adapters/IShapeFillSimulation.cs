@@ -14,18 +14,12 @@ namespace Gameplay.Core.Adapters
         /// </summary>
         int SpawnFloating(PieceType type, Vec2 spawn, float rotation);
 
-        /// <summary>
-        /// Spawn a body already at rest in an exact pose (RFC §8, save rehydration). The body does not
-        /// re-simulate — its pose is preserved exactly and it can support other pieces. Returns its body id.
-        /// </summary>
-        int SpawnSettled(PieceType type, Vec2 pos, float rotation);
-
         /// <summary>Materialise a floating piece: enable its collider AND gravity → it starts falling.</summary>
         void Release(int bodyId);
 
         /// <summary>
         /// Lock a settled body at an exact pose: kinematic, zero velocity — stops post-rest drift and turns it
-        /// into a stable support (mirrors SpawnSettled). Called at Falling→Placed (RFC 07 §2.1).
+        /// into a stable support. Called at Falling→Placed (RFC 07 §2.1).
         /// </summary>
         void FreezeAt(int bodyId, Vec2 position, float rotation);
 

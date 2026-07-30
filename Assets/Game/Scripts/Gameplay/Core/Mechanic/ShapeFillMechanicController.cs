@@ -35,7 +35,6 @@ namespace Gameplay.Core.Mechanic
         private readonly List<PlacedPiece> _placedScratch = new();
 
         private IDisposable _levelLoadedSub;
-        private IDisposable _stateRestoredSub;
         private LevelData _level;
         // Balance physics mode (TASK-021 → free-beam TASK-023): the beam is a FREE Dynamic body resting on the
         // fulcrum (no world hinge/pin/limits), loads are released as synchronous groups (coalescence window), there
@@ -79,7 +78,6 @@ namespace Gameplay.Core.Mechanic
             _tuning = tuning;
 
             _levelLoadedSub = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
-            _stateRestoredSub = _model.StateRestored.Subscribe(_ => OnStateRestored());
         }
 
         private void OnLevelLoaded()
@@ -111,51 +109,6 @@ namespace Gameplay.Core.Mechanic
                     SpawnPreplaced(piece);
                 else
                     SpawnIdle(piece);
-            }
-        }
-
-        /// <summary>
-        /// Rebuild runtime state from a restored snapshot (RFC §8). Runs AFTER OnLevelLoaded, so it tears down
-        /// the fresh spawn and re-materialises bodies/views from each piece's saved state: Idle → floating
-        /// (non-colliding), Placed → settled (kinematic, supports others), Lost → skipped.
-        /// </summary>
-        private void OnStateRestored()
-        {
-            _level = _model.CurrentLevel;
-            _balanceMode = _level.PhysicsMode is PhysicsMode.Balance or PhysicsMode.Catapult;
-            _catapultMode = _level.PhysicsMode == PhysicsMode.Catapult;
-
-            ClearRuntime();
-            _simulation.Reset();
-            _simulation.LoadStatics(_level.StaticGeometry, _level.Bounds, _level.Gravity);
-
-            foreach (var piece in _model.Pieces)
-            {
-                if (piece.State == PieceLifecycle.Lost)
-                    continue;
-
-                // A preplaced piece (TASK-031b) that has not yet settled must re-enter Dynamic (falling), NOT
-                // floating-Idle — otherwise the restore would make the level lever tap-releasable. (Campaign flow
-                // only snapshots at rest, so in prod a preplaced piece restores as Placed and takes the branch
-                // below; this keeps the QA save/load round-trip correct.)
-                if (piece.State != PieceLifecycle.Placed && _level.Pieces[piece.PlacementIndex].Preplaced)
-                {
-                    SpawnPreplaced(piece);
-                    continue;
-                }
-
-                var type = _model.TypeFor(piece);
-                var bodyId = piece.State == PieceLifecycle.Placed
-                    ? _simulation.SpawnSettled(type, piece.Position, piece.Rotation)
-                    : _simulation.SpawnFloating(type, piece.Position, piece.Rotation);
-
-                _bodyByInstance[piece.InstanceId] = bodyId;
-                _typeByInstance[piece.InstanceId] = type;
-
-                var view = _viewFactory.Create(type);
-                view.SetState(piece.State);
-                view.Sync(piece.Position, piece.Rotation);
-                _viewByInstance[piece.InstanceId] = view;
             }
         }
 
@@ -584,16 +537,14 @@ namespace Gameplay.Core.Mechanic
             _pendingRelease.Clear();
             _coalesceWindowStepsLeft = 0;
             _lastGlobalRestReached = false;
-            // NB: _catapultMode / _balanceMode are deliberately NOT reset here — ClearRuntime runs AFTER both
-            // OnLevelLoaded and OnStateRestored have set the mode from the level, so clearing them would clobber it.
+            // NB: _catapultMode / _balanceMode are deliberately NOT reset here — ClearRuntime runs AFTER
+            // OnLevelLoaded has set the mode from the level, so clearing them would clobber it.
         }
 
         public void Dispose()
         {
             _levelLoadedSub?.Dispose();
             _levelLoadedSub = null;
-            _stateRestoredSub?.Dispose();
-            _stateRestoredSub = null;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Gameplay.Core.Sim
 {
     /// <summary>
     /// Builds the CSV + JSON report bodies as strings (RFC §7 п.11) — Unity-free; the host writes them to
-    /// disk. CSV rows are assembled by hand (invariant culture); JSON uses Newtonsoft like <c>GameSnapshot</c>.
+    /// disk. CSV rows are assembled by hand (invariant culture); JSON uses Newtonsoft with stable field names.
     /// </summary>
     public static class SimReportWriter
     {

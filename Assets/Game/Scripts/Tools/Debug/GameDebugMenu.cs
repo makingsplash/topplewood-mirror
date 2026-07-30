@@ -5,6 +5,7 @@ using Services;
 using Services.DebugTools.Submenu;
 using SGS.Data;
 using SGS.Extensions;
+using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 using SGS.Services.DebugTools;
 using UnityEngine;
 using UnityEngine.UI;
@@ -56,8 +57,14 @@ namespace Tools.Debug
         {
             DDMButton.Create(context, "Reset Progress", () =>
             {
-                PlayerPrefs.DeleteAll();
+                // TASK-044: no direct UnityEngine.PlayerPrefs — go through the Say wrapper. DeleteAllPrefs wipes
+                // every key the backend has touched this session; the campaign reset is GUARANTEED by explicitly
+                // setting CurrentLevel=1 (the campaign reads only CurrentLevel) and keeping the 0-based mirror
+                // coherent, then flushing durably.
+                PlayerPrefsCollection.Instance.DeleteAllPrefs();
                 SayData.Meta.CurrentLevel.Value = 1;
+                SayData.Meta.CurrentLevelIndex.Value = 0;
+                PlayerPrefsCollection.Instance.SaveDataIfChanged();
 
                 context.Main.SetRestart();
                 context.Main.CloseMenu();

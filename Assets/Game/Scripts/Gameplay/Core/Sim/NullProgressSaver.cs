@@ -1,13 +1,4 @@
-namespace Gameplay.Core.Sim
-{
-    /// <summary>
-    /// Headless <see cref="IProgressSaver"/> (RFC §3): never persists and never restores, so each sim run
-    /// starts from the freshly loaded level, immune to any stray real save on disk.
-    /// </summary>
-    public sealed class NullProgressSaver : IProgressSaver
-    {
-        public void Save() { }
-
-        public bool TryRestore() => false;
-    }
-}
+// TASK-044: RETIRED — the in-level snapshot save/restore contour was removed (write-only dead code, BUG-2),
+// so the headless no-op saver has nothing to implement.
+// This file is emptied to a type-free stub only because file deletion (git rm) was unavailable to the
+// implementer this session; it must be deleted together with its .meta. See 02-dev-implementer.md.

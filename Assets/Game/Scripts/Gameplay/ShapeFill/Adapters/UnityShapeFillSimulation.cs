@@ -116,38 +116,6 @@ namespace Gameplay.Adapters
             return id;
         }
 
-        public int SpawnSettled(PieceType type, Vec2 pos, float rotation)
-        {
-            var go = new GameObject($"Piece_{type.Kind}_{_nextId}");
-            go.transform.SetParent(Root, false);
-            go.transform.position = new Vector3(pos.X, pos.Y, 0f);
-            go.transform.rotation = Quaternion.Euler(0f, 0f, rotation * Mathf.Rad2Deg);
-
-            var collider = go.AddComponent<PolygonCollider2D>();
-            collider.points = ToPoints(type.Shape.Vertices);
-            collider.density = Mathf.Max(0.0001f, type.Material.Density);
-            collider.sharedMaterial = new PhysicsMaterial2D($"mat_{type.Kind}")
-            {
-                friction = type.Material.Friction,
-                bounciness = type.Material.Restitution,
-            };
-
-            var rb = go.AddComponent<Rigidbody2D>();
-            // Kinematic: the restored stack keeps its exact saved pose (coverage preserved), no re-settle.
-            rb.bodyType = RigidbodyType2D.Kinematic;
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-
-            var id = _nextId++;
-            _bodies[id] = new Body
-            {
-                Rigidbody = rb,
-                Collider = collider,
-                Radius = Mathf.Max(0.0001f, collider.bounds.extents.magnitude),
-            };
-            return id;
-        }
-
         public void Release(int bodyId)
         {
             if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)
@@ -165,8 +133,8 @@ namespace Gameplay.Adapters
             if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)
                 return;
             var rb = body.Rigidbody;
-            // Lock exactly like SpawnSettled: zero velocity, kinematic, exact pose → no post-rest drift, and the
-            // body becomes a rigid support the next piece cannot shove (RFC 07 §2.1).
+            // Lock at rest: zero velocity, kinematic, exact pose → no post-rest drift, and the body becomes a
+            // rigid support the next piece cannot shove (RFC 07 §2.1).
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
             rb.bodyType = RigidbodyType2D.Kinematic;
@@ -218,7 +186,7 @@ namespace Gameplay.Adapters
                 if (other == null || other == body.Collider)
                     continue;
                 // Support = the floor (a static collider, no rigidbody) or an already-settled piece (kinematic,
-                // locked by FreezeAt/SpawnSettled). Another still-falling dynamic body is not yet a support.
+                // locked by FreezeAt). Another still-falling dynamic body is not yet a support.
                 var otherRb = other.attachedRigidbody;
                 if (otherRb == null || otherRb.bodyType == RigidbodyType2D.Kinematic)
                     return true;

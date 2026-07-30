@@ -1,16 +1,3 @@
-namespace Gameplay.Core
-{
-    /// <summary>
-    /// Domain-agnostic save facade (RFC §4.1): captures/restores the session without <c>SaveManager</c>
-    /// knowing about <see cref="GameModel"/>. Unity-free — the concrete store lives behind
-    /// <see cref="IShapeFillSaveStore"/>.
-    /// </summary>
-    public interface IProgressSaver
-    {
-        /// <summary>Serialize the current session snapshot to the store.</summary>
-        void Save();
-
-        /// <summary>Restore a stored snapshot onto the already-loaded level; false if none/foreign.</summary>
-        bool TryRestore();
-    }
-}
+// TASK-044: RETIRED — the in-level snapshot save/restore contour was removed (write-only dead code, BUG-2).
+// This file is emptied to a type-free stub only because file deletion (git rm) was unavailable to the
+// implementer this session; it must be deleted together with its .meta. See 02-dev-implementer.md.

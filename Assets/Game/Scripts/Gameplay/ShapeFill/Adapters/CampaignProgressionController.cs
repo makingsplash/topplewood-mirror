@@ -37,9 +37,11 @@ namespace Gameplay.Adapters
 
         public void Start()
         {
-            var progress = _store.Read();
-            _index = Clamp(progress?.CampaignIndex ?? 0);
-            _completed = progress?.CampaignCompleted ?? false;
+            _index = Clamp(_store.ReadLevelIndex());
+            // "Campaign complete" is derived state now (TASK-044): recomputed against the LIVE level count each
+            // session, never persisted, so BUG-1's stuck completed flag cannot exist. Starts false so the
+            // one-shot completion log fires at most once per session.
+            _completed = false;
 
             // GameController.Start already loaded index 0; only re-enter when resuming a later level.
             if (_index != 0)
@@ -60,23 +62,20 @@ namespace Gameplay.Adapters
             if (_index + 1 < _levelSource.Count)
             {
                 _index++;
-                Persist();
+                _store.WriteLevelIndex(_index); // durable WIN checkpoint (flushes prefs to disk)
                 _controller.ReloadLevel(_index);
                 return;
             }
 
-            // Won the final level → campaign complete. Persist once; leave the finished figure on screen
-            // (behaviour after the last level is an open design lever — GAME_RULES / A/B, out of scope here).
+            // Won the final level → campaign complete. The pointer is already at the last index (persisted when
+            // we advanced into it); completion is derived, not stored, so there is nothing more to write. Leave
+            // the finished figure on screen (post-last-level behaviour is an open design lever — out of scope).
             if (!_completed)
             {
                 _completed = true;
-                Persist();
                 Debug.Log("[ShapeFill] CAMPAIGN COMPLETE");
             }
         }
-
-        private void Persist()
-            => _store.Write(new CampaignProgress { CampaignIndex = _index, CampaignCompleted = _completed });
 
         private int Clamp(int index)
         {

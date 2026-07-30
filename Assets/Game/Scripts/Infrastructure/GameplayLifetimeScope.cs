@@ -46,9 +46,10 @@ namespace Game.Code.Infrastructure
 
             builder.RegisterInstance(Data.Configs.Core).AsSelf();
 
-            // Saving — F2 round-trip sink + facade, then the autosave lifecycle entry point.
-            builder.Register<IShapeFillSaveStore, FileShapeFillSaveStore>(Lifetime.Singleton);
-            builder.Register<IProgressSaver, ShapeFillProgressSaver>(Lifetime.Singleton);
+            // Persistence (TASK-044): the campaign pointer is the SDK-canon Data.Meta.CurrentLevel via
+            // MetaCampaignStore; the in-level snapshot contour is gone. SaveManager is repurposed into the
+            // lifecycle prefs-flush (pause/focus/quit → SaveDataIfChanged).
+            builder.Register<ICampaignStore, MetaCampaignStore>(Lifetime.Singleton);
             builder.RegisterEntryPoint<SaveManager>();
 
             RegisterSessionServices(builder);
