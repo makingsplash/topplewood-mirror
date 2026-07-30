@@ -1,6 +1,7 @@
 using Gameplay.Adapters;
 using Gameplay.Core;
 using Gameplay.DI;
+using Gameplay.Tutorial;
 using Infrastructure.ApplicationTriggers;
 using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 using VContainer;
@@ -31,9 +32,18 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
         // GameControllerRunner / ShapeFillPresenter entry points (RFC §7).
         new GameplayCoreInstaller().Install(builder);
 
-        // Bringup input (RFC §2.3): raw new-Input-System pointer, no IInputService/Data. One singleton is
-        // both the IGameplayInputSource seam and the ticked entry point (PointerTapInputSource : ITickable).
-        builder.RegisterEntryPoint<PointerTapInputSource>(Lifetime.Singleton).As<IGameplayInputSource>();
+        // Bringup input (RFC §2.3): raw new-Input-System pointer, no IInputService/Data. The concrete
+        // PointerTapInputSource stays the ticked entry point (ITickable) AND is resolvable by concrete type
+        // (.AsSelf()); IGameplayInputSource binds to the tutorial input decorator that wraps it (TASK-049,
+        // human 15:21 DI note). Splitting the two registrations avoids binding one interface twice — the old
+        // `.As<IGameplayInputSource>()` on the concrete would have collided with the decorator and silently
+        // broken either input or ticking.
+        builder.RegisterEntryPoint<PointerTapInputSource>(Lifetime.Singleton).AsSelf();
+        builder.Register<IGameplayInputSource>(
+            resolver => new TutorialGatedInputSource(
+                resolver.Resolve<PointerTapInputSource>(),
+                resolver.Resolve<ITutorialInputGate>()),
+            Lifetime.Singleton);
 
         // App lifecycle triggers (Data-free) so the prefs flush can hook pause/focus/quit.
         builder.RegisterApplicationTriggers();
@@ -43,6 +53,14 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
         // Data.Debug-gated SaveManager). No in-level snapshot — kill mid-level reopens the level from scratch.
         builder.Register<ICampaignStore, PrefsCampaignStore>(Lifetime.Singleton);
         builder.RegisterEntryPoint<BringupPrefsFlush>();
+
+        // Tutorial system bringup impls (TASK-049): own Data-free PlayerPrefs completion list, gate defaults on
+        // (no Data.Debug here, RFC R5), no-op analytics (no GlobalService/SayKit). Context-independent parts
+        // (input gate, view stub, definition, runner) come from GameplayCoreInstaller. This lets the bringup
+        // scene prove the whole mechanism live on parallel impls (RFC §9).
+        builder.Register<ITutorialProgressStore, PrefsTutorialProgressStore>(Lifetime.Singleton);
+        builder.Register<ITutorialGate, BringupTutorialGate>(Lifetime.Singleton);
+        builder.Register<ITutorialAnalytics, NullTutorialAnalytics>(Lifetime.Singleton);
 
 #if GPIE_DEVELOPMENT
         // Dev/QA level-switch cheat (TASK-047): the reachable SayKit DynamicDebugMenu UI, hosted inside this

@@ -2,6 +2,7 @@ using Gameplay.Adapters;
 using Gameplay.Core;
 using Gameplay.Core.Adapters;
 using Gameplay.Core.Mechanic;
+using Gameplay.Tutorial;
 using Gameplay.View;
 using VContainer;
 using VContainer.Unity;
@@ -70,6 +71,20 @@ namespace Gameplay.DI
             builder.RegisterEntryPoint<StaticGeometryPresenter>();
             builder.RegisterEntryPoint<ShapeFillPresenter>();
             builder.RegisterEntryPoint<TargetPreviewPresenter>();
+
+            // Tutorial system (TASK-049) — context-INDEPENDENT parts only: the reentrant input gate consumed by
+            // the input decorator, the v1 logging view stub, the tour definition + its smoke step, and the
+            // runner entry point (registered AFTER CampaignProgressionController so ReadLevelIndex is already
+            // resumed and the resumed level is loaded). The context-DEPENDENT seams (progress store / gate /
+            // analytics) and the input decorator itself are bound by the hosting scope — exactly like
+            // IGameplayInputSource / ICampaignStore (RFC §4). Like the dev cheat, tutorial IMPLEMENTATIONS are
+            // NOT registered here. The headless SimRun builds the domain with bare `new`, so it never creates
+            // this runner → the sim physically cannot play the tutorial (RFC §7).
+            builder.Register<ITutorialInputGate, TutorialInputGate>(Lifetime.Singleton);
+            builder.Register<ITutorialView, LoggingTutorialView>(Lifetime.Singleton);
+            builder.RegisterInstance(new TutorialDefinition(
+                "first_tutorial", new ITutorialStep[] { new FirstTapStep() }));
+            builder.RegisterEntryPoint<TutorialRunner>();
             // NOTE: the dev level-switch cheat is NOT registered here. This core installer is context-independent
             // (shared with prod), and prod raises its own GameDebugMenu via LoadingGame — registering a cheat here
             // would spawn a SECOND menu in prod. The bringup-only DDM host is registered by

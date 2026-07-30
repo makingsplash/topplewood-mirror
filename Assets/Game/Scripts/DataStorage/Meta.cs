@@ -2,6 +2,7 @@ using System;
 using SGS.Data;
 using SGS.Infrastructure.Tools.PlayerPrefsWrapper;
 using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Collections;
+using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 using UnityEngine;
 using Game.Services.LogService;
 
@@ -19,7 +20,10 @@ namespace DataStorage
         public PlayerPrefsInt CurrentLevelIndex => SayData.Meta.CurrentLevelIndex;
 
         /// <summary>
-        /// for modify this field pls use TutorialsDataManager
+        /// SDK-canon set of completed tutorial ids. To modify, use the
+        /// <see cref="IsTutorialCompleted"/> / <see cref="MarkTutorialCompleted"/> / <see cref="ResetTutorial"/>
+        /// methods below (TASK-049) — they are the "TutorialsDataManager" the old comment referenced, which never
+        /// existed as a class. Kept internal: the tutorial layer reaches this only through ITutorialProgressStore.
         /// </summary>
         internal PlayerPrefsListString CompletedTutorials => SayData.Meta.CompletedTutorials;
 
@@ -81,6 +85,37 @@ namespace DataStorage
 
             levelsRevives[levelIndex] = LevelReviveMarkerValue;
             LevelsRevives.ForceSave();
+        }
+
+        // Tutorial completion accessors (TASK-049): the canon "TutorialsDataManager" the CompletedTutorials
+        // comment referenced. All writes go through the SHARED CompletedTutorials instance and flush durably so
+        // completion survives a kill (persistence R1 + explicit flush). Reached only via ITutorialProgressStore.
+        public bool IsTutorialCompleted(string tutorialId)
+        {
+            var completed = CompletedTutorials.Value;
+            return completed != null && completed.Contains(tutorialId);
+        }
+
+        public void MarkTutorialCompleted(string tutorialId)
+        {
+            if (IsTutorialCompleted(tutorialId))
+            {
+                return;
+            }
+
+            CompletedTutorials.Add(tutorialId);
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
+        }
+
+        public void ResetTutorial(string tutorialId)
+        {
+            if (!IsTutorialCompleted(tutorialId))
+            {
+                return;
+            }
+
+            CompletedTutorials.Remove(tutorialId);
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
         }
 
         public bool HasDifficultyAfterLoseMarker(int levelIndex)
