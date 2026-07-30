@@ -13,7 +13,20 @@ namespace Ui.Components
 
         private void Start()
         {
-            _level.text = SGS.Services.GlobalService.Localization.GetLocalizedString(_keyLevel, Data.Meta.CurrentLevel.Value);
+            // Track = subscribe + immediate first call: the label follows ANY source that moves the level — the
+            // one-time file→prefs migration, a WIN advancing the campaign, a debug CurrentLevel reset — not just
+            // whatever value happened to be set the frame Start ran. Mirrors RewardedStateService's OnChanged wiring.
+            Data.Meta.CurrentLevel.Track(OnLevelChanged);
+        }
+
+        private void OnDestroy()
+        {
+            Data.Meta.CurrentLevel.Untrack(OnLevelChanged);
+        }
+
+        private void OnLevelChanged(int level)
+        {
+            _level.text = SGS.Services.GlobalService.Localization.GetLocalizedString(_keyLevel, level);
         }
     }
 }

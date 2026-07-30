@@ -38,14 +38,18 @@ namespace Gameplay.Adapters
                     currentLevel.Value = index.Value + 1; // 0-based file index → 1-based pref
             }
 
+            // The index is now imported into the pref, so the migration has effectively happened. Mark it done and
+            // flush BEFORE the destructive cleanup below: legacy-file removal is best-effort hygiene, and even a
+            // total failure there must not re-arm the migration on the next boot (a re-run would re-import a stale
+            // index over live progress → BUG-1 redux + boot-loop while the file lingers).
+            migratedMarker.Value = true;
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
+
             // Purge every legacy persistentDataPath save file: the campaign pointer now lives in prefs and the
             // in-level snapshot is retired dead code (BUG-2), so neither file has a reader anymore.
             DeleteIfExists(campaignPath);
             DeleteIfExists(Path.Combine(dir, CampaignBackupFile));
             DeleteIfExists(Path.Combine(dir, InLevelSaveFile));
-
-            migratedMarker.Value = true;
-            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
         }
 
         private static int? TryReadLegacyIndex(string path)
@@ -66,8 +70,16 @@ namespace Gameplay.Adapters
 
         private static void DeleteIfExists(string path)
         {
-            if (File.Exists(path))
-                File.Delete(path);
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch
+            {
+                // Best-effort cleanup (mirrors the guarded read path): a locked / permission-denied legacy file must
+                // not crash migration. The marker is already set + flushed above, so the file just lingers harmlessly.
+            }
         }
 
         /// <summary>Minimal shape of the retired <c>CampaignProgress</c> JSON — only the index is migrated.</summary>
