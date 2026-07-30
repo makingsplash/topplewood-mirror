@@ -87,17 +87,19 @@ namespace Gameplay.Adapters
 
 #if GPIE_DEVELOPMENT
         /// <summary>
-        /// Dev/QA cheat hook (TASK-011): the current campaign index, so the level-switch overlay can compute
-        /// prev/next and highlight the active level. Editor/dev builds only — never compiled into player builds.
+        /// Dev/QA cheat hook (TASK-011; consumed by the DDM host <c>BringupDebugMenuHost</c> since TASK-047):
+        /// the current campaign index, so the level-switch menu can compute prev/next and show the active level.
+        /// Editor/dev builds only — never compiled into player builds.
         /// </summary>
         public int DevCampaignIndex => _index;
 
         /// <summary>
-        /// Dev/QA cheat hook (TASK-011): jump straight to <paramref name="index"/> and keep the campaign
-        /// pointer in sync, so the next WIN/LOSS resolves relative to the jumped-to level instead of snapping
-        /// back to the pre-jump index. Clamped to the level range; reuses the normal reset-in-place reload path
-        /// (no gameplay-logic change). Deliberately does NOT persist — the cheat is non-destructive to saved
-        /// progress; a level actually resolved after the jump persists through the usual flow. Editor/dev only.
+        /// Dev/QA cheat hook (TASK-011; consumed by the DDM host <c>BringupDebugMenuHost</c> since TASK-047):
+        /// jump straight to <paramref name="index"/> and keep the campaign pointer in sync, so the next WIN/LOSS
+        /// resolves relative to the jumped-to level instead of snapping back to the pre-jump index. Clamped to
+        /// the level range; reuses the normal reset-in-place reload path (no gameplay-logic change). Deliberately
+        /// does NOT persist — the cheat is non-destructive to saved progress; a level actually resolved after the
+        /// jump persists through the usual flow. Editor/dev only.
         /// </summary>
         public void DevJumpToLevel(int index)
         {
