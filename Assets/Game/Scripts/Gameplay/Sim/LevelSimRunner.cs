@@ -48,6 +48,7 @@ namespace Gameplay.Sim
         private readonly ShapeFillTuning _tuning = new ShapeFillTuning();
 
         private float _startRealtime;
+        private DateTime _startWallClock;   // wall-clock sweep start → report provenance `startedAt` (TASK-058)
         private bool _m0Faulted;
 
         private void Awake()
@@ -66,6 +67,7 @@ namespace Gameplay.Sim
         private IEnumerator RunSweep()
         {
             _startRealtime = Time.realtimeSinceStartup;
+            _startWallClock = DateTime.Now;
             _m0Faulted = false;
             var ok = true;
             var runs = new List<SimRunResult>();
@@ -378,7 +380,10 @@ namespace Gameplay.Sim
             try
             {
                 var csv = SimReportWriter.BuildCsv(runs);
-                var json = SimReportWriter.BuildJson(runs, stats, m0);
+                // Provenance is captured from the tree the sweep actually ran in (repo root = the projectPath),
+                // so a sim-worktree run stamps that worktree's detached ref, not the main tree's (TASK-058).
+                var provenance = SimProvenance.Capture(ResolveRepoRoot(), _startWallClock);
+                var json = SimReportWriter.BuildJson(runs, stats, m0, provenance);
                 var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
 
                 Directory.CreateDirectory(dir);
@@ -398,12 +403,14 @@ namespace Gameplay.Sim
             }
         }
 
-        private string ResolveOutputDir()
+        private string ResolveOutputDir() => Path.Combine(ResolveRepoRoot(), _outputSubdir);
+
+        // Editor/batch: repo root (parent of /Assets) — this is also the git worktree the sweep runs in, so it
+        // doubles as the provenance CWD (TASK-058). Player build: persistentDataPath fallback (RFC §7 п.12).
+        private static string ResolveRepoRoot()
         {
-            // Editor: repo root (parent of /Assets). Player build: persistentDataPath fallback (RFC §7 п.12).
             var repoRoot = Directory.GetParent(Application.dataPath)?.FullName;
-            var baseDir = string.IsNullOrEmpty(repoRoot) ? Application.persistentDataPath : repoRoot;
-            return Path.Combine(baseDir, _outputSubdir);
+            return string.IsNullOrEmpty(repoRoot) ? Application.persistentDataPath : repoRoot;
         }
 
         private void LogSummary(IReadOnlyList<LevelSolveStats> stats, object m0)
