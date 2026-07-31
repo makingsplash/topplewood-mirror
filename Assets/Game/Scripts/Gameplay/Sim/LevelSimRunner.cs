@@ -251,7 +251,7 @@ namespace Gameplay.Sim
         private IEnumerator BuildM0Summary(
             IReadOnlyList<LevelData> levels, IReadOnlyList<SimRunResult> runs, Action<object> done)
         {
-            var level = levels[0]; // two_cubes: the deterministic M1 baseline
+            var level = levels[0]; // the manifest's first level is the fixed m0 baseline (currently 'giraffe')
             var order = Identity(level.Pieces.Count);
 
             // M0.1 — same-device reproducibility: one fixed order, N fresh-instance repeats, count distinct hashes.
