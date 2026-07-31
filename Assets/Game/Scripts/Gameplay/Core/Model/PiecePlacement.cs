@@ -16,12 +16,21 @@ namespace Gameplay.Core
         /// and never counts as a player attempt; the release ORDER puzzle is over the remaining Idle pieces.</summary>
         public readonly bool Preplaced;
 
-        public PiecePlacement(PieceType type, Vec2 startPosition, float startRotation = 0f, bool preplaced = false)
+        /// <summary>TASK-054: when true, this piece is a TOOL (lever/projectile/knock-away), not a part of the target
+        /// figure — losing it past the field bounds is fine and does NOT fail the level. Absent → false → ESSENTIAL:
+        /// the default matches the pre-TASK-054 rule "any lost piece blocks the win". Losing an essential piece is an
+        /// immediate loss (GAME_RULES §2). Property of the PLACEMENT, not the <see cref="PieceType"/>: two pieces of
+        /// the same kind may differ (one figure part, one tool) — the same identity argument as <see cref="Preplaced"/>.</summary>
+        public readonly bool Expendable;
+
+        public PiecePlacement(PieceType type, Vec2 startPosition, float startRotation = 0f, bool preplaced = false,
+            bool expendable = false)
         {
             Type = type;
             StartPosition = startPosition;
             StartRotation = startRotation;
             Preplaced = preplaced;
+            Expendable = expendable;
         }
     }
 }

@@ -57,7 +57,7 @@ namespace Gameplay.Core
                 if (!types.TryGetValue(p.Kind, out var type))
                     throw new InvalidOperationException(
                         $"Level '{LevelId}': piece references unknown kind '{p.Kind}'.");
-                pieces.Add(new PiecePlacement(type, p.StartPosition.ToDomain(), p.StartRotation, p.Preplaced));
+                pieces.Add(new PiecePlacement(type, p.StartPosition.ToDomain(), p.StartRotation, p.Preplaced, p.Expendable));
             }
 
             var statics = new Polygon[StaticGeometry.Count];
@@ -237,6 +237,7 @@ namespace Gameplay.Core
         [JsonProperty("startPosition")] public Vec2Dto StartPosition { get; set; }
         [JsonProperty("startRotation")] public float StartRotation { get; set; }
         [JsonProperty("preplaced")] public bool Preplaced { get; set; } // absent → false (TASK-031b)
+        [JsonProperty("expendable")] public bool Expendable { get; set; } // absent → false → essential (TASK-054)
     }
 
     public sealed class TargetSlotDto
