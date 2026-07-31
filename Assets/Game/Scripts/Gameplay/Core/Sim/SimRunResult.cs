@@ -40,12 +40,15 @@ namespace Gameplay.Core.Sim
         // per piece and precompensate the tilted-piece start so physics itself lands the slot. JSON-only (an array,
         // omitted from the CSV row like FinalPoses). Empty on runs with no physical-settle pieces. Sim-only.
         public readonly IReadOnlyList<SimPiecePose> PreGlidePoses;
-        // TASK-042 honesty detector: physical-fidelity checks over the FINAL settled poses, the proof the owner's bug
-        // (interpenetration + freeze-in-air) is gone in EVERY release order. IntersectingPairs = count of Placed piece
-        // pairs whose SAT penetration exceeds 0.01 world units (touching/epsilon is not an intersection). MaxPenetration
-        // = the worst such depth (0 ⇒ clean). UnsupportedPlaced = count of Placed pieces with nothing (floor or a lower
-        // Placed piece) within a small gap beneath them — i.e. frozen on an "invisible support". Pass criterion (any
-        // order): all three are 0. Sim-only measurement; the controller's honesty gate is what enforces it.
+        // TASK-042 honesty detector (semantics rewritten by TASK-043; docstring corrected TASK-056): physical-fidelity
+        // checks over the FINAL settled poses, the proof the owner's bug (interpenetration + freeze-in-air) is gone in
+        // EVERY release order. IntersectingPairs = count of Placed piece pairs whose SAT penetration OVERSHOOTS their
+        // AUTHORED baseline overlap by more than DetectorEpsilon (= 0.05 world units; see SimRun.cs:44,211-215) — the
+        // overshoot, NOT the raw depth, so authored micro-overlaps (owl's ear in the head) are not false-flagged.
+        // MaxPenetration = the worst such overshoot (max(penetration − baseline), clamped ≥0; baseline already subtracted
+        // in the harness — 0 ⇒ every contact within design + slop). UnsupportedPlaced = count of Placed pieces with
+        // nothing (floor or a lower Placed piece) within a small gap beneath them — i.e. frozen on an "invisible
+        // support". Pass criterion (any order): all three are 0. Sim-only measurement; the sim-gate is what enforces it.
         public readonly int IntersectingPairs;
         public readonly float MaxPenetration;
         public readonly int UnsupportedPlaced;
