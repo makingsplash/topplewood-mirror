@@ -824,6 +824,34 @@
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.15, "y": -0.2 }, { "x": 0.15, "y": -0.2 }, { "x": 0.15, "y": 2.0 }, { "x": -0.15, "y": 2.0 } ] },
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.0, "y": -0.2 }, { "x": 2.4, "y": -0.2 }, { "x": 2.4, "y": 0.7 }, { "x": 1.0, "y": 0.7 } ] }
       ]
+    },
+    {
+      "levelId": "chain_duo",
+      "seed": 61,
+      "difficultyTier": 9,
+      "matchTolerance": { "posTol": 0.30, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#F2801D", "kind": "orange_ball", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.5, "segments": 24 } },
+        { "color": "#5B4FE0", "kind": "purple_ball", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.5, "segments": 24 } }
+      ],
+      "target": {
+        "outline": [ { "x": -3.55, "y": 0.2 }, { "x": -1.5, "y": 0.2 }, { "x": -1.5, "y": 1.4 }, { "x": -3.55, "y": 1.4 } ],
+        "slots": [
+          { "kind": "purple_ball", "position": { "x": -2.01, "y": 0.71 }, "rotation": 0 },
+          { "kind": "orange_ball", "position": { "x": -3.01, "y": 0.89 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "purple_ball", "startPosition": { "x": -3.5, "y": 3.0 }, "startRotation": 0 },
+        { "kind": "orange_ball", "startPosition": { "x": -3.5, "y": 4.4 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.8, "y": 0.5 }, { "x": -1.5, "y": 0.1 }, { "x": -1.5, "y": -0.6 }, { "x": -3.8, "y": -0.6 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.5, "y": 0.1 }, { "x": -1.3, "y": 0.1 }, { "x": -1.3, "y": 2.2 }, { "x": -1.5, "y": 2.2 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -4.0, "y": -0.6 }, { "x": -3.8, "y": -0.6 }, { "x": -3.8, "y": 2.2 }, { "x": -4.0, "y": 2.2 } ] }
+      ]
     }
   ]
 }
