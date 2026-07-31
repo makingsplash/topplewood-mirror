@@ -216,10 +216,11 @@ namespace Gameplay.Core.Mechanic
 
             foreach (var piece in _model.Pieces)
             {
-                // Losing an ESSENTIAL piece past the bounds resolves the level Lost immediately inside
-                // UpdateFalling (TASK-054 §3). Once that fires the phase leaves Running, so the remaining
-                // iterations must NOT keep mutating the model: bail out before MirrorPose can drag a resolved
-                // model, and before a second simultaneous loss double-Resolves in the same tick.
+                // Losing a piece past the bounds resolves an ESSENTIAL one Lost immediately (TASK-054 §3) —
+                // both for a Falling piece (inside UpdateFalling) and a Placed one (the check below, TASK-059).
+                // Once that fires the phase leaves Running, so the remaining iterations must NOT keep mutating
+                // the model: bail out before MirrorPose can drag a resolved model, and before a second
+                // simultaneous loss double-Resolves in the same tick.
                 if (_model.CurrentPhase != GamePhase.Running)
                     return;
 
@@ -232,8 +233,19 @@ namespace Gameplay.Core.Mechanic
                     if (piece.State == PieceLifecycle.Falling)
                         anyFalling = true;
                 }
+                else if (piece.State == PieceLifecycle.Placed && !_simulation.IsWithinBounds(bodyId))
+                {
+                    // TASK-059: a Placed piece is only ever bounds-checked HERE. In balance/catapult it stays
+                    // Dynamic and rides the beam, so a later drop can knock it off the field; without this it
+                    // keeps falling forever, GlobalRestReached never fires, and the level hangs on Timeout. Same
+                    // verdict as a Falling piece (symmetry): essential → immediate Lost; expendable → silent
+                    // leave. In assembly mode a Placed piece is frozen kinematic in-bounds, so this never trips.
+                    // LosePastBounds despawns the body, so skip MirrorPose this iteration.
+                    LosePastBounds(piece, bodyId);
+                    continue;
+                }
 
-                // The body may have been despawned (Lost) inside UpdateFalling.
+                // The body may have been despawned (Lost) inside UpdateFalling / the Placed check above.
                 if (_bodyByInstance.TryGetValue(piece.InstanceId, out bodyId))
                     MirrorPose(piece, bodyId);
             }
@@ -301,19 +313,30 @@ namespace Gameplay.Core.Mechanic
             return _globalRestTimer >= _tuning.RestDurationSeconds;
         }
 
+        /// <summary>
+        /// A piece has left the field past the bounds — the loss verdict shared by the Falling path (TASK-054 §3)
+        /// and the Placed path (TASK-059). Transition to Lost, drop the view/body, and for an ESSENTIAL piece
+        /// (part of the target figure) fail the level NOW: the loss is terminal, no later event can bring it back,
+        /// so waiting for global rest only risks a hang. An EXPENDABLE piece (a tool) leaves silently and the
+        /// verdict is still decided at rest. The caller's Tick loop early-exits once the phase leaves Running, so a
+        /// second simultaneous loss in the same tick never double-Resolves. The slot the piece filled un-fills by
+        /// itself: CollectPlaced re-reads only live Placed pieces, so a despawned one simply drops out of the match.
+        /// </summary>
+        private void LosePastBounds(PieceInstance piece, int bodyId)
+        {
+            piece.State = PieceLifecycle.Lost;
+            _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Lost);
+            _simulation.Despawn(bodyId);
+            _bodyByInstance.Remove(piece.InstanceId);
+            if (!IsExpendable(piece))
+                _model.Resolve(GameOutcome.Lost);
+        }
+
         private void UpdateFalling(PieceInstance piece, int bodyId, float dt)
         {
             if (!_simulation.IsWithinBounds(bodyId))
             {
-                piece.State = PieceLifecycle.Lost;
-                _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Lost);
-                _simulation.Despawn(bodyId);
-                _bodyByInstance.Remove(piece.InstanceId);
-                // TASK-054: losing an ESSENTIAL piece (part of the target figure) is terminal — no later event can
-                // bring it back, so fail NOW rather than waiting for global rest. The caller's Tick loop early-exits
-                // once the phase leaves Running (above). An EXPENDABLE piece (a tool) may leave the field freely.
-                if (!IsExpendable(piece))
-                    _model.Resolve(GameOutcome.Lost);
+                LosePastBounds(piece, bodyId);
                 return;
             }
 
