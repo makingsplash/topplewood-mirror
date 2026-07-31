@@ -125,6 +125,11 @@ tools/LevelValidator/obj/
 # Python cache
 __pycache__/
 *.pyc
+
+# Отчёты сим-харнесса (level-sim). Генерируемые, десятки МБ, живут в sim-worktree;
+# в основном дереве появляются от ручного прогона. Скоуп коммита кодовых ролей широкий —
+# без этой строки многомегабайтный JSON однажды уедет в коммит роли.
+/[Aa]rtifacts/
 Assets/Editor/McpBridge
 Assets/Editor/McpBridge.meta
 Assets/Plugins/Demigiant/DOTween/Editor/DOTweenUpgradeManager.XML.meta
