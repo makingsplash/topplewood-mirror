@@ -52,12 +52,26 @@ namespace Gameplay.Core.Sim
             return sb.ToString();
         }
 
+        private const string GeneratorName = "level-sim v0";
+
         public static string BuildJson(
-            IReadOnlyList<SimRunResult> runs, IReadOnlyList<LevelSolveStats> stats, object m0Summary)
+            IReadOnlyList<SimRunResult> runs, IReadOnlyList<LevelSolveStats> stats, object m0Summary,
+            SimProvenance provenance)
         {
+            // `generator` is now an object (was the bare string "level-sim v0"): it carries the git provenance
+            // of the run (TASK-058) so acceptance reads the ref/dirty from the artifact, not from file mtime.
+            // sim-gate.py reads only `runs`, so widening this key does not touch judging.
             var payload = new
             {
-                generator = "level-sim v0",
+                generator = new
+                {
+                    name = GeneratorName,
+                    commit = provenance.Commit,
+                    branch = provenance.Branch,
+                    dirty = provenance.Dirty,
+                    worktree = provenance.Worktree,
+                    startedAt = provenance.StartedAt,
+                },
                 stats,
                 m0 = m0Summary,
                 runs,
