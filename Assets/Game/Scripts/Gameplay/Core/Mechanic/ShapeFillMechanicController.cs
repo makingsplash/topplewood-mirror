@@ -8,9 +8,11 @@ namespace Gameplay.Core.Mechanic
     /// <summary>
     /// Fills the <c>IMechanicController</c> seam with the pivoted shape_fill loop (GAME_RULES §2–3), all pure
     /// C# (headless-testable via ScriptedPoseSimulation): all pieces are pre-placed Idle over their target
-    /// slots; a tap hit-tests which Idle piece it hit and releases it; releasing materialises the body so it
-    /// falls; poses are mirrored into PieceInstances; the Idle→Falling→Placed/Lost FSM runs; and on global
-    /// rest a pose-match decides Won/Lost. Physics itself lives behind IShapeFillSimulation.
+    /// slots; a tap hit-tests which Idle piece it hit and ARMS it, then a serialized release queue (TASK-061,
+    /// assembly + catapult) materialises pieces ONE at a time as the field becomes ready — so tap timing can't
+    /// reorder the build (FIFO == tap order); balance keeps its synchronous coalescence group instead. Releasing
+    /// materialises the body so it falls; poses are mirrored into PieceInstances; the Idle→Falling→Placed/Lost FSM
+    /// runs; and on global rest a pose-match decides Won/Lost. Physics itself lives behind IShapeFillSimulation.
     ///
     /// TASK-043 (assist-layer removal): the whole pre-physics assist layer is gone — the in-fall snap-to-slot
     /// crystallisation, the soft-settle glide, the hybrid balance load-snap, and the TASK-042 honesty scaffolding
@@ -61,6 +63,14 @@ namespace Gameplay.Core.Mechanic
         // Last computed global-rest state, exposed via ReadyForNextRelease so the sim driver releases the next
         // group only once the beam + loads have settled (balance) — recomputed each tick the field is not falling.
         private bool _lastGlobalRestReached;
+
+        // ── Serialized release queue (TASK-061). In the immediate-release modes (assembly + catapult) a tap ARMS the
+        //    piece at once (instant "selected" feedback, SetArmed) but the physical Release happens ONE unit at a
+        //    time, only when the field is ReadyForNextRelease. So tap TIMING can no longer reorder the build: the
+        //    release sequence is the FIFO tap order, identical to patient play. Transient runtime state — NOT
+        //    persisted; cleared in ClearRuntime. Balance never uses it (it keeps the synchronous coalescence group,
+        //    _pendingRelease). ──
+        private readonly Queue<int> _releaseQueue = new();
 
         public ShapeFillMechanicController(
             GameModel model,
@@ -123,8 +133,11 @@ namespace Gameplay.Core.Mechanic
 
             if (!_balanceMode)
             {
-                // Assembly (66 levels): one tap = one immediate release — byte-for-byte the pre-TASK-023 path.
-                ReleasePiece(hit);
+                // Assembly (TASK-061): one tap = ARM now + serialized release when the field is ready (queue). The
+                // model stays Idle until the physical Release; timing can no longer reorder the build (see
+                // EnqueueTap). For a rest-gated sweep the field is always ready, so the drain fires in THIS call —
+                // byte-for-byte the old immediate ReleasePiece(hit).
+                EnqueueTap(hit);
                 return;
             }
 
@@ -132,9 +145,10 @@ namespace Gameplay.Core.Mechanic
             {
                 // Catapult (TASK-025): the solution is a SEQUENTIAL single-tap chain (fulcrum → arm → pebble charges
                 // the far end → boulder overloads the near end and flips the arm). Coalescing a fast pebble+boulder
-                // double-tap into one synchronous step would launch them together and break the charge, so release
-                // immediately (like assembly). The seesaw pair path below (_balanceMode && !_catapultMode) is intact.
-                ReleasePiece(hit);
+                // double-tap into one synchronous step would launch them together and break the charge — so the
+                // catapult stays SINGLE-tap (never coalesced). TASK-061 routes it through the same serialized queue
+                // as assembly: arm now, release one at a time on field-ready, so a fast chain keeps its tap order.
+                EnqueueTap(hit);
                 return;
             }
 
@@ -162,6 +176,52 @@ namespace Gameplay.Core.Mechanic
             piece.RestTimer = 0f;
             _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Falling);
             _model.RegisterAttempt();
+        }
+
+        /// <summary>
+        /// Serialized-release entry point (TASK-061, assembly + catapult). ARM the tapped piece immediately for
+        /// instant "selected" feedback — the model stays Idle, so PickIdlePieceAt keeps seeing it, ResolveAtRest's
+        /// anyIdle keeps holding the verdict, and nothing releases early. The physical release is deferred to
+        /// TryDrainReleaseQueue, which fires one unit at a time on ReadyForNextRelease. FIFO order == tap order.
+        /// On a rest-gated field (the default sweep) the drain runs in this same call, before controller.Tick, so
+        /// the release moment/order/attempt count are byte-for-byte the old immediate ReleasePiece.
+        /// </summary>
+        private void EnqueueTap(PieceInstance hit)
+        {
+            if (_releaseQueue.Contains(hit.InstanceId))
+                return; // re-tap on an already-queued (still Idle) piece — ignore, not a new move
+            _releaseQueue.Enqueue(hit.InstanceId);
+            _viewByInstance[hit.InstanceId].SetArmed(true);
+            TryDrainReleaseQueue();
+        }
+
+        /// <summary>
+        /// Release the next queued piece IF the field is ready — exactly ONE unit per call (after ReleasePiece the
+        /// piece is Falling ⇒ ReadyForNextRelease turns false ⇒ the next unit waits for the next ready moment). A
+        /// stale head (piece gone or no longer Idle) is dropped defensively. Called from EnqueueTap (ready path)
+        /// and from Tick (deferred path, once the field becomes ready). Balance never queues, so this is a no-op
+        /// there (empty queue early-return).
+        /// </summary>
+        private void TryDrainReleaseQueue()
+        {
+            if (_model.CurrentPhase != GamePhase.Running)
+                return;
+            if (_releaseQueue.Count == 0)
+                return;
+            if (!ReadyForNextRelease)
+                return; // field still busy → keep the tap armed and wait
+
+            var id = _releaseQueue.Peek();
+            var piece = FindPiece(id);
+            if (piece == null || piece.State != PieceLifecycle.Idle)
+            {
+                _releaseQueue.Dequeue(); // defensive: drop a stale head, drain the rest next tick
+                return;
+            }
+
+            _viewByInstance[id].SetArmed(false);
+            ReleasePiece(piece);
+            _releaseQueue.Dequeue();
         }
 
         /// <summary>
@@ -211,6 +271,12 @@ namespace Gameplay.Core.Mechanic
                 if (_coalesceWindowStepsLeft == 0)
                     FlushPendingRelease();
             }
+
+            // Serialized release (TASK-061): once the field is ready, release the next queued piece. If it releases
+            // here, the fall-loop below sees it Falling → anyFalling → early return before the verdict; it then falls
+            // honestly on the next ticks. No-op for balance (queue empty) and for the default sweep (already drained
+            // in OnIntent).
+            TryDrainReleaseQueue();
 
             var anyFalling = false;
 
@@ -449,6 +515,13 @@ namespace Gameplay.Core.Mechanic
         /// </summary>
         private void ResolveAtRest()
         {
+            // TASK-061: never judge while taps are still queued for physical release. A queued piece is armed-Idle,
+            // so the Lost path is already held by anyIdle below; this additionally holds the WIN so the level can't
+            // be declared won before the player's queued taps have all dropped. No-op for the default sweep (the
+            // queue is drained inside OnIntent before Tick) and for balance (which never queues).
+            if (_releaseQueue.Count > 0)
+                return;
+
             // TASK-054: only an ESSENTIAL Lost piece blocks the win (an expendable tool may leave the field). After
             // §3 an essential piece never survives Lost to this point — it already resolved the level in UpdateFalling
             // — so anyEssentialLost is defensively false here; the branch keeps the win-gate self-consistent and
@@ -581,6 +654,7 @@ namespace Gameplay.Core.Mechanic
             _pendingRelease.Clear();
             _coalesceWindowStepsLeft = 0;
             _lastGlobalRestReached = false;
+            _releaseQueue.Clear();
             // NB: _catapultMode / _balanceMode are deliberately NOT reset here — ClearRuntime runs AFTER
             // OnLevelLoaded has set the mode from the level, so clearing them would clobber it.
         }
