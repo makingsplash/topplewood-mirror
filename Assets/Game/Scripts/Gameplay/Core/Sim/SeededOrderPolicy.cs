@@ -15,6 +15,9 @@ namespace Gameplay.Core.Sim
 
         public SeededOrderPolicy(IGameplayRandom rng) => _rng = rng;
 
+        // Patient: wraps ReleaseOrderPolicy, which is rest-gated (TASK-060). Unchanged behaviour.
+        public bool GatedByRest => true;
+
         public bool TryNextRelease(GameModel model, List<Vec2> taps)
         {
             _inner ??= new ReleaseOrderPolicy(Permutations.Shuffled(model.Pieces.Count, _rng));

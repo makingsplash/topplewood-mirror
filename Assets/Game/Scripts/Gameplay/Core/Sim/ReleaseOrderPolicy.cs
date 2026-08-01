@@ -15,6 +15,9 @@ namespace Gameplay.Core.Sim
 
         public ReleaseOrderPolicy(int[] order) => _order = order;
 
+        // Patient: the driver waits for global rest between releases (TASK-060). Unchanged behaviour.
+        public bool GatedByRest => true;
+
         public bool TryNextRelease(GameModel model, List<Vec2> taps)
         {
             taps.Clear();

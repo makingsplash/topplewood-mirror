@@ -34,6 +34,15 @@ namespace Gameplay.Sim
         [SerializeField] private int _maxFullPermute = 5;          // ≤ this many pieces → enumerate all orders
         [SerializeField] private bool _runSlotAscendingSmoke = true;
 
+        [Header("Timing pass (TASK-060; OPT-IN — separate report, NEVER judged by the gate)")]
+        // The "fast"/impatient game: release the same orders WITHOUT waiting for rest, gap fixed steps apart. OFF
+        // by default → the corpus sweep and the gated report are byte-for-byte unchanged. When on, its runs go to a
+        // SEPARATE level-sim-timing report (not the gated one): a player playing fast is a balance/authoring FINDING,
+        // never a red build (owner directive, TASK-060). Also flips on headlessly via env SIM_TIMING_GAP=<int> so a
+        // batch probe needs no scene edit.
+        [SerializeField] private bool _runImpatientPass = false;   // OFF by default → gated corpus sweep unchanged
+        [SerializeField] private int _impatientGapSteps = 20;      // fixed steps between fast taps (~0.33s @60fps)
+
         [Header("M0 confirmation (ADR-0001)")]
         [SerializeField] private int _m0ReproRepeats = 100;        // same-device reproducibility sample size
         [SerializeField] private int[] _accelStepsPerFrame = { 1, 8, 64 };
@@ -60,6 +69,15 @@ namespace Gameplay.Sim
             // Headless batch MUST self-exit (do not trust the scene-serialized flag).
             if (Application.isBatchMode)
                 _exitOnDone = true;
+
+            // TASK-060: a headless timing probe flips the opt-in impatient pass on via env (no scene edit needed),
+            // so the committed scene keeps the pass OFF and the gated sweep stays default. SIM_TIMING_GAP=<int>.
+            var gapEnv = Environment.GetEnvironmentVariable("SIM_TIMING_GAP");
+            if (Application.isBatchMode && int.TryParse(gapEnv, out var gap) && gap > 0)
+            {
+                _runImpatientPass = true;
+                _impatientGapSteps = gap;
+            }
         }
 
         private void Start() => StartCoroutine(RunSweep());
@@ -224,8 +242,158 @@ namespace Gameplay.Sim
                       $"csv={csvPath ?? "<none>"} json={jsonPath ?? "<none>"}");
             LogSmoke(stats);
 
+            // TASK-060: OPT-IN "fast" game. Runs AFTER the gated report is on disk and into a SEPARATE report, so
+            // the gate (sim-gate.py reads only the main report's runs) is untouched no matter what fast play finds.
+            if (_runImpatientPass && ok && levels != null)
+                yield return StartCoroutine(RunTimingPass(levels, runs));
+
             if (_exitOnDone)
                 Exit(exitCode);
+        }
+
+        // TASK-060: the "impatient player" comparison. For every non-Balance level (Assembly + Catapult, where a tap
+        // releases immediately, so "step T" == "release on step T"), re-runs the SAME release orders through
+        // ScriptedReleasePolicy.Impatient(order, gap) — releasing the next piece WITHOUT waiting for rest — and
+        // compares its final poses against the patient release-order runs already in <paramref name="patientRuns"/>.
+        // Writes its own level-sim-timing_<ts> report (NEVER the gated one) and logs, per level, whether fast play
+        // reaches a different outcome or different poses. Determinism is proven the same way as every other policy:
+        // identical poseHash across the R repeats (timing is in fixed steps, no RNG/wall-clock).
+        private IEnumerator RunTimingPass(IReadOnlyList<LevelData> levels, IReadOnlyList<SimRunResult> patientRuns)
+        {
+            var gap = _impatientGapSteps;
+            Debug.Log($"[level-sim] TIMING PASS (impatient, gapSteps={gap}) — SEPARATE report, not gated.");
+
+            // Patient poseHash sets by (levelId, orderKey), from the release-order sweep already run.
+            var patientHashes = new Dictionary<string, HashSet<long>>();
+            var patientSolved = new Dictionary<string, int>();
+            foreach (var r in patientRuns)
+            {
+                if (r.PolicyId != "release-order")
+                    continue;
+                var key = r.LevelId + "|" + r.OrderKey;
+                if (!patientHashes.TryGetValue(key, out var set))
+                    patientHashes[key] = set = new HashSet<long>();
+                set.Add(r.PoseHash);
+                if (r.Solved)
+                    patientSolved[key] = patientSolved.TryGetValue(key, out var c) ? c + 1 : 1;
+            }
+
+            var timingRuns = new List<SimRunResult>();
+            var divergentLevels = new List<string>();
+
+            foreach (var level in levels)
+            {
+                if (level.PhysicsMode == PhysicsMode.Balance)
+                    continue; // balance inserts a coalescence window between tap and release; gap composes with it
+
+                IReadOnlyList<int[]> orders;
+                try
+                {
+                    orders = SolveSweepPlan.BuildOrders(
+                        TappableIndices(level), _maxFullPermute, _sampleCount, level.Seed, null);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[level-sim] timing {level.LevelId}: build orders threw: {e}");
+                    continue;
+                }
+
+                var levelDiverged = false;
+                foreach (var order in orders)
+                {
+                    var orderKey = string.Join("-", order);
+                    var impatientHashes = new HashSet<long>();
+                    var impatientSolved = 0;
+                    for (var r = 0; r < _repeats; r++)
+                    {
+                        var sim = new UnityShapeFillSimulation(_tuning);
+                        try
+                        {
+                            var res = SimRun.Run(level, sim, ScriptedReleasePolicy.Impatient(order, gap),
+                                "impatient", orderKey, r, _maxSteps);
+                            timingRuns.Add(res);
+                            impatientHashes.Add(res.PoseHash);
+                            if (res.Solved)
+                                impatientSolved++;
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError($"[level-sim] timing {level.LevelId} order {orderKey} run {r} threw: {e}");
+                        }
+
+                        yield return null;
+                        if (WatchdogExpired())
+                            break;
+                    }
+
+                    var pKey = level.LevelId + "|" + orderKey;
+                    patientHashes.TryGetValue(pKey, out var pHashes);
+                    var pSolved = patientSolved.TryGetValue(pKey, out var ps) ? ps : 0;
+                    var impatientDeterministic = impatientHashes.Count == 1;
+                    // "Different physics": a different solved-count (outcome flip) OR a disjoint pose-hash set.
+                    var outcomeDiffers = impatientSolved != pSolved;
+                    var posesDiffer = pHashes != null && !pHashes.SetEquals(impatientHashes);
+                    if (outcomeDiffers || posesDiffer)
+                        levelDiverged = true;
+
+                    Debug.Log($"[level-sim] TIMING {level.LevelId} order={orderKey} gap={gap}: " +
+                              $"impatient solved {impatientSolved}/{_repeats} (patient {pSolved}/{_repeats}), " +
+                              $"impatientDeterministic={impatientDeterministic} " +
+                              $"impatientHashes={impatientHashes.Count} patientHashes={pHashes?.Count ?? 0} " +
+                              $"outcomeDiffers={outcomeDiffers} posesDiffer={posesDiffer}");
+
+                    if (WatchdogExpired())
+                        break;
+                }
+
+                if (levelDiverged)
+                    divergentLevels.Add(level.LevelId);
+                if (WatchdogExpired())
+                    break;
+            }
+
+            // Honesty of the fast game is DATA, not a gate: report int/unsup/pen counts so a finding is visible.
+            var timingInt = 0;
+            var timingUnsupWon = 0;
+            var timingPenWon = 0;
+            foreach (var r in timingRuns)
+            {
+                if (r.IntersectingPairs > 0) timingInt++;
+                if (r.Solved && r.UnsupportedPlaced > 0) timingUnsupWon++;
+                if (r.Solved && r.MaxPenetration > 1e-4f) timingPenWon++;
+            }
+            Debug.Log($"[level-sim] TIMING SUMMARY gap={gap} runs={timingRuns.Count} " +
+                      $"divergent-levels={divergentLevels.Count} {string.Join(",", divergentLevels)} " +
+                      $"| fast-honesty(FYI, NOT gated): int={timingInt} unsup-won={timingUnsupWon} pen-won={timingPenWon}");
+
+            WriteTimingReport(timingRuns);
+        }
+
+        // Writes the timing pass to its OWN report file so it never mixes into the gated report. Reuses the shared
+        // writer/aggregator; failure to write is logged and does not affect the gate (already on disk).
+        private void WriteTimingReport(IReadOnlyList<SimRunResult> timingRuns)
+        {
+            if (timingRuns.Count == 0)
+            {
+                Debug.LogWarning("[level-sim] timing pass produced no runs — nothing to write.");
+                return;
+            }
+            try
+            {
+                var stats = SimAggregator.Aggregate(timingRuns);
+                var provenance = SimProvenance.Capture(ResolveRepoRoot(), _startWallClock);
+                var json = SimReportWriter.BuildJson(timingRuns, stats, null, provenance);
+                var dir = ResolveOutputDir();
+                var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
+                Directory.CreateDirectory(dir);
+                var path = Path.Combine(dir, $"level-sim-timing_{stamp}.json");
+                File.WriteAllText(path, json);
+                Debug.Log($"[level-sim] wrote TIMING report to {path}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[level-sim] failed to write timing report: {e.Message}");
+            }
         }
 
         // GAP-1: reuse the TASK-009 JSON pipeline verbatim (JsonLevelSource over the StreamingAssets ILevelStore,

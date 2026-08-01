@@ -88,15 +88,20 @@ namespace Gameplay.Core.Sim
         public long PoseHash() => SimPoseHash.Of(_model);
 
         /// <summary>
-        /// One driver iteration: when the controller reports the field is ready for the next release group
-        /// (balance-aware — beam settled AND the coalescence window closed; assembly ≡ "no Falling piece"), ask
-        /// the policy for the next group and push ALL its taps in this SAME step so a synchronous pair enters the
-        /// physics together (TASK-023 §5.4). Then advance exactly one fixed physics step + mechanic tick.
+        /// One driver iteration. For a rest-gated policy the driver asks it only when the controller reports the
+        /// field is ready for the next release group (balance-aware — beam settled AND the coalescence window
+        /// closed; assembly ≡ "no Falling piece") — the patient protocol. For a NON-gated policy (TASK-060
+        /// <see cref="ScriptedReleasePolicy"/>) the rest-gate is dropped and the policy is asked every Running step;
+        /// it times its own releases by fixed-step count, expressing the "fast" game the player can already play.
+        /// Either way ALL of a group's taps are pushed in this SAME step so a synchronous pair enters the physics
+        /// together (TASK-023 §5.4), and the push still goes through the unchanged input seam — the game's release
+        /// rules (<c>OnIntent</c>) are untouched. Then advance exactly one fixed physics step + mechanic tick.
         /// </summary>
         public void Step()
         {
-            if (_model.CurrentPhase == GamePhase.Running && _mechanic.ReadyForNextRelease &&
-                _policy.TryNextRelease(_model, _tapScratch))
+            if (_model.CurrentPhase == GamePhase.Running
+                && (!_policy.GatedByRest || _mechanic.ReadyForNextRelease)
+                && _policy.TryNextRelease(_model, _tapScratch))
             {
                 foreach (var tap in _tapScratch)
                     _input.Push(tap);
