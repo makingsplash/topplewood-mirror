@@ -23,5 +23,4 @@ MonoBehaviour:
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
-  _debugUIPrefabs:
-  - {fileID: 7084808920465361146, guid: 62fae895e916b84418a920b79bb0aaa1, type: 3}
+  _debugUIPrefabs: []

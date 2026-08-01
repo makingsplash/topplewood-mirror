@@ -30,11 +30,16 @@ namespace Gameplay.Dev
     /// inject <see cref="CampaignProgressionController"/> by ordinary DI — that constructor injection *is* the
     /// "meta↔gameplay-scope bridge", no statics involved.
     ///
-    /// Trigger: the backquote (`) key toggles the menu (bringup is played in the Editor per
-    /// docs/architecture/overview.md; a keyboard is always present). The switch semantics mirror the retired
-    /// overlay: live <see cref="CampaignProgressionController.DevJumpToLevel"/> (0-based, no meta persist),
-    /// prev/next, and a visible i/N + level-id label — bringup has no SayData.Meta, so persisting a jump is
-    /// physically unavailable there (design-locked, RFC Q2).
+    /// Triggers (either opens the menu): an always-visible on-screen <b>DEV</b> button built at runtime in
+    /// <see cref="CreateToggleButton"/> — the discoverable, keyboard-free entry point that works on device and
+    /// in the Editor (TASK-062, the template's cut prefab button rebuilt in code since the Unity bridge has no
+    /// prefab-save op) — and the backquote (`) key in <see cref="Tick"/>, an Editor convenience kept because
+    /// bringup is usually played there. The button lives on its own DontDestroyOnLoad overlay canvas pinned to
+    /// a screen corner; gameplay taps ride the raw PointerTapInputSource (not uGUI), an independent pipeline, so
+    /// a detail under the button stays tappable. The switch semantics mirror the retired overlay: live
+    /// <see cref="CampaignProgressionController.DevJumpToLevel"/> (0-based, no meta persist), prev/next, and a
+    /// visible i/N + level-id label — bringup has no SayData.Meta, so persisting a jump is physically
+    /// unavailable there (design-locked, RFC Q2).
     /// </summary>
     public sealed class BringupDebugMenuHost : IStartable, ITickable, IDisposable
     {
@@ -46,6 +51,7 @@ namespace Gameplay.Dev
         private DebugItemsConfig _config;
         private DDMMain _menu;
         private GameObject _eventSystem;
+        private GameObject _buttonCanvas;
 
         public BringupDebugMenuHost(
             ILevelSource levelSource, GameModel model, CampaignProgressionController campaign, ICampaignStore store)
@@ -71,8 +77,13 @@ namespace Gameplay.Dev
                 SRDebug.Init();
 
             // DDM UI prefabs live in a Resources ScriptableObject; loadable without SayData (LoadingGame.cs:95).
-            // The menu is NOT shown on start — it is toggled by the trigger key so it never occludes gameplay.
+            // The menu is NOT shown on start — it is toggled by the button/key so it never occludes gameplay.
             _config = Resources.Load<DebugItemsConfig>(ConfigPath.DebugItems);
+
+            // The always-visible on-screen entry point (TASK-062). Its own uGUI button needs an EventSystem to
+            // receive clicks, so raise one now instead of lazily in ToggleMenu.
+            EnsureEventSystem();
+            CreateToggleButton();
         }
 
         public void Tick()
@@ -112,6 +123,61 @@ namespace Gameplay.Dev
 
             _eventSystem = new GameObject("[Dev] EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             UnityEngine.Object.DontDestroyOnLoad(_eventSystem);
+        }
+
+        // The visible, keyboard-free entry point (TASK-062). The template shipped a draggable prefab button
+        // (com.say.services.common DebugMenuButtonUi) instantiated by DebugService from UiPrefabs.asset, but that
+        // path never runs in ShapeFillBringup (it skips LoadingGame/DebugService) and the prefab asset itself was
+        // cut from the repo. Rebuild the affordance in code — no prefab asset, so nothing for the Unity bridge's
+        // missing prefab-save op to author. A small corner button on its own overlay canvas keeps the play field
+        // clear; gameplay taps ride the raw PointerTapInputSource (not uGUI), so anything under the button is still
+        // reachable even without moving it.
+        private void CreateToggleButton()
+        {
+            _buttonCanvas = new GameObject("[Dev] DebugMenuButton",
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            UnityEngine.Object.DontDestroyOnLoad(_buttonCanvas);
+
+            var canvas = _buttonCanvas.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = short.MaxValue; // above any gameplay/UI so it is never occluded.
+
+            var scaler = _buttonCanvas.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1080f, 1920f);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
+            buttonGo.transform.SetParent(_buttonCanvas.transform, false);
+
+            buttonGo.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.12f, 0.7f);
+
+            var rect = buttonGo.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f); // top-left corner, away from the play field's centre.
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = new Vector2(28f, -28f);
+            rect.sizeDelta = new Vector2(170f, 96f);
+
+            buttonGo.GetComponent<Button>().onClick.AddListener(ToggleMenu);
+
+            var labelGo = new GameObject("Label", typeof(Text));
+            labelGo.transform.SetParent(buttonGo.transform, false);
+
+            var label = labelGo.GetComponent<Text>();
+            label.text = "DEV ≡";
+            label.alignment = TextAnchor.MiddleCenter;
+            label.color = Color.white;
+            label.fontSize = 40;
+            // Built-in font of Unity 6 (renamed from Arial.ttf pre-2022). If unavailable the glyphs just do not
+            // draw — the button image and its click still work, so this is a cosmetic best-effort, not a gate.
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+            var labelRect = labelGo.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
         }
 
         // Content generator handed the live DDMContext by DDMMain — mirrors the retired overlay's UX.
@@ -158,6 +224,11 @@ namespace Gameplay.Dev
             if (_eventSystem != null)
                 UnityEngine.Object.Destroy(_eventSystem);
             _eventSystem = null;
+
+            // The on-screen button canvas is DontDestroyOnLoad too, so tear it down explicitly like the EventSystem.
+            if (_buttonCanvas != null)
+                UnityEngine.Object.Destroy(_buttonCanvas);
+            _buttonCanvas = null;
         }
     }
 }
