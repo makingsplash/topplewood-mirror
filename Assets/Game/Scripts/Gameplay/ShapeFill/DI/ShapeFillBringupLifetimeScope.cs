@@ -4,6 +4,7 @@ using Gameplay.DI;
 using Gameplay.Tutorial;
 using Infrastructure.ApplicationTriggers;
 using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
+using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
@@ -19,6 +20,12 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
 {
     protected override void Configure(IContainerBuilder builder)
     {
+        // Display cadence (TASK-069): prod sets Application.targetFrameRate in LoadingGame.InitializeGameSettings,
+        // but the bringup scene bypasses that bootstrap, so an APK built off this scene ran at Unity's mobile
+        // default (30). Owner asked for 90 explicitly (device measure showed missedFrames=0 at 30 — headroom, not
+        // a perf wall). A screen/mode that can't sustain 90Hz is clamped by Unity itself; we do NOT fall back to 60.
+        Application.targetFrameRate = 90;
+
         // Say-wrapper prefs backend (TASK-044 §3): the bringup scene omits the LoadingGame bootstrap, so it must
         // Init the collection itself before any PlayerPrefs value is constructed (PlayerPrefsBase ctor registers
         // into the singleton → NRE without Init). Idempotent guard: a second Init in the same editor session
