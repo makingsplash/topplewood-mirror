@@ -81,11 +81,16 @@ namespace Gameplay.Core
 
         /// <summary>A shape's local vertices transformed to world by a pose (rotate then translate).</summary>
         public static Vec2[] WorldVertices(Shape shape, Vec2 position, float rotation)
+            => WorldVertices(shape.Vertices, position, rotation);
+
+        /// <summary>A local outline transformed to world by a pose (rotate then translate). Overload for callers
+        /// that supply an outline other than <see cref="Shape.Vertices"/> — e.g. the view's higher-resolution
+        /// arc tessellation (<c>ShapeVisualOutline</c>, TASK-074).</summary>
+        public static Vec2[] WorldVertices(Vec2[] local, Vec2 position, float rotation)
         {
-            var src = shape.Vertices;
-            var world = new Vec2[src.Length];
-            for (var i = 0; i < src.Length; i++)
-                world[i] = position + src[i].Rotate(rotation);
+            var world = new Vec2[local.Length];
+            for (var i = 0; i < local.Length; i++)
+                world[i] = position + local[i].Rotate(rotation);
             return world;
         }
     }
