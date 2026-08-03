@@ -66,6 +66,13 @@ namespace Gameplay.Sim
         private DateTime _startWallClock;   // wall-clock sweep start → report provenance `startedAt` (TASK-058)
         private bool _m0Faulted;
 
+        // TASK-070: opt-in per-step [STEPLOG] pass for the device↔editor divergence diff. OFF by default → the gated
+        // corpus sweep and every poseHash are byte-for-byte unchanged. Flips on headlessly via env SIM_STEPLOG=<any>
+        // (run-sim.sh --steplog), mirroring the SIM_TIMING_GAP opt-in, so the committed scene stays default. Runs a
+        // SINGLE dedicated video_launcher / order 0-1-2 / patient run AFTER the gated report is on disk, with the
+        // dev logger attached; never touches the gated runs.
+        private bool _runStepLog;
+
         private void Awake()
         {
             // Best-effort (RFC-Δ §7): if an interactive/MCP play-mode entered, keep the loop ticking without
@@ -84,6 +91,14 @@ namespace Gameplay.Sim
                 _runImpatientPass = true;
                 _impatientGapSteps = gap;
             }
+
+#if GPIE_DEVELOPMENT
+            // TASK-070: headless opt-in for the per-step logging pass (no scene edit; committed scene stays default).
+            // Only meaningful under GPIE_DEVELOPMENT — the logger it drives is compiled out otherwise — and the sim
+            // canonically runs in the editor, where GPIE_DEVELOPMENT is defined, so this is the real path.
+            if (Application.isBatchMode && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIM_STEPLOG")))
+                _runStepLog = true;
+#endif
         }
 
         private void Start() => StartCoroutine(RunSweep());
@@ -253,8 +268,57 @@ namespace Gameplay.Sim
             if (_runImpatientPass && ok && levels != null)
                 yield return StartCoroutine(RunTimingPass(levels, runs));
 
+            // TASK-070: OPT-IN per-step logging pass. Also runs AFTER the gated report is on disk and is purely
+            // additive (its own single run, dev logger attached) → the gated report and every poseHash are
+            // unaffected regardless of the gate outcome.
+            if (_runStepLog && levels != null)
+                yield return StartCoroutine(RunStepLogPass(levels));
+
             if (_exitOnDone)
                 Exit(exitCode);
+        }
+
+        // TASK-070: emit the per-step [STEPLOG] stream for the ONE run the owner played on device — video_launcher,
+        // release order 0-1-2 (left ball → right ball → hammer), rest-gated (patient) ReleaseOrderPolicy — using the
+        // SAME StepPoseLogger the device APK carries, so the editor/desktop lines are byte-identical to the device
+        // lines and diff line-by-line. This is the sim (editor=1) half of the divergence measurement; the device
+        // half is captured by the owner from logcat. Additive and isolated: it never runs during the gated sweep, so
+        // the gated report is unchanged; the logger is read-only, so even the numbers it observes are the same
+        // trajectory the gate saw. Wrapped so a hiccup here can never wedge the already-finalised exit.
+        private IEnumerator RunStepLogPass(IReadOnlyList<LevelData> levels)
+        {
+            LevelData level = null;
+            foreach (var l in levels)
+            {
+                if (l.LevelId == "video_launcher")
+                {
+                    level = l;
+                    break;
+                }
+            }
+            if (level == null)
+            {
+                Debug.LogWarning("[level-sim] STEPLOG pass: 'video_launcher' not in campaign — skipped.");
+                yield break;
+            }
+
+            Debug.Log("[level-sim] STEPLOG pass: video_launcher order=0-1-2 patient (editor half of the " +
+                      "device↔editor diff) — SEPARATE from the gated sweep.");
+
+            var sim = new UnityShapeFillSimulation(_tuning);
+            try
+            {
+                // logSteps:true attaches the dev StepPoseLogger for THIS run only; 0-1-2 = the device tap order over
+                // the tappable pieces (the preplaced stick is excluded from release orders, TappableIndices).
+                SimRun.Run(level, sim, new ReleaseOrderPolicy(new[] { 0, 1, 2 }),
+                    "steplog", "0-1-2", 0, _maxSteps, logSteps: true);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[level-sim] STEPLOG pass threw: {e}");
+            }
+
+            yield return null; // RFC §6: let the deferred body Destroy flush
         }
 
         // TASK-060: the "impatient player" comparison. For every non-Balance level (Assembly + Catapult, where a tap
