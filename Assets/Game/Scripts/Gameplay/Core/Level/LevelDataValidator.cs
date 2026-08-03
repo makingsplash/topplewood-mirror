@@ -132,6 +132,18 @@ namespace Gameplay.Core
                 }
                 if (type.Shape?.Vertices == null || type.Shape.Vertices.Length < 3)
                     errors.Add($"Pieces[{i}] '{type.Kind}' has an invalid shape (need ≥3 vertices).");
+                // TASK-074: a polygon collider with >8 vertices exceeds Box2D's per-shape convex cap, so the engine
+                // re-splits it into convex sub-shapes by a split that depends on the exact vertex coordinates — a
+                // platform-dependent physics input (Mono editor vs IL2CPP arm64), the P0 mechanism of TASK-072.
+                // Circle is exempt: it maps to a NATIVE CircleCollider2D (UnityShapeFillSimulation:95), so its
+                // vertices never reach a collider. Every other primitive gets a PolygonCollider2D built from these
+                // vertices, so the rule keys on the RESULT (vertex count), not the primitive — it also catches a
+                // future QuarterDisc or concave polyomino authored past 8 verts. Fix bad data (coarser arc / native
+                // primitive), never widen this cap.
+                else if (type.Shape.Primitive != ShapePrimitive.Circle && type.Shape.Vertices.Length > 8)
+                    errors.Add($"Pieces[{i}] '{type.Kind}' has a {type.Shape.Vertices.Length}-vertex polygon collider; " +
+                               "Box2D splits any >8-vertex polygon by a coordinate-dependent split (platform-dependent " +
+                               "physics, TASK-072/074) — use a native primitive or ≤8 vertices.");
                 if (type.Material.Density < 0f || type.Material.Friction < 0f || type.Material.Restitution < 0f)
                     errors.Add($"Pieces[{i}] '{type.Kind}' has a negative material field.");
                 if (!level.Bounds.Contains(level.Pieces[i].StartPosition))

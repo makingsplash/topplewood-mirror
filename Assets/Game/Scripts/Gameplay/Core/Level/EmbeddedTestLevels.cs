@@ -72,7 +72,9 @@ namespace Gameplay.Core
         // top half domes up on it (rot 0). Cradle + numbers UNVERIFIED (needs level-sim; RFC §7.2).
         private static LevelData BuildCircleHalves()
         {
-            var half = new PieceType("half_disc", Shape.HalfDisc(0.5f, 12), Wood, symmetryOrder: 1);
+            // segments:7 ⇒ 8 collider vertices ⇒ one convex Box2D shape (no coordinate-dependent split). >8 would
+            // trip the LevelDataValidator ≤8-vertex collider guard (TASK-074) — same rule the shipped levels obey.
+            var half = new PieceType("half_disc", Shape.HalfDisc(0.5f, 7), Wood, symmetryOrder: 1);
 
             var outline = new Polygon(new[]
             {
