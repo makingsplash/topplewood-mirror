@@ -29,39 +29,51 @@ namespace Gameplay.Dev
     /// numbers are formatted with <see cref="CultureInfo.InvariantCulture"/> so a comma-locale device and a
     /// dot-locale editor produce identical, diffable text.
     ///
-    /// VOLUME is bounded three ways (the owner's constraint — a prior task drowned in 74 logs/s): nothing is
-    /// logged until a launch actually starts (a piece enters Falling); the episode auto-closes after the
-    /// field has been quiet for <see cref="RestTailSteps"/> steps; and a hard <see cref="MaxEpisodeSteps"/>
-    /// floodgate closes any pathological hang. It re-arms on every <see cref="GameModel.LevelLoaded"/>
+    /// SESSION = the WHOLE match, load → verdict (TASK-070 return, owner 10:30): the logger is armed at level
+    /// load, emits <c>BEGIN</c> + a <c>READY</c> snapshot of every piece's start pose (so idle tap targets are
+    /// in the log — see the world→screen note below), then logs each step where at least one piece is
+    /// <c>Falling</c>, all the way to the level's verdict. A previous version closed the session on the FIRST
+    /// global rest — which lands right after the preplaced plank settles, BEFORE any player tap — so it only
+    /// ever captured the initial static settling and nothing of the actual launch. Intermediate rests (the
+    /// pauses between taps) NO LONGER close the session; only the level verdict does.
+    ///
+    /// VOLUME is bounded two ways (the owner's constraint — a prior task drowned in 74 logs/s): a per-step line
+    /// is emitted ONLY while something is Falling (the pre-tap idle and the seconds-long gaps between taps
+    /// advance the step clock but emit nothing), and a hard <see cref="MaxLoggedSteps"/> floodgate closes any
+    /// pathological hang that never resolves. The session ends on <see cref="GameModel.LevelResolved"/> with
+    /// the outcome (<c>END … reason=won|lost</c>) and re-arms on every <see cref="GameModel.LevelLoaded"/>
     /// (covers DevJumpToLevel switches AND same-index LOSS→retry reloads).
     ///
-    /// ALIGNMENT: <c>s=</c> is the step index since launch start (episode step 0 = first Falling step), and
-    /// each token carries <c>age=</c> = steps since THAT piece first started moving. Human tap timing is not
-    /// injectable, so absolute wall-clock is not comparable across runs; anchor the editor↔device diff on the
-    /// launched piece's <c>age</c> (its post-impulse flight is deterministic once released).
+    /// ALIGNMENT: <c>s=</c> is the fixed-step index since level load (a true physics-step clock; gaps in it are
+    /// the un-logged idle spans between taps), and each token carries <c>age=</c> = steps since THAT piece
+    /// first started moving. Human/injected tap timing is not frame-exact, so absolute wall-clock is not
+    /// comparable across runs; anchor the editor↔device diff on the launched piece's <c>age</c> — its
+    /// post-impulse flight is deterministic once released, so the first <c>age</c> at which Δx/Δy grows is the
+    /// divergence step. World coordinates are platform-invariant; convert to device tap pixels outside the log
+    /// (the mapping is screen-resolution-specific — see the READY line and the artifact, §3).
     /// </summary>
     public sealed class StepPoseLogger : IStartable, IStepObserver, IDisposable
     {
-        // Steps of continuous "nothing Falling" after a launch before the episode auto-closes (~0.5 s @ 1/60).
-        private const int RestTailSteps = 30;
-        // Hard floodgate: close the episode no matter what after this many logged steps (~33 s @ 1/60).
-        private const int MaxEpisodeSteps = 2000;
+        // Hard floodgate: close the session after this many EMITTED (Falling) lines, so a level that never
+        // reaches a verdict cannot flood the log. Idle steps do not count — this bounds real motion, not
+        // patient waiting — so a full match stays well under it (~50 s of continuous motion @ 1/60).
+        private const int MaxLoggedSteps = 3000;
 
         private readonly GameController _controller;
         private readonly GameModel _model;
         private readonly ShapeFillTuning _tuning;
 
         private readonly StringBuilder _line = new();
-        // Per instance: last logged position (for the derived velocity) and the episode-step it first moved.
+        // Per instance: last logged position (for the derived velocity) and the step it first moved.
         private readonly Dictionary<int, Vec2> _prevPos = new();
         private readonly Dictionary<int, int> _firstMoveStep = new();
 
         private IDisposable _levelLoadedSub;
-        private bool _begun;      // BEGIN line emitted for the current level load
-        private bool _active;     // a launch episode is in progress (something Falling has been seen)
-        private bool _closed;     // episode finished — stop logging until the next LevelLoaded
-        private int _episodeStep; // fixed steps since launch start (0 = first Falling step)
-        private int _restTail;    // consecutive steps with no Falling piece since the episode went active
+        private IDisposable _levelResolvedSub;
+        private bool _begun;      // BEGIN/READY emitted for the current level load
+        private bool _closed;     // session finished (verdict or cap) — stop logging until the next LevelLoaded
+        private int _stepIndex;   // fixed steps since level load (true physics-step clock)
+        private int _loggedCount; // emitted (Falling) lines this session — drives the floodgate
 
         public StepPoseLogger(GameController controller, GameModel model, ShapeFillTuning tuning)
         {
@@ -80,6 +92,9 @@ namespace Gameplay.Dev
             // Re-arm on every level (re)load — DevJumpToLevel and same-index LOSS→retry both re-fire this, and
             // a retry reuses the LevelId so a plain id-change check would miss it.
             _levelLoadedSub = _model.LevelLoaded.Subscribe(_ => ReArm());
+            // Close the session on the verdict, NOT on rest: video_launcher is a catapult whose beam rests
+            // several times before the launch, so rest is not terminal — the level's Won/Lost outcome is.
+            _levelResolvedSub = _model.LevelResolved.Subscribe(_ => OnResolved());
         }
 
         public void OnStep()
@@ -88,14 +103,23 @@ namespace Gameplay.Dev
             if (level == null || _closed)
                 return;
 
+            var pieces = _model.Pieces;
+
             if (!_begun)
             {
+                // Lazy BEGIN so the auto-loaded first level (campaign resume runs before this IStartable) is
+                // still captured; ReArm re-clears this for every subsequent DevJumpToLevel / retry.
                 LogBegin(level);
+                LogReady(level.LevelId, pieces);
                 _begun = true;
+                _stepIndex = 0;
+            }
+            else
+            {
+                _stepIndex++;
             }
 
             var anyFalling = false;
-            var pieces = _model.Pieces;
             for (var i = 0; i < pieces.Count; i++)
             {
                 if (pieces[i].State == PieceLifecycle.Falling)
@@ -105,47 +129,38 @@ namespace Gameplay.Dev
                 }
             }
 
-            // Do not spam the idle steps before the player's first tap — the episode (and s=0) begins at the
-            // first Falling step, the launch anchor both platforms share.
-            if (!_active)
-            {
-                if (!anyFalling)
-                    return;
-                _active = true;
-                _episodeStep = 0;
-            }
-            else
-            {
-                _episodeStep++;
-            }
+            // Emit a per-step line ONLY while something is Falling — this bounds volume; the pre-tap idle and
+            // the gaps between taps just advance _stepIndex (visible as jumps in s=) and never close the
+            // session. The session ends on the verdict (OnResolved), not here.
+            if (!anyFalling)
+                return;
 
             LogStep(level.LevelId, pieces);
 
-            if (anyFalling)
-            {
-                _restTail = 0;
-            }
-            else if (++_restTail >= RestTailSteps)
-            {
-                LogEnd(level.LevelId, "rest");
-                _closed = true;
-                return;
-            }
-
-            if (_episodeStep >= MaxEpisodeSteps)
+            if (++_loggedCount >= MaxLoggedSteps)
             {
                 LogEnd(level.LevelId, "cap");
                 _closed = true;
             }
         }
 
+        private void OnResolved()
+        {
+            if (_closed || !_begun)
+                return;
+            var level = _model.CurrentLevel;
+            if (level == null)
+                return;
+            LogEnd(level.LevelId, _model.Outcome.CurrentValue == GameOutcome.Won ? "won" : "lost");
+            _closed = true;
+        }
+
         private void ReArm()
         {
             _begun = false;
-            _active = false;
             _closed = false;
-            _episodeStep = 0;
-            _restTail = 0;
+            _stepIndex = 0;
+            _loggedCount = 0;
             _prevPos.Clear();
             _firstMoveStep.Clear();
         }
@@ -161,11 +176,30 @@ namespace Gameplay.Dev
                 " targetFPS=", Application.targetFrameRate.ToString(CultureInfo.InvariantCulture)));
         }
 
+        // Snapshot of every piece's start pose BEFORE any motion — the Idle pieces here are the tap targets, so
+        // the owner can compute device tap pixels from world x/y (mapping is resolution-specific; artifact §3).
+        private void LogReady(string levelId, IReadOnlyList<PieceInstance> pieces)
+        {
+            _line.Clear();
+            _line.Append("[STEPLOG] READY ").Append(levelId);
+            for (var i = 0; i < pieces.Count; i++)
+            {
+                var p = pieces[i];
+                _line.Append(" | ")
+                    .Append(p.InstanceId.ToString(CultureInfo.InvariantCulture)).Append(':')
+                    .Append(p.Kind).Append(':').Append(p.State.ToString())
+                    .Append(" x=").Append(F5(p.Position.X))
+                    .Append(" y=").Append(F5(p.Position.Y))
+                    .Append(" r=").Append(F5(p.Rotation));
+            }
+            Debug.Log(_line.ToString());
+        }
+
         private void LogStep(string levelId, IReadOnlyList<PieceInstance> pieces)
         {
             _line.Clear();
             _line.Append("[STEPLOG] ").Append(levelId)
-                .Append(" s=").Append(_episodeStep.ToString("0000", CultureInfo.InvariantCulture));
+                .Append(" s=").Append(_stepIndex.ToString("0000", CultureInfo.InvariantCulture));
 
             for (var i = 0; i < pieces.Count; i++)
             {
@@ -174,13 +208,14 @@ namespace Gameplay.Dev
                 // First step this piece is in motion → anchor its per-piece age and seed the velocity baseline.
                 var moving = p.State != PieceLifecycle.Idle;
                 if (moving && !_firstMoveStep.ContainsKey(p.InstanceId))
-                    _firstMoveStep[p.InstanceId] = _episodeStep;
-                var age = _firstMoveStep.TryGetValue(p.InstanceId, out var fm) ? _episodeStep - fm : -1;
+                    _firstMoveStep[p.InstanceId] = _stepIndex;
+                var age = _firstMoveStep.TryGetValue(p.InstanceId, out var fm) ? _stepIndex - fm : -1;
 
                 // Derived velocity = Δposition / FixedStep (domain units/s). NOT the solver's linearVelocity
                 // (that needs the mechanic's private body-id map); with a fixed dt this closely tracks it and
                 // is exactly the per-step displacement the divergence question is about. Zero on a piece's
-                // first logged step (no previous sample).
+                // first logged step (no previous sample). Idle pieces do not move between logged steps, so the
+                // gap between two logged steps that straddle an idle span still yields a correct one-step Δ.
                 float vx = 0f, vy = 0f;
                 if (_prevPos.TryGetValue(p.InstanceId, out var prev))
                 {
@@ -207,7 +242,8 @@ namespace Gameplay.Dev
         {
             Debug.Log(string.Concat(
                 "[STEPLOG] END level=", levelId,
-                " steps=", _episodeStep.ToString("0000", CultureInfo.InvariantCulture),
+                " steps=", _stepIndex.ToString("0000", CultureInfo.InvariantCulture),
+                " logged=", _loggedCount.ToString("0000", CultureInfo.InvariantCulture),
                 " reason=", reason));
         }
 
@@ -223,6 +259,8 @@ namespace Gameplay.Dev
                 _controller.StepObserver = null;
             _levelLoadedSub?.Dispose();
             _levelLoadedSub = null;
+            _levelResolvedSub?.Dispose();
+            _levelResolvedSub = null;
         }
     }
 }
