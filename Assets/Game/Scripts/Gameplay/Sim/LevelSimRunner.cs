@@ -42,6 +42,12 @@ namespace Gameplay.Sim
         // batch probe needs no scene edit.
         [SerializeField] private bool _runImpatientPass = false;   // OFF by default → gated corpus sweep unchanged
         [SerializeField] private int _impatientGapSteps = 20;      // fixed steps between fast taps (~0.33s @60fps)
+        // TASK-067: the timing pass ALSO replays each rest-gated POLICY's winning sequence (slot-ascending /
+        // pair-release) at a human tempo — the coverage the enumerated-order impatient pass above misses for
+        // levels solved by a POLICY, not a listed single order. These gaps are the acceptance table columns:
+        // patient (from the gated sweep's policy runs) vs 8 / 20 / 32 fast steps. Tiny extra cost (1 sequence
+        // per level per gap), so it never explodes the sweep. Off unless _runImpatientPass is on.
+        [SerializeField] private int[] _policyScriptGaps = { 8, 20, 32 };
 
         [Header("M0 confirmation (ADR-0001)")]
         [SerializeField] private int _m0ReproRepeats = 100;        // same-device reproducibility sample size
@@ -258,6 +264,10 @@ namespace Gameplay.Sim
         // Writes its own level-sim-timing_<ts> report (NEVER the gated one) and logs, per level, whether fast play
         // reaches a different outcome or different poses. Determinism is proven the same way as every other policy:
         // identical poseHash across the R repeats (timing is in fixed steps, no RNG/wall-clock).
+        // TASK-067: after that enumerated loop it runs a SECOND, POLICY-SCRIPTED sub-pass (see the block comment
+        // there) that replays each rest-gated policy's WINNING sequence — slot-ascending / pair-release — fast, at
+        // every gap in _policyScriptGaps. That is the coverage the enumerated loop misses for levels whose solution
+        // is a policy, not a listed order; both sub-passes write into the same (non-gated) timing report.
         private IEnumerator RunTimingPass(IReadOnlyList<LevelData> levels, IReadOnlyList<SimRunResult> patientRuns)
         {
             var gap = _impatientGapSteps;
@@ -266,16 +276,30 @@ namespace Gameplay.Sim
             // Patient poseHash sets by (levelId, orderKey), from the release-order sweep already run.
             var patientHashes = new Dictionary<string, HashSet<long>>();
             var patientSolved = new Dictionary<string, int>();
+            // TASK-067: patient POLICY baselines keyed by (policyId, levelId), from the gated sweep's
+            // slot-ascending / pair-release runs — the "patient" column of the acceptance table.
+            var patientPolicyHashes = new Dictionary<string, HashSet<long>>();
+            var patientPolicySolved = new Dictionary<string, int>();
             foreach (var r in patientRuns)
             {
-                if (r.PolicyId != "release-order")
-                    continue;
-                var key = r.LevelId + "|" + r.OrderKey;
-                if (!patientHashes.TryGetValue(key, out var set))
-                    patientHashes[key] = set = new HashSet<long>();
-                set.Add(r.PoseHash);
-                if (r.Solved)
-                    patientSolved[key] = patientSolved.TryGetValue(key, out var c) ? c + 1 : 1;
+                if (r.PolicyId == "release-order")
+                {
+                    var key = r.LevelId + "|" + r.OrderKey;
+                    if (!patientHashes.TryGetValue(key, out var set))
+                        patientHashes[key] = set = new HashSet<long>();
+                    set.Add(r.PoseHash);
+                    if (r.Solved)
+                        patientSolved[key] = patientSolved.TryGetValue(key, out var c) ? c + 1 : 1;
+                }
+                else if (r.PolicyId == "slot-ascending" || r.PolicyId == "pair-release")
+                {
+                    var key = r.PolicyId + "|" + r.LevelId;
+                    if (!patientPolicyHashes.TryGetValue(key, out var set))
+                        patientPolicyHashes[key] = set = new HashSet<long>();
+                    set.Add(r.PoseHash);
+                    if (r.Solved)
+                        patientPolicySolved[key] = patientPolicySolved.TryGetValue(key, out var c) ? c + 1 : 1;
+                }
             }
 
             var timingRuns = new List<SimRunResult>();
@@ -351,6 +375,85 @@ namespace Gameplay.Sim
                 if (WatchdogExpired())
                     break;
             }
+
+            // TASK-067: POLICY-SCRIPTED sub-pass — the coverage the enumerated loop above misses. A level solved
+            // by a POLICY (slot-ascending assembly / pair-release balance) rather than a listed single order was
+            // never measured fast: the loop above re-runs only SolveSweepPlan's orders, which for a seeded-sampled
+            // figure or a seesaw are NOT the policy's sequence. Here we replay the EXACT sequence each rest-gated
+            // policy chooses (PolicyScriptPlan mirrors the policy) but at a human tempo — a fixed gap between
+            // releases instead of waiting for global rest — over every gap in _policyScriptGaps, so one sweep
+            // yields the whole acceptance table (patient vs 8/20/32). Balance → scripted pair-release (pairs stay
+            // synchronous, groups go back-to-back — never split); every other mode → scripted slot-ascending.
+            // Catapult is INCLUDED under slot-ascending only for parity with its patient slot-ascending smoke; its
+            // real solution is a bespoke charge chain, so a loss there is expected and not a regression signal.
+            var policyRegressions = new List<string>();
+            Debug.Log($"[level-sim] TIMING POLICY-SCRIPTED pass gaps=[{string.Join(",", _policyScriptGaps)}] " +
+                      "— SEPARATE report, not gated.");
+            foreach (var level in levels)
+            {
+                var balance = level.PhysicsMode == PhysicsMode.Balance;
+                var patientPolicyId = balance ? "pair-release" : "slot-ascending";
+                var fastPolicyId = balance ? "fast-pair" : "fast-slot-asc";
+                var pKey = patientPolicyId + "|" + level.LevelId;
+                patientPolicyHashes.TryGetValue(pKey, out var pHashes);
+                var pSolved = patientPolicySolved.TryGetValue(pKey, out var ps) ? ps : 0;
+
+                foreach (var policyGap in _policyScriptGaps)
+                {
+                    if (policyGap <= 0)
+                        continue;
+
+                    var script = balance
+                        ? PolicyScriptPlan.PairRelease(level, policyGap)
+                        : PolicyScriptPlan.SlotAscending(level, policyGap);
+                    var orderKey = "gap-" + policyGap;
+                    var fastHashes = new HashSet<long>();
+                    var fastSolved = 0;
+                    for (var r = 0; r < _repeats; r++)
+                    {
+                        var sim = new UnityShapeFillSimulation(_tuning);
+                        try
+                        {
+                            var res = SimRun.Run(level, sim, new ScriptedReleasePolicy(script),
+                                fastPolicyId, orderKey, r, _maxSteps);
+                            timingRuns.Add(res);
+                            fastHashes.Add(res.PoseHash);
+                            if (res.Solved)
+                                fastSolved++;
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError($"[level-sim] timing-policy {level.LevelId} {fastPolicyId} {orderKey} " +
+                                           $"run {r} threw: {e}");
+                        }
+
+                        yield return null;
+                        if (WatchdogExpired())
+                            break;
+                    }
+
+                    var deterministic = fastHashes.Count == 1;
+                    var posesDiffer = pHashes != null && !pHashes.SetEquals(fastHashes);
+                    // A regression is losing winnability the patient policy HAD (pSolved>0 → fastSolved==0). A level
+                    // the patient policy never solved (pSolved==0) is "still not covered", not "broke" — the caller
+                    // separates the two in the artifact table.
+                    if (pSolved > 0 && fastSolved == 0)
+                        policyRegressions.Add(level.LevelId + "@" + policyGap);
+
+                    Debug.Log($"[level-sim] TIMING-POLICY {level.LevelId} policy={fastPolicyId} gap={policyGap}: " +
+                              $"fast solved {fastSolved}/{_repeats} (patient {patientPolicyId} {pSolved}/{_repeats}), " +
+                              $"deterministic={deterministic} fastHashes={fastHashes.Count} " +
+                              $"patientHashes={pHashes?.Count ?? 0} posesDiffer={posesDiffer}");
+
+                    if (WatchdogExpired())
+                        break;
+                }
+
+                if (WatchdogExpired())
+                    break;
+            }
+            Debug.Log($"[level-sim] TIMING POLICY SUMMARY gaps=[{string.Join(",", _policyScriptGaps)}] " +
+                      $"lost-winnability={policyRegressions.Count} {string.Join(",", policyRegressions)}");
 
             // Honesty of the fast game is DATA, not a gate: report int/unsup/pen counts so a finding is visible.
             var timingInt = 0;
