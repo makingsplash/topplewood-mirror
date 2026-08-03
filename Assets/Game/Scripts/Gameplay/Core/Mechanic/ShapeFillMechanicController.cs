@@ -55,6 +55,16 @@ namespace Gameplay.Core.Mechanic
         // once it exceeds RestDurationSeconds (the beam and everything on it have stopped swinging).
         private float _globalRestTimer;
 
+        // Monotone level-load counter (TASK-069 crash fix). Bumped once per (re)load in OnLevelLoaded so Tick can
+        // detect its own model being TORN DOWN AND REBUILT under its per-piece iteration: on device a mid-tick
+        // Resolve reloads the level SYNCHRONOUSLY (CampaignProgressionController subscribes LevelResolved →
+        // ReloadLevel → GameModel.LoadLevel, which _pieces.Clear()s and re-adds). Neither the phase (the reload
+        // flips it back to Running) nor the LevelData instance (reused on LOSS→retry) is a reliable "did we
+        // reload?" sentinel — a generation counter is. The sim graph has NO reload subscriber (SimRun only does
+        // _model.Outcome.Subscribe), so it never bumps mid-tick and never reproduces this — which is exactly why
+        // the seeded sweep is structurally blind to the whole class of reentrancy defect.
+        private int _levelGeneration;
+
         // ── Synchronous group release (TASK-023, balance-only). Taps on separate Idle pieces are buffered into a
         //    coalescence group and released in ONE flush step so a symmetric pair enters the physics together and
         //    the free beam stays level. Transient runtime state — NOT persisted. Assembly mode never touches it. ──
@@ -87,6 +97,7 @@ namespace Gameplay.Core.Mechanic
         private void OnLevelLoaded()
         {
             _level = _model.CurrentLevel;
+            _levelGeneration++; // see field doc: lets Tick detect a reload that happened under its own iteration
             _balanceMode = _level.PhysicsMode is PhysicsMode.Balance or PhysicsMode.Catapult;
             _catapultMode = _level.PhysicsMode == PhysicsMode.Catapult;
 
@@ -221,15 +232,28 @@ namespace Gameplay.Core.Mechanic
 
             var anyFalling = false;
 
-            foreach (var piece in _model.Pieces)
+            // TASK-069 crash fix: iterate _model.Pieces by INDEX, not with foreach. A per-piece Resolve below
+            // (LosePastBounds) can, ON DEVICE, synchronously reload the level (CampaignProgressionController →
+            // ReloadLevel → GameModel.LoadLevel _pieces.Clear()s+re-adds) — structurally mutating this very list
+            // mid-iteration. A foreach enumerator would throw "Collection was modified" on the next MoveNext; a
+            // List indexer does not version-check, so the for is safe AND we bail before indexing anything. The
+            // old phase-only guard could not protect this: MoveNext ran before it, and the reload restores the
+            // Running phase — so the reliable "did a reload tear us down?" signal is the level-generation bump,
+            // not the phase. (The sim never reloads → never trips this; see the _levelGeneration field doc.)
+            var generation = _levelGeneration;
+            var pieces = _model.Pieces;
+            for (var i = 0; i < pieces.Count; i++)
             {
                 // Losing a piece past the bounds resolves an ESSENTIAL one Lost immediately (TASK-054 §3) —
                 // both for a Falling piece (inside UpdateFalling) and a Placed one (the check below, TASK-059).
-                // Once that fires the phase leaves Running, so the remaining iterations must NOT keep mutating
-                // the model: bail out before MirrorPose can drag a resolved model, and before a second
-                // simultaneous loss double-Resolves in the same tick.
-                if (_model.CurrentPhase != GamePhase.Running)
+                // Once that fires the level is over (sim: phase leaves Running; device: the whole level was torn
+                // down and reloaded → generation bumped), so the remaining iterations must NOT touch the model:
+                // bail out before indexing a rebuilt list, before MirrorPose can drag a resolved/replaced model,
+                // and before a second simultaneous loss double-Resolves in the same tick.
+                if (_levelGeneration != generation || _model.CurrentPhase != GamePhase.Running)
                     return;
+
+                var piece = pieces[i];
 
                 if (!_bodyByInstance.TryGetValue(piece.InstanceId, out var bodyId))
                     continue;
@@ -251,6 +275,12 @@ namespace Gameplay.Core.Mechanic
                     LosePastBounds(piece, bodyId);
                     continue;
                 }
+
+                // UpdateFalling above may have Lost this piece and (on device) reloaded the whole level under us.
+                // Re-check the generation BEFORE MirrorPose so we never mirror onto a piece the reload already
+                // replaced (a same-level LOSS→retry reuses InstanceIds, so the body lookup would spuriously hit).
+                if (_levelGeneration != generation)
+                    return;
 
                 // The body may have been despawned (Lost) inside UpdateFalling / the Placed check above.
                 if (_bodyByInstance.TryGetValue(piece.InstanceId, out bodyId))
