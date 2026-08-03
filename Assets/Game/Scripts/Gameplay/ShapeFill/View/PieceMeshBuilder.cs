@@ -7,10 +7,15 @@ namespace Gameplay.View
     /// Builds a flat convex fan mesh from a domain <see cref="Shape"/>. Shared by <see cref="PieceView"/>
     /// (the physical pieces) and <see cref="TargetPreviewView"/> (the mini preview) so both render from a
     /// single source of truth — no duplicated triangulation (RFC §4.4). v0 shapes are convex.
+    /// Arc primitives are tessellated for the VIEW by <see cref="ShapeVisualOutline"/> (higher segment count
+    /// than the ≤8-vertex physics collider, TASK-074) — the physics vertices are never used for rendering.
     /// </summary>
     public static class PieceMeshBuilder
     {
-        public static Mesh Build(Shape shape) => Build(shape.Vertices);
+        // View outline, NOT shape.Vertices: dome primitives render at ShapeVisualOutline.VisualArcSegments so the
+        // mesh stays smooth while the collider stays at ≤8 vertices (TASK-074). Do not collapse this back to
+        // shape.Vertices — that would re-facet the wheels. Straight-edged shapes pass through unchanged.
+        public static Mesh Build(Shape shape) => Build(ShapeVisualOutline.Build(shape));
 
         /// <summary>Build a flat convex fan mesh from a raw CCW outline (TASK-031: visible static geometry reuses
         /// the same triangulation as pieces). The outline must be convex — v0's fan cannot triangulate a concave

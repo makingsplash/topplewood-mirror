@@ -77,7 +77,11 @@ namespace Gameplay.View
                 if (shape == null)
                     continue;
 
-                var world = Geometry.WorldVertices(shape, slot.Position, slot.Rotation);
+                // Trace the VIEW outline (ShapeVisualOutline), not shape.Vertices, so a slot ghost matches its
+                // piece silhouette exactly — a dome piece renders smooth (TASK-074) and its ghost must too.
+                // This is view-only: the collider and honesty detector still read shape.Vertices unchanged.
+                var visual = ShapeVisualOutline.Build(shape);
+                var world = Geometry.WorldVertices(visual, slot.Position, slot.Rotation);
                 var ghost = new GameObject($"SlotGhost_{slot.Kind}");
                 ghost.AddComponent<SilhouetteView>().Initialize(new Polygon(world), GhostColor);
                 _ghosts.Add(ghost);
