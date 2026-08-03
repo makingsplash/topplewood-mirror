@@ -19,6 +19,12 @@ namespace Gameplay.Adapters
             public Rigidbody2D Rigidbody;
             public Collider2D Collider;
             public float Radius;
+#if GPIE_DEVELOPMENT
+            // Retained only so the [SHAPELOG] diagnostic can name the piece at Release time (TASK-072); the
+            // adapter no longer holds the PieceType. Guarded so the release player never carries dead fields.
+            public string Kind;
+            public ShapePrimitive Primitive;
+#endif
         }
 
         private readonly Dictionary<int, Body> _bodies = new();
@@ -78,8 +84,26 @@ namespace Gameplay.Adapters
             go.transform.position = new Vector3(spawn.X, spawn.Y, 0f);
             go.transform.rotation = Quaternion.Euler(0f, 0f, rotation * Mathf.Rad2Deg);
 
-            var collider = go.AddComponent<PolygonCollider2D>();
-            collider.points = ToPoints(type.Shape.Vertices);
+            // TASK-072: a circle gets a NATIVE CircleCollider2D from the AUTHORED radius, not a PolygonCollider2D
+            // built from Shape.Circle's trig vertices. Those vertices are platform-dependent (Mono vs IL2CPP
+            // MathF.Cos/Sin) and, at 24 segments, exceed Box2D's 8-vertex convex cap so the poly is re-split into
+            // convex sub-shapes by a split that depends on the exact coordinates — either alone shifts the contact
+            // manifold editor↔device by double-digit percent. A native circle has one exact manifold and no
+            // vertices, removing both. Every other primitive keeps a PolygonCollider2D (its vertices are exact, or
+            // — for the trig-based half/quarter discs — quantized in Shape to a platform-invariant grid).
+            Collider2D collider;
+            if (type.Shape.Primitive == ShapePrimitive.Circle)
+            {
+                var circle = go.AddComponent<CircleCollider2D>();
+                circle.radius = type.Shape.Radius; // authored radius, NOT derived from vertices (would change mass)
+                collider = circle;
+            }
+            else
+            {
+                var polygon = go.AddComponent<PolygonCollider2D>();
+                polygon.points = ToPoints(type.Shape.Vertices);
+                collider = polygon;
+            }
             collider.sharedMaterial = new PhysicsMaterial2D($"mat_{type.Kind}")
             {
                 friction = type.Material.Friction,
@@ -112,6 +136,10 @@ namespace Gameplay.Adapters
                 // Collider is disabled while Idle, so its bounds are unreliable — derive the rest-speed radius
                 // from the shape vertices instead (used only for the angular-speed term in GetSpeed).
                 Radius = VertexRadius(type.Shape.Vertices),
+#if GPIE_DEVELOPMENT
+                Kind = type.Kind,
+                Primitive = type.Shape.Primitive,
+#endif
             };
             return id;
         }
@@ -126,6 +154,9 @@ namespace Gameplay.Adapters
             // Damping settles the fall (angular in particular tames rolling half-discs) — RFC 07 §2.3.
             body.Rigidbody.linearDamping = _tuning.ReleaseLinearDrag;
             body.Rigidbody.angularDamping = _tuning.ReleaseAngularDrag;
+#if GPIE_DEVELOPMENT
+            LogShape(bodyId, body);
+#endif
         }
 
         public void FreezeAt(int bodyId, Vec2 position, float rotation)
@@ -269,5 +300,44 @@ namespace Gameplay.Adapters
             }
             return max;
         }
+
+#if GPIE_DEVELOPMENT
+        // TASK-072 diagnostic: one [SHAPELOG] line per piece the instant it materialises. Emitted at Release
+        // (not SpawnFloating) BECAUSE that is when the collider is enabled and Unity's auto-mass is actually
+        // computed — at spawn the collider is disabled and rb.mass/inertia are not yet the real values (see the
+        // density note in SpawnFloating). Same InvariantCulture / fixed-width formatting as [STEPLOG] so the
+        // editor and device logs diff byte-for-byte: if collider vertices differ across platforms the trig-poly
+        // input was platform-dependent (mechanism #1); if they match but mass/inertia differ the cause is the
+        // convex re-split / manifold generation (mechanism #2). GPIE_DEVELOPMENT-gated — never in a shipped build.
+        private void LogShape(int bodyId, Body body)
+        {
+            var rb = body.Rigidbody;
+            var sb = new System.Text.StringBuilder();
+            var ic = System.Globalization.CultureInfo.InvariantCulture;
+            sb.Append("[SHAPELOG] id=").Append(bodyId.ToString(ic))
+                .Append(" kind=").Append(body.Kind)
+                .Append(" primitive=").Append(body.Primitive.ToString());
+
+            if (body.Collider is CircleCollider2D circle)
+            {
+                sb.Append(" collider=circle radius=").Append(F5(circle.radius)).Append(" verts=0");
+            }
+            else if (body.Collider is PolygonCollider2D polygon)
+            {
+                var pts = polygon.points;
+                sb.Append(" collider=polygon verts=").Append(pts.Length.ToString(ic));
+                for (var i = 0; i < pts.Length; i++)
+                    sb.Append(" v").Append(i.ToString(ic))
+                        .Append("=(").Append(F5(pts[i].x)).Append(',').Append(F5(pts[i].y)).Append(')');
+            }
+
+            sb.Append(" mass=").Append(F5(rb.mass)).Append(" inertia=").Append(F5(rb.inertia));
+            Debug.Log(sb.ToString());
+        }
+
+        // Signed fixed-width — identical formatting to StepPoseLogger.F5 so [SHAPELOG] and [STEPLOG] diff cleanly.
+        private static string F5(float v)
+            => v.ToString("+0.00000;-0.00000", System.Globalization.CultureInfo.InvariantCulture);
+#endif
     }
 }
