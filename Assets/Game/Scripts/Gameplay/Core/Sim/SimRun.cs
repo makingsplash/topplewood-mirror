@@ -63,7 +63,18 @@ namespace Gameplay.Core.Sim
 
         private GameOutcome _outcome = GameOutcome.None;
 
-        public SimRun(LevelData level, IShapeFillSimulation simulation, ISimBotPolicy policy)
+#if GPIE_DEVELOPMENT
+        // TASK-070: the SAME per-step pose logger the device build uses, opt-in via the logSteps ctor flag. Reusing
+        // the one class (not a sim-local copy) is what GUARANTEES the [STEPLOG] lines are byte-identical to the
+        // device side — otherwise there is nothing to diff. It is dev-gated and NEVER attached by the corpus sweep
+        // (LevelSimRunner passes logSteps only on its dedicated single-level pass), so the gated report and every
+        // poseHash are unchanged. Even if it WERE attached it is read-only (reads the pose mirror, writes only the
+        // log), so physics/poseHash cannot move. null when logSteps is false → the controller's StepObserver stays
+        // null exactly as in prod/the default sweep.
+        private readonly Gameplay.Dev.StepPoseLogger _stepLogger;
+#endif
+
+        public SimRun(LevelData level, IShapeFillSimulation simulation, ISimBotPolicy policy, bool logSteps = false)
         {
             _level = level;
             _policy = policy;
@@ -80,6 +91,18 @@ namespace Gameplay.Core.Sim
                 new FixedLevelSource(level), _model, _mechanic, simulation, _clock, _input);
 
             _outcomeSub = _model.Outcome.Subscribe(o => _outcome = o);
+
+#if GPIE_DEVELOPMENT
+            // Attach BEFORE Start() so the logger's LevelLoaded/LevelResolved subscriptions are live for this run's
+            // single load and its terminal verdict (BEGIN is emitted lazily on the first step; END fires on the
+            // Won/Lost resolve). Self-attaches as _controller.StepObserver — the same seam the device build uses.
+            if (logSteps)
+            {
+                _stepLogger = new Gameplay.Dev.StepPoseLogger(_controller, _model, _tuning);
+                _stepLogger.Start();
+            }
+#endif
+
             _controller.Start(); // mechanic reacts to LevelLoaded → pre-places every piece Idle
         }
 
@@ -441,6 +464,9 @@ namespace Gameplay.Core.Sim
 
         public void Dispose()
         {
+#if GPIE_DEVELOPMENT
+            _stepLogger?.Dispose(); // detaches itself from _controller.StepObserver + drops its subscriptions
+#endif
             _outcomeSub?.Dispose();
             _mechanic.Dispose();
             _controller.Dispose();
@@ -453,9 +479,9 @@ namespace Gameplay.Core.Sim
         /// body <c>Destroy</c> flushes (RFC §6).
         /// </summary>
         public static SimRunResult Run(LevelData level, IShapeFillSimulation simulation, ISimBotPolicy policy,
-            string policyId, string orderKey, int repeatIndex, int maxSteps)
+            string policyId, string orderKey, int repeatIndex, int maxSteps, bool logSteps = false)
         {
-            using var run = new SimRun(level, simulation, policy);
+            using var run = new SimRun(level, simulation, policy, logSteps);
 
             var steps = 0;
             for (; steps < maxSteps && !run.Resolved; steps++)

@@ -75,6 +75,14 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
         // overlay). Registered HERE, not in the context-independent GameplayCoreInstaller, because prod raises its
         // own GameDebugMenu via LoadingGame — a core-installer registration would spawn a SECOND menu in prod.
         builder.RegisterEntryPoint<Gameplay.Dev.BringupDebugMenuHost>();
+
+        // Per-fixed-step pose logger (TASK-070): a read-only diagnostic that attaches itself as the
+        // GameController.StepObserver and emits one [STEPLOG] line per physics step, so the same dev build
+        // run in the Editor and on device can be diffed to pin where cross-device physics diverges (ADR-0001
+        // M0.2). Never touches the simulation/model → physics and poseHash are unchanged. Bringup-only, like
+        // the DDM host: prod raises its own graph via LoadingGame, and the headless sim news the domain
+        // directly so it never creates this entry point.
+        builder.RegisterEntryPoint<Gameplay.Dev.StepPoseLogger>();
 #endif
     }
 }
