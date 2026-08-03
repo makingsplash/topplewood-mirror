@@ -21,6 +21,13 @@ namespace Gameplay.Core
         private IDisposable _inputSubscription;
         private bool _started;
 
+        /// <summary>
+        /// Optional per-fixed-step diagnostic hook (TASK-070). Left null in prod and the headless sim, so the
+        /// tick loop's null-conditional call is skipped and the pose sequence / poseHash are unchanged. A dev
+        /// build attaches a read-only pose logger here (see <see cref="IStepObserver"/>).
+        /// </summary>
+        public IStepObserver StepObserver { get; set; }
+
         public GameController(
             ILevelSource levelSource,
             GameModel model,
@@ -71,6 +78,9 @@ namespace Gameplay.Core
             {
                 _simulation.Step(_clock.FixedStep);
                 _mechanic.Tick(_clock.FixedStep);
+                // Diagnostic-only, after the pose mirror is current for this step; null in prod/sim (no cost,
+                // no effect on the pose sequence). Read-only by IStepObserver contract (TASK-070).
+                StepObserver?.OnStep();
             }
         }
 
