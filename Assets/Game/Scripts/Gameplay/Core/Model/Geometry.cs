@@ -9,11 +9,66 @@ namespace Gameplay.Core
     public static class Geometry
     {
         /// <summary>
+        /// Penetration depth (world units) between two convex colliders (TASK-075). Dispatches on primitive so the
+        /// detector measures the SAME geometry the physics simulates: circle-circle and circle-polygon are ANALYTIC
+        /// (exact for the native <c>CircleCollider2D</c> the physics uses for a <c>Circle</c> piece), while
+        /// polygon-polygon delegates to <see cref="ConvexPenetration(Vec2[],Vec2[])"/> — byte-unchanged, so levels
+        /// with no circles move by exactly zero. 0 ⇒ apart / merely touching. Deterministic and Unity-free.
+        /// </summary>
+        public static float Penetration(in ConvexShape a, in ConvexShape b)
+        {
+            if (a.IsCircle && b.IsCircle)
+                return CircleCircle(a.Center, a.Radius, b.Center, b.Radius);
+            if (a.IsCircle)
+                return CirclePolygon(a.Center, a.Radius, b.Vertices);
+            if (b.IsCircle)
+                return CirclePolygon(b.Center, b.Radius, a.Vertices);
+            return ConvexPenetration(a.Vertices, b.Vertices); // existing SAT kernel — UNCHANGED
+        }
+
+        /// <summary>Analytic penetration of two discs: overlap of the radii minus the centre distance, floored at 0.</summary>
+        private static float CircleCircle(Vec2 ca, float ra, Vec2 cb, float rb)
+        {
+            var pen = (ra + rb) - (ca - cb).Length;
+            return pen > 0f ? pen : 0f;
+        }
+
+        /// <summary>Analytic penetration of a disc against a CONVEX CCW polygon. Finds the closest point on the
+        /// polygon boundary (clamped to each edge segment, so corners are handled exactly) and whether the centre
+        /// is inside. Depth = the minimum translation to separate: <c>r − dist</c> outside within reach of the
+        /// boundary, <c>r + dist</c> when the centre is engulfed, else 0.</summary>
+        private static float CirclePolygon(Vec2 c, float r, Vec2[] v)
+        {
+            var bestDistSq = float.MaxValue;
+            var inside = true;
+            for (int i = 0, n = v.Length; i < n; i++)
+            {
+                var a = v[i];
+                var e = v[(i + 1) % n] - a;
+                var ee = Vec2.Dot(e, e);
+                var t = ee < 1e-12f ? 0f : Vec2.Dot(c - a, e) / ee;
+                t = t < 0f ? 0f : (t > 1f ? 1f : t); // clamp to segment (correct at corners)
+                var p = a + e * t;
+                var dsq = (c - p).SqrLength;
+                if (dsq < bestDistSq)
+                    bestDistSq = dsq;
+                // CCW ⇒ outward normal of edge (a→a+e) is (e.Y, −e.X); centre on the outward side of ANY edge ⇒ outside.
+                if (Vec2.Dot(c - a, new Vec2(e.Y, -e.X)) > 0f)
+                    inside = false;
+            }
+            var dist = MathF.Sqrt(bestDistSq);
+            if (inside)
+                return r + dist; // centre engulfed: radius + depth to nearest edge
+            return dist < r ? r - dist : 0f; // outside: overlap only within r of the boundary
+        }
+
+        /// <summary>
         /// Separating-Axis penetration depth (world units) between two CONVEX polygons (TASK-042). Returns the
         /// minimum overlap over all edge-normal axes when the polygons intersect, or 0 when a separating axis
         /// exists (they are apart / merely touching). All shape_fill pieces and the floor/cradle statics are
-        /// convex, so SAT is exact. Deterministic and Unity-free — used both as the controller's snap/freeze
-        /// honesty gate and as the sim-report interpenetration detector, so the two always agree.
+        /// convex, so SAT is exact. Deterministic and Unity-free — the poly-poly kernel of <see cref="Penetration"/>.
+        /// Sim-only: the controller's former snap/freeze assist gate that once shared it was removed in TASK-043, so
+        /// the ONLY caller today is the sim honesty detector (SimRun.cs).
         /// </summary>
         public static float ConvexPenetration(Vec2[] a, Vec2[] b)
         {

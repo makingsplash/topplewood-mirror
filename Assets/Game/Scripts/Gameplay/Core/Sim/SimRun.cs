@@ -236,7 +236,7 @@ namespace Gameplay.Core.Sim
         /// TASK-042 honesty detector — the owner's proof that physics stays honest in EVERY release order — now fully
         /// SIM-LOCAL (TASK-043 decoupled it from the removed controller assist layer, but its checks are unchanged).
         /// Over the FINAL settled (Placed) poses it measures:
-        /// (a) INTERPENETRATION — pairs of pieces whose convex SAT penetration exceeds their AUTHORED baseline
+        /// (a) INTERPENETRATION — pairs of pieces whose measured penetration exceeds their AUTHORED baseline
         ///     overlap (the sim-local per-pair design overlap baked in <see cref="EnsureSlotBaseline"/>) by more than
         ///     the <c>DetectorEpsilon</c> constant. Measuring the OVERSHOOT above baseline — not raw penetration — is
         ///     what stops authored micro-overlaps (owl's ear in the head, birthday_cake's touching tiers) from being
@@ -248,8 +248,10 @@ namespace Gameplay.Core.Sim
         ///     touching pair with no path to a static never grounds, so a real float is still caught. Pieces that have
         ///     fallen OUT of <see cref="_level"/>.Bounds are excluded (TASK-043): they are escapees in free fall (a
         ///     pathological Timeout, e.g. grand_seesaw with the fulcrum never released), not dishonest mid-air freezes.
-        /// Convex-only SAT (all pieces + the rectangular floor/cradle statics are convex); no shipped level authors a
-        /// concave floor. Sim-only; the production path never runs this.
+        /// All pieces + the rectangular floor/cradle statics are convex, so penetration is exact. TASK-075: a Circle
+        /// piece is measured as the NATIVE disc the physics simulates (analytic, rotation-invariant) rather than
+        /// Shape.Circle's inscribed 24-gon; every other primitive stays a polygon (its collider IS a polygon), so
+        /// levels without circles are byte-unchanged. Sim-only; the production path never runs this.
         /// </summary>
         private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration,
             out int unsupportedPlaced, out WorstOverlapPair worst)
@@ -267,7 +269,11 @@ namespace Gameplay.Core.Sim
             unsupportedPlaced = 0;
             worst = WorstOverlapPair.None;
 
-            var polys = new List<Vec2[]>();
+            // TASK-075: each Placed piece as the convex collider the PHYSICS simulates — a native disc for a Circle
+            // piece (centre = body position, angle irrelevant), a world-vertex polygon for every other primitive.
+            // Keyed on the SAME predicate as the adapter (UnityShapeFillSimulation:95), so detector and physics agree
+            // by construction; HalfDisc/QuarterDisc stay polygons because their collider is a polygon too.
+            var shapes = new List<ConvexShape>();
             var kinds = new List<string>();
             // Each Placed piece's nearest same-Kind slot (the sim-local equivalent of the controller's removed
             // ClaimedSlot) — used to look up the authored baseline overlap and to report the worst pair.
@@ -281,17 +287,17 @@ namespace Gameplay.Core.Sim
             {
                 if (piece.State != PieceLifecycle.Placed)
                     continue;
-                polys.Add(Geometry.WorldVertices(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation));
+                shapes.Add(ConvexShapeOf(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation));
                 kinds.Add(piece.Kind);
                 slotOf.Add(NearestSameKindSlot(piece.Kind, piece.Position));
                 inBounds.Add(_level.Bounds.Contains(piece.Position));
             }
 
-            for (var i = 0; i < polys.Count; i++)
+            for (var i = 0; i < shapes.Count; i++)
             {
-                for (var j = i + 1; j < polys.Count; j++)
+                for (var j = i + 1; j < shapes.Count; j++)
                 {
-                    var penetration = Geometry.ConvexPenetration(polys[i], polys[j]);
+                    var penetration = Geometry.Penetration(shapes[i], shapes[j]);
                     var baseline = SlotBaselineBetween(slotOf[i], slotOf[j]);
                     // Overshoot above what the DESIGN authored for this specific pair of nearest slots.
                     var overshoot = penetration - baseline;
@@ -309,8 +315,17 @@ namespace Gameplay.Core.Sim
                 }
             }
 
-            unsupportedPlaced = CountUngrounded(polys, supportProbe, inBounds);
+            unsupportedPlaced = CountUngrounded(shapes, supportProbe, inBounds);
         }
+
+        /// <summary>The convex collider the PHYSICS simulates for a piece/slot at a pose (TASK-075): a native disc
+        /// for a <c>Circle</c> primitive (centre = body position; a disc has no meaningful angle), a world-vertex
+        /// polygon for every other primitive. The <c>Primitive == Circle</c> predicate MUST mirror the adapter
+        /// (UnityShapeFillSimulation:95) so detector and physics dispatch identically.</summary>
+        private static ConvexShape ConvexShapeOf(Shape shape, Vec2 position, float rotation)
+            => shape.Primitive == ShapePrimitive.Circle
+                ? ConvexShape.Circle(position, shape.Radius)
+                : ConvexShape.Polygon(Geometry.WorldVertices(shape, position, rotation));
 
         /// <summary>Bake the authored-baseline overlap map once (TASK-043, moved sim-side from the controller): with
         /// each Kind's shape at its exact slot pose, the pairwise SAT penetration of every two slots. This is the
@@ -336,20 +351,27 @@ namespace Gameplay.Core.Sim
                     shapeByKind[type.Kind] = type.Shape;
             }
 
-            var worldVerts = new Vec2[count][];
+            // TASK-075: bake with the SAME geometry dispatch as the live pairwise measurement (circle → native disc,
+            // else polygon). The symmetry is load-bearing — overshoot = live − baseline, so baking a circle slot as a
+            // polygon while measuring it live as a disc would inject a false overshoot on authored-touching circles.
+            var hasShape = new bool[count];
+            var shapeOf = new ConvexShape[count];
             for (var i = 0; i < count; i++)
                 if (shapeByKind.TryGetValue(slots[i].Kind, out var shape))
-                    worldVerts[i] = Geometry.WorldVertices(shape, slots[i].Position, slots[i].Rotation);
+                {
+                    shapeOf[i] = ConvexShapeOf(shape, slots[i].Position, slots[i].Rotation);
+                    hasShape[i] = true;
+                }
 
             for (var i = 0; i < count; i++)
             {
-                if (worldVerts[i] == null)
+                if (!hasShape[i])
                     continue;
                 for (var j = i + 1; j < count; j++)
                 {
-                    if (worldVerts[j] == null)
+                    if (!hasShape[j])
                         continue;
-                    var pen = Geometry.ConvexPenetration(worldVerts[i], worldVerts[j]);
+                    var pen = Geometry.Penetration(shapeOf[i], shapeOf[j]);
                     _slotBaseline[i, j] = pen;
                     _slotBaseline[j, i] = pen;
                 }
@@ -393,21 +415,21 @@ namespace Gameplay.Core.Sim
         /// statics, then propagates: any not-yet-grounded piece that, dropped by <paramref name="supportProbe"/>,
         /// touches an already-grounded piece becomes grounded — iterated until the set stops growing. Direction-
         /// agnostic (credits lateral / tilted contact), yet a cluster with no path to a static stays ungrounded.</summary>
-        private int CountUngrounded(List<Vec2[]> polys, float supportProbe, List<bool> inBounds)
+        private int CountUngrounded(List<ConvexShape> shapes, float supportProbe, List<bool> inBounds)
         {
             var statics = _level.StaticGeometry;
-            var grounded = new bool[polys.Count];
-            var lowered = new Vec2[polys.Count][];
+            var grounded = new bool[shapes.Count];
+            var lowered = new ConvexShape[shapes.Count];
             var remaining = 0;
-            for (var i = 0; i < polys.Count; i++)
+            for (var i = 0; i < shapes.Count; i++)
             {
                 // TASK-043: a Placed piece that has escaped the world Bounds is in free fall (pathological Timeout,
                 // not an air-freeze) — drop it from the grounding graph entirely: neither required to be supported
                 // (never added to remaining) nor allowed to serve as support for another piece (never grounded, so
-                // never picked as an anchor k below). lowered[i] stays null and is only read for in-Bounds pieces.
+                // never picked as an anchor k below). lowered[i] stays default and is only read for in-Bounds pieces.
                 if (!inBounds[i])
                     continue;
-                lowered[i] = ShiftDown(polys[i], supportProbe);
+                lowered[i] = shapes[i].ShiftedDown(supportProbe);
                 if (SupportedByStatic(lowered[i], statics))
                     grounded[i] = true;
                 else
@@ -418,15 +440,15 @@ namespace Gameplay.Core.Sim
             while (changed && remaining > 0)
             {
                 changed = false;
-                for (var i = 0; i < polys.Count; i++)
+                for (var i = 0; i < shapes.Count; i++)
                 {
                     if (grounded[i] || !inBounds[i])
                         continue;
-                    for (var k = 0; k < polys.Count; k++)
+                    for (var k = 0; k < shapes.Count; k++)
                     {
                         if (k == i || !grounded[k])
                             continue;
-                        if (Geometry.ConvexPenetration(lowered[i], polys[k]) > 0f)
+                        if (Geometry.Penetration(lowered[i], shapes[k]) > 0f)
                         {
                             grounded[i] = true;
                             remaining--;
@@ -440,7 +462,7 @@ namespace Gameplay.Core.Sim
             return remaining;
         }
 
-        private static bool SupportedByStatic(Vec2[] lowered, Polygon[] statics)
+        private static bool SupportedByStatic(ConvexShape lowered, Polygon[] statics)
         {
             if (statics == null)
                 return false;
@@ -448,18 +470,11 @@ namespace Gameplay.Core.Sim
             {
                 if (s?.Outline == null || s.Outline.Length < 3)
                     continue;
-                if (Geometry.ConvexPenetration(lowered, s.Outline) > 0f)
+                // Statics (floor/cradle) are always polygons; a circle piece drops against them via circle-poly.
+                if (Geometry.Penetration(lowered, ConvexShape.Polygon(s.Outline)) > 0f)
                     return true;
             }
             return false;
-        }
-
-        private static Vec2[] ShiftDown(Vec2[] verts, float d)
-        {
-            var r = new Vec2[verts.Length];
-            for (var i = 0; i < verts.Length; i++)
-                r[i] = new Vec2(verts[i].X, verts[i].Y - d);
-            return r;
         }
 
         public void Dispose()
