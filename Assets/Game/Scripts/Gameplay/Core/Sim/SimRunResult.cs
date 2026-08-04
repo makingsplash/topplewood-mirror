@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Gameplay.Core.Sim
 {
@@ -59,6 +60,14 @@ namespace Gameplay.Core.Sim
         // baseline that belongs to a different slot pair (unexpected slotA/slotB for the two same-kind kinds) ⇒ a
         // cross-mapping to fix. Zeroed/-1 when no Placed pair overlaps at all (Worst == None).
         public readonly WorstOverlapPair WorstPair;
+        // TASK-075 reference-rest baseline: the RAW resting penetration of each authored-TOUCHING slot pair this run
+        // (≥1 circle, |sep|≤ProximityEps in the slot pose). NOT judged per-run — a touching pair's honest baseline is
+        // its cross-run reference-rest FLOOR (MIN over the level's honest wins), unknown to a single run; the harness
+        // (LevelSimRunner.ApplyTouchingRestFloor) computes the floor and folds max(raw−floor,0) back into
+        // IntersectingPairs/MaxPenetration/WorstPair via WithCorrectedHonesty. [JsonIgnore] (Newtonsoft): raw sim
+        // scaffolding, never in the report — only the ALREADY-CORRECTED scalars are written. Empty on runs with no
+        // authored-touching circle pair (⇒ non-circle levels are byte-unchanged: the pass is a no-op there).
+        [JsonIgnore] public readonly IReadOnlyList<TouchingPen> TouchingPens;
 
         public SimRunResult(string levelId, int seed, string policyId, string orderKey, int repeatIndex,
             bool solved, string outcome, int attemptsUsed, int stepsToResolve, float matchError,
@@ -66,7 +75,7 @@ namespace Gameplay.Core.Sim
             float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses,
             IReadOnlyList<SimPiecePose> preGlidePoses,
             int intersectingPairs, float maxPenetration, int unsupportedPlaced,
-            WorstOverlapPair worstPair)
+            WorstOverlapPair worstPair, IReadOnlyList<TouchingPen> touchingPens = null)
         {
             LevelId = levelId;
             Seed = seed;
@@ -90,6 +99,41 @@ namespace Gameplay.Core.Sim
             MaxPenetration = maxPenetration;
             UnsupportedPlaced = unsupportedPlaced;
             WorstPair = worstPair;
+            TouchingPens = touchingPens ?? System.Array.Empty<TouchingPen>();
+        }
+
+        /// <summary>TASK-075: a copy with the three honesty scalars replaced by the harness after it applies the
+        /// reference-rest floor to this run's touching pairs (the struct is readonly, so it is rebuilt). Everything
+        /// else — pose hash, outcome, residuals, the raw TouchingPens — is carried over verbatim.</summary>
+        public SimRunResult WithCorrectedHonesty(int intersectingPairs, float maxPenetration, WorstOverlapPair worstPair)
+            => new(LevelId, Seed, PolicyId, OrderKey, RepeatIndex, Solved, Outcome, AttemptsUsed, StepsToResolve,
+                MatchError, SlotsFilled, SlotsTotal, LostPieces, PoseHash, PreGlideAngResidual, PreGlidePosErr,
+                FinalPoses, PreGlidePoses, intersectingPairs, maxPenetration, unsupportedPlaced: UnsupportedPlaced,
+                worstPair: worstPair, touchingPens: TouchingPens);
+    }
+
+    /// <summary>
+    /// TASK-075 reference-rest baseline: the raw resting penetration of one authored-TOUCHING slot pair in a sim run
+    /// (a pair with ≥1 circle whose surfaces coincide in the slot pose). Carries both slot indices AND kinds so the
+    /// harness can rebuild a <see cref="WorstOverlapPair"/> when a touching pair drives the worst overshoot after the
+    /// floor is subtracted. Slot order is this run's nearest-slot mapping; the harness normalises (lo,hi) to key the
+    /// floor. Sim scaffolding, [JsonIgnore]'d off the report via <see cref="SimRunResult.TouchingPens"/>.
+    /// </summary>
+    public readonly struct TouchingPen
+    {
+        public readonly int SlotA;
+        public readonly int SlotB;
+        public readonly string KindA;
+        public readonly string KindB;
+        public readonly float Penetration;
+
+        public TouchingPen(int slotA, int slotB, string kindA, string kindB, float penetration)
+        {
+            SlotA = slotA;
+            SlotB = slotB;
+            KindA = kindA;
+            KindB = kindB;
+            Penetration = penetration;
         }
     }
 
