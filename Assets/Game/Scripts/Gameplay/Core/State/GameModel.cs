@@ -14,12 +14,22 @@ namespace Gameplay.Core
         private readonly ReactiveProperty<GameOutcome> _outcome = new(GameOutcome.None);
         private readonly Subject<Unit> _levelLoaded = new();
         private readonly Subject<Unit> _levelResolved = new();
+        private readonly Subject<int> _pieceReleased = new();
         private readonly List<PieceInstance> _pieces = new();
 
         public ReadOnlyReactiveProperty<GamePhase> Phase => _phase;
         public ReadOnlyReactiveProperty<GameOutcome> Outcome => _outcome;
         public Observable<Unit> LevelLoaded => _levelLoaded;
         public Observable<Unit> LevelResolved => _levelResolved;
+
+        /// <summary>
+        /// Emits the InstanceId of a piece the moment the player releases it (TASK-078 §2): the precise
+        /// "highlighted piece actually left Idle" signal the step-by-step tutorial needs — a first tap alone
+        /// (which can miss empty space) is not enough. Fires only on a player release (never on SpawnPreplaced),
+        /// so pre-placed pieces stay silent. Unity-free <c>int</c>, same family as LevelLoaded/LevelResolved →
+        /// the headless-simulatable invariant holds; the sim graph subscribes to nothing here, so it is a no-op.
+        /// </summary>
+        public Observable<int> PieceReleased => _pieceReleased;
 
         public LevelData CurrentLevel { get; private set; }
         public IReadOnlyList<PieceInstance> Pieces => _pieces;
@@ -57,7 +67,14 @@ namespace Gameplay.Core
         /// <summary>The placement type backing a given instance.</summary>
         public PieceType TypeFor(PieceInstance instance) => CurrentLevel.Pieces[instance.PlacementIndex].Type;
 
-        public void RegisterAttempt() => AttemptsUsed++;
+        /// <summary>Record a player release: bump the attempt counter and emit <see cref="PieceReleased"/> with
+        /// the released instance. "Attempt" and "release" are the same event (the counter already ticks once per
+        /// player release), so they share one call rather than a second method.</summary>
+        public void RegisterAttempt(int instanceId)
+        {
+            AttemptsUsed++;
+            _pieceReleased.OnNext(instanceId);
+        }
 
         public void Resolve(GameOutcome outcome)
         {

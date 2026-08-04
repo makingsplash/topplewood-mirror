@@ -179,7 +179,7 @@ namespace Gameplay.Core.Mechanic
             piece.State = PieceLifecycle.Falling;
             piece.RestTimer = 0f;
             _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Falling);
-            _model.RegisterAttempt();
+            _model.RegisterAttempt(piece.InstanceId);
         }
 
         /// <summary>

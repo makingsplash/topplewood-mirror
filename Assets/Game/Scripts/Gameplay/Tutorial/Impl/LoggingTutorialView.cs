@@ -5,10 +5,10 @@ using Game.Services.LogService;
 namespace Gameplay.Tutorial
 {
     /// <summary>
-    /// v1 stub <see cref="ITutorialView"/> (TASK-049 RFC §Q3/§6): logs highlight/clear under the existing
-    /// <c>LogCategory.Tutorial</c> so the view seam is exercised end-to-end without any art. Shared by both
-    /// scopes (context-independent). The real ring/finger presenter reading <c>GameModel.Pieces</c> is a content
-    /// follow-up — swapping this for it is a one-line scope change, no seam change.
+    /// Logging <see cref="ITutorialView"/> (TASK-049 RFC §Q3/§6): logs highlight/clear under the existing
+    /// <c>LogCategory.Tutorial</c> so the view seam can be exercised without any art. NO LONGER the bound view —
+    /// TASK-078 swapped the installer to the real <c>TutorialView</c> overlay; this is retained as a headless/
+    /// fallback stub (e.g. for a scope with no camera), a one-line scope change away.
     /// </summary>
     public sealed class LoggingTutorialView : ITutorialView
     {

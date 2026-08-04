@@ -22,9 +22,10 @@ namespace Gameplay.Tutorial
             _gate = gate;
         }
 
-        // Per-emission gate check: Block()/dispose flips IsBlocked live, so open/closed is evaluated at the
-        // moment each intent arrives (not captured at subscription time). The predicate closes over the gate
-        // once per subscription (two subscribers: GameController + TutorialRunner) — no per-frame alloc.
-        public Observable<InputIntent> Intents => _inner.Intents.Where(_ => !_gate.IsBlocked);
+        // Per-emission gate check: Block()/AllowOnly()/dispose mutate the gate live, so pass/suppress is
+        // evaluated per intent (not captured at subscription time). Gate.Allows folds both rules — block wins,
+        // else the optional allow-predicate decides (TASK-078 §4). Method group closes over the gate once per
+        // subscription (two subscribers: GameController + TutorialRunner) — no per-frame alloc.
+        public Observable<InputIntent> Intents => _inner.Intents.Where(_gate.Allows);
     }
 }
