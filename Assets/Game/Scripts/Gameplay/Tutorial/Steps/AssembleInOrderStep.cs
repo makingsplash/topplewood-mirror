@@ -47,7 +47,9 @@ namespace Gameplay.Tutorial
                     }
 
                     var target = targets[index];
-                    context.View.Highlight(target.Position); // reposition ring + finger onto this piece
+                    // Hand the view the piece's pose AND shape so it can trace a contour matching the silhouette
+                    // (TASK-083). Read-only domain access — TypeFor is the same seam HitTest below uses.
+                    context.View.Highlight(target.Position, target.Rotation, context.Model.TypeFor(target).Shape);
 
                     // Admit only a tap inside THIS piece's polygon; build the new gate handle BEFORE swapping the
                     // SerialDisposable so the old handle's dispose (ClearAllow) is a no-op (last-wins) — no gap.
