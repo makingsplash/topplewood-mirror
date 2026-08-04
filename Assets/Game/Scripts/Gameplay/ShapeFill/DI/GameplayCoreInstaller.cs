@@ -84,8 +84,10 @@ namespace Gameplay.DI
             builder.Register<ITutorialInputGate, TutorialInputGate>(Lifetime.Singleton);
             builder.Register<ITutorialView, TutorialView>(Lifetime.Singleton);
             // TEMPORARY INPUT (TASK-078, owner directive 1): the giraffe tutorial level's winning tap order is
-            // hardcoded here = placement-order 0..6 (leg, leg, body, neck, head, horn, horn, bottom-up; verified
-            // by sweep level-sim_20260804_123746.json). AssembleInOrderStep itself is level-agnostic — remove this
+            // hardcoded here = placement-order 0..6 (leg, leg, body, neck, head, horn_a, horn_b, bottom-up; re-verified
+            // after TASK-084 split the single horn into horn_a/horn_b by sweep level-sim_20260804_170440.json:
+            // slot-ascending is the sole reliable solve order and equals placement order 0..6, so the constant is
+            // unchanged). AssembleInOrderStep itself is level-agnostic — remove this
             // array once a certified order is exported into LevelData and fed from there (TASK-078 tech-debt).
             var giraffeTapOrder = new[] { 0, 1, 2, 3, 4, 5, 6 };
             builder.RegisterInstance(new TutorialDefinition(
