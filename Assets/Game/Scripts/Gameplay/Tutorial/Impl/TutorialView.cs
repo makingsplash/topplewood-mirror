@@ -47,6 +47,7 @@ namespace Gameplay.Tutorial
             private static readonly Vector2 FingerOffset = new(38f, -60f); // below-right of centre, like a real finger
 
             private RectTransform _anchor;   // repositioned each frame to the target's screen point
+            private RectTransform _canvasRect; // overlay canvas rect — reference space for the screen→UI conversion
             private UnityEngine.Camera _camera; // fully-qualified: Gameplay.Camera namespace shadows the bare name
             private Vector3 _worldTarget;
             private bool _active;
@@ -73,7 +74,14 @@ namespace Gameplay.Tutorial
 
             private void Build(GameObject root)
             {
+                _canvasRect = (RectTransform)root.transform;
+
                 _anchor = NewChild("Anchor", root.transform, Vector2.zero);
+                // Anchor to the canvas CENTRE: Reposition() maps the target's screen point into this canvas's own
+                // local space via RectTransformUtility, whose origin is the rect pivot (centre). Anchoring the node
+                // to that same centre makes anchoredPosition == that local point. (The ring/finger children keep
+                // their corner anchor: _anchor is zero-size, so their offsets read identically from any corner.)
+                _anchor.anchorMin = _anchor.anchorMax = new Vector2(0.5f, 0.5f);
 
                 var ring = NewImage("Ring", _anchor, RingSpriteCache.Get(), RingSizePx, Vector2.zero);
                 var finger = NewImage("Finger", _anchor, WhiteSpriteCache.Get(), FingerSizePx, FingerOffset);
@@ -130,7 +138,15 @@ namespace Gameplay.Tutorial
                 if (screen.z < 0f)
                     return; // behind the camera — leave the ring where it was rather than flip it
 
-                _anchor.anchoredPosition = new Vector2(screen.x, screen.y);
+                // Convert the screen point into the overlay canvas's OWN local space instead of assuming screen(0,0)
+                // maps to the canvas rect's bottom-left at scaleFactor 1. That assumption held in the editor but
+                // drifted by a constant on-device (TASK-078 device pass: ring off the piece by ~(-50,+53) px on a
+                // display with a cutout): the real render surface / safe area shifts the canvas rect's origin, so the
+                // raw pixel value lives in a different coordinate system than anchoredPosition. RectTransformUtility
+                // maps through the canvas's actual world corners, so it stays exact under cutout / DPI / orientation.
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        _canvasRect, screen, null, out var local))
+                    _anchor.anchoredPosition = local;
             }
 
             private static RectTransform NewChild(string name, Transform parent, Vector2 anchoredPos)
@@ -138,7 +154,7 @@ namespace Gameplay.Tutorial
                 var go = new GameObject(name, typeof(RectTransform));
                 var rt = (RectTransform)go.transform;
                 rt.SetParent(parent, false);
-                rt.anchorMin = rt.anchorMax = Vector2.zero; // bottom-left origin ⇒ anchoredPosition == screen pixels
+                rt.anchorMin = rt.anchorMax = Vector2.zero; // point-anchored to parent's corner; anchoredPosition = local px offset
                 rt.pivot = new Vector2(0.5f, 0.5f);
                 rt.anchoredPosition = anchoredPos;
                 return rt;
