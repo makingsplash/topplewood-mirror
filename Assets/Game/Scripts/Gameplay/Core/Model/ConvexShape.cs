@@ -28,6 +28,17 @@ namespace Gameplay.Core
 
         public static ConvexShape Circle(Vec2 center, float radius) => new(null, center, radius);
 
+        /// <summary>The convex collider the PHYSICS simulates for a shape at a pose (TASK-075): a native disc for a
+        /// <c>Circle</c> primitive (centre = body position; a disc has no meaningful angle), a world-vertex polygon
+        /// for every other primitive. The <c>Primitive == Circle</c> predicate is the SINGLE dispatch mirroring the
+        /// adapter (UnityShapeFillSimulation:95) — the sim honesty detector (SimRun) AND the authored-touching slot
+        /// classifier (SlotTouchClassifier) both route through here, so detector, floor classifier and physics can
+        /// never diverge on which pieces are discs.</summary>
+        public static ConvexShape Of(Shape shape, Vec2 position, float rotation)
+            => shape.Primitive == ShapePrimitive.Circle
+                ? Circle(position, shape.Radius)
+                : Polygon(Geometry.WorldVertices(shape, position, rotation));
+
         /// <summary>Copy shifted down by <paramref name="d"/> (the grounding support-probe drop): a polygon's
         /// vertices move, a circle's centre moves. Radius is unchanged.</summary>
         public ConvexShape ShiftedDown(float d) =>
