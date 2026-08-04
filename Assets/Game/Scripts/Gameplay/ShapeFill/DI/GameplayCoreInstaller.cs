@@ -22,6 +22,11 @@ namespace Gameplay.DI
             builder.RegisterInstance(tuning);
             builder.RegisterInstance(new TargetPreviewConfig());
             builder.RegisterInstance(new CameraFramingConfig());
+            // TASK-085: the min tap zone config + its runtime adapter (live Camera/Screen → world halo radius). The
+            // adapter reads Camera.main like CameraFramingPresenter (below), so it belongs in this same installer; the
+            // headless sim never runs this — SimRun bare-news the domain with NullTapTolerance instead.
+            builder.RegisterInstance(new TapZoneConfig());
+            builder.Register<IGameplayTapTolerance, CameraTapTolerance>(Lifetime.Singleton);
             builder.RegisterInstance<IGameplayClock>(new GameplayClock(tuning.FixedStep));
             builder.RegisterInstance<IGameplayRandom>(new DeterministicRandom(0));
             builder.RegisterInstance<IEmbeddedLevels>(new EmbeddedTestLevels());

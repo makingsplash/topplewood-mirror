@@ -9,14 +9,24 @@ namespace Gameplay.Core
     /// </summary>
     public sealed class LevelDataValidator
     {
+        private readonly TapZoneConfig _tapZone;
+
+        /// <summary>TASK-085: takes the tap-zone config so the tap-spacing check can predict the per-level zone. The
+        /// null-coalesce keeps a bare <c>new LevelDataValidator()</c> (older tests/tools) working with defaults.</summary>
+        public LevelDataValidator(TapZoneConfig tapZone = null)
+        {
+            _tapZone = tapZone ?? new TapZoneConfig();
+        }
+
         public ValidationResult Validate(LevelData level)
         {
             var errors = new List<string>();
+            var warnings = new List<string>();
 
             if (level == null)
             {
                 errors.Add("LevelData is null.");
-                return new ValidationResult(errors);
+                return new ValidationResult(errors, warnings);
             }
 
             // 1. Target figure: outline ≥3 verts, non-empty slots.
@@ -51,7 +61,58 @@ namespace Gameplay.Core
             if (level.PhysicsMode is PhysicsMode.Balance or PhysicsMode.Catapult)
                 ValidateBalance(level, errors, requirePivot: !level.FreezeLoadsAtRest);
 
-            return new ValidationResult(errors);
+            // 7. Tap spacing (TASK-085): two tapable (non-preplaced) pieces whose start poses sit closer than the
+            //    minimum tap zone are hard to hit apart. Phase 1 = non-blocking WARNING (does not affect Ok).
+            ValidateTapSpacing(level, errors, warnings);
+
+            return new ValidationResult(errors, warnings);
+        }
+
+        /// <summary>
+        /// TASK-085 (owner directive 2026-08-04): tapable pieces must not start closer than the minimum tap zone, or
+        /// their touch targets merge and small pieces become unhittable. The zone is a SCREEN size (dp) turned into
+        /// world units via the level's PREDICTED orthoSize (<see cref="CameraFramingMath"/> replayed on the reference
+        /// device) — the same framing the live camera applies — so the check tracks what the player actually sees. The
+        /// guard is on START poses of non-<c>Preplaced</c> pieces (the only tapable ones; preplaced pieces are Dynamic
+        /// furniture, never tapped). Metric v1 = centre-to-centre (StartPosition): exact for the compact pieces that
+        /// are actually the problem (horn/head/ear); elongated planks are large and never a tap problem (edge-to-edge
+        /// is the tech-debt refinement). Phase 1 emits WARNINGS; flipping <c>EnforceMinDistanceAsError</c> makes them
+        /// ERRORS (phase 2, after the corpus is cleaned).
+        /// </summary>
+        private void ValidateTapSpacing(LevelData level, List<string> errors, List<string> warnings)
+        {
+            if (level.Pieces == null || level.Pieces.Count < 2)
+                return;
+            if (!CameraFramingMath.TryContentBounds(level, out var min, out var max))
+                return;
+
+            var orthoSize = CameraFramingMath.ComputeOrthoSize(
+                min, max, _tapZone.ReferenceAspect,
+                _tapZone.RefMargin, _tapZone.RefPreviewBand, _tapZone.RefMinOrthoSize);
+            var minWorld = _tapZone.MinTapDp * _tapZone.RefKDevice * orthoSize; // tap-zone DIAMETER in world units
+
+            for (var i = 0; i < level.Pieces.Count; i++)
+            {
+                if (level.Pieces[i].Preplaced)
+                    continue;
+                for (var j = i + 1; j < level.Pieces.Count; j++)
+                {
+                    if (level.Pieces[j].Preplaced)
+                        continue;
+                    var dist = (level.Pieces[i].StartPosition - level.Pieces[j].StartPosition).Length;
+                    if (dist >= minWorld)
+                        continue;
+
+                    var msg =
+                        $"Tap spacing: Pieces[{i}] '{level.Pieces[i].Type?.Kind}' and Pieces[{j}] " +
+                        $"'{level.Pieces[j].Type?.Kind}' start {dist:F3} apart — closer than the {minWorld:F3} world " +
+                        $"tap zone ({_tapZone.MinTapDp}dp @ orthoSize {orthoSize:F2}); their tap targets merge.";
+                    if (_tapZone.EnforceMinDistanceAsError)
+                        errors.Add(msg);
+                    else
+                        warnings.Add(msg);
+                }
+            }
         }
 
         /// <summary>
