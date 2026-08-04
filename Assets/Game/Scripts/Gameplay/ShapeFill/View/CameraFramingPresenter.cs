@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Gameplay.Core;
 using R3;
 using UnityEngine;
@@ -49,122 +48,22 @@ namespace Gameplay.View
             if (camera == null || !camera.orthographic)
                 return;
 
-            if (!TryComputeContentBounds(level, out var min, out var max))
+            if (!CameraFramingMath.TryContentBounds(level, out var min, out var max))
                 return;
 
             var centerX = (min.X + max.X) * 0.5f;
             var centerY = (min.Y + max.Y) * 0.5f;
-            var halfH = (max.Y - min.Y) * 0.5f;
-            var halfW = (max.X - min.X) * 0.5f;
-            var aspect = camera.aspect <= 0f ? 1f : camera.aspect;
 
-            // Reserve the top PreviewBandFraction of the viewport for the target-preview overlay (TASK-033):
-            // fit the content into the LOWER (1 - band) of the viewport height (full width is unaffected —
-            // the band is top-only). Then raise the camera by size*band so the content sits in the lower band
-            // and the top band stays empty for the preview card. Both bounds get ≥ Margin of clearance.
-            var usable = Mathf.Clamp(1f - _config.PreviewBandFraction, 0.1f, 1f);
-            var sizeForHeight = (halfH + _config.Margin) / usable;   // content height must fit the usable lower band
-            var sizeForWidth = (halfW / aspect) + _config.Margin;    // width uses the full viewport
-            var size = Mathf.Max(_config.MinOrthoSize, Mathf.Max(sizeForHeight, sizeForWidth));
+            // Framing math lives in Core (CameraFramingMath, TASK-085) so the validator predicts the same orthoSize;
+            // the presenter keeps only the Unity contact. Reserve the top PreviewBandFraction for the target preview:
+            // content is framed into the lower (1 - band) of the viewport, then the camera is raised by size*band so
+            // the top band stays empty for the preview card.
+            var size = CameraFramingMath.ComputeOrthoSize(
+                min, max, camera.aspect, _config.Margin, _config.PreviewBandFraction, _config.MinOrthoSize);
             camera.orthographicSize = size;
 
             var t = camera.transform;
             t.position = new Vector3(centerX, centerY + size * _config.PreviewBandFraction, t.position.z);
-        }
-
-        /// <summary>Union AABB (world space) of every piece's start silhouette, the target slots and the static
-        /// geometry — the full content the player must see and reach.</summary>
-        private static bool TryComputeContentBounds(LevelData level, out Vec2 min, out Vec2 max)
-        {
-            min = default;
-            max = default;
-
-            var minX = float.MaxValue;
-            var minY = float.MaxValue;
-            var maxX = float.MinValue;
-            var maxY = float.MinValue;
-            var any = false;
-
-            if (level.Pieces != null)
-            {
-                foreach (var placement in level.Pieces)
-                {
-                    if (placement.Type?.Shape == null)
-                        continue;
-                    foreach (var v in Geometry.WorldVertices(placement.Type.Shape, placement.StartPosition, placement.StartRotation))
-                    {
-                        Accumulate(v, ref minX, ref minY, ref maxX, ref maxY);
-                        any = true;
-                    }
-                }
-            }
-
-            var slots = level.Target?.Slots;
-            if (slots != null)
-            {
-                var kindToShape = BuildKindMap(level);
-                foreach (var slot in slots)
-                {
-                    if (kindToShape.TryGetValue(slot.Kind, out var shape) && shape != null)
-                    {
-                        foreach (var v in Geometry.WorldVertices(shape, slot.Position, slot.Rotation))
-                        {
-                            Accumulate(v, ref minX, ref minY, ref maxX, ref maxY);
-                            any = true;
-                        }
-                    }
-                    else
-                    {
-                        Accumulate(slot.Position, ref minX, ref minY, ref maxX, ref maxY);
-                        any = true;
-                    }
-                }
-            }
-
-            if (level.StaticGeometry != null)
-            {
-                foreach (var poly in level.StaticGeometry)
-                {
-                    if (poly?.Outline == null)
-                        continue;
-                    foreach (var v in poly.Outline)
-                    {
-                        Accumulate(v, ref minX, ref minY, ref maxX, ref maxY);
-                        any = true;
-                    }
-                }
-            }
-
-            if (!any)
-                return false;
-
-            min = new Vec2(minX, minY);
-            max = new Vec2(maxX, maxY);
-            return true;
-        }
-
-        private static void Accumulate(Vec2 v, ref float minX, ref float minY, ref float maxX, ref float maxY)
-        {
-            if (v.X < minX) minX = v.X;
-            if (v.Y < minY) minY = v.Y;
-            if (v.X > maxX) maxX = v.X;
-            if (v.Y > maxY) maxY = v.Y;
-        }
-
-        // Slots carry only a Kind; recover each Kind's shape from the pieces the level ships (mirrors
-        // TargetPreviewPresenter.BuildKindMap).
-        private static IReadOnlyDictionary<string, Shape> BuildKindMap(LevelData level)
-        {
-            var map = new Dictionary<string, Shape>();
-            if (level.Pieces == null)
-                return map;
-
-            foreach (var placement in level.Pieces)
-            {
-                if (placement.Type?.Shape != null && !map.ContainsKey(placement.Type.Kind))
-                    map[placement.Type.Kind] = placement.Type.Shape;
-            }
-            return map;
         }
 
         public void Dispose()

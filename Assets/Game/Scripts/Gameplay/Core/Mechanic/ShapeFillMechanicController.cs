@@ -32,11 +32,16 @@ namespace Gameplay.Core.Mechanic
         private readonly LevelDataValidator _validator;
         private readonly IPieceViewFactory _viewFactory;
         private readonly ShapeFillTuning _tuning;
+        // TASK-085: screen-space tap halo. r=0 (NullTapTolerance, sim/headless) ⇒ PickIdlePieceAt is byte-for-byte
+        // the old containment-only pick; a live CameraTapTolerance widens the miss into the nearest piece in radius.
+        private readonly IGameplayTapTolerance _tapTolerance;
 
         private readonly Dictionary<int, int> _bodyByInstance = new();
         private readonly Dictionary<int, IPieceView> _viewByInstance = new();
         private readonly Dictionary<int, PieceType> _typeByInstance = new();
         private readonly List<PlacedPiece> _placedScratch = new();
+        // Reused per tap so resolving a tap allocates only the per-piece world-vertex arrays (as it did before).
+        private readonly List<PieceHitResolver.HitCandidate> _hitCandidates = new();
 
         private IDisposable _levelLoadedSub;
         private LevelData _level;
@@ -82,7 +87,8 @@ namespace Gameplay.Core.Mechanic
             IMatchEvaluator match,
             LevelDataValidator validator,
             IPieceViewFactory viewFactory,
-            ShapeFillTuning tuning)
+            ShapeFillTuning tuning,
+            IGameplayTapTolerance tapTolerance)
         {
             _model = model;
             _simulation = simulation;
@@ -90,6 +96,7 @@ namespace Gameplay.Core.Mechanic
             _validator = validator;
             _viewFactory = viewFactory;
             _tuning = tuning;
+            _tapTolerance = tapTolerance;
 
             _levelLoadedSub = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
         }
@@ -540,12 +547,13 @@ namespace Gameplay.Core.Mechanic
             return _placedScratch;
         }
 
-        /// <summary>Nearest Idle piece whose shape (at its current pose) contains the tapped point (RFC §5.2).</summary>
+        /// <summary>Resolve a tap to an Idle piece via the shared two-tier <see cref="PieceHitResolver"/> (TASK-085):
+        /// containment first (byte-for-byte the old pick), then — only with a live tap halo (r&gt;0) — the nearest
+        /// Idle piece whose boundary is within the halo. The sim's <c>NullTapTolerance</c> (r=0) makes this identical
+        /// to the pre-TASK-085 containment-only pick, so the seeded sweep's poseHash is unchanged.</summary>
         private PieceInstance PickIdlePieceAt(Vec2 p)
         {
-            PieceInstance best = null;
-            var bestSqr = float.MaxValue;
-
+            _hitCandidates.Clear();
             foreach (var piece in _model.Pieces)
             {
                 if (piece.State != PieceLifecycle.Idle || !_bodyByInstance.ContainsKey(piece.InstanceId))
@@ -553,18 +561,11 @@ namespace Gameplay.Core.Mechanic
 
                 var type = _typeByInstance[piece.InstanceId];
                 var world = Geometry.WorldVertices(type.Shape, piece.Position, piece.Rotation);
-                if (!Geometry.PointInPolygon(world, p))
-                    continue;
-
-                var sqr = (piece.Position - p).SqrLength; // tie-break by centroid distance (determinism)
-                if (sqr < bestSqr)
-                {
-                    bestSqr = sqr;
-                    best = piece;
-                }
+                _hitCandidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, world, piece.Position));
             }
 
-            return best;
+            var instanceId = PieceHitResolver.Resolve(_hitCandidates, p, _tapTolerance.WorldRadius);
+            return instanceId < 0 ? null : FindPiece(instanceId);
         }
 
         private void SpawnIdle(PieceInstance piece)

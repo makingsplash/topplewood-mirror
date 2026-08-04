@@ -1,4 +1,5 @@
 using Gameplay.Core;
+using Gameplay.Core.Adapters;
 using R3;
 
 namespace Gameplay.Tutorial
@@ -14,16 +15,22 @@ namespace Gameplay.Tutorial
         public ITutorialView View { get; }
         public ITutorialInputGate InputGate { get; }
 
+        /// <summary>TASK-085: the screen-space tap halo, so a step's gate resolves taps with the SAME two-tier rule
+        /// (and radius) as the domain — a near-miss on a small tapable piece passes the gate exactly when it would
+        /// drop that piece in the domain.</summary>
+        public IGameplayTapTolerance TapTolerance { get; }
+
         /// <summary>Domain-facing input intents (the decorated <see cref="IGameplayInputSource"/> stream).</summary>
         public Observable<InputIntent> Inputs { get; }
 
         public TutorialContext(GameModel model, ITutorialView view, ITutorialInputGate inputGate,
-            Observable<InputIntent> inputs)
+            Observable<InputIntent> inputs, IGameplayTapTolerance tapTolerance)
         {
             Model = model;
             View = view;
             InputGate = inputGate;
             Inputs = inputs;
+            TapTolerance = tapTolerance;
         }
     }
 }

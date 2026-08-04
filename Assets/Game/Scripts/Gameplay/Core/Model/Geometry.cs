@@ -155,6 +155,28 @@ namespace Gameplay.Core
             }
         }
 
+        /// <summary>Distance (world units) from a point to a polygon's BOUNDARY (segment-clamped, so corners are
+        /// exact). Unlike <see cref="ClosestPointOnConvex"/> it does not compute inside/outside — the tap-halo caller
+        /// (TASK-085 tier-2, <see cref="PieceHitResolver"/>) only reaches here when the point is already outside every
+        /// polygon, so it needs the rim distance alone. Works for any simple polygon (no CCW/convex requirement).</summary>
+        public static float DistanceToPolygonBoundary(Vec2[] verts, Vec2 p)
+        {
+            var bestDistSq = float.MaxValue;
+            for (int i = 0, n = verts.Length; i < n; i++)
+            {
+                var a = verts[i];
+                var e = verts[(i + 1) % n] - a;
+                var ee = Vec2.Dot(e, e);
+                var t = ee < 1e-12f ? 0f : Vec2.Dot(p - a, e) / ee;
+                t = t < 0f ? 0f : (t > 1f ? 1f : t); // clamp to segment (correct at corners)
+                var q = a + e * t;
+                var dsq = (p - q).SqrLength;
+                if (dsq < bestDistSq)
+                    bestDistSq = dsq;
+            }
+            return MathF.Sqrt(bestDistSq);
+        }
+
         /// <summary>Even-odd point-in-polygon over a vertex ring (world/local — caller's frame).</summary>
         public static bool PointInPolygon(Vec2[] verts, Vec2 p)
         {

@@ -1,5 +1,6 @@
 using System;
 using Gameplay.Core;
+using Gameplay.Core.Adapters;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -35,6 +36,7 @@ namespace Gameplay.Tutorial
         private readonly ITutorialView _view;
         private readonly ITutorialInputGate _inputGate;
         private readonly IGameplayInputSource _input;
+        private readonly IGameplayTapTolerance _tapTolerance;
         private readonly TutorialDefinition _definition;
 
         private IDisposable _levelLoadedSubscription;
@@ -57,6 +59,7 @@ namespace Gameplay.Tutorial
             ITutorialView view,
             ITutorialInputGate inputGate,
             IGameplayInputSource input,
+            IGameplayTapTolerance tapTolerance,
             TutorialDefinition definition)
         {
             _model = model;
@@ -67,12 +70,13 @@ namespace Gameplay.Tutorial
             _view = view;
             _inputGate = inputGate;
             _input = input;
+            _tapTolerance = tapTolerance;
             _definition = definition;
         }
 
         public void Start()
         {
-            _context = new TutorialContext(_model, _view, _inputGate, _input.Intents);
+            _context = new TutorialContext(_model, _view, _inputGate, _input.Intents, _tapTolerance);
             _levelLoadedSubscription = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
 
             // A level is already loaded before this entry point starts (GameControllerRunner + the campaign

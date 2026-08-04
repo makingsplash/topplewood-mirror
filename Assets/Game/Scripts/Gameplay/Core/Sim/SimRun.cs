@@ -91,8 +91,11 @@ namespace Gameplay.Core.Sim
             _clock = new GameplayClock(_tuning.FixedStep);
             _input = new SimBotInputSource();
 
+            // TASK-085: NullTapTolerance (r=0) keeps the two-tier hit-test containment-only in the sweep — the sim bot
+            // taps exact centroids, so tier-1 always hits and the halo tier is inert → poseHash byte-for-byte unchanged.
             _mechanic = new ShapeFillMechanicController(
-                _model, simulation, _match, new LevelDataValidator(), new NullPieceViewFactory(), _tuning);
+                _model, simulation, _match, new LevelDataValidator(new TapZoneConfig()), new NullPieceViewFactory(),
+                _tuning, new NullTapTolerance());
             _controller = new GameController(
                 new FixedLevelSource(level), _model, _mechanic, simulation, _clock, _input);
 

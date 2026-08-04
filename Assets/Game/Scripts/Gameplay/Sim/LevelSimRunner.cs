@@ -126,6 +126,7 @@ namespace Gameplay.Sim
 
             if (ok)
             {
+                AuditTapSpacing(levels);
                 foreach (var level in levels)
                 {
                     // TASK-075: print the authored-touching classification of every slot pair (once per level) so QA
@@ -713,9 +714,30 @@ namespace Gameplay.Sim
         // GAP-1: reuse the TASK-009 JSON pipeline verbatim (JsonLevelSource over the StreamingAssets ILevelStore,
         // same structural validation production runs) so the sweep drives the real two_cubes…snowman — no
         // duplicate loader. JsonLevelSource validates eagerly and throws on malformed content (fail-fast → exit 1).
+        // TASK-085: enumerate every campaign level through the tap-spacing check and log each warning, so the
+        // author-time audit of "tapable pieces closer than the min tap zone" falls out of the normal sweep (RFC §7's
+        // sanctioned enumerate-all-levels method). Log-only; never gates (the check is a WARNING in phase 1). Uses a
+        // fresh validator with the default TapZoneConfig — the SAME reference-device prediction the shipped validator
+        // emits at load — so the count here is exactly what LevelDataValidator would report.
+        private static void AuditTapSpacing(IReadOnlyList<LevelData> levels)
+        {
+            var validator = new LevelDataValidator(new TapZoneConfig());
+            var total = 0;
+            foreach (var level in levels)
+            {
+                var result = validator.Validate(level);
+                foreach (var w in result.Warnings)
+                {
+                    total++;
+                    Debug.Log($"[TAP-AUDIT] {level.LevelId}: {w}");
+                }
+            }
+            Debug.Log($"[TAP-AUDIT] total tap-spacing warnings across {levels.Count} level(s): {total}");
+        }
+
         private static IReadOnlyList<LevelData> LoadLevels()
         {
-            var source = new JsonLevelSource(new StreamingAssetsLevelStore(), new LevelDataValidator());
+            var source = new JsonLevelSource(new StreamingAssetsLevelStore(), new LevelDataValidator(new TapZoneConfig()));
             var levels = new List<LevelData>(source.Count);
             for (var i = 0; i < source.Count; i++)
                 levels.Add(source.Load(i));

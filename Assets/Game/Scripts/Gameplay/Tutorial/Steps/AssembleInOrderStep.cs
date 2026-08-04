@@ -51,9 +51,9 @@ namespace Gameplay.Tutorial
                     // (TASK-083). Read-only domain access — TypeFor is the same seam HitTest below uses.
                     context.View.Highlight(target.Position, target.Rotation, context.Model.TypeFor(target).Shape);
 
-                    // Admit only a tap inside THIS piece's polygon; build the new gate handle BEFORE swapping the
+                    // Admit only a tap that resolves to THIS piece; build the new gate handle BEFORE swapping the
                     // SerialDisposable so the old handle's dispose (ClearAllow) is a no-op (last-wins) — no gap.
-                    var gate = context.InputGate.AllowOnly(HitTest(context.Model, target));
+                    var gate = context.InputGate.AllowOnly(HitTest(context, target));
                     var release = context.Model.PieceReleased
                         .Where(id => id == target.InstanceId)
                         .Take(1)
@@ -92,16 +92,36 @@ namespace Gameplay.Tutorial
             return targets;
         }
 
-        /// <summary>Predicate "tap lands inside the highlighted piece" — built from the SAME public geometry the
-        /// domain hit-tests with (<see cref="Geometry.PointInPolygon"/> over the piece's world outline at its
-        /// current pose). Idle pieces do not move, so the pose captured here stays valid until release.
-        /// KNOWN LIMIT (TASK-078 tech-debt): hit-tests independently of the domain's PickIdlePieceAt — overlapping
-        /// Idle pieces could disagree; giraffe's slots do not overlap, so it does not fire here.</summary>
-        private static System.Func<InputIntent, bool> HitTest(GameModel model, PieceInstance target)
+        /// <summary>Predicate "the tap resolves to the highlighted piece" — built from the SAME shared
+        /// <see cref="PieceHitResolver"/> the domain uses (TASK-085), so the tutorial gate and the domain can never
+        /// disagree on which piece a tap hits. This closes the former TASK-078 tech-debt (the gate used to hit-test
+        /// independently, containment-only): a near-miss on a small tapable piece now passes the gate exactly when it
+        /// would drop that piece in the domain, and the shared two-tier resolver honours the SAME screen-space tap
+        /// halo (<see cref="TutorialContext.TapTolerance"/>) — which is what makes the giraffe horns tappable IN the
+        /// tutorial, not only outside it. Idle pieces do not move, so the candidate poses snapshotted at Arm stay
+        /// valid until release; the tour only shrinks the Idle set (each Arm follows a release), so the snapshot is
+        /// the current Idle set for the whole time this gate is active.</summary>
+        private static System.Func<InputIntent, bool> HitTest(TutorialContext context, PieceInstance target)
         {
-            var shape = model.TypeFor(target).Shape;
-            var world = Geometry.WorldVertices(shape, target.Position, target.Rotation);
-            return intent => Geometry.PointInPolygon(world, new Vec2(intent.X, intent.Y));
+            var candidates = BuildCandidates(context.Model);
+            return intent => PieceHitResolver.Resolve(
+                candidates, new Vec2(intent.X, intent.Y), context.TapTolerance.WorldRadius) == target.InstanceId;
+        }
+
+        /// <summary>Snapshot every currently-Idle piece as a hit candidate (its world polygon + centre), so the
+        /// shared resolver picks over the SAME set the domain would.</summary>
+        private static List<PieceHitResolver.HitCandidate> BuildCandidates(GameModel model)
+        {
+            var candidates = new List<PieceHitResolver.HitCandidate>();
+            foreach (var piece in model.Pieces)
+            {
+                if (piece.State != PieceLifecycle.Idle)
+                    continue;
+                var shape = model.TypeFor(piece).Shape;
+                var world = Geometry.WorldVertices(shape, piece.Position, piece.Rotation);
+                candidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, world, piece.Position));
+            }
+            return candidates;
         }
     }
 }
