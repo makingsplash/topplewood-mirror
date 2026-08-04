@@ -72,18 +72,24 @@ namespace Gameplay.DI
             builder.RegisterEntryPoint<ShapeFillPresenter>();
             builder.RegisterEntryPoint<TargetPreviewPresenter>();
 
-            // Tutorial system (TASK-049) — context-INDEPENDENT parts only: the reentrant input gate consumed by
-            // the input decorator, the v1 logging view stub, the tour definition + its smoke step, and the
-            // runner entry point (registered AFTER CampaignProgressionController so ReadLevelIndex is already
+            // Tutorial system (TASK-049, step-by-step TASK-078) — context-INDEPENDENT parts only: the reentrant
+            // input gate consumed by the input decorator, the real ring/finger overlay view (TutorialView), the
+            // tour definition + its composite AssembleInOrderStep, and the runner entry point (registered AFTER
+            // CampaignProgressionController so ReadLevelIndex is already
             // resumed and the resumed level is loaded). The context-DEPENDENT seams (progress store / gate /
             // analytics) and the input decorator itself are bound by the hosting scope — exactly like
             // IGameplayInputSource / ICampaignStore (RFC §4). Like the dev cheat, tutorial IMPLEMENTATIONS are
             // NOT registered here. The headless SimRun builds the domain with bare `new`, so it never creates
             // this runner → the sim physically cannot play the tutorial (RFC §7).
             builder.Register<ITutorialInputGate, TutorialInputGate>(Lifetime.Singleton);
-            builder.Register<ITutorialView, LoggingTutorialView>(Lifetime.Singleton);
+            builder.Register<ITutorialView, TutorialView>(Lifetime.Singleton);
+            // TEMPORARY INPUT (TASK-078, owner directive 1): the giraffe tutorial level's winning tap order is
+            // hardcoded here = placement-order 0..6 (leg, leg, body, neck, head, horn, horn, bottom-up; verified
+            // by sweep level-sim_20260804_123746.json). AssembleInOrderStep itself is level-agnostic — remove this
+            // array once a certified order is exported into LevelData and fed from there (TASK-078 tech-debt).
+            var giraffeTapOrder = new[] { 0, 1, 2, 3, 4, 5, 6 };
             builder.RegisterInstance(new TutorialDefinition(
-                "first_tutorial", new ITutorialStep[] { new FirstTapStep() }));
+                "first_tutorial", new ITutorialStep[] { new AssembleInOrderStep(giraffeTapOrder) }));
             builder.RegisterEntryPoint<TutorialRunner>();
             // NOTE: the dev level-switch cheat is NOT registered here. This core installer is context-independent
             // (shared with prod), and prod raises its own GameDebugMenu via LoadingGame — registering a cheat here

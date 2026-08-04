@@ -1,4 +1,5 @@
 using System;
+using Gameplay.Core;
 
 namespace Gameplay.Tutorial
 {
@@ -14,5 +15,14 @@ namespace Gameplay.Tutorial
 
         /// <summary>Suppress gameplay input until the returned handle is disposed.</summary>
         IDisposable Block();
+
+        /// <summary>Pass ONLY intents for which <paramref name="predicate"/> is true until the returned handle is
+        /// disposed (TASK-078 §4) — how the step "let only a tap on the highlighted piece through" while the
+        /// finger points at the right one. Composes with <see cref="Block"/>: a block wins (nothing passes while
+        /// blocked). One predicate is active at a time (steps run one highlight at a time); last-wins.</summary>
+        IDisposable AllowOnly(Func<InputIntent, bool> predicate);
+
+        /// <summary>Single decision the input decorator asks per emission: will this intent pass the gate now?</summary>
+        bool Allows(InputIntent intent);
     }
 }
