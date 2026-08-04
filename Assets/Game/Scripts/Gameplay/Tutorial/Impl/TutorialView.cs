@@ -79,9 +79,15 @@ namespace Gameplay.Tutorial
                 _anchor = NewChild("Anchor", root.transform, Vector2.zero);
                 // Anchor to the canvas CENTRE: Reposition() maps the target's screen point into this canvas's own
                 // local space via RectTransformUtility, whose origin is the rect pivot (centre). Anchoring the node
-                // to that same centre makes anchoredPosition == that local point. (The ring/finger children keep
-                // their corner anchor: _anchor is zero-size, so their offsets read identically from any corner.)
+                // to that same centre makes anchoredPosition == that local point.
                 _anchor.anchorMin = _anchor.anchorMax = new Vector2(0.5f, 0.5f);
+                // MUST force zero size: a fresh RectTransform defaults to sizeDelta (100,100), and the ring/finger
+                // children are corner-anchored (anchorMin/Max 0,0), so their pivots would sit at this node's rect
+                // BOTTOM-LEFT = anchoredPosition − (50,50) — a constant offset that put the ring 50px below-left of
+                // the piece (TASK-078 editor repro: ring worldCenter (371,874) vs target screen (421,924) = −(50,50),
+                // exactly half the default rect). Collapsing the rect to a point makes bottom-left == centre, so each
+                // child's offset (0 for the ring, FingerOffset for the finger) reads from the target itself.
+                _anchor.sizeDelta = Vector2.zero;
 
                 var ring = NewImage("Ring", _anchor, RingSpriteCache.Get(), RingSizePx, Vector2.zero);
                 var finger = NewImage("Finger", _anchor, WhiteSpriteCache.Get(), FingerSizePx, FingerOffset);
@@ -138,12 +144,11 @@ namespace Gameplay.Tutorial
                 if (screen.z < 0f)
                     return; // behind the camera — leave the ring where it was rather than flip it
 
-                // Convert the screen point into the overlay canvas's OWN local space instead of assuming screen(0,0)
-                // maps to the canvas rect's bottom-left at scaleFactor 1. That assumption held in the editor but
-                // drifted by a constant on-device (TASK-078 device pass: ring off the piece by ~(-50,+53) px on a
-                // display with a cutout): the real render surface / safe area shifts the canvas rect's origin, so the
-                // raw pixel value lives in a different coordinate system than anchoredPosition. RectTransformUtility
-                // maps through the canvas's actual world corners, so it stays exact under cutout / DPI / orientation.
+                // Screen pixels → this canvas's local space. For a ScreenSpaceOverlay canvas at scaleFactor 1 this is
+                // just (screen − canvasCentre), but going through the utility keeps it exact if the canvas ever gains
+                // a cutout/DPI/scale factor. (NOTE: the real TASK-078 overlay offset was NOT here — it was the anchor
+                // node's default (100,100) rect displacing the corner-anchored children; fixed in Build via sizeDelta
+                // zero. This conversion measured identical before and after that fix — editor repro, ±0px.)
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                         _canvasRect, screen, null, out var local))
                     _anchor.anchoredPosition = local;
