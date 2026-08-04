@@ -853,6 +853,277 @@
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.5, "y": 0.1 }, { "x": -1.3, "y": 0.1 }, { "x": -1.3, "y": 2.2 }, { "x": -1.5, "y": 2.2 } ] },
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -4.0, "y": -0.6 }, { "x": -3.8, "y": -0.6 }, { "x": -3.8, "y": 2.2 }, { "x": -4.0, "y": 2.2 } ] }
       ]
+    },
+    {
+      "levelId": "teacup",
+      "seed": 200,
+      "difficultyTier": 1,
+      "matchTolerance": { "posTol": 0.24, "angTol": 0.20943951 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#4CAF50", "kind": "saucer", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.4, "height": 0.2 } },
+        { "color": "#12A5A5", "kind": "cup", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.6, "topWidth": 0.95, "height": 0.7 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.7, "y": -0.1 }, { "x": 0.7, "y": -0.1 }, { "x": 0.7, "y": 0.8 }, { "x": -0.7, "y": 0.8 } ],
+        "slots": [
+          { "kind": "saucer", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "cup", "position": { "x": 0, "y": 0.45 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "saucer", "startPosition": { "x": 0, "y": 4.6 }, "startRotation": 0 },
+        { "kind": "cup", "startPosition": { "x": 0, "y": 3.2 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.85, "y": -0.4 }, { "x": 0.85, "y": -0.4 }, { "x": 0.85, "y": -0.1 }, { "x": -0.85, "y": -0.1 } ] }
+      ]
+    },
+    {
+      "levelId": "candle",
+      "seed": 201,
+      "difficultyTier": 1,
+      "matchTolerance": { "posTol": 0.24, "angTol": 0.20943951 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#12A5A5", "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.4 } },
+        { "color": "#2E7CD6", "kind": "flame", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.3, "height": 0.5 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.2, "y": -0.7 }, { "x": 0.2, "y": -0.7 }, { "x": 0.2, "y": 1.2 }, { "x": -0.2, "y": 1.2 } ],
+        "slots": [
+          { "kind": "body", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "flame", "position": { "x": 0, "y": 0.95 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "body", "startPosition": { "x": 0, "y": 3.4 }, "startRotation": 0 },
+        { "kind": "flame", "startPosition": { "x": 0, "y": 5.2 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.35, "y": -1.0 }, { "x": 0.35, "y": -1.0 }, { "x": 0.35, "y": -0.7 }, { "x": -0.35, "y": -0.7 } ] }
+      ]
+    },
+    {
+      "levelId": "milk_carton",
+      "seed": 202,
+      "difficultyTier": 1,
+      "matchTolerance": { "posTol": 0.24, "angTol": 0.20943951 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#2E7CD6", "kind": "body", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 1.2 } },
+        { "color": "#5B4FE0", "kind": "top", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.0, "height": 0.3, "apexHeight": 0.5 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.5, "y": -0.6 }, { "x": 0.5, "y": -0.6 }, { "x": 0.5, "y": 1.4 }, { "x": -0.5, "y": 1.4 } ],
+        "slots": [
+          { "kind": "body", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "top", "position": { "x": 0, "y": 1.0 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "body", "startPosition": { "x": 0, "y": 3.2 }, "startRotation": 0 },
+        { "kind": "top", "startPosition": { "x": 0, "y": 5.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.65, "y": -0.9 }, { "x": 0.65, "y": -0.9 }, { "x": 0.65, "y": -0.6 }, { "x": -0.65, "y": -0.6 } ] }
+      ]
+    },
+    {
+      "levelId": "cheese_wedge",
+      "seed": 203,
+      "difficultyTier": 1,
+      "matchTolerance": { "posTol": 0.24, "angTol": 0.20943951 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#5B4FE0", "kind": "board", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.2 } },
+        { "color": "#B24BD1", "kind": "wedge", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 1.0, "height": 0.7 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.8, "y": -0.1 }, { "x": 0.8, "y": -0.1 }, { "x": 0.8, "y": 0.8 }, { "x": -0.8, "y": 0.8 } ],
+        "slots": [
+          { "kind": "board", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "wedge", "position": { "x": 0, "y": 0.45 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "board", "startPosition": { "x": 0, "y": 4.4 }, "startRotation": 0 },
+        { "kind": "wedge", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.95, "y": -0.4 }, { "x": 0.95, "y": -0.4 }, { "x": 0.95, "y": -0.1 }, { "x": -0.95, "y": -0.1 } ] }
+      ]
+    },
+    {
+      "levelId": "bread_loaf",
+      "seed": 204,
+      "difficultyTier": 2,
+      "matchTolerance": { "posTol": 0.26, "angTol": 0.26179939 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#B24BD1", "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.6, "height": 0.6 } },
+        { "color": "#E84B8A", "kind": "dome", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.85, "segments": 7 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.85, "y": -0.3 }, { "x": 0.85, "y": -0.3 }, { "x": 0.85, "y": 1.15 }, { "x": -0.85, "y": 1.15 } ],
+        "slots": [
+          { "kind": "base", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "dome", "position": { "x": 0, "y": 0.3 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "base", "startPosition": { "x": 0, "y": 3.4 }, "startRotation": 0 },
+        { "kind": "dome", "startPosition": { "x": 0, "y": 5.2 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.95, "y": -0.6 }, { "x": 0.95, "y": -0.6 }, { "x": 0.95, "y": -0.3 }, { "x": -0.95, "y": -0.3 } ] }
+      ]
+    },
+    {
+      "levelId": "table_lamp",
+      "seed": 205,
+      "difficultyTier": 3,
+      "matchTolerance": { "posTol": 0.28, "angTol": 0.26179939 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#E84B8A", "kind": "base", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 0.3 } },
+        { "color": "#8D6E4A", "kind": "stem", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.25, "height": 1.3 } },
+        { "color": "#E23B3B", "kind": "shade", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.1, "topWidth": 0.5, "height": 0.7 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.6, "y": -0.15 }, { "x": 0.6, "y": -0.15 }, { "x": 0.6, "y": 2.15 }, { "x": -0.6, "y": 2.15 } ],
+        "slots": [
+          { "kind": "base", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "stem", "position": { "x": 0, "y": 0.8 }, "rotation": 0 },
+          { "kind": "shade", "position": { "x": 0, "y": 1.8 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "base", "startPosition": { "x": 0, "y": 5.6 }, "startRotation": 0 },
+        { "kind": "stem", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
+        { "kind": "shade", "startPosition": { "x": 0, "y": 4.5 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.75, "y": -0.45 }, { "x": 0.75, "y": -0.45 }, { "x": 0.75, "y": -0.15 }, { "x": -0.75, "y": -0.15 } ] }
+      ]
+    },
+    {
+      "levelId": "cupcake",
+      "seed": 206,
+      "difficultyTier": 2,
+      "matchTolerance": { "posTol": 0.26, "angTol": 0.26179939 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#8D6E4A", "kind": "wrapper", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.7, "topWidth": 1.0, "height": 0.6 } },
+        { "color": "#E23B3B", "kind": "frosting", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.0, "topWidth": 0.45, "height": 0.55 } },
+        { "color": "#F2801D", "kind": "cherry", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.25, "height": 0.25 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.55, "y": -0.3 }, { "x": 0.55, "y": -0.3 }, { "x": 0.55, "y": 1.1 }, { "x": -0.55, "y": 1.1 } ],
+        "slots": [
+          { "kind": "wrapper", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "frosting", "position": { "x": 0, "y": 0.575 }, "rotation": 0 },
+          { "kind": "cherry", "position": { "x": 0, "y": 0.975 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "wrapper", "startPosition": { "x": 0, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "frosting", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
+        { "kind": "cherry", "startPosition": { "x": 0, "y": 4.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.65, "y": -0.6 }, { "x": 0.65, "y": -0.6 }, { "x": 0.65, "y": -0.3 }, { "x": -0.65, "y": -0.3 } ] }
+      ]
+    },
+    {
+      "levelId": "book_stack",
+      "seed": 207,
+      "difficultyTier": 3,
+      "matchTolerance": { "posTol": 0.28, "angTol": 0.26179939 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#E23B3B", "kind": "book_a", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.35 } },
+        { "color": "#F2801D", "kind": "book_b", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.3, "height": 0.35 } },
+        { "color": "#F4C20D", "kind": "book_c", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.0, "height": 0.35 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.8, "y": -0.175 }, { "x": 0.8, "y": -0.175 }, { "x": 0.8, "y": 0.875 }, { "x": -0.8, "y": 0.875 } ],
+        "slots": [
+          { "kind": "book_a", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "book_b", "position": { "x": 0, "y": 0.35 }, "rotation": 0 },
+          { "kind": "book_c", "position": { "x": 0, "y": 0.7 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "book_a", "startPosition": { "x": 0, "y": 5.2 }, "startRotation": 0 },
+        { "kind": "book_b", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
+        { "kind": "book_c", "startPosition": { "x": 0, "y": 4.1 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.95, "y": -0.475 }, { "x": 0.95, "y": -0.475 }, { "x": 0.95, "y": -0.175 }, { "x": -0.95, "y": -0.175 } ] }
+      ]
+    },
+    {
+      "levelId": "rolling_pin",
+      "seed": 208,
+      "difficultyTier": 2,
+      "matchTolerance": { "posTol": 0.26, "angTol": 0.26179939 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#F2801D", "kind": "barrel", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.8, "height": 0.45 } },
+        { "color": "#F4C20D", "kind": "handle", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.4, "height": 0.3 } }
+      ],
+      "target": {
+        "outline": [ { "x": -1.35, "y": -0.225 }, { "x": 1.35, "y": -0.225 }, { "x": 1.35, "y": 0.225 }, { "x": -1.35, "y": 0.225 } ],
+        "slots": [
+          { "kind": "barrel", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "handle", "position": { "x": -1.15, "y": -0.075 }, "rotation": 0 },
+          { "kind": "handle", "position": { "x": 1.15, "y": -0.075 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "barrel", "startPosition": { "x": 0, "y": 4.4 }, "startRotation": 0 },
+        { "kind": "handle", "startPosition": { "x": -1.15, "y": 3.2 }, "startRotation": 0 },
+        { "kind": "handle", "startPosition": { "x": 1.15, "y": 3.2 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.55, "y": -0.525 }, { "x": 1.55, "y": -0.525 }, { "x": 1.55, "y": -0.225 }, { "x": -1.55, "y": -0.225 } ] }
+      ]
+    },
+    {
+      "levelId": "pie_slice",
+      "seed": 209,
+      "difficultyTier": 2,
+      "matchTolerance": { "posTol": 0.26, "angTol": 0.26179939 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "color": "#F4C20D", "kind": "plate", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.5, "height": 0.18 } },
+        { "color": "#4CAF50", "kind": "slice", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "quarterdisc", "radius": 1.0, "segments": 6 } }
+      ],
+      "target": {
+        "outline": [ { "x": -0.75, "y": -0.09 }, { "x": 0.75, "y": -0.09 }, { "x": 0.75, "y": 1.09 }, { "x": -0.75, "y": 1.09 } ],
+        "slots": [
+          { "kind": "plate", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+          { "kind": "slice", "position": { "x": 0, "y": 0.59 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "plate", "startPosition": { "x": 0, "y": 4.4 }, "startRotation": 0 },
+        { "kind": "slice", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.85, "y": -0.39 }, { "x": 0.85, "y": -0.39 }, { "x": 0.85, "y": -0.09 }, { "x": -0.85, "y": -0.09 } ] }
+      ]
     }
   ]
 }
