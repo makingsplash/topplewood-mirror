@@ -1830,14 +1830,14 @@
         ]
       },
       "pieces": [
-        { "kind": "tower", "startPosition": { "x": -1.25, "y": 6.75 }, "startRotation": 0 },
-        { "kind": "tower", "startPosition": { "x": 1.25, "y": 6.75 }, "startRotation": 0 },
-        { "kind": "lintel", "startPosition": { "x": 0, "y": 3.1 }, "startRotation": 0 },
-        { "kind": "battlement", "startPosition": { "x": 0, "y": 5.55 }, "startRotation": 0 },
-        { "kind": "merlon", "startPosition": { "x": -1.2, "y": 3.8 }, "startRotation": 0 },
-        { "kind": "merlon", "startPosition": { "x": -0.4, "y": 3.8 }, "startRotation": 0 },
-        { "kind": "merlon", "startPosition": { "x": 0.4, "y": 3.8 }, "startRotation": 0 },
-        { "kind": "merlon", "startPosition": { "x": 1.2, "y": 3.8 }, "startRotation": 0 }
+        { "kind": "tower", "startPosition": { "x": -1.25, "y": 4.2 }, "startRotation": 0 },
+        { "kind": "tower", "startPosition": { "x": 1.25, "y": 4.2 }, "startRotation": 0 },
+        { "kind": "lintel", "startPosition": { "x": 0, "y": 6.2 }, "startRotation": 0 },
+        { "kind": "battlement", "startPosition": { "x": 0, "y": 3.2 }, "startRotation": 0 },
+        { "kind": "merlon", "startPosition": { "x": -1.2, "y": 5.2 }, "startRotation": 0 },
+        { "kind": "merlon", "startPosition": { "x": -0.4, "y": 5.2 }, "startRotation": 0 },
+        { "kind": "merlon", "startPosition": { "x": 0.4, "y": 5.2 }, "startRotation": 0 },
+        { "kind": "merlon", "startPosition": { "x": 1.2, "y": 5.2 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.9, "y": -0.3 }, { "x": 1.9, "y": -0.3 }, { "x": 1.9, "y": 0 }, { "x": -1.9, "y": 0 } ] },
@@ -1978,12 +1978,12 @@
         ]
       },
       "pieces": [
-        { "kind": "roller", "startPosition": { "x": 1.05, "y": 3.10 }, "startRotation": 3.14159265 },
+        { "kind": "roller", "startPosition": { "x": 1.05, "y": 4.00 }, "startRotation": 3.14159265 },
         { "kind": "canopy", "startPosition": { "x": 0.20, "y": 4.70 }, "startRotation": 0.209 },
-        { "kind": "drum", "startPosition": { "x": -0.95, "y": 3.65 }, "startRotation": 3.14159265 },
-        { "kind": "stack", "startPosition": { "x": -0.90, "y": 6.40 }, "startRotation": 0 },
-        { "kind": "body", "startPosition": { "x": 0, "y": 5.60 }, "startRotation": 0 },
-        { "kind": "cab", "startPosition": { "x": 0.25, "y": 6.95 }, "startRotation": 0 }
+        { "kind": "drum", "startPosition": { "x": -0.95, "y": 4.00 }, "startRotation": 3.14159265 },
+        { "kind": "stack", "startPosition": { "x": -0.90, "y": 3.10 }, "startRotation": 0 },
+        { "kind": "body", "startPosition": { "x": 0, "y": 6.40 }, "startRotation": 0 },
+        { "kind": "cab", "startPosition": { "x": 0.25, "y": 5.50 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.0, "y": -0.7 }, { "x": 2.0, "y": -0.7 }, { "x": 2.0, "y": -0.4 }, { "x": -2.0, "y": -0.4 } ] },
@@ -2002,32 +2002,34 @@
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "color": "#5B4FE0", "kind": "wheel", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.7, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.45, "segments": 7 } },
-        { "color": "#B24BD1", "kind": "front", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.45 } },
-        { "color": "#E84B8A", "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.3, "height": 0.95 } },
+        { "color": "#B24BD1", "kind": "front", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "color": "#E84B8A", "kind": "leg", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.9 } },
         { "color": "#8D6E4A", "kind": "tub", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.9, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.5, "height": 0.6, "topWidth": 1.9 } },
         { "color": "#E23B3B", "kind": "handle", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.1, "height": 0.16 } }
       ],
       "target": {
         "outline": [ { "x": -1.3, "y": -0.4 }, { "x": 1.2, "y": -0.4 }, { "x": 1.2, "y": 1.35 }, { "x": -1.3, "y": 1.35 } ],
         "slots": [
-          { "kind": "wheel", "position": { "x": 0.65, "y": 0 }, "rotation": 3.14159265 },
-          { "kind": "front", "position": { "x": 0.65, "y": 0.63 }, "rotation": 0 },
-          { "kind": "leg", "position": { "x": -0.85, "y": 0.075 }, "rotation": 0 },
-          { "kind": "tub", "position": { "x": -0.10, "y": 1.02 }, "rotation": 0.20 },
-          { "kind": "handle", "position": { "x": -0.95, "y": 0.70 }, "rotation": 0.20 }
+          { "kind": "wheel", "position": { "x": 0.6, "y": 0 }, "rotation": 3.14159265 },
+          { "kind": "front", "position": { "x": 0.6, "y": 0.25 }, "rotation": 0 },
+          { "kind": "leg", "position": { "x": -0.85, "y": 0.05 }, "rotation": 0 },
+          { "kind": "tub", "position": { "x": -0.125, "y": 0.8 }, "rotation": 0 },
+          { "kind": "handle", "position": { "x": -0.125, "y": 1.18 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "wheel", "startPosition": { "x": 0.65, "y": 3.20 }, "startRotation": 3.14159265 },
-        { "kind": "tub", "startPosition": { "x": -0.18, "y": 4.80 }, "startRotation": 0.07 },
-        { "kind": "front", "startPosition": { "x": 0.65, "y": 5.55 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": -0.85, "y": 6.30 }, "startRotation": 0 },
-        { "kind": "handle", "startPosition": { "x": -0.95, "y": 3.95 }, "startRotation": 0.20 }
+        { "kind": "front", "startPosition": { "x": 0.6, "y": 3.50 }, "startRotation": 0 },
+        { "kind": "wheel", "startPosition": { "x": 0.6, "y": 4.30 }, "startRotation": 3.14159265 },
+        { "kind": "tub", "startPosition": { "x": -0.18, "y": 4.85 }, "startRotation": 0.209 },
+        { "kind": "handle", "startPosition": { "x": -0.125, "y": 5.60 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": -0.85, "y": 6.40 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.6, "y": -0.7 }, { "x": 1.5, "y": -0.7 }, { "x": 1.5, "y": -0.4 }, { "x": -1.6, "y": -0.4 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.15, "y": -0.4 }, { "x": 0.25, "y": -0.4 }, { "x": 0.25, "y": -0.05 }, { "x": 0.15, "y": -0.05 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.05, "y": -0.4 }, { "x": 1.15, "y": -0.4 }, { "x": 1.15, "y": -0.05 }, { "x": 1.05, "y": -0.05 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.10, "y": -0.4 }, { "x": 0.20, "y": -0.4 }, { "x": 0.20, "y": -0.05 }, { "x": 0.10, "y": -0.05 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.00, "y": -0.4 }, { "x": 1.10, "y": -0.4 }, { "x": 1.10, "y": -0.05 }, { "x": 1.00, "y": -0.05 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.20, "y": -0.4 }, { "x": -1.10, "y": -0.4 }, { "x": -1.10, "y": -0.05 }, { "x": -1.20, "y": -0.05 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.60, "y": -0.4 }, { "x": -0.50, "y": -0.4 }, { "x": -0.50, "y": -0.05 }, { "x": -0.60, "y": -0.05 } ] }
       ]
     },
     {
@@ -2041,27 +2043,24 @@
         { "color": "#B24BD1", "kind": "wheel", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.7, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.35, "segments": 7 } },
         { "color": "#E84B8A", "kind": "fuse", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.6, "height": 0.55 } },
         { "color": "#8D6E4A", "kind": "wing", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 1.0, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.22 } },
-        { "color": "#E23B3B", "kind": "fin", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 1.0, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.7, "height": 0.6 } },
-        { "color": "#F2801D", "kind": "nose", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.6, "height": 0.5 } }
+        { "color": "#E23B3B", "kind": "fin", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 1.0, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.7, "height": 0.6 } }
       ],
       "target": {
-        "outline": [ { "x": -1.5, "y": -0.4 }, { "x": 1.7, "y": -0.4 }, { "x": 1.7, "y": 1.35 }, { "x": -1.5, "y": 1.35 } ],
+        "outline": [ { "x": -1.5, "y": -0.4 }, { "x": 1.5, "y": -0.4 }, { "x": 1.5, "y": 1.7 }, { "x": -1.5, "y": 1.7 } ],
         "slots": [
           { "kind": "wheel", "position": { "x": -0.5, "y": 0 }, "rotation": 3.14159265 },
           { "kind": "wheel", "position": { "x": 0.5, "y": 0 }, "rotation": 3.14159265 },
           { "kind": "fuse", "position": { "x": 0, "y": 0.475 }, "rotation": 0 },
           { "kind": "wing", "position": { "x": 0, "y": 0.86 }, "rotation": 0 },
-          { "kind": "nose", "position": { "x": 1.5, "y": 0.475 }, "rotation": -1.5708 },
-          { "kind": "fin", "position": { "x": -1.25, "y": 0.95 }, "rotation": 0.14 }
+          { "kind": "fin", "position": { "x": -1.0, "y": 1.27 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "wheel", "startPosition": { "x": -0.5, "y": 3.10 }, "startRotation": 3.14159265 },
-        { "kind": "wheel", "startPosition": { "x": 0.5, "y": 3.10 }, "startRotation": 3.14159265 },
-        { "kind": "wing", "startPosition": { "x": -0.06, "y": 4.55 }, "startRotation": 0.209 },
-        { "kind": "fuse", "startPosition": { "x": 0, "y": 6.10 }, "startRotation": 0 },
-        { "kind": "nose", "startPosition": { "x": 1.5, "y": 3.85 }, "startRotation": -1.5708 },
-        { "kind": "fin", "startPosition": { "x": -1.25, "y": 5.30 }, "startRotation": 0.01 }
+        { "kind": "fuse", "startPosition": { "x": 0, "y": 3.60 }, "startRotation": 0 },
+        { "kind": "fin", "startPosition": { "x": -1.0, "y": 4.60 }, "startRotation": 0 },
+        { "kind": "wing", "startPosition": { "x": -0.06, "y": 5.10 }, "startRotation": 0.209 },
+        { "kind": "wheel", "startPosition": { "x": -0.5, "y": 5.60 }, "startRotation": 3.14159265 },
+        { "kind": "wheel", "startPosition": { "x": 0.5, "y": 5.60 }, "startRotation": 3.14159265 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.8, "y": -0.7 }, { "x": 2.0, "y": -0.7 }, { "x": 2.0, "y": -0.4 }, { "x": -1.8, "y": -0.4 } ] },
@@ -2095,26 +2094,24 @@
           { "kind": "bed", "position": { "x": 0.45, "y": 0.90 }, "rotation": 0 },
           { "kind": "cab", "position": { "x": -0.6, "y": 0.95 }, "rotation": 0 },
           { "kind": "roof", "position": { "x": -0.6, "y": 1.40 }, "rotation": 0 },
-          { "kind": "blade", "position": { "x": -1.35, "y": 0.35 }, "rotation": 0.26 }
+          { "kind": "blade", "position": { "x": -1.55, "y": -0.05 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "wheel", "startPosition": { "x": -0.6, "y": 3.10 }, "startRotation": 3.14159265 },
-        { "kind": "wheel", "startPosition": { "x": 0.6, "y": 3.10 }, "startRotation": 3.14159265 },
-        { "kind": "blade", "startPosition": { "x": -1.30, "y": 4.55 }, "startRotation": 0.12 },
-        { "kind": "chassis", "startPosition": { "x": 0, "y": 5.90 }, "startRotation": 0 },
-        { "kind": "cab", "startPosition": { "x": -0.6, "y": 6.95 }, "startRotation": 0 },
-        { "kind": "roof", "startPosition": { "x": -0.6, "y": 5.15 }, "startRotation": 0 },
-        { "kind": "bed", "startPosition": { "x": 0.45, "y": 3.80 }, "startRotation": 0 }
+        { "kind": "bed", "startPosition": { "x": 0.45, "y": 3.30 }, "startRotation": 0 },
+        { "kind": "roof", "startPosition": { "x": -0.6, "y": 4.10 }, "startRotation": 0 },
+        { "kind": "blade", "startPosition": { "x": -1.45, "y": 4.55 }, "startRotation": 0.209 },
+        { "kind": "wheel", "startPosition": { "x": -0.6, "y": 4.90 }, "startRotation": 3.14159265 },
+        { "kind": "wheel", "startPosition": { "x": 0.6, "y": 4.90 }, "startRotation": 3.14159265 },
+        { "kind": "cab", "startPosition": { "x": -0.6, "y": 5.70 }, "startRotation": 0 },
+        { "kind": "chassis", "startPosition": { "x": 0, "y": 6.50 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.0, "y": -0.7 }, { "x": 1.9, "y": -0.7 }, { "x": 1.9, "y": -0.4 }, { "x": -2.0, "y": -0.4 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.95, "y": -0.4 }, { "x": -0.85, "y": -0.4 }, { "x": -0.85, "y": -0.05 }, { "x": -0.95, "y": -0.05 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.25, "y": -0.4 }, { "x": -0.15, "y": -0.4 }, { "x": -0.15, "y": -0.05 }, { "x": -0.25, "y": -0.05 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.15, "y": -0.4 }, { "x": 0.25, "y": -0.4 }, { "x": 0.25, "y": -0.05 }, { "x": 0.15, "y": -0.05 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.85, "y": -0.4 }, { "x": 0.95, "y": -0.4 }, { "x": 0.95, "y": -0.05 }, { "x": 0.85, "y": -0.05 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.75, "y": -0.4 }, { "x": -1.65, "y": -0.4 }, { "x": -1.65, "y": 0.55 }, { "x": -1.75, "y": 0.55 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.95, "y": -0.4 }, { "x": -0.85, "y": -0.4 }, { "x": -0.85, "y": 0.25 }, { "x": -0.95, "y": 0.25 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.10, "y": -0.4 }, { "x": -0.97, "y": -0.4 }, { "x": -0.97, "y": 0.15 }, { "x": -1.10, "y": 0.15 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.23, "y": -0.4 }, { "x": -0.13, "y": -0.4 }, { "x": -0.13, "y": -0.05 }, { "x": -0.23, "y": -0.05 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.13, "y": -0.4 }, { "x": 0.23, "y": -0.4 }, { "x": 0.23, "y": -0.05 }, { "x": 0.13, "y": -0.05 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.97, "y": -0.4 }, { "x": 1.07, "y": -0.4 }, { "x": 1.07, "y": -0.05 }, { "x": 0.97, "y": -0.05 } ] }
       ]
     },
     {
@@ -2126,39 +2123,36 @@
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "color": "#8D6E4A", "kind": "wheel", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.7, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.45, "segments": 7 } },
-        { "color": "#E23B3B", "kind": "chassis", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.32 } },
+        { "color": "#E23B3B", "kind": "chassis", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.32 } },
         { "color": "#F2801D", "kind": "cab", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.9 } },
         { "color": "#F4C20D", "kind": "cabroof", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.2 } },
-        { "color": "#4CAF50", "kind": "pivot", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.7, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.35 } },
-        { "color": "#12A5A5", "kind": "body", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.8, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.7, "height": 0.7, "topWidth": 2.0 } }
+        { "color": "#4CAF50", "kind": "body", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.9, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.7, "height": 0.7, "topWidth": 2.0 } }
       ],
       "target": {
-        "outline": [ { "x": -1.9, "y": -0.4 }, { "x": 1.6, "y": -0.4 }, { "x": 1.6, "y": 2.0 }, { "x": -1.9, "y": 2.0 } ],
+        "outline": [ { "x": -1.6, "y": -0.4 }, { "x": 1.6, "y": -0.4 }, { "x": 1.6, "y": 1.75 }, { "x": -1.6, "y": 1.75 } ],
         "slots": [
           { "kind": "wheel", "position": { "x": -0.7, "y": 0 }, "rotation": 3.14159265 },
           { "kind": "wheel", "position": { "x": 0.7, "y": 0 }, "rotation": 3.14159265 },
           { "kind": "chassis", "position": { "x": 0, "y": 0.46 }, "rotation": 0 },
-          { "kind": "cab", "position": { "x": 0.95, "y": 1.07 }, "rotation": 0 },
-          { "kind": "cabroof", "position": { "x": 0.95, "y": 1.62 }, "rotation": 0 },
-          { "kind": "pivot", "position": { "x": -1.5, "y": 0.795 }, "rotation": 0 },
-          { "kind": "body", "position": { "x": -0.35, "y": 1.28 }, "rotation": 0.38 }
+          { "kind": "cab", "position": { "x": 1.0, "y": 1.07 }, "rotation": 0 },
+          { "kind": "cabroof", "position": { "x": 1.0, "y": 1.62 }, "rotation": 0 },
+          { "kind": "body", "position": { "x": -0.5, "y": 0.97 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "wheel", "startPosition": { "x": -0.7, "y": 3.10 }, "startRotation": 3.14159265 },
-        { "kind": "wheel", "startPosition": { "x": 0.7, "y": 3.10 }, "startRotation": 3.14159265 },
-        { "kind": "body", "startPosition": { "x": -0.55, "y": 4.85 }, "startRotation": 0.20 },
-        { "kind": "chassis", "startPosition": { "x": 0, "y": 6.05 }, "startRotation": 0 },
-        { "kind": "pivot", "startPosition": { "x": -1.5, "y": 3.75 }, "startRotation": 0 },
-        { "kind": "cab", "startPosition": { "x": 0.95, "y": 6.95 }, "startRotation": 0 },
-        { "kind": "cabroof", "startPosition": { "x": 0.95, "y": 5.35 }, "startRotation": 0 }
+        { "kind": "cab", "startPosition": { "x": 1.0, "y": 3.30 }, "startRotation": 0 },
+        { "kind": "wheel", "startPosition": { "x": -0.7, "y": 4.20 }, "startRotation": 3.14159265 },
+        { "kind": "wheel", "startPosition": { "x": 0.7, "y": 4.20 }, "startRotation": 3.14159265 },
+        { "kind": "body", "startPosition": { "x": -0.65, "y": 5.00 }, "startRotation": 0.209 },
+        { "kind": "cabroof", "startPosition": { "x": 1.0, "y": 5.10 }, "startRotation": 0 },
+        { "kind": "chassis", "startPosition": { "x": 0, "y": 6.00 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.2, "y": -0.7 }, { "x": 1.9, "y": -0.7 }, { "x": 1.9, "y": -0.4 }, { "x": -2.2, "y": -0.4 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.05, "y": -0.4 }, { "x": -0.95, "y": -0.4 }, { "x": -0.95, "y": -0.05 }, { "x": -1.05, "y": -0.05 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.35, "y": -0.4 }, { "x": -0.25, "y": -0.4 }, { "x": -0.25, "y": -0.05 }, { "x": -0.35, "y": -0.05 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.25, "y": -0.4 }, { "x": 0.35, "y": -0.4 }, { "x": 0.35, "y": -0.05 }, { "x": 0.25, "y": -0.05 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.95, "y": -0.4 }, { "x": 1.05, "y": -0.4 }, { "x": 1.05, "y": -0.05 }, { "x": 0.95, "y": -0.05 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.20, "y": -0.4 }, { "x": -1.10, "y": -0.4 }, { "x": -1.10, "y": -0.05 }, { "x": -1.20, "y": -0.05 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.40, "y": -0.4 }, { "x": -0.30, "y": -0.4 }, { "x": -0.30, "y": -0.05 }, { "x": -0.40, "y": -0.05 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.30, "y": -0.4 }, { "x": 0.40, "y": -0.4 }, { "x": 0.40, "y": -0.05 }, { "x": 0.30, "y": -0.05 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.10, "y": -0.4 }, { "x": 1.20, "y": -0.4 }, { "x": 1.20, "y": -0.05 }, { "x": 1.10, "y": -0.05 } ] }
       ]
     },
     {
@@ -2172,39 +2166,30 @@
         { "color": "#E23B3B", "kind": "skid", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.0, "height": 0.18 } },
         { "color": "#F2801D", "kind": "strut", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.2, "height": 0.35 } },
         { "color": "#F4C20D", "kind": "cabin", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.6, "height": 0.9, "topWidth": 1.0 } },
-        { "color": "#4CAF50", "kind": "canopy", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 1.0, "height": 0.18, "apexHeight": 0.17 } },
-        { "color": "#12A5A5", "kind": "mast", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.35 } },
-        { "color": "#2E7CD6", "kind": "rotor", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.9, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 3.0, "height": 0.16 } },
-        { "color": "#5B4FE0", "kind": "tailboom", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.4, "height": 0.2 } },
-        { "color": "#B24BD1", "kind": "tailfin", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 1.0, "restitution": 0.05 }, "shape": { "primitive": "righttriangle", "width": 0.55, "height": 0.6 } }
+        { "color": "#4CAF50", "kind": "mast", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.0, "height": 0.3, "topWidth": 1.4 } },
+        { "color": "#12A5A5", "kind": "rotor", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.9, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 3.0, "height": 0.16 } }
       ],
       "target": {
-        "outline": [ { "x": -2.0, "y": -0.4 }, { "x": 1.7, "y": -0.4 }, { "x": 1.7, "y": 2.35 }, { "x": -2.0, "y": 2.35 } ],
+        "outline": [ { "x": -1.6, "y": -0.4 }, { "x": 1.6, "y": -0.4 }, { "x": 1.6, "y": 1.6 }, { "x": -1.6, "y": 1.6 } ],
         "slots": [
-          { "kind": "skid", "position": { "x": 0, "y": 0 }, "rotation": 0 },
-          { "kind": "strut", "position": { "x": -0.55, "y": 0.265 }, "rotation": 0 },
-          { "kind": "strut", "position": { "x": 0.55, "y": 0.265 }, "rotation": 0 },
-          { "kind": "cabin", "position": { "x": 0, "y": 0.89 }, "rotation": 0 },
-          { "kind": "canopy", "position": { "x": 0, "y": 1.515 }, "rotation": 0 },
-          { "kind": "mast", "position": { "x": 0, "y": 1.865 }, "rotation": 0 },
-          { "kind": "rotor", "position": { "x": 0, "y": 2.12 }, "rotation": 0 },
-          { "kind": "tailboom", "position": { "x": -1.35, "y": 0.90 }, "rotation": 0 },
-          { "kind": "tailfin", "position": { "x": -1.95, "y": 1.25 }, "rotation": 0.16 }
+          { "kind": "skid", "position": { "x": 0, "y": -0.31 }, "rotation": 0 },
+          { "kind": "strut", "position": { "x": -0.55, "y": -0.045 }, "rotation": 0 },
+          { "kind": "strut", "position": { "x": 0.55, "y": -0.045 }, "rotation": 0 },
+          { "kind": "cabin", "position": { "x": 0, "y": 0.58 }, "rotation": 0 },
+          { "kind": "mast", "position": { "x": 0, "y": 1.18 }, "rotation": 0 },
+          { "kind": "rotor", "position": { "x": 0, "y": 1.41 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "skid", "startPosition": { "x": 0, "y": 2.95 }, "startRotation": 0 },
-        { "kind": "rotor", "startPosition": { "x": -0.10, "y": 5.15 }, "startRotation": 0.244 },
-        { "kind": "strut", "startPosition": { "x": -0.55, "y": 3.45 }, "startRotation": 0 },
-        { "kind": "cabin", "startPosition": { "x": 0, "y": 6.15 }, "startRotation": 0 },
-        { "kind": "strut", "startPosition": { "x": 0.55, "y": 4.55 }, "startRotation": 0 },
-        { "kind": "mast", "startPosition": { "x": 0, "y": 7.00 }, "startRotation": 0 },
-        { "kind": "canopy", "startPosition": { "x": 0, "y": 3.95 }, "startRotation": 0 },
-        { "kind": "tailboom", "startPosition": { "x": -1.35, "y": 5.75 }, "startRotation": 0 },
-        { "kind": "tailfin", "startPosition": { "x": -1.95, "y": 4.30 }, "startRotation": 0.02 }
+        { "kind": "cabin", "startPosition": { "x": 0, "y": 3.30 }, "startRotation": 0 },
+        { "kind": "skid", "startPosition": { "x": 0, "y": 4.20 }, "startRotation": 0 },
+        { "kind": "mast", "startPosition": { "x": 0, "y": 5.10 }, "startRotation": 0 },
+        { "kind": "strut", "startPosition": { "x": -0.55, "y": 6.00 }, "startRotation": 0 },
+        { "kind": "strut", "startPosition": { "x": 0.55, "y": 6.00 }, "startRotation": 0 },
+        { "kind": "rotor", "startPosition": { "x": -0.10, "y": 6.50 }, "startRotation": 0.209 }
       ],
       "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.3, "y": -0.7 }, { "x": 2.0, "y": -0.7 }, { "x": 2.0, "y": -0.4 }, { "x": -2.3, "y": -0.4 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.8, "y": -0.7 }, { "x": 1.8, "y": -0.7 }, { "x": 1.8, "y": -0.4 }, { "x": -1.8, "y": -0.4 } ] }
       ]
     }
   ]
