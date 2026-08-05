@@ -2610,36 +2610,36 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "color": "#F4C20D", "kind": "foot", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.40, "height": 0.28 } },
-        { "color": "#4CAF50", "kind": "plinth", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.35, "height": 0.35 } },
-        { "color": "#12A5A5", "kind": "case", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.95, "height": 0.85 } },
-        { "color": "#2E7CD6", "kind": "waist", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.42, "height": 0.55 } },
-        { "color": "#5B4FE0", "kind": "hood", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.10, "height": 0.70 } },
-        { "color": "#B24BD1", "kind": "dial", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.62, "height": 0.55 } },
-        { "color": "#E84B8A", "kind": "crown", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.70, "height": 0.40 } }
+        { "color": "#F4C20D", "kind": "foot", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.40, "height": 0.24 } },
+        { "color": "#4CAF50", "kind": "plinth", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.35, "height": 0.30 } },
+        { "color": "#12A5A5", "kind": "case", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.95, "height": 0.55 } },
+        { "color": "#2E7CD6", "kind": "waist", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.42, "height": 0.35 } },
+        { "color": "#5B4FE0", "kind": "hood", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.10, "height": 0.45 } },
+        { "color": "#B24BD1", "kind": "dial", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.62, "height": 0.42 } },
+        { "color": "#E84B8A", "kind": "crown", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.70, "height": 0.30 } }
       ],
       "target": {
-        "outline": [ { "x": -0.68, "y": 0 }, { "x": 0.68, "y": 0 }, { "x": 0.68, "y": 3.7 }, { "x": -0.68, "y": 3.7 } ],
+        "outline": [ { "x": -0.68, "y": 0 }, { "x": 0.68, "y": 0 }, { "x": 0.68, "y": 2.61 }, { "x": -0.68, "y": 2.61 } ],
         "slots": [
-          { "kind": "foot", "position": { "x": -0.5, "y": 0.14 }, "rotation": 0 },
-          { "kind": "foot", "position": { "x": 0.5, "y": 0.14 }, "rotation": 0 },
-          { "kind": "plinth", "position": { "x": 0, "y": 0.455 }, "rotation": 0 },
-          { "kind": "case", "position": { "x": 0, "y": 1.055 }, "rotation": 0 },
-          { "kind": "waist", "position": { "x": 0, "y": 1.755 }, "rotation": 0 },
-          { "kind": "hood", "position": { "x": 0, "y": 2.38 }, "rotation": 0 },
-          { "kind": "dial", "position": { "x": 0, "y": 3.005 }, "rotation": 0 },
-          { "kind": "crown", "position": { "x": 0, "y": 3.48 }, "rotation": 0 }
+          { "kind": "foot", "position": { "x": -0.5, "y": 0.12 }, "rotation": 0 },
+          { "kind": "foot", "position": { "x": 0.5, "y": 0.12 }, "rotation": 0 },
+          { "kind": "plinth", "position": { "x": 0, "y": 0.39 }, "rotation": 0 },
+          { "kind": "case", "position": { "x": 0, "y": 0.815 }, "rotation": 0 },
+          { "kind": "waist", "position": { "x": 0, "y": 1.265 }, "rotation": 0 },
+          { "kind": "hood", "position": { "x": 0, "y": 1.665 }, "rotation": 0 },
+          { "kind": "dial", "position": { "x": 0, "y": 2.10 }, "rotation": 0 },
+          { "kind": "crown", "position": { "x": 0, "y": 2.46 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "foot", "startPosition": { "x": -0.5, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "foot", "startPosition": { "x": 0.5, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "plinth", "startPosition": { "x": 0, "y": 3.8 }, "startRotation": 0 },
-        { "kind": "case", "startPosition": { "x": 0, "y": 7.0 }, "startRotation": 0 },
-        { "kind": "waist", "startPosition": { "x": 0, "y": 2.2 }, "startRotation": 0 },
-        { "kind": "hood", "startPosition": { "x": 0, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "dial", "startPosition": { "x": 0, "y": 6.2 }, "startRotation": 0 },
-        { "kind": "crown", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 }
+        { "kind": "foot", "startPosition": { "x": -0.5, "y": 5.00 }, "startRotation": 0 },
+        { "kind": "foot", "startPosition": { "x": 0.5, "y": 5.00 }, "startRotation": 0 },
+        { "kind": "plinth", "startPosition": { "x": 0, "y": 3.73 }, "startRotation": 0 },
+        { "kind": "case", "startPosition": { "x": 0, "y": 6.27 }, "startRotation": 0 },
+        { "kind": "waist", "startPosition": { "x": 0, "y": 3.00 }, "startRotation": 0 },
+        { "kind": "hood", "startPosition": { "x": 0, "y": 5.54 }, "startRotation": 0 },
+        { "kind": "dial", "startPosition": { "x": 0, "y": 4.46 }, "startRotation": 0 },
+        { "kind": "crown", "startPosition": { "x": 0, "y": 7.00 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.75, "y": -0.3 }, { "x": 0.75, "y": -0.3 }, { "x": 0.75, "y": 0 }, { "x": -0.75, "y": 0 } ] }
