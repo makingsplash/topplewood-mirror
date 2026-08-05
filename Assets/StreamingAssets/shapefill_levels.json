@@ -1812,7 +1812,6 @@
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "color": "#F4C20D", "kind": "tower", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 1.4 } },
-        { "color": "#4CAF50", "kind": "gate", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 0.8 } },
         { "color": "#12A5A5", "kind": "lintel", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.6, "height": 0.3 } },
         { "color": "#2E7CD6", "kind": "battlement", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.5 } },
         { "color": "#5B4FE0", "kind": "merlon", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.3, "height": 0.4 } }
@@ -1820,7 +1819,6 @@
       "target": {
         "outline": [ { "x": -1.7, "y": 0 }, { "x": 1.7, "y": 0 }, { "x": 1.7, "y": 2.8 }, { "x": -1.7, "y": 2.8 } ],
         "slots": [
-          { "kind": "gate", "position": { "x": 0, "y": 0.9 }, "rotation": 0 },
           { "kind": "tower", "position": { "x": -1.25, "y": 1.2 }, "rotation": 0 },
           { "kind": "tower", "position": { "x": 1.25, "y": 1.2 }, "rotation": 0 },
           { "kind": "lintel", "position": { "x": 0, "y": 1.45 }, "rotation": 0 },
@@ -1832,7 +1830,6 @@
         ]
       },
       "pieces": [
-        { "kind": "gate", "startPosition": { "x": 0, "y": 4.65 }, "startRotation": 0 },
         { "kind": "tower", "startPosition": { "x": -1.25, "y": 6.75 }, "startRotation": 0 },
         { "kind": "tower", "startPosition": { "x": 1.25, "y": 6.75 }, "startRotation": 0 },
         { "kind": "lintel", "startPosition": { "x": 0, "y": 3.1 }, "startRotation": 0 },
@@ -1844,7 +1841,8 @@
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.9, "y": -0.3 }, { "x": 1.9, "y": -0.3 }, { "x": 1.9, "y": 0 }, { "x": -1.9, "y": 0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.7, "y": 0 }, { "x": 1.7, "y": 0 }, { "x": 1.7, "y": 0.5 }, { "x": -1.7, "y": 0.5 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.7, "y": 0 }, { "x": 1.7, "y": 0 }, { "x": 1.7, "y": 0.5 }, { "x": -1.7, "y": 0.5 } ] },
+        { "visible": true, "color": "#7A5230", "outline": [ { "x": -0.6, "y": 0.5 }, { "x": 0.6, "y": 0.5 }, { "x": 0.6, "y": 1.3 }, { "x": -0.6, "y": 1.3 } ] }
       ]
     },
     {
