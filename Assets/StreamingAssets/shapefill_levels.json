@@ -4685,7 +4685,7 @@
             "x": 1,
             "y": 0
           },
-          "acceleration": 3.0,
+          "acceleration": 6.0,
           "color": "#CFE8F5"
         }
       ]
