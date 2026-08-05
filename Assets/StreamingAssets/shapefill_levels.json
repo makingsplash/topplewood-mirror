@@ -4033,6 +4033,290 @@
           "color": "#CFE8F5"
         }
       ]
+    },
+    {
+      "levelId": "air_dunk",
+      "seed": 264,
+      "difficultyTier": 6,
+      "physicsMode": "assembly",
+      "matchTolerance": {
+        "posTol": 0.30,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -6
+        },
+        "max": {
+          "x": 6,
+          "y": 10
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "pole",
+          "color": "#8D6E4A",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 0.5,
+            "height": 2.6
+          }
+        },
+        {
+          "kind": "board",
+          "color": "#3B7DD8",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 1.4,
+            "height": 0.5
+          }
+        },
+        {
+          "kind": "ball",
+          "color": "#E8853B",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.4,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": 0.7,
+            "y": 2.2
+          },
+          {
+            "x": 3.4,
+            "y": 2.2
+          },
+          {
+            "x": 3.4,
+            "y": 3.1
+          },
+          {
+            "x": 0.7,
+            "y": 3.1
+          },
+          {
+            "x": 2.0,
+            "y": 0.0
+          },
+          {
+            "x": 2.0,
+            "y": 2.6
+          }
+        ],
+        "slots": [
+          {
+            "kind": "pole",
+            "position": {
+              "x": 2.7,
+              "y": 1.30
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "board",
+            "position": {
+              "x": 2.7,
+              "y": 2.85
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "ball",
+            "position": {
+              "x": 1.40,
+              "y": 2.75
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "pole",
+          "startPosition": {
+            "x": 2.70,
+            "y": 4.80
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "board",
+          "startPosition": {
+            "x": 2.70,
+            "y": 7.00
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "ball",
+          "startPosition": {
+            "x": -3.77,
+            "y": 5.59
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -6,
+              "y": -0.6
+            },
+            {
+              "x": 6,
+              "y": -0.6
+            },
+            {
+              "x": 6,
+              "y": 0.0
+            },
+            {
+              "x": -6,
+              "y": 0.0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -4.20,
+              "y": 5.40
+            },
+            {
+              "x": -1.50,
+              "y": 3.50
+            },
+            {
+              "x": -1.673,
+              "y": 3.255
+            },
+            {
+              "x": -4.373,
+              "y": 5.155
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.70,
+              "y": 2.35
+            },
+            {
+              "x": 0.85,
+              "y": 2.35
+            },
+            {
+              "x": 0.85,
+              "y": 3.10
+            },
+            {
+              "x": 0.70,
+              "y": 3.10
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.70,
+              "y": 2.20
+            },
+            {
+              "x": 2.05,
+              "y": 2.20
+            },
+            {
+              "x": 2.05,
+              "y": 2.35
+            },
+            {
+              "x": 0.70,
+              "y": 2.35
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.95,
+              "y": 2.35
+            },
+            {
+              "x": 2.05,
+              "y": 2.35
+            },
+            {
+              "x": 2.05,
+              "y": 3.10
+            },
+            {
+              "x": 1.95,
+              "y": 3.10
+            }
+          ]
+        }
+      ],
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -1.90,
+              "y": 1.10
+            },
+            "max": {
+              "x": 0.10,
+              "y": 3.90
+            }
+          },
+          "direction": {
+            "x": 0,
+            "y": 1
+          },
+          "acceleration": 15.0,
+          "color": "#CFE8F5",
+          "bypassHoverGuard": true
+        }
+      ]
     }
   ]
 }

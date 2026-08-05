@@ -178,6 +178,11 @@ namespace Gameplay.Core
         /// up-component of the applied acceleration. Pure-horizontal flow (Direction.Y == 0) always passes this rule.
         /// The authoring band [2,4] (balancer) is guidance in level-authoring §L(air), NOT a hard cap — a level's
         /// acceleration is ultimately proven by the sim gate, not clamped here (owner decision, stage-3 gate).
+        /// TASK-107: the hover-guard is no longer absolute — a zone with <see cref="AirZone.BypassHoverGuard"/>=true
+        /// opts out of THIS one check (owner decision 2026-08-05) so a real up-launcher may lift a piece. The opt-out
+        /// does NOT relax the rule or shift the threshold; it moves the burden of proving the level still reaches rest
+        /// from this static guard to the sim gate (§L(air) Rule 4). A bypassed up-flow logs a WARNING (not an ERROR) so
+        /// the shifted burden is visible at load. Every OTHER structural check below applies regardless of the flag.
         /// </summary>
         private static void ValidateAirZones(LevelData level, List<string> errors, List<string> warnings)
         {
@@ -196,12 +201,20 @@ namespace Gameplay.Core
                 if (zone.Acceleration <= 0f)
                     errors.Add($"AirZones[{i}] acceleration must be > 0; was {zone.Acceleration}.");
 
-                // Hover-guard: up-component of the applied acceleration must stay below gravity, or the piece hovers.
-                if (zone.Direction.Y * zone.Acceleration >= gravityMag)
+                // Hover-guard: up-component of the applied acceleration must stay below gravity, or the piece hovers —
+                // UNLESS the zone opts out (TASK-107). The opt-out does NOT relax the rule; it moves the burden of
+                // proving the level still reaches rest from this static check to the sim gate (§L(air) Rule 4).
+                var upThrustExceedsGravity = zone.Direction.Y * zone.Acceleration >= gravityMag;
+                if (upThrustExceedsGravity && !zone.BypassHoverGuard)
                     errors.Add(
                         $"AirZones[{i}] up-flow is too strong: Direction.Y·Acceleration = " +
                         $"{zone.Direction.Y * zone.Acceleration:F3} ≥ |gravity| {gravityMag:F3} — it would hold pieces " +
                         "aloft in free-space equilibrium, so the level never reaches rest and hangs into Timeout.");
+                else if (upThrustExceedsGravity && zone.BypassHoverGuard)
+                    warnings.Add(
+                        $"AirZones[{i}] bypasses the hover-guard (up-flow Direction.Y·Acceleration = " +
+                        $"{zone.Direction.Y * zone.Acceleration:F3} ≥ |gravity| {gravityMag:F3}); termination is NOT " +
+                        "proven statically — the sim gate MUST show restReached, !timedOut, lostPieces=0 (§L(air) Rule 4).");
 
                 // A zone that does not overlap Bounds does nothing (no released body can ever be inside it). Not a
                 // structural break (an author may park a zone off-field intentionally), so WARNING only.
