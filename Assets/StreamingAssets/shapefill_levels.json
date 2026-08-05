@@ -4102,65 +4102,94 @@
             "radius": 0.4,
             "segments": 24
           }
+        },
+        {
+          "kind": "rim_floor",
+          "color": "#4CAF50",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 1.30,
+            "height": 0.24
+          }
+        },
+        {
+          "kind": "rim_l",
+          "color": "#12A5A5",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.18,
+            "height": 0.55
+          }
+        },
+        {
+          "kind": "rim_r",
+          "color": "#B24BD1",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.18,
+            "height": 0.72
+          }
         }
       ],
       "target": {
         "outline": [
           {
-            "x": 0.90,
-            "y": 1.90
+            "x": 1.45,
+            "y": 1.10
           },
           {
-            "x": 0.90,
-            "y": 2.70
-          },
-          {
-            "x": 2.00,
-            "y": 2.70
-          },
-          {
-            "x": 2.00,
-            "y": 3.10
-          },
-          {
-            "x": 3.40,
-            "y": 3.10
-          },
-          {
-            "x": 3.40,
-            "y": 2.60
-          },
-          {
-            "x": 2.95,
-            "y": 2.60
-          },
-          {
-            "x": 2.95,
-            "y": 0.00
+            "x": 2.45,
+            "y": 1.10
           },
           {
             "x": 2.45,
             "y": 0.00
           },
           {
-            "x": 2.45,
+            "x": 2.95,
+            "y": 0.00
+          },
+          {
+            "x": 2.95,
             "y": 2.60
           },
           {
-            "x": 2.00,
+            "x": 3.40,
             "y": 2.60
+          },
+          {
+            "x": 3.40,
+            "y": 3.10
+          },
+          {
+            "x": 2.00,
+            "y": 3.10
           },
           {
             "x": 2.00,
             "y": 2.30
           },
           {
-            "x": 1.70,
+            "x": 1.45,
             "y": 2.30
-          },
-          {
-            "x": 1.70,
-            "y": 1.90
           }
         ],
         "slots": [
@@ -4183,8 +4212,32 @@
           {
             "kind": "ball",
             "position": {
-              "x": 1.30,
-              "y": 2.30
+              "x": 2.10,
+              "y": 1.86
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "rim_floor",
+            "position": {
+              "x": 2.10,
+              "y": 1.34
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "rim_l",
+            "position": {
+              "x": 1.55,
+              "y": 1.775
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "rim_r",
+            "position": {
+              "x": 2.65,
+              "y": 1.94
             },
             "rotation": 0
           }
@@ -4212,6 +4265,30 @@
           "startPosition": {
             "x": -3.77,
             "y": 5.59
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "rim_floor",
+          "startPosition": {
+            "x": 2.10,
+            "y": 5.40
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "rim_l",
+          "startPosition": {
+            "x": 1.55,
+            "y": 7.00
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "rim_r",
+          "startPosition": {
+            "x": 2.65,
+            "y": 6.10
           },
           "startRotation": 0
         }
@@ -4260,72 +4337,6 @@
               "y": 5.155
             }
           ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 0.70,
-              "y": 1.70
-            },
-            {
-              "x": 1.85,
-              "y": 1.70
-            },
-            {
-              "x": 1.85,
-              "y": 1.90
-            },
-            {
-              "x": 0.70,
-              "y": 1.90
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 0.70,
-              "y": 1.90
-            },
-            {
-              "x": 0.75,
-              "y": 1.90
-            },
-            {
-              "x": 0.75,
-              "y": 2.10
-            },
-            {
-              "x": 0.70,
-              "y": 2.10
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 1.70,
-              "y": 1.90
-            },
-            {
-              "x": 1.85,
-              "y": 1.90
-            },
-            {
-              "x": 1.85,
-              "y": 3.10
-            },
-            {
-              "x": 1.70,
-              "y": 3.10
-            }
-          ]
         }
       ],
       "airZones": [
@@ -4337,7 +4348,7 @@
             },
             "max": {
               "x": 0.60,
-              "y": 3.90
+              "y": 7.50
             }
           },
           "direction": {
@@ -4347,6 +4358,356 @@
           "acceleration": 15.0,
           "color": "#CFE8F5",
           "bypassHoverGuard": true
+        }
+      ]
+    },
+    {
+      "levelId": "piggy_bank",
+      "seed": 270,
+      "difficultyTier": 6,
+      "physicsMode": "assembly",
+      "matchTolerance": {
+        "posTol": 0.30,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -6
+        },
+        "max": {
+          "x": 6,
+          "y": 10
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "belly",
+          "color": "#5B4FE0",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 2.20,
+            "height": 0.24
+          }
+        },
+        {
+          "kind": "wall_l",
+          "color": "#B24BD1",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.20,
+            "height": 0.45
+          }
+        },
+        {
+          "kind": "wall_r",
+          "color": "#E84B8A",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.20,
+            "height": 0.72
+          }
+        },
+        {
+          "kind": "leg",
+          "color": "#8D6E4A",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.30,
+            "height": 0.70
+          }
+        },
+        {
+          "kind": "snout",
+          "color": "#E23B3B",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.40,
+            "height": 0.40
+          }
+        },
+        {
+          "kind": "coin",
+          "color": "#F4C20D",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.35,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -1.05,
+            "y": 0.00
+          },
+          {
+            "x": -0.75,
+            "y": 0.00
+          },
+          {
+            "x": -0.75,
+            "y": 1.10
+          },
+          {
+            "x": 1.55,
+            "y": 1.10
+          },
+          {
+            "x": 1.55,
+            "y": 1.60
+          },
+          {
+            "x": 1.95,
+            "y": 1.60
+          },
+          {
+            "x": 1.95,
+            "y": 1.20
+          },
+          {
+            "x": 1.15,
+            "y": 1.20
+          },
+          {
+            "x": 1.15,
+            "y": 0.00
+          },
+          {
+            "x": 1.45,
+            "y": 0.00
+          },
+          {
+            "x": 0.20,
+            "y": -0.40
+          },
+          {
+            "x": -1.05,
+            "y": -0.40
+          }
+        ],
+        "slots": [
+          {
+            "kind": "leg",
+            "position": {
+              "x": -0.90,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "leg",
+            "position": {
+              "x": 1.30,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "belly",
+            "position": {
+              "x": 0.20,
+              "y": 0.82
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "wall_l",
+            "position": {
+              "x": -0.80,
+              "y": 1.165
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "wall_r",
+            "position": {
+              "x": 1.30,
+              "y": 1.30
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "snout",
+            "position": {
+              "x": 1.75,
+              "y": 1.40
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "coin",
+            "position": {
+              "x": 0.85,
+              "y": 1.05
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "leg",
+          "startPosition": {
+            "x": -0.90,
+            "y": 4.60
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "leg",
+          "startPosition": {
+            "x": 1.30,
+            "y": 6.20
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "belly",
+          "startPosition": {
+            "x": 0.20,
+            "y": 5.40
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "wall_l",
+          "startPosition": {
+            "x": -0.80,
+            "y": 6.80
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "wall_r",
+          "startPosition": {
+            "x": 1.30,
+            "y": 5.00
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "snout",
+          "startPosition": {
+            "x": 1.75,
+            "y": 7.00
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "coin",
+          "startPosition": {
+            "x": -2.60,
+            "y": 7.60
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -6,
+              "y": -0.6
+            },
+            {
+              "x": 6,
+              "y": -0.6
+            },
+            {
+              "x": 6,
+              "y": -0.4
+            },
+            {
+              "x": -6,
+              "y": -0.4
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.20,
+              "y": 2.60
+            },
+            {
+              "x": 1.60,
+              "y": 2.60
+            },
+            {
+              "x": 1.60,
+              "y": 2.80
+            },
+            {
+              "x": -0.20,
+              "y": 2.80
+            }
+          ]
+        }
+      ],
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -3.00,
+              "y": 1.20
+            },
+            "max": {
+              "x": -0.60,
+              "y": 7.40
+            }
+          },
+          "direction": {
+            "x": 1,
+            "y": 0
+          },
+          "acceleration": 3.0,
+          "color": "#CFE8F5"
         }
       ]
     }
