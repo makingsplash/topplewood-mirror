@@ -757,7 +757,7 @@ namespace Gameplay.Sim
         private IEnumerator BuildM0Summary(
             IReadOnlyList<LevelData> levels, IReadOnlyList<SimRunResult> runs, Action<object> done)
         {
-            var level = levels[0]; // the manifest's first level is the fixed m0 baseline (currently 'giraffe')
+            var level = levels[0]; // the manifest's first level is the fixed m0 baseline (currently 'sailboat' since TASK-100 reordered the lineup; was 'giraffe'). m0 is a same-device DETERMINISM probe on whatever levels[0] is — it counts distinct poseHashes across repeats, not a comparison to a stored baseline — so the reorder just re-baselines it onto sailboat, it does not fail the gate.
             var order = Identity(level.Pieces.Count);
 
             // M0.1 — same-device reproducibility: one fixed order, N fresh-instance repeats, count distinct hashes.
