@@ -57,6 +57,11 @@ namespace Gameplay.Core.Adapters
 
         public void LoadStatics(Polygon[] staticGeometry, Rect bounds, Vec2 gravity) { }
 
+        // No physics here (pose canvas), so directed flow has nothing to act on — no-op, exactly like LoadStatics.
+        // The Released flag this simulation already tracks is the same "released-only" gate the Unity adapter applies
+        // to the real force path (TASK-097 RFC §3.2); here it stays a QA pose-canvas control, unaffected by flow.
+        public void LoadFlowZones(AirZone[] zones) { }
+
         public void Reset()
         {
             _bodies.Clear();

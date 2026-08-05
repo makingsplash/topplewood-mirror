@@ -35,6 +35,7 @@ namespace Gameplay.Core
         [JsonProperty("target")] public TargetFigureDto Target { get; set; }
         [JsonProperty("pieces")] public List<PiecePlacementDto> Pieces { get; set; } = new();
         [JsonProperty("staticGeometry")] public List<PolygonDto> StaticGeometry { get; set; } = new();
+        [JsonProperty("airZones")] public List<AirZoneDto> AirZones { get; set; } = new(); // absent/empty → null → no flow (TASK-097)
 
         public LevelData ToDomain()
         {
@@ -68,6 +69,15 @@ namespace Gameplay.Core
                 visuals[i] = new StaticVisual(StaticGeometry[i].Visible, StaticGeometry[i].Color);
             }
 
+            // TASK-097: absent/empty → null so every pre-TASK-097 level maps to no flow, exactly like Decoys=null.
+            AirZone[] airZones = null;
+            if (AirZones != null && AirZones.Count > 0)
+            {
+                airZones = new AirZone[AirZones.Count];
+                for (var i = 0; i < AirZones.Count; i++)
+                    airZones[i] = AirZones[i].ToDomain();
+            }
+
             return new LevelData
             {
                 LevelId = LevelId,
@@ -84,6 +94,7 @@ namespace Gameplay.Core
                 Source = LevelSourceKind.Authored,
                 PhysicsMode = ParsePhysicsMode(PhysicsMode),
                 FreezeLoadsAtRest = FreezeLoadsAtRest,
+                AirZones = airZones,
             };
         }
 
@@ -273,6 +284,27 @@ namespace Gameplay.Core
             for (var i = 0; i < Outline.Count; i++)
                 verts[i] = Outline[i].ToDomain();
             return new Polygon(verts);
+        }
+    }
+
+    /// <summary>TASK-097: one authored air-flow zone. <c>region</c> is the finite force area (world space, == the
+    /// rendered mesh, §D5); <c>direction</c> is normalised to a unit vector here so authors may write any non-zero
+    /// vector; <c>acceleration</c> is mass-independent units/s² (balancer default 3.0, band [2,4]); <c>color</c>
+    /// tints the visible zone mesh. A zero-length direction is left as-is → LevelDataValidator flags it (ERROR).</summary>
+    public sealed class AirZoneDto
+    {
+        [JsonProperty("region")] public RectDto Region { get; set; }
+        [JsonProperty("direction")] public Vec2Dto Direction { get; set; }
+        [JsonProperty("acceleration")] public float Acceleration { get; set; }
+        [JsonProperty("color")] public string Color { get; set; }
+
+        public AirZone ToDomain()
+        {
+            var dir = Direction != null ? Direction.ToDomain() : Vec2.Zero;
+            var len = dir.Length;
+            var unit = len > 0f ? dir * (1f / len) : dir; // normalise; zero stays zero → validator rejects
+            var region = Region != null ? Region.ToDomain() : default;
+            return new AirZone(region, unit, Acceleration, Color);
         }
     }
 }

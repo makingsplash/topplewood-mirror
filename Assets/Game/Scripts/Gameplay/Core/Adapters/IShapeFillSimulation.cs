@@ -51,6 +51,14 @@ namespace Gameplay.Core.Adapters
         /// <summary>Install static geometry, world bounds and gravity for the level.</summary>
         void LoadStatics(Polygon[] staticGeometry, Rect bounds, Vec2 gravity);
 
+        /// <summary>
+        /// Install directed air-flow zones for the level (TASK-097). Null/empty ⇒ no flow (back-compat: every
+        /// pre-TASK-097 level parses to null and is byte-for-byte unchanged). Each RELEASED Dynamic body whose
+        /// centre is inside a zone receives a mass-independent ACCELERATION every Step (RFC §2.2). The headless
+        /// pose-canvas simulation replays no physics, so it treats this as a no-op (like its LoadStatics).
+        /// </summary>
+        void LoadFlowZones(AirZone[] zones);
+
         /// <summary>Tear down all bodies and static geometry (level reset).</summary>
         void Reset();
     }

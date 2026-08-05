@@ -49,5 +49,11 @@ namespace Gameplay.Core
         /// the silhouette by real physics, and posTol/angTol only JUDGE the result. Default false keeps the existing
         /// catapult/seesaw levels on the glide path byte-for-byte.</summary>
         public bool FreezeLoadsAtRest { get; set; }
+
+        /// <summary>TASK-097: optional directed air-flow zones (propeller/fan — environment force). Null/absent ⇒
+        /// no flow, so every existing level is byte-for-byte unchanged. The physics adapter applies each zone's
+        /// mass-independent acceleration to every RELEASED Dynamic body whose centre is inside it (see
+        /// <see cref="AirZone"/>). Consumers guard on null (mirrors <see cref="Decoys"/> / <see cref="StaticVisuals"/>).</summary>
+        public AirZone[] AirZones { get; set; }
     }
 }

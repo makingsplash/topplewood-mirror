@@ -65,6 +65,10 @@ namespace Gameplay.Core
             //    minimum tap zone are hard to hit apart. Phase 1 = non-blocking WARNING (does not affect Ok).
             ValidateTapSpacing(level, errors, warnings);
 
+            // 8. Air-flow zones (TASK-097): structural well-formedness + the hover-guard that forbids a metastable
+            //    up-flow (verdict is judged on global rest — a piece held aloft never rests → Timeout, not a verdict).
+            ValidateAirZones(level, errors, warnings);
+
             return new ValidationResult(errors, warnings);
         }
 
@@ -161,6 +165,54 @@ namespace Gameplay.Core
                     errors.Add($"Pivot kind '{kind}' beam judge slot {anchor} is outside Bounds.");
             }
         }
+
+        /// <summary>
+        /// TASK-097 air-flow zone validation. Null ⇒ no flow ⇒ skip (back-compat: every pre-TASK-097 level). Each
+        /// zone must be a non-degenerate region with a non-zero direction and positive acceleration. The load-bearing
+        /// rule is the HOVER-GUARD: an up-flow whose vertical acceleration component reaches |gravity| lifts a piece
+        /// into free-space equilibrium (thrust ≥ weight) so it never comes to rest — the verdict is judged on GLOBAL
+        /// rest, so such a level hangs into Timeout instead of resolving (GAME_RULES §4 / ADR-0001 metastability).
+        /// This is mass-independent because the acceleration is applied mass-independently (RFC §2.2), so it can be
+        /// proven statically here, before any sim run. |gravity| is read from the level (robust to any gravity, not a
+        /// hardcoded 9.81); Direction is a unit vector (normalised at DTO→domain), so Direction.Y·Acceleration is the
+        /// up-component of the applied acceleration. Pure-horizontal flow (Direction.Y == 0) always passes this rule.
+        /// The authoring band [2,4] (balancer) is guidance in level-authoring §L(air), NOT a hard cap — a level's
+        /// acceleration is ultimately proven by the sim gate, not clamped here (owner decision, stage-3 gate).
+        /// </summary>
+        private static void ValidateAirZones(LevelData level, List<string> errors, List<string> warnings)
+        {
+            if (level.AirZones == null)
+                return;
+
+            var gravityMag = level.Gravity.Length;
+            for (var i = 0; i < level.AirZones.Length; i++)
+            {
+                var zone = level.AirZones[i];
+
+                if (zone.Region.IsDegenerate)
+                    errors.Add($"AirZones[{i}] region is degenerate (zero width or height) — invisible/zero force.");
+                if (zone.Direction.SqrLength <= 0f)
+                    errors.Add($"AirZones[{i}] direction is zero — a flow zone needs a direction.");
+                if (zone.Acceleration <= 0f)
+                    errors.Add($"AirZones[{i}] acceleration must be > 0; was {zone.Acceleration}.");
+
+                // Hover-guard: up-component of the applied acceleration must stay below gravity, or the piece hovers.
+                if (zone.Direction.Y * zone.Acceleration >= gravityMag)
+                    errors.Add(
+                        $"AirZones[{i}] up-flow is too strong: Direction.Y·Acceleration = " +
+                        $"{zone.Direction.Y * zone.Acceleration:F3} ≥ |gravity| {gravityMag:F3} — it would hold pieces " +
+                        "aloft in free-space equilibrium, so the level never reaches rest and hangs into Timeout.");
+
+                // A zone that does not overlap Bounds does nothing (no released body can ever be inside it). Not a
+                // structural break (an author may park a zone off-field intentionally), so WARNING only.
+                if (!RectsOverlap(zone.Region, level.Bounds))
+                    warnings.Add($"AirZones[{i}] region does not overlap Bounds — no piece can enter it.");
+            }
+        }
+
+        /// <summary>AABB overlap test for two domain <see cref="Rect"/>s (touching edges count as overlap).</summary>
+        private static bool RectsOverlap(Rect a, Rect b)
+            => a.Min.X <= b.Max.X && a.Max.X >= b.Min.X && a.Min.Y <= b.Max.Y && a.Max.Y >= b.Min.Y;
 
         private static void ValidateTarget(LevelData level, List<string> errors)
         {

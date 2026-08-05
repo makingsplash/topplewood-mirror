@@ -119,6 +119,7 @@ namespace Gameplay.Core.Mechanic
             ClearRuntime();
             _simulation.Reset();
             _simulation.LoadStatics(_level.StaticGeometry, _level.Bounds, _level.Gravity);
+            _simulation.LoadFlowZones(_level.AirZones); // TASK-097: null ⇒ no flow (73 existing levels unchanged)
 
             _model.SetPhase(GamePhase.Running);
 

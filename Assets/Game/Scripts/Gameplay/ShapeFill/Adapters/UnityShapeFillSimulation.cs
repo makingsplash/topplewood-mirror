@@ -19,6 +19,12 @@ namespace Gameplay.Adapters
             public Rigidbody2D Rigidbody;
             public Collider2D Collider;
             public float Radius;
+            // TASK-097 released-only gate: air flow acts ONLY on bodies that have been released (tapped, or
+            // preplaced-as-released). An Idle floating piece is a full Dynamic body (gravity off, collider off) that
+            // AddForce WOULD otherwise blow off its authored hang pose — see the owner's live-code refutation in the
+            // stage-1 gate. Set true in Release(); never reset (a frozen Placed body is Kinematic, which ApplyFlow's
+            // bodyType guard skips anyway).
+            public bool Released;
 #if GPIE_DEVELOPMENT
             // Retained only so the [SHAPELOG] diagnostic can name the piece at Release time (TASK-072); the
             // adapter no longer holds the PieceType. Guarded so the release player never carries dead fields.
@@ -29,6 +35,9 @@ namespace Gameplay.Adapters
 
         private readonly Dictionary<int, Body> _bodies = new();
         private readonly List<GameObject> _statics = new();
+        // TASK-097: directed air-flow zones for this level. Null/empty ⇒ no flow (every pre-TASK-097 level). Read
+        // every Step by ApplyFlow; cleared by Reset. Domain data (no UnityEngine), the same array the domain holds.
+        private AirZone[] _flowZones;
         // Reused across HasSupportBelow calls so the every-fixed-step support probe allocates nothing (no
         // GC in the physics hot path).
         private readonly RaycastHit2D[] _supportHits = new RaycastHit2D[8];
@@ -76,6 +85,8 @@ namespace Gameplay.Adapters
                 _statics.Add(go);
             }
         }
+
+        public void LoadFlowZones(AirZone[] zones) => _flowZones = zones;
 
         public int SpawnFloating(PieceType type, Vec2 spawn, float rotation)
         {
@@ -150,6 +161,7 @@ namespace Gameplay.Adapters
                 return;
             if (body.Collider != null)
                 body.Collider.enabled = true; // materialise: Idle piece becomes physical (RFC §5.3)
+            body.Released = true; // TASK-097: from now on air-flow zones may push this body (released-only gate)
             body.Rigidbody.gravityScale = 1f;
             // Damping settles the fall (angular in particular tames rolling half-discs) — RFC 07 §2.3.
             body.Rigidbody.linearDamping = _tuning.ReleaseLinearDrag;
@@ -243,7 +255,46 @@ namespace Gameplay.Adapters
             }
         }
 
-        public void Step(float dt) => Physics2D.Simulate(dt);
+        public void Step(float dt)
+        {
+            ApplyFlow(); // TASK-097: accumulate directed air-flow force before integrating this step
+            Physics2D.Simulate(dt);
+        }
+
+        /// <summary>
+        /// TASK-097: apply each air-flow zone's directed force to the released Dynamic bodies inside it, once per
+        /// Step, immediately before <see cref="Physics2D.Simulate"/>. Force is <c>direction · acceleration · mass</c>:
+        /// Unity-2D's <c>AddForce</c> has only <c>ForceMode2D.Force</c> (∝ 1/m), no Acceleration mode, so multiplying
+        /// by <c>rb.mass</c> yields a mass-INDEPENDENT acceleration <c>a = F/m = accel</c> for any mass — the
+        /// balancer's mass-independent model (spread 209×) realised without per-piece tuning.
+        /// Determinism (ADR-0001): each body reads only its own zones and accumulates additively (order-invariant);
+        /// no body reads another's mutating state; called exactly once per fixed Step. Membership is by body CENTRE
+        /// (rb.position) — see FEATURES.md / level-authoring §L(air): the zone must be large relative to a piece.
+        /// </summary>
+        private void ApplyFlow()
+        {
+            if (_flowZones == null || _flowZones.Length == 0)
+                return;
+
+            foreach (var body in _bodies.Values)
+            {
+                if (!body.Released) // idle-hanging pieces (not yet tapped) keep their authored pose — owner stage-1 gate
+                    continue;
+                var rb = body.Rigidbody;
+                if (rb == null || rb.bodyType != RigidbodyType2D.Dynamic) // frozen Placed = Kinematic → immune
+                    continue;
+
+                var p = rb.position;
+                var centre = new Vec2(p.x, p.y);
+                foreach (var zone in _flowZones)
+                {
+                    if (!zone.Region.Contains(centre))
+                        continue;
+                    var force = new Vector2(zone.Direction.X, zone.Direction.Y) * (zone.Acceleration * rb.mass);
+                    rb.AddForce(force);
+                }
+            }
+        }
 
         public void Reset()
         {
@@ -260,6 +311,7 @@ namespace Gameplay.Adapters
                     Object.Destroy(go);
             }
             _statics.Clear();
+            _flowZones = null; // TASK-097: drop the level's flow zones on teardown (OnLevelLoaded reinstalls them)
             _nextId = 1;
         }
 

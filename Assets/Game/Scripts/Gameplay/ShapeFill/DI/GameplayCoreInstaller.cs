@@ -74,6 +74,9 @@ namespace Gameplay.DI
             builder.RegisterEntryPoint<CameraFramingPresenter>();
             // Renders opt-in VISIBLE static geometry (TASK-031c); no-op for levels without visuals.
             builder.RegisterEntryPoint<StaticGeometryPresenter>();
+            // Renders directed air-flow zones (TASK-097); no-op for levels without AirZones. The headless SimRun
+            // bare-news the domain without this installer, so the sim sees flow only through the adapter (no view).
+            builder.RegisterEntryPoint<AirZonePresenter>();
             builder.RegisterEntryPoint<ShapeFillPresenter>();
             builder.RegisterEntryPoint<TargetPreviewPresenter>();
 
