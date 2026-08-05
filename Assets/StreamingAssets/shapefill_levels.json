@@ -533,6 +533,116 @@
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.75, "y": -0.3 }, { "x": 0.75, "y": -0.3 }, { "x": 0.75, "y": 0 }, { "x": -0.75, "y": 0 } ] }
       ]
+    },
+    {
+      "levelId": "mailbox",
+      "seed": 260,
+      "difficultyTier": 5,
+      "matchTolerance": { "posTol": 0.30, "angTol": 0.34906585 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "post",   "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.5, "height": 2.9 } },
+        { "kind": "flag",   "color": "#E23B3B", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.45 } },
+        { "kind": "letter", "color": "#F4C20D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+      ],
+      "target": {
+        "outline": [ { "x": -2.15, "y": -0.5 }, { "x": -0.6, "y": -0.5 }, { "x": -0.6, "y": 2.9 }, { "x": -2.15, "y": 2.9 } ],
+        "slots": [
+          { "kind": "post",   "position": { "x": -1.85, "y": 0.95 }, "rotation": 0 },
+          { "kind": "letter", "position": { "x": -1.10, "y": 1.50 }, "rotation": 0 },
+          { "kind": "flag",   "position": { "x": -1.85, "y": 2.65 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "post",   "startPosition": { "x": -1.85, "y": 5.5 }, "startRotation": 0 },
+        { "kind": "letter", "startPosition": { "x": -0.50, "y": 4.5 }, "startRotation": 0 },
+        { "kind": "flag",   "startPosition": { "x": -1.85, "y": 7.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.6, "y": -0.8 }, { "x":  0.8, "y": -0.8 }, { "x":  0.8, "y": -0.5 }, { "x": -2.6, "y": -0.5 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.55, "y": 1.25 }, { "x": -1.35, "y": 1.25 }, { "x": -1.35, "y": 5.5 }, { "x": -1.55, "y": 5.5 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.35, "y": 1.10 }, { "x": -0.85, "y": 1.10 }, { "x": -0.85, "y": 1.25 }, { "x": -1.35, "y": 1.25 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.35, "y": 5.5 }, { "x": -0.85, "y": 5.5 }, { "x": -0.85, "y": 5.7 }, { "x": -1.35, "y": 5.7 } ] }
+      ],
+      "airZones": [
+        { "region": { "min": { "x": -1.30, "y": 1.35 }, "max": { "x": -0.35, "y": 4.60 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 3.0, "color": "#CFE8F5" }
+      ]
+    },
+    {
+      "levelId": "birdhouse",
+      "seed": 261,
+      "difficultyTier": 7,
+      "matchTolerance": { "posTol": 0.31, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "pole", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.4, "height": 1.7 } },
+        { "kind": "body", "color": "#2E7CD6", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.7 } },
+        { "kind": "roof", "color": "#F2801D", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 0.6, "height": 0.25, "apexHeight": 0.3 } },
+        { "kind": "bird", "color": "#E84B8A", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+      ],
+      "target": {
+        "outline": [ { "x": 0.85, "y": -0.5 }, { "x": 2.45, "y": -0.5 }, { "x": 2.45, "y": 2.6 }, { "x": 0.85, "y": 2.6 } ],
+        "slots": [
+          { "kind": "pole", "position": { "x": 2.0,  "y": 0.35 }, "rotation": 0 },
+          { "kind": "body", "position": { "x": 2.0,  "y": 1.55 }, "rotation": 0 },
+          { "kind": "bird", "position": { "x": 1.15, "y": 1.60 }, "rotation": 0 },
+          { "kind": "roof", "position": { "x": 2.0,  "y": 2.05 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "pole", "startPosition": { "x": 2.0,  "y": 6.8 }, "startRotation": 0 },
+        { "kind": "body", "startPosition": { "x": 2.0,  "y": 3.4 }, "startRotation": 0 },
+        { "kind": "roof", "startPosition": { "x": 2.0,  "y": 5.1 }, "startRotation": 0 },
+        { "kind": "bird", "startPosition": { "x": 0.62, "y": 4.25 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.4, "y": -0.8 }, { "x": 3.0, "y": -0.8 }, { "x": 3.0, "y": -0.5 }, { "x": -0.4, "y": -0.5 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.4, "y": 1.35 }, { "x": 1.6, "y": 1.35 }, { "x": 1.6, "y": 4.6 }, { "x": 1.4, "y": 4.6 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.9, "y": 1.2 }, { "x": 1.4, "y": 1.2 }, { "x": 1.4, "y": 1.35 }, { "x": 0.9, "y": 1.35 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.0, "y": 4.45 }, { "x": 1.6, "y": 4.45 }, { "x": 1.6, "y": 4.6 }, { "x": 1.0, "y": 4.6 } ] }
+      ],
+      "airZones": [
+        { "region": { "min": { "x": -0.3, "y": 1.4 }, "max": { "x": 1.35, "y": 4.5 } }, "direction": { "x": 1, "y": 0 }, "acceleration": 3.0, "color": "#CFE8F5" }
+      ]
+    },
+    {
+      "levelId": "cliff_nest",
+      "seed": 263,
+      "difficultyTier": 6,
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "trunk",     "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.5, "height": 2.4 } },
+        { "kind": "canopy_lo", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.4 } },
+        { "kind": "canopy_hi", "color": "#12A5A5", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "gable", "width": 0.7, "height": 0.25, "apexHeight": 0.4 } },
+        { "kind": "chick",     "color": "#F4C20D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+      ],
+      "target": {
+        "outline": [ { "x": -2.4, "y": -0.5 }, { "x": -0.8, "y": -0.5 }, { "x": -0.8, "y": 3.0 }, { "x": -2.4, "y": 3.0 } ],
+        "slots": [
+          { "kind": "trunk",     "position": { "x": -2.0,   "y": 0.7 },  "rotation": 0 },
+          { "kind": "chick",     "position": { "x": -1.075, "y": 0.80 }, "rotation": 0 },
+          { "kind": "canopy_lo", "position": { "x": -2.0,   "y": 2.1 },  "rotation": 0 },
+          { "kind": "canopy_hi", "position": { "x": -2.0,   "y": 2.45 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "trunk",     "startPosition": { "x": -2.0,   "y": 6.7 }, "startRotation": 0 },
+        { "kind": "canopy_lo", "startPosition": { "x": -2.0,   "y": 4.4 }, "startRotation": 0 },
+        { "kind": "canopy_hi", "startPosition": { "x": -2.0,   "y": 5.9 }, "startRotation": 0 },
+        { "kind": "chick",     "startPosition": { "x": -0.575, "y": 3.30 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.0, "y": -0.8 }, { "x": 0.4, "y": -0.8 }, { "x": 0.4, "y": -0.5 }, { "x": -3.0, "y": -0.5 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.525, "y": 0.55 }, { "x": -1.325, "y": 0.55 }, { "x": -1.325, "y": 3.75 }, { "x": -1.525, "y": 3.75 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.325, "y": 0.40 }, { "x": -0.825, "y": 0.40 }, { "x": -0.825, "y": 0.55 }, { "x": -1.325, "y": 0.55 } ] }
+      ],
+      "airZones": [
+        { "region": { "min": { "x": -1.28, "y": 0.75 }, "max": { "x": -0.35, "y": 3.40 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 3.0, "color": "#CFE8F5" }
+      ]
     }
   ]
 }
