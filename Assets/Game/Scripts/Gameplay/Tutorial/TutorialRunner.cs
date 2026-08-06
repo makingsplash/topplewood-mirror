@@ -24,12 +24,15 @@ namespace Gameplay.Tutorial
     /// </summary>
     public sealed class TutorialRunner : IStartable, IDisposable
     {
-        // v1 plays the first tour only on the campaign's first level. Per-level tours keyed by LevelData.Id are
-        // a follow-up (the domain level model carries no id yet, RFC §Q4/§8).
+        // v1 plays the first tour only on the campaign's first level, identified by LevelId (TASK-112): the gate
+        // compares the LOADED level's LevelId to the id of the level at campaign position 0 (ILevelSource.Load(0)),
+        // NOT the persisted campaign pointer. Reading what is actually loaded keeps the gate coherent with a DEV
+        // level-jump — a non-destructive preview that intentionally never writes the pointer — so the tour can no
+        // longer surface on a jumped-to level. Per-level tours keyed by LevelId are a follow-up (RFC §Q4/§8).
         private const int FirstTutorialLevelIndex = 0;
 
         private readonly GameModel _model;
-        private readonly ICampaignStore _campaignStore;
+        private readonly ILevelSource _levelSource;
         private readonly ITutorialGate _gate;
         private readonly ITutorialProgressStore _progress;
         private readonly ITutorialAnalytics _analytics;
@@ -52,7 +55,7 @@ namespace Gameplay.Tutorial
 
         public TutorialRunner(
             GameModel model,
-            ICampaignStore campaignStore,
+            ILevelSource levelSource,
             ITutorialGate gate,
             ITutorialProgressStore progress,
             ITutorialAnalytics analytics,
@@ -63,7 +66,7 @@ namespace Gameplay.Tutorial
             TutorialDefinition definition)
         {
             _model = model;
-            _campaignStore = campaignStore;
+            _levelSource = levelSource;
             _gate = gate;
             _progress = progress;
             _analytics = analytics;
@@ -99,7 +102,8 @@ namespace Gameplay.Tutorial
         {
             return _gate.Enabled
                 && !_progress.IsCompleted(_definition.Id)
-                && _campaignStore.ReadLevelIndex() == FirstTutorialLevelIndex;
+                && _model.CurrentLevel != null
+                && _model.CurrentLevel.LevelId == _levelSource.Load(FirstTutorialLevelIndex).LevelId;
         }
 
         private void StartSequence()
