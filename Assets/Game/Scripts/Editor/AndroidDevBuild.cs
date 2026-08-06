@@ -41,6 +41,12 @@ namespace Game.Editor
             PlayerSettings.Android.useCustomKeystore = false;
             // Emit a single .apk, not an .aab — the device install path uses `adb install`.
             EditorUserBuildSettings.buildAppBundle = false;
+            // Dev builds ship ARM64 only: the project default (AndroidTargetArchitectures: 3 =
+            // ARMv7|ARM64) packs the IL2CPP engine twice and roughly doubles the APK (281 → 143 MB,
+            // TASK-119). armeabi-v7a matters only for 32-bit release devices, so dropping it from the
+            // release path would be a product decision the owner has not made — it is forced HERE, in
+            // the dev-only path, so ProjectSettings.asset (and the release build) keeps both archs.
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
             var options = new BuildPlayerOptions
             {
