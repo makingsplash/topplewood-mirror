@@ -25,6 +25,8 @@ namespace Gameplay.Adapters
         public void WriteLevelIndex(int levelIndex)
         {
             _currentLevel.Value = levelIndex + 1;                 // 1-based, same key as production
+            _currentLevel.ForceSave();                            // TASK-109 M-2: durable even when value==RealtimeValue
+                                                                  // (ShouldSave gate suppresses the setter, PlayerPrefsValue.cs:43-46)
             PlayerPrefsCollection.Instance?.SaveDataIfChanged();  // durable WIN checkpoint (RFC §8)
         }
     }

@@ -4,6 +4,7 @@ using DynamicDebugMenu;
 using DynamicDebugMenu.Elements;
 using Gameplay.Adapters;
 using Gameplay.Core;
+using Gameplay.Tutorial;
 using Tools.Constants;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -47,6 +48,8 @@ namespace Gameplay.Dev
         private readonly GameModel _model;
         private readonly CampaignProgressionController _campaign;
         private readonly ICampaignStore _store;
+        private readonly ITutorialProgressStore _tutorialProgress;
+        private readonly TutorialDefinition _tutorial;
 
         private DebugItemsConfig _config;
         private DDMMain _menu;
@@ -54,12 +57,15 @@ namespace Gameplay.Dev
         private GameObject _buttonCanvas;
 
         public BringupDebugMenuHost(
-            ILevelSource levelSource, GameModel model, CampaignProgressionController campaign, ICampaignStore store)
+            ILevelSource levelSource, GameModel model, CampaignProgressionController campaign,
+            ICampaignStore store, ITutorialProgressStore tutorialProgress, TutorialDefinition tutorial)
         {
             _levelSource = levelSource;
             _model = model;
             _campaign = campaign;
             _store = store;
+            _tutorialProgress = tutorialProgress;
+            _tutorial = tutorial;
         }
 
         private string CurrentLevelId => _model.CurrentLevel == null ? "<none>" : _model.CurrentLevel.LevelId;
@@ -198,11 +204,23 @@ namespace Gameplay.Dev
                         Jump(oneBased - 1);
                 });
 
-            // Reset progress reachable through the existing ICampaignStore seam (owner condition, TASK-047): persist
-            // the 0-based pointer to 0, then jump there live. No new seam method — the domain contract is untouched.
+            // Reset progress reachable through existing seams (owner condition, TASK-047 / fix TASK-109): persist
+            // the 0-based pointer to 0 AND forget the tutorial, then jump there live. No new seam method — both
+            // domain contracts (ICampaignStore, ITutorialProgressStore) are untouched.
             DDMButton.Create(context, "Reset progress", () =>
             {
+                // M-2: durable-reset the campaign pointer to the first level. WriteLevelIndex(0) is now durable even
+                // when the stored value already equals the default (PrefsCampaignStore.ForceSave, TASK-109 §3.2).
                 _store.WriteLevelIndex(0);
+
+                // M-1: reset FTUE via the existing dev seam — "forget the tutorial so it replays"
+                // (ITutorialProgressStore.cs:17-18), durable. tutorialId is the one canon tour id
+                // (TutorialDefinition.Id = "first_tutorial", GameplayCoreInstaller.cs:105 — the same id
+                // TutorialRunner.ShouldPlay reads). Resets the bringup Tutorial.Completed contour.
+                _tutorialProgress.Reset(_tutorial.Id);
+
+                // Reload level 0 in-place → GameModel.LevelLoaded → TutorialRunner.OnLevelLoaded → ShouldPlay
+                // (now IsCompleted==false, ReadLevelIndex()==0) → FTUE replays. No relaunch needed.
                 _campaign.DevJumpToLevel(0);
             });
         }
