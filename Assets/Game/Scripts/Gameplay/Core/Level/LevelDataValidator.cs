@@ -238,6 +238,15 @@ namespace Gameplay.Core
                 errors.Add("Target outline must have at least 3 vertices.");
             if (level.Target.Slots == null || level.Target.Slots.Count == 0)
                 errors.Add("Target has no slots.");
+            // D14 (TASK-118, owner directive 2026-08-06 "одна фигура — это не прикольно"): a target figure must be at
+            // least TWO slots — a single slot is "one piece in a pocket", not a readable silhouette. The count is on
+            // target.slots (the REQUIRED figure pieces), NOT total pieces: an expendable tool (D11) or preplaced
+            // furniture (§L11) is not part of the target and does not count toward the minimum. Hard ERROR, no phase-in
+            // (D12): the corpus is clean at rule introduction (lever_lid, the sole violator, is fixed in this task), so
+            // failing load on a 1-slot level creates no debt. See level-authoring §D14.
+            else if (level.Target.Slots.Count < 2)
+                errors.Add($"Target has {level.Target.Slots.Count} slot(s); a target figure needs at least 2 " +
+                           "(D14: одна фигура — это не прикольно — a single slot is not a readable silhouette).");
         }
 
         private static void ValidatePieces(LevelData level, List<string> errors)
