@@ -2,6 +2,7 @@ using Gameplay.Adapters;
 using Gameplay.Core;
 using Gameplay.Core.Adapters;
 using Gameplay.Core.Mechanic;
+using Gameplay.PlayScreen;
 using Gameplay.Tutorial;
 using Gameplay.View;
 using VContainer;
@@ -61,12 +62,16 @@ namespace Gameplay.DI
             builder.RegisterEntryPoint<GameControllerRunner>();
             // After the runner loads level 0, this resumes the persisted campaign index and drives WIN→next /
             // LOSS→retry reloads (TASK-009). Registered before the presenters so they render the resumed level.
+            // .As<ICampaignRestart>() exposes the play-screen restart seam (TASK-116) — the same singleton, so
+            // the Restart button reloads through the existing index owner. (RegisterEntryPoint's
+            // AsImplementedInterfaces already covers it; kept explicit at the registration site for intent.)
+            // ILevelResolutionFlow is bound by the hosting scope, not here (context-dependent, like ICampaignStore).
 #if GPIE_DEVELOPMENT
             // .AsSelf() also makes the same singleton resolvable by concrete type so the dev level-switch cheat
             // (TASK-011) can inject it and drive DevJumpToLevel. Player builds keep interface-only registration.
-            builder.RegisterEntryPoint<CampaignProgressionController>().AsSelf();
+            builder.RegisterEntryPoint<CampaignProgressionController>().AsSelf().As<ICampaignRestart>();
 #else
-            builder.RegisterEntryPoint<CampaignProgressionController>();
+            builder.RegisterEntryPoint<CampaignProgressionController>().As<ICampaignRestart>();
 #endif
             // Frames Camera.main to the level content (TASK-009, RFC 07 §1) so tall levels (L5) fit on screen
             // and every piece is tappable. Registered BEFORE TargetPreviewPresenter, which anchors to the

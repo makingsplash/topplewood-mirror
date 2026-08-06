@@ -1,5 +1,6 @@
 using System;
 using Gameplay.Core;
+using Gameplay.PlayScreen;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -14,25 +15,35 @@ namespace Gameplay.Adapters
     /// the mechanic's LevelLoaded handler already tears down + respawns, so no extra teardown is needed.
     /// In-level progress is deliberately NOT restored (ticket: kill mid-level = level from scratch); only the
     /// level number is persisted.
+    ///
+    /// TASK-116: this stays the single <c>LevelResolved</c> subscriber and the sole index/persist/reload owner,
+    /// but no longer transitions inline — it hands its transition to <see cref="ILevelResolutionFlow"/> as a
+    /// callback and the flow decides *when* to run it (prod: immediately, bit-for-bit the old behaviour; bringup:
+    /// after the WIN/LOSE banner + 2s hold). The domain never sees the flow. Also implements
+    /// <see cref="ICampaignRestart"/> so the play-screen Restart button reuses this same reset-in-place reload
+    /// (no second index); restart is neutral — it does not resolve a loss or persist the pointer.
     /// </summary>
-    public sealed class CampaignProgressionController : IStartable, IDisposable
+    public sealed class CampaignProgressionController : IStartable, IDisposable, ICampaignRestart
     {
         private readonly GameModel _model;
         private readonly GameController _controller;
         private readonly ILevelSource _levelSource;
         private readonly ICampaignStore _store;
+        private readonly ILevelResolutionFlow _resolutionFlow;
 
         private IDisposable _resolvedSubscription;
         private int _index;
         private bool _completed;
 
         public CampaignProgressionController(
-            GameModel model, GameController controller, ILevelSource levelSource, ICampaignStore store)
+            GameModel model, GameController controller, ILevelSource levelSource, ICampaignStore store,
+            ILevelResolutionFlow resolutionFlow)
         {
             _model = model;
             _controller = controller;
             _levelSource = levelSource;
             _store = store;
+            _resolutionFlow = resolutionFlow;
         }
 
         public void Start()
@@ -50,7 +61,14 @@ namespace Gameplay.Adapters
             _resolvedSubscription = _model.LevelResolved.Subscribe(_ => OnLevelResolved());
         }
 
+        // Hand the transition to the flow instead of running it inline (TASK-116): the flow calls ApplyResolution
+        // back when it decides the level should actually change (prod: now; bringup: after the banner + hold).
         private void OnLevelResolved()
+            => _resolutionFlow.Present(_model.Outcome.CurrentValue, ApplyResolution);
+
+        // The actual transition — unchanged from the pre-TASK-116 inline body. Reads phase live at transition
+        // time; nothing re-resolves during the hold, so Won/Lost is stable.
+        private void ApplyResolution()
         {
             if (_model.CurrentPhase != GamePhase.Won)
             {
@@ -76,6 +94,14 @@ namespace Gameplay.Adapters
                 Debug.Log("[ShapeFill] CAMPAIGN COMPLETE");
             }
         }
+
+        /// <summary>
+        /// <see cref="ICampaignRestart"/> — restart the current level for the play-screen Restart button
+        /// (TASK-116, Q3). Reuses the reset-in-place reload at the current index (the same path <see cref="Start"/>
+        /// and the dev jump use), so there is no second index. Neutral for the domain: does NOT call
+        /// <c>Resolve(Lost)</c>, is not counted as a loss/attempt, and does not persist the pointer.
+        /// </summary>
+        public void ReloadCurrent() => _controller.ReloadLevel(_index);
 
         private int Clamp(int index)
         {
