@@ -40,5 +40,27 @@ namespace Gameplay.View
         /// the mini preview is the primary reference; the ghost is an optional FTUE/A/B aid.
         /// </summary>
         public bool ShowOnFieldGhost = false;
+
+        /// <summary>
+        /// Show a white square backdrop behind the preview figure (TASK-110), so the silhouette reads
+        /// apart from the screen background. Default ON. Lives inside the preview root, so it inherits the
+        /// band anchor + auto-fit scale; the auto-fit denominator switches to the square side when enabled.
+        /// </summary>
+        public bool BackdropEnabled = true;
+
+        /// <summary>
+        /// Hex colour of the backdrop (TASK-110), e.g. "#FFFFFF". Parsed via ColorUtility.TryParseHtmlString
+        /// (invalid ⇒ white), consistent with how piece/static colours arrive as hex from data. Rendered
+        /// OPAQUE through <see cref="BlockMaterial.Shared"/> — the alpha channel is NOT blended
+        /// (translucency is a separate translucent-material path, tracked as tech-debt).
+        /// </summary>
+        public string BackdropColorHex = "#FFFFFF";
+
+        /// <summary>
+        /// Padding (in the figure's local units) from the figure bbox to the square edge (TASK-110):
+        /// side = max(figureSize.x, figureSize.y) + 2·BackdropPadding. Starting value — UNVERIFIED,
+        /// tuned by playtest/balancer alongside <see cref="Scale"/>.
+        /// </summary>
+        public float BackdropPadding = 0.35f;
     }
 }

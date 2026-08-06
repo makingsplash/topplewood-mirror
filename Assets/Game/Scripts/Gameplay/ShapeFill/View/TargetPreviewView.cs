@@ -10,10 +10,17 @@ namespace Gameplay.View
     /// (<see cref="TargetPreviewConfig.Scale"/>) and anchored to a camera viewport point above the field.
     /// Pure static reference — no collisions, no physics tick, not in the save snapshot. The domain never
     /// references it, so headless simulation is unaffected.
+    /// A white square backdrop (TASK-110, <see cref="TargetPreviewConfig.BackdropEnabled"/>) is drawn behind
+    /// the silhouette so it reads apart from the screen background; it lives inside this preview root, so it
+    /// shares the band anchor and auto-fit scale and adds nothing to physics/save/poseHash.
     /// </summary>
     public sealed class TargetPreviewView : MonoBehaviour
     {
         private static readonly Color DefaultColor = new Color(0.29f, 0.56f, 0.89f); // blue, mirrors PieceView
+
+        // Local +z nudge of the backdrop so it renders behind the slot meshes (opaque depth-order, same trick
+        // StaticGeometryView uses). Kept a private const — the ticket asked for colour/alpha/padding config, not z.
+        private const float BackdropZOffset = 0.1f;
 
         public void Initialize(
             TargetFigure target,
@@ -26,6 +33,11 @@ namespace Gameplay.View
                 return;
 
             ComputeExtent(target, out var figureCenter, out var figureSize);
+
+            // TASK-110: the white square backdrop side. max-axis (a square, not the bbox rectangle) + padding.
+            // S ≥ each figure axis, so switching the auto-fit denominator to it only shrinks scale (Scale stays
+            // the ceiling), and the whole square is guaranteed inside the reserved band on every aspect.
+            var backdropSide = Mathf.Max(figureSize.x, figureSize.y) + 2f * config.BackdropPadding;
 
             var t = transform;
             if (camera != null)
@@ -47,9 +59,15 @@ namespace Gameplay.View
                 var bandWorldH = band * 2f * orthoSize;
                 var bandWorldW = 2f * orthoSize * aspect;
                 const float pad = 0.85f; // keep the card off the band edges
+                // With the backdrop on, fit the SQUARE (S×S) into the band, not the figure bbox: the square is
+                // wider than the bbox on the short axis, so fitting the bbox would let the square spill out of
+                // the band on non-square figures (Готово №2). S ≥ each axis ⇒ fit only decreases (Scale ceiling
+                // intact). Backdrop off ⇒ the legacy figure-bbox path is unchanged (no regression).
+                var fitExtentX = config.BackdropEnabled ? backdropSide : figureSize.x;
+                var fitExtentY = config.BackdropEnabled ? backdropSide : figureSize.y;
                 var fit = Mathf.Min(
-                    bandWorldW * pad / Mathf.Max(figureSize.x, 1e-3f),
-                    bandWorldH * pad / Mathf.Max(figureSize.y, 1e-3f));
+                    bandWorldW * pad / Mathf.Max(fitExtentX, 1e-3f),
+                    bandWorldH * pad / Mathf.Max(fitExtentY, 1e-3f));
                 var scale = Mathf.Clamp(Mathf.Min(config.Scale, fit), config.MinScale, config.Scale);
                 t.localScale = Vector3.one * scale;
             }
@@ -59,6 +77,12 @@ namespace Gameplay.View
                 t.position = new Vector3(0f, 0f, config.ZPlane);
                 t.localScale = Vector3.one * config.Scale;
             }
+
+            // TASK-110: white square backdrop, created FIRST (before the slots) at a small +z nudge so it draws
+            // BEHIND the slot meshes (camera looks along +Z ⇒ larger z = farther). The whole preview root sits at
+            // ZPlane = -0.5, so the backdrop stays in front of the field and background, behind the silhouette.
+            if (config.BackdropEnabled)
+                BuildBackdrop(t, backdropSide, config);
 
             foreach (var slot in target.Slots)
             {
@@ -92,6 +116,48 @@ namespace Gameplay.View
                 mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
                 renderer.SetPropertyBlock(mpb);
             }
+        }
+
+        /// <summary>
+        /// TASK-110: build the white square backdrop as a child of the preview root, centred on the figure
+        /// (already at local (0,0)), one axis long: <paramref name="side"/> = max-axis + 2·padding. Rendered
+        /// OPAQUE via the shared block material (colour from <see cref="TargetPreviewConfig.BackdropColorHex"/>,
+        /// alpha forced to 1 — the opaque path does not blend alpha). Same mesh triangulation as the pieces.
+        /// </summary>
+        private static void BuildBackdrop(Transform parent, float side, TargetPreviewConfig config)
+        {
+            var half = side * 0.5f;
+            var outline = new[]
+            {
+                new Vec2(-half, -half),
+                new Vec2(half, -half),
+                new Vec2(half, half),
+                new Vec2(-half, half),
+            };
+
+            var backdrop = new GameObject("PreviewBackdrop");
+            var backdropTransform = backdrop.transform;
+            backdropTransform.SetParent(parent, false);
+            backdropTransform.localPosition = new Vector3(0f, 0f, BackdropZOffset);
+
+            var meshFilter = backdrop.AddComponent<MeshFilter>();
+            meshFilter.mesh = PieceMeshBuilder.Build(outline);
+
+            var renderer = backdrop.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = BlockMaterial.Shared;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+
+            var color = Color.white;
+            if (!string.IsNullOrEmpty(config.BackdropColorHex)
+                && ColorUtility.TryParseHtmlString(config.BackdropColorHex, out var parsed))
+                color = parsed;
+            color.a = 1f; // opaque material — alpha is not blended (translucency is tracked as tech-debt).
+
+            var mpb = new MaterialPropertyBlock();
+            mpb.SetColor(BlockMaterial.ColorProperty, color);
+            mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
+            renderer.SetPropertyBlock(mpb);
         }
 
         /// <summary>
