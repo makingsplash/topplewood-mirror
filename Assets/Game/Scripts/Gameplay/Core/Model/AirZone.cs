@@ -23,12 +23,20 @@ namespace Gameplay.Core
         /// <summary>Optional "#RRGGBB" fill for the visible zone mesh; null/empty → the view's default. View-only.</summary>
         public readonly string Color;
 
-        public AirZone(Rect region, Vec2 direction, float acceleration, string color)
+        /// <summary>TASK-107: opt-out of the hover-guard for THIS zone. false (default) ⇒ the validator forbids an
+        /// up-flow whose Direction.Y·Acceleration ≥ |gravity| (metastable hover → Timeout). true ⇒ that ONE check is
+        /// skipped so a real launcher may lift a piece — the burden of proving the level still reaches rest moves from
+        /// the static guard to the sim gate (§L(air) Rule 4: restReached, !timedOut, lostPieces=0, single poseHash R≥5).
+        /// The physics adapter (ApplyFlow) never reads this — it changes validation only, not the force.</summary>
+        public readonly bool BypassHoverGuard;
+
+        public AirZone(Rect region, Vec2 direction, float acceleration, string color, bool bypassHoverGuard = false)
         {
             Region = region;
             Direction = direction;
             Acceleration = acceleration;
             Color = color;
+            BypassHoverGuard = bypassHoverGuard;
         }
     }
 }
