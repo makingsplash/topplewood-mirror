@@ -83,8 +83,9 @@ namespace Gameplay.DI
             // Tutorial system (TASK-049, step-by-step TASK-078) — context-INDEPENDENT parts only: the reentrant
             // input gate consumed by the input decorator, the real ring/finger overlay view (TutorialView), the
             // tour definition + its composite AssembleInOrderStep, and the runner entry point (registered AFTER
-            // CampaignProgressionController so ReadLevelIndex is already
-            // resumed and the resumed level is loaded). The context-DEPENDENT seams (progress store / gate /
+            // CampaignProgressionController so the resumed level is already loaded into GameModel.CurrentLevel by the
+            // time the runner starts — TASK-112 gates the tour on CurrentLevel.LevelId, not on ReadLevelIndex, so the
+            // ordering requirement stands and is now load-order, not pointer-resume). The context-DEPENDENT seams (progress store / gate /
             // analytics) and the input decorator itself are bound by the hosting scope — exactly like
             // IGameplayInputSource / ICampaignStore (RFC §4). Like the dev cheat, tutorial IMPLEMENTATIONS are
             // NOT registered here. The headless SimRun builds the domain with bare `new`, so it never creates
