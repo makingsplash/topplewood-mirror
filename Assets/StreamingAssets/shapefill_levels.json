@@ -2183,18 +2183,33 @@
       },
       "pieceTypes": [
         {
-          "color": "#4CAF50",
-          "kind": "ball",
-          "symmetryOrder": 24,
+          "color": "#EFD9A1",
+          "kind": "stem",
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
             "restitution": 0.05
           },
           "shape": {
-            "primitive": "circle",
-            "radius": 0.5,
-            "segments": 24
+            "primitive": "box",
+            "width": 0.9,
+            "height": 1.1
+          }
+        },
+        {
+          "color": "#D64541",
+          "kind": "cap",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "halfdisc",
+            "radius": 0.7,
+            "segments": 7
           }
         },
         {
@@ -2231,28 +2246,64 @@
       "target": {
         "outline": [
           {
-            "x": -2.5,
-            "y": 0.5
+            "x": -2.45,
+            "y": 0.6
           },
           {
-            "x": -1.5,
-            "y": 0.5
+            "x": -1.55,
+            "y": 0.6
           },
           {
-            "x": -1.5,
-            "y": 1.5
+            "x": -1.55,
+            "y": 1.7
           },
           {
-            "x": -2.5,
-            "y": 1.5
+            "x": -1.3,
+            "y": 1.7
+          },
+          {
+            "x": -1.3,
+            "y": 2.05
+          },
+          {
+            "x": -1.65,
+            "y": 2.38
+          },
+          {
+            "x": -2.0,
+            "y": 2.42
+          },
+          {
+            "x": -2.35,
+            "y": 2.38
+          },
+          {
+            "x": -2.7,
+            "y": 2.05
+          },
+          {
+            "x": -2.7,
+            "y": 1.7
+          },
+          {
+            "x": -2.45,
+            "y": 1.7
           }
         ],
         "slots": [
           {
-            "kind": "ball",
+            "kind": "stem",
             "position": {
               "x": -2.0,
-              "y": 1.0
+              "y": 1.15
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cap",
+            "position": {
+              "x": -2.0,
+              "y": 1.7
             },
             "rotation": 0
           }
@@ -2278,10 +2329,18 @@
           "expendable": true
         },
         {
-          "kind": "ball",
+          "kind": "stem",
           "startPosition": {
             "x": -2.0,
-            "y": 6.5
+            "y": 5.5
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cap",
+          "startPosition": {
+            "x": -2.0,
+            "y": 7.5
           },
           "startRotation": 0
         }
