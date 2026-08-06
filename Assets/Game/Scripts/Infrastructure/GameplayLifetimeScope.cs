@@ -3,6 +3,7 @@ using DataStorage;
 using Gameplay.Adapters;
 using Gameplay.Core;
 using Gameplay.DI;
+using Gameplay.PlayScreen;
 using Gameplay.Sequence.DI;
 using Gameplay.Tutorial;
 using Services;
@@ -60,6 +61,14 @@ namespace Game.Code.Infrastructure
             // lifecycle prefs-flush (pause/focus/quit → SaveDataIfChanged).
             builder.Register<ICampaignStore, MetaCampaignStore>(Lifetime.Singleton);
             builder.RegisterEntryPoint<SaveManager>();
+
+            // TASK-116: CampaignProgressionController now requires an ILevelResolutionFlow; prod binds the
+            // immediate impl so the transition still happens the instant the level resolves — bit-for-bit the
+            // pre-TASK-116 behaviour, no play screen. Required for this scope to resolve at all (a double bind of
+            // the interface is disallowed, so a context-dependent single bind here is the only correct option).
+            // Loading.unity is untouched and this scope is not in any build today (LoadingGame TODO) → zero runtime
+            // effect on what ships; it is the behaviour-preserving DI symmetry for the seam.
+            builder.Register<ILevelResolutionFlow, ImmediateResolutionFlow>(Lifetime.Singleton);
 
             // Tutorial system prod impls (TASK-049): completion on the SDK-canon Data.Meta.CompletedTutorials,
             // gate on Data.Debug.DisableTutorial, funnel via the SayKit tutorial analytics. Context-independent

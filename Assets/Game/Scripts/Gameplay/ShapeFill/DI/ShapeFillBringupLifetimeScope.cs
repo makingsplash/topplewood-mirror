@@ -1,6 +1,8 @@
 using Gameplay.Adapters;
 using Gameplay.Core;
 using Gameplay.DI;
+using Gameplay.PlayScreen;
+using Gameplay.Sequence.DI;
 using Gameplay.Tutorial;
 using Infrastructure.ApplicationTriggers;
 using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
@@ -68,6 +70,21 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
         builder.Register<ITutorialProgressStore, PrefsTutorialProgressStore>(Lifetime.Singleton);
         builder.Register<ITutorialGate, BringupTutorialGate>(Lifetime.Singleton);
         builder.Register<ITutorialAnalytics, NullTutorialAnalytics>(Lifetime.Singleton);
+
+        // Play screen (TASK-116): the sequence layer is context-dependent — prod raises SequenceInstaller in
+        // GameplayLifetimeScope, so bringup (the only path built into the APK) must raise its own copy or
+        // ISequenceFactory is unresolvable. On top of it: the bringup (sequenced) ILevelResolutionFlow, the
+        // procedural WIN/LOSE banner view, its config, the busy coordinator, and the always-on Restart button.
+        // The campaign controller now drives its transition through ILevelResolutionFlow (bit-for-bit the old
+        // behaviour is the prod ImmediateResolutionFlow; here it plays banner + 2s hold first). Registered before
+        // the dev DDM host: EventSystem ownership is order-independent by construction (idempotent guard in
+        // RestartButtonPresenter + BringupDebugMenuHost), so this order is convenience, not a load-bearing invariant.
+        new SequenceInstaller().Install(builder);
+        builder.RegisterInstance(new PlayScreenConfig());
+        builder.Register<PlayScreenInteraction>(Lifetime.Singleton);
+        builder.Register<IPlayScreenView, PlayScreenView>(Lifetime.Singleton);
+        builder.Register<ILevelResolutionFlow, SequencedResolutionFlow>(Lifetime.Singleton);
+        builder.RegisterEntryPoint<RestartButtonPresenter>();
 
 #if GPIE_DEVELOPMENT
         // Dev/QA level-switch cheat (TASK-047): the reachable SayKit DynamicDebugMenu UI, hosted inside this
