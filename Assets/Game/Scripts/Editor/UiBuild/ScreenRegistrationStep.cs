@@ -70,7 +70,7 @@ namespace Game.Editor.UiBuild
             }
             EditorUtility.SetDirty(settings);
 
-            RegenerateScreenNames(ctx, group);
+            RegenerateScreenNames(ctx, group, spec.Name, address);
         }
 
         /// <summary>
@@ -84,10 +84,16 @@ namespace Game.Editor.UiBuild
         /// уронила бы компиляцию проекта. Удаление мёртвых констант — отдельная осознанная уборка,
         /// а не побочный эффект сборки попапа.
         ///
+        /// Константа ТЕКУЩЕГО экрана (`currentName`/`currentAddress`) вносится напрямую из `Run()`,
+        /// а НЕ через повторное сканирование группы: свежесозданная `CreateOrMoveEntry`-запись не
+        /// видна `group.GatherAllAssets` в том же синхронном билде (наблюдалось «0 из группы»),
+        /// поэтому новый экран иначе не попадал бы в файл с первого билда. Сканирование группы
+        /// остаётся как источник для остальных, уже осевших экранов.
+        ///
         /// Пишем только при реальном изменении: каждая запись .cs = рекомпиляция + перезагрузка
         /// домена, а она обрывает прогон роли.
         /// </summary>
-        static void RegenerateScreenNames(UiBuildContext ctx, AddressableAssetGroup group)
+        static void RegenerateScreenNames(UiBuildContext ctx, AddressableAssetGroup group, string currentName, string currentAddress)
         {
             string filePath = FindScreenNamesFile();
             if (filePath == null)
@@ -115,6 +121,14 @@ namespace Game.Editor.UiBuild
                 fromGroup++;
             }
 
+            // Текущий экран — авторитетно и в обход сканирования группы (см. XML-док выше).
+            bool currentFromGroup = false;
+            if (!string.IsNullOrEmpty(currentName) && !string.IsNullOrEmpty(currentAddress))
+            {
+                currentFromGroup = names.ContainsKey(currentName) && names[currentName] == currentAddress;
+                names[currentName] = currentAddress;
+            }
+
             if (names.Count == 0)
             {
                 ctx.Report.Warn("ScreenNames", "в группе UI нет ни одного экрана и файл пуст — константы не тронуты");
@@ -134,7 +148,8 @@ namespace Game.Editor.UiBuild
             if (NormalizeNewlines(current) == NormalizeNewlines(next)) return;
 
             File.WriteAllText(filePath, next);
-            ctx.Report.Note($"обновил {filePath}: {names.Count} констант ({fromGroup} из группы Addressables, остальные сохранены) — дальше пойдёт рекомпиляция");
+            string currentSource = currentFromGroup ? "" : " + текущий экран напрямую";
+            ctx.Report.Note($"обновил {filePath}: {names.Count} констант ({fromGroup} из группы Addressables{currentSource}, остальные сохранены) — дальше пойдёт рекомпиляция");
             // Импорт откладываем: перезагрузка домена внутри прогона оборвала бы запись отчёта.
             string toImport = filePath;
             EditorApplication.delayCall += () => AssetDatabase.ImportAsset(toImport);
