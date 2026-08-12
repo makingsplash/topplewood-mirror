@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e34ffff950ae84bb49c8372fcb3b686e
+    m_Address: Screens/RestartPopup.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e97667c4b46c2ce41813f5261e1309ee
     m_Address: Canvas
     m_ReadOnly: 0
