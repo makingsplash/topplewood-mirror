@@ -1,0 +1,9 @@
+{
+  "tool": "uibuild",
+  "version": "0.1.0",
+  "displayName": "iliai UI Build",
+  "portability": "portable",
+  "description": "Переносимый компилятор UI: текстовая спека (screens/*.json) → UGUI-префаб, плюс рендер wireframe и скриншота для агентов. Ядро не знает ни одного имени проекта: проектная специфика входит через design/config.json и проектные behaviour-хэндлеры.",
+  "unity": "6000.0",
+  "portingNotes": "Перенос = скопировать папку Assets/UiBuild/ целиком + завести design/config.json под новый проект. Лежит в Assets, а НЕ в Packages, осознанно: embedded-пакет Unity не разрешает по AssetDatabase.Refresh (нужен фокус редактора или рестарт), и тула перестала бы проходить тот же компайл-гейт, которым студия проверяет весь остальной код. Подробности — docs/PORTING.md."
+}
