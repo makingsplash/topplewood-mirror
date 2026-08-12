@@ -84,15 +84,14 @@ namespace Iliai.UiBuild
                 stage.Dispose();
                 return null;
             }
-            // Экран растягиваем на «экран», компонент показываем как есть по центру.
-            if (instanceRect.sizeDelta.x >= stage.Width - 1 && instanceRect.sizeDelta.y >= stage.Height - 1)
-            {
-                instanceRect.anchorMin = Vector2.zero;
-                instanceRect.anchorMax = Vector2.one;
-                instanceRect.offsetMin = Vector2.zero;
-                instanceRect.offsetMax = Vector2.zero;
-            }
-            instanceRect.anchoredPosition = Vector2.zero;
+            // Анкеринг инстанса НЕ трогаем: что записано в префабе, то и рисуем.
+            // Раньше здесь по эвристике «размер ≈ reference» экран переанкеривался в stretch — и это
+            // МАСКИРОВАЛО дефект: картинка выглядела правильной, а рантайм-префаб оставался фиксированным
+            // боксом по центру канваса (показ идёт без ре-анкеринга). Рендер обязан показывать то, что
+            // будет в игре, иначе он не поверхность проверки, а её имитация.
+            // Компонент (не-stretch корень) ставим по центру — его в игре кладут в чужой контейнер.
+            bool stretched = instanceRect.anchorMin == Vector2.zero && instanceRect.anchorMax == Vector2.one;
+            if (!stretched) instanceRect.anchoredPosition = Vector2.zero;
 
             if (flat) Flatten(stage.Instance);
             LayoutRebuilder.ForceRebuildLayoutImmediate(instanceRect);

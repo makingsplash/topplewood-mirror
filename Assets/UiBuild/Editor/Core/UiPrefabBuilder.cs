@@ -118,14 +118,33 @@ namespace Iliai.UiBuild
         static void BuildRoot(UiSpec spec, UiBuildContext ctx, GameObject go)
         {
             var rect = Ensure<RectTransform>(go);
-            Vector2Int size = spec.Size ?? (spec.Kind == "screen" ? ctx.Config.ReferenceResolution : new Vector2Int(100, 100));
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = spec.Pivot;
             rect.anchoredPosition = Vector2.zero;
             rect.localScale = Vector3.one;
             rect.localRotation = Quaternion.identity;
-            rect.sizeDelta = new Vector2(size.x, size.y);
+
+            if (spec.Kind == "screen")
+            {
+                // Экран РАСТЯГИВАЕТСЯ на родителя, а не печётся фиксированным боксом reference-размера.
+                // Причина конкретная: показ идёт через `Addressables.InstantiateAsync(адрес, канвас)` БЕЗ
+                // ре-анкеринга — что записано в префабе, то и живёт на экране. Фиксированные 1080×1920 по
+                // центру означали бы, что на 1080×2400 затемнение не покрывает 480 px, а safe-area считает
+                // от 1920 вместо реальной высоты. Нашла роль ui-composer на первой же спеке; хуже того,
+                // рендерер это МАСКИРОВАЛ, переанкеривая инстанс только для картинки.
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+                if (spec.Size.HasValue)
+                    ctx.Report.Warn(spec.SourcePath, "'size' у kind: screen не применяется — экран растягивается на канвас. Оставь его как описание design-space или убери");
+            }
+            else
+            {
+                Vector2Int size = spec.Size ?? new Vector2Int(100, 100);
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.sizeDelta = new Vector2(size.x, size.y);
+            }
 
             ApplyFill(ctx, go, spec.Background, spec.SourcePath + ".background");
             AttachController(spec, ctx, go);
