@@ -53,6 +53,17 @@ namespace Infrastructure.Loading
 
         public async UniTask StartAsync(CancellationToken cancellationToken)
         {
+            // TASK-134 (owner 16:11): initialize SayKit HERE, at the very start of the boot — NOT from
+            // [RuntimeInitializeOnLoadMethod(BeforeSceneLoad)] as before. From BeforeSceneLoad the play-loop
+            // is not spinning yet and SayKit's editor bridge deadlocks the main thread on a blocking
+            // SKThreadService.RunOnMainThreadWithResult (the editor boot stall chased through this whole
+            // task). The prod studio project (hexa-sorter) calls SayKitInit.Init() from the loading scene's
+            // Awake with the attribute commented out; our loading entry point is this VContainer
+            // IAsyncStartable, so the Awake-equivalent earliest boot point is the top of StartAsync. The
+            // !SayKit.isInitialized guard mirrors the reference (idempotent if init already ran).
+            if (!SayKit.isInitialized)
+                SayKitInit.Init();
+
             InitializeGameSettings();
             SetupGameResources();
             LoadTechResources();
