@@ -175,36 +175,54 @@ namespace Infrastructure.Loading
 
 #if UNITY_EDITOR
         // Редакторный шорткат прод-бута (TASK-129). Плеер (#else выше) не тронут: на устройстве бут
-        // по-прежнему ждёт настоящий нативный init без таймаута. Здесь же ждём SayKit-состояния
-        // ограниченно; если за EditorSayKitInitTimeoutSeconds они не достигнуты — не тихий catch и не
-        // Debug.Log, а ГРОМКАЯ запись тем же наблюдаемым каналом _logService (ровно тот дефект молчания,
-        // который вскрыла эта задача), после чего бут продолжается на локальном конфиге. Настоящая
-        // причина неполного init — отсутствие своего app key, см. TASK-064.
+        // по-прежнему ждёт настоящий нативный init без таймаута. Здесь ждём EInitState.Done ОГРАНИЧЕННО —
+        // гоняем ожидание против фиксированного дедлайна UniTask.Delay через WhenAny, поэтому таймаут это
+        // ОБЫЧНАЯ ветка кода, а не путь через отмену/исключение: он срабатывает независимо от того, как
+        // UniTask прокидывает cancellation сквозь WaitUntil. Прежний вариант (linked CancellationTokenSource
+        // + CancelAfter, отмена → catch OperationCanceledException) эмпирически НЕ срабатывал — за 22 c при
+        // таймауте 10 c catch не исполнился ни разу (TASK-129, замер человека 11:06). Delay крутится на
+        // PlayerLoop по Realtime-часам (Stopwatch) и завершится, даже если init висит.
+        //
+        // Метод инструментирован на входе и в обеих ветках исхода: _logService — единственный канал,
+        // видимый в логе Unity (мост play-mode-логи не отдаёт), поэтому по этим записям человек локализует,
+        // где встаёт бут. Если после «did not reach» маркер «Load Configs finished» так и не появится —
+        // держит WhenAll кто-то из ресурс-загрузчиков (_resources), это отдельная находка, а не таймаут.
+        // Настоящая причина неполного init в редакторе — отсутствие своего app key, см. TASK-064.
         private const float EditorSayKitInitTimeoutSeconds = 10f;
 
         private async UniTask WaitForSayKitInitWithEditorTimeoutAsync(CancellationToken cancellationToken)
         {
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(TimeSpan.FromSeconds(EditorSayKitInitTimeoutSeconds));
-            var token = timeoutCts.Token;
+            var enter = DateTime.Now;
+            _logService.Log(
+                LogLevel.Info,
+                $"[{enter:T}.{enter.Millisecond.ToString()}] Waiting for SayKit init " +
+                $"(editor, max {EditorSayKitInitTimeoutSeconds}s), current state {SayKit.GetInitState}",
+                LogCategory.LoadLevel);
 
-            try
+            // Проигравшая ветка WhenAny не отменяется — осиротевший WaitUntil (если победит дедлайн)
+            // продолжит дешёвый поллинг до выхода из play-mode, где cancellationToken его снимет.
+            var initReached = UniTask.WaitUntil(
+                () => SayKit.GetInitState == EInitState.Done, cancellationToken: cancellationToken);
+            var deadline = UniTask.Delay(
+                TimeSpan.FromSeconds(EditorSayKitInitTimeoutSeconds),
+                DelayType.Realtime,
+                cancellationToken: cancellationToken);
+
+            var winnerIndex = await UniTask.WhenAny(initReached, deadline);
+
+            var done = DateTime.Now;
+            if (winnerIndex == 0)
             {
-                await UniTask.WhenAll(
-                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Platform, cancellationToken: token),
-                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.RemoteConfig, cancellationToken: token),
-                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Consent, cancellationToken: token),
-                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.IDFA, cancellationToken: token),
-                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Gdpr, cancellationToken: token),
-                    UniTask.WaitUntil(() => SayKit.GetInitState == EInitState.Done, cancellationToken: token));
+                _logService.Log(
+                    LogLevel.Info,
+                    $"[{done:T}.{done.Millisecond.ToString()}] SayKit init reached {SayKit.GetInitState}",
+                    LogCategory.LoadLevel);
             }
-            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+            else
             {
-                // Сработал наш таймаут, а не внешняя отмена (выход из play-mode) — её пропускаем наверх.
-                var time = DateTime.Now;
                 _logService.Log(
                     LogLevel.Warning,
-                    $"[{time:T}.{time.Millisecond.ToString()}] SayKit init did not reach EInitState.Done in " +
+                    $"[{done:T}.{done.Millisecond.ToString()}] SayKit init did not reach EInitState.Done in " +
                     $"{EditorSayKitInitTimeoutSeconds}s (stuck at {SayKit.GetInitState}). EDITOR-ONLY: boot continues on " +
                     "LOCAL config, without remote. Root cause is the missing own app key — see TASK-064. " +
                     "Player build is unaffected (waits for real native init, no timeout).",
