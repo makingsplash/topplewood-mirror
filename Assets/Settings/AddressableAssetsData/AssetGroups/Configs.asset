@@ -15,8 +15,88 @@ MonoBehaviour:
   m_GroupName: Configs
   m_GUID: 94f94ea77d1457a47901d2d60cece5e4
   m_SerializeEntries:
-  - m_GUID: 923447a186fe2d44d940ecc7635a72bb
-    m_Address: Configs
+  - m_GUID: 0a1fc0eff8952d447825fea444a9d1e8
+    m_Address: Configs/AnimationsConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d5a0f39f801d9549aa30cffdaf70047
+    m_Address: Configs/AudioConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a76f6d4c1efe5a14cbf9ef53d999bad2
+    m_Address: Configs/UiPrefabs.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6428fa7c56259442e93883912a647b99
+    m_Address: Configs/RateUsConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8aac53820236abc469e84656f3233671
+    m_Address: Configs/CoreConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ef31a14a73a0470f9909e5b6908d90a
+    m_Address: Configs/LogServiceConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0aea606b540784a0195416d282a36bb1
+    m_Address: Configs/MessagesConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa488a51ae7f341c984a0d8cae90a519
+    m_Address: Configs/StartConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1f19a549879648de8072e8655885ddf
+    m_Address: Configs/RewardedConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7031020a0c78241fea81c8165afb87ff
+    m_Address: Configs/HeartConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7043b23816b684fae97db5dc826cbab4
+    m_Address: Configs/InputConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ed99c46874c34867a14032f7b08de08
+    m_Address: Configs/NoAdsOfferConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fbc3531d79bd24776bef29b70540827a
+    m_Address: Configs/AssetPreloadConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 860d90889b2d503468b2e8ab71270b91
+    m_Address: Configs/PurchaseConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da5d25003aa45894b9a431d00db08949
+    m_Address: Configs/StoreVisualConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d456958a30a5b4785b368c97946e1705
+    m_Address: Configs/StoreConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3dc3f5d35381845a6aa57996e2557897
+    m_Address: Configs/StoreItemsConfig.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
