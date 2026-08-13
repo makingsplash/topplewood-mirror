@@ -61,19 +61,14 @@ namespace Infrastructure.Loading
             _behaviour = go.AddComponent<ProbeBehaviour>();
         }
 
-        private static void End()
+        // Сброс статики. Зовётся из OnDestroy пробника (единственная точка), чтобы разрушение объекта и
+        // очистка состояния были согласованы — иначе после teardown play-mode на застывшем loop'е статика
+        // осталась бы «running», и следующий Begin (без domain reload) не поднялся бы.
+        private static void Cleanup()
         {
-            if (!_running)
-                return;
-
             _running = false;
-            if (_behaviour != null)
-            {
-                UnityEngine.Object.Destroy(_behaviour.gameObject);
-                _behaviour = null;
-            }
-
             _logService = null;
+            _behaviour = null;
         }
 
         // Хартбит НА раннере UniTask. Каждое резюмирование Yield(Update) инкрементит счётчик:
@@ -93,8 +88,19 @@ namespace Infrastructure.Loading
         // Принтер на play-loop. Живёт весь play-сеанс, самоснимается на выходе из play-mode.
         private sealed class ProbeBehaviour : MonoBehaviour
         {
+            // Первые DenseFrameCount кадров печатаем КАЖДЫЙ (без секундного порога) — иначе «столл после
+            // ~3 кадров» неотличим от «печать просто ещё не дошла до 1-секундного порога» (грабля прошлого
+            // прогона: одна строка mbtick=1 и тишина). Дальше — раз в секунду, чтобы не заваливать лог.
+            private const int DenseFrameCount = 120;
+
+            private ILogService _log; // своя ссылка: к моменту OnDestroy статический _logService уже обнулён Cleanup
             private long _mbTick;
             private float _nextLog;
+
+            private void Awake()
+            {
+                _log = _logService;
+            }
 
             private void Update()
             {
@@ -102,23 +108,47 @@ namespace Infrastructure.Loading
 
                 if (!EditorApplication.isPlaying)
                 {
-                    End();
+                    // Штатный выход из play-mode: уничтожаем объект → сработает OnDestroy (лог + Cleanup).
+                    Destroy(gameObject);
                     return;
                 }
 
-                if (Time.realtimeSinceStartup < _nextLog)
+                if (_mbTick > DenseFrameCount && Time.realtimeSinceStartup < _nextLog)
                     return;
 
                 _nextLog = Time.realtimeSinceStartup + LogIntervalSeconds;
+                Print("loop-probe");
+            }
 
-                if (_logService == null)
+            // Разрешает ключевую неоднозначность (директива владельца 15:12): молчание в логе значит
+            // «play-loop встал» ТОЛЬКО если этой строки НЕТ. Если она есть — объект пробника уничтожен, и
+            // тишина после неё — не застывший loop, а мёртвый наблюдатель. mbtick/frame фиксируют ПОСЛЕДНИЙ
+            // кадр, на котором пробник был жив.
+            private void OnDestroy()
+            {
+                if (_log != null)
+                {
+                    var now = DateTime.Now;
+                    _log.Log(
+                        LogLevel.Warning,
+                        $"[{now:T}.{now.Millisecond.ToString()}] loop-probe: OnDestroy at mbtick={_mbTick.ToString()} " +
+                        $"frame={Time.frameCount.ToString()} (probe destroyed — silence AFTER this is NOT a frozen loop)",
+                        LogCategory.LoadLevel);
+                }
+
+                Cleanup();
+            }
+
+            private void Print(string tag)
+            {
+                if (_log == null)
                     return;
 
                 var injected = PlayerLoopHelper.IsInjectedUniTaskPlayerLoop();
                 var now = DateTime.Now;
-                _logService.Log(
+                _log.Log(
                     LogLevel.Info,
-                    $"[{now:T}.{now.Millisecond.ToString()}] loop-probe: injected={injected.ToString()} " +
+                    $"[{now:T}.{now.Millisecond.ToString()}] {tag}: injected={injected.ToString()} " +
                     $"utick={_uniTaskTick.ToString()} mbtick={_mbTick.ToString()} frame={Time.frameCount.ToString()}",
                     LogCategory.LoadLevel);
             }
