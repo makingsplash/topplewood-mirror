@@ -42,7 +42,9 @@ namespace Ui.Screens
 
         public void Close()
         {
-            Service.UI?.Hide(this);
+            // TASK-126: маскирующий `?.` убран. Геттер Service.UI теперь гарантирует не-null после бута
+            // или бросает — молчаливый no-op ("Close() ничего не делает"), стоивший нам TASK-120, устранён.
+            Service.UI.Hide(this);
         }
     }
 }

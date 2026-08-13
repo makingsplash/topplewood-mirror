@@ -11,7 +11,6 @@ using Services.Gameplay;
 using SGS.Services.Date_Time;
 using SGS.Services.Gameplay;
 using SGS.Services.Pools;
-using SGS.Services.Ui;
 using VContainer;
 using VContainer.Unity;
 using Game.Infrastructure;
@@ -84,7 +83,12 @@ namespace Game.Code.Infrastructure
         {
             builder.RegisterEntryPoint<Pool>();
 
-            builder.RegisterEntryPoint<UiService>().AsSelf();
+            // TASK-126: UiService здесь БОЛЬШЕ НЕ регистрируется. Эта строка (RegisterEntryPoint<UiService>().AsSelf())
+            // была инертна и вводила в заблуждение: Service.UI читает LocalServiceContainer, а не VContainer-граф,
+            // и UiService не реализует ни одного VContainer entry-point-интерфейса → его Init() отсюда не звался,
+            // Service.UI оставался null. UiService теперь app-level, поднимается на буте
+            // (LoadingGame.InitializeLocalServices через LocalServiceContainer). Прочие строки ниже —
+            // такой же осиротелый latent tech-debt, но их живого потребителя пока нет (вне scope TASK-126).
             builder.RegisterEntryPoint<GameplayInputScreenBlocker>();
 
             builder.RegisterEntryPoint<TimeScale>();

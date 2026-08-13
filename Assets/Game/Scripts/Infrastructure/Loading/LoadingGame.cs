@@ -13,7 +13,10 @@ using SGS.Configs;
 using SGS.Data;
 using SGS.Infrastructure.Loading;
 using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
+using SGS.Services.Containers;
 using SGS.Services.DebugLog;
+using SGS.Services.Gameplay;
+using SGS.Services.Ui;
 using Tools.Constants;
 using Tools.Debug;
 using Ui.Components.Message;
@@ -84,6 +87,10 @@ namespace Infrastructure.Loading
             RunBootStep("RemoteConfigUpdated", SayKitInit.RemoteConfigUpdated);
 
             RunBootStep("InitializeGlobalServices", InitializeGlobalServices);
+
+            // TASK-126: поднимаем app-level UI-скоуп ПРЯМО ЗДЕСЬ, на буте, а не за (незавершённой,
+            // TODO ниже) игровой сценой. Это единственная точка, где Service.UI начинает быть не-null.
+            RunBootStep("InitializeLocalServices", InitializeLocalServices);
 
             // TODO: load the new game's main scene here — BEFORE hiding the loading screen — e.g.:
             //     await _sceneLoader.LoadSceneByAddressableAsync(SceneInBuild.Game, _loadingScreen.Progress);
@@ -398,6 +405,35 @@ namespace Infrastructure.Loading
             // Устройство: фаза зовётся напрямую, без маркера и без try/catch — поведение плеера не меняется.
             step();
 #endif
+        }
+
+        // TASK-126: единственный app-lifetime bootstrap локального сервис-слоя. Service.UI читает
+        // ИМЕННО LocalServiceContainer (Service.cs) — НЕ VContainer-граф: RegisterEntryPoint<UiService>()
+        // в GameplayLifetimeScope клал сервис в другой контейнер, из которого Service.UI не читает (и был
+        // инертен — UiService не реализует ни одного VContainer entry-point-интерфейса), поэтому
+        // Service.UI всегда возвращал null. Мост — ровно та же форма, что GlobalService.Create
+        // (GlobalService.cs:23): Create() один раз + Register сервисов. UiService конструируется голым
+        // new (нет ctor-зависимостей); Register зовёт его Init() — это лишь взводит ленивый
+        // InitializeAsync, реальный Canvas инстанцируется на первом Show. Контейнер создаём РОВНО ОДИН
+        // РАЗ на app-lifetime: повторный Create() сделал бы DeInit старого инстанса и стёр реестр
+        // (LocalServiceContainer.cs) — поэтому пакетный per-level LevelController.Create (мёртвый путь,
+        // подклассов нет) сюда НЕ тащим.
+        //
+        // PauseService регистрируется ВМЕСТЕ с UiService не как scope-крип, а по необходимости: сам факт
+        // Create() делает Service.IsReady (== LocalServiceContainer.IsReady()) == true, а глобальный
+        // покадровый тикер GameTimerService (GlobalService, ServiceAddapter.cs) гейтится ровно этим флагом
+        // — `if (Service.IsReady && !Service.Pause.IsPaused)`. До TASK-126 контейнер не создавался, IsReady
+        // был false и гейт короткозамыкался; как только контейнер «готов», тикер начинает дёргать
+        // Service.Pause КАЖДЫЙ кадр — без регистрации PauseService это NRE на каждом Update/LateUpdate
+        // (поймано play-mode-прогоном этой задачи). Контракт «контейнер готов ⇒ Service.Pause резолвится»
+        // обязан держаться. PauseService — без ctor-зависимостей, Init() пустой. Прочие локальные сервисы
+        // (Pool/TimeScale/Messages/RewardedState) живого IsReady-гейтед потребителя пока НЕ имеют
+        // (единственный Service.IsReady в дереве — GameTimerService) → остаются tech-debt, вне scope.
+        private void InitializeLocalServices()
+        {
+            LocalServiceContainer.Create();
+            LocalServiceContainer.Register(new UiService());
+            LocalServiceContainer.Register(new PauseService());
         }
 
         private void InitializeGlobalServices()
