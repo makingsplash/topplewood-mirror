@@ -166,7 +166,7 @@ namespace Infrastructure.Loading
             await tasks.WhenAll(_loadingScreen.Progress, cancellationToken: cancellationToken);
         }
 
-        private static void InitializeGlobalServices()
+        private void InitializeGlobalServices()
         {
             GlobalService.Create();
 #if GPIE_DEVELOPMENT
@@ -176,6 +176,12 @@ namespace Infrastructure.Loading
             Data.Configs.Purchase.VerifySettings(Data.Configs.StoreVisual);
 #endif
 
+            // Мирроринг маркера старта (см. LoadResources) в тот же канал _logService/LogCategory.LoadLevel:
+            // это единственная запись «бут дошёл до конца», попадающая в лог Unity. Канал GlobalService.DebugLog
+            // (DebugLogType.ApplicationFlow) в лог Unity не пишет и годится только для внутриигрового оверлея —
+            // им нельзя наблюдать завершение бута ни человеку, ни play-mode проверке.
+            var time = DateTime.Now;
+            _logService.Log(LogLevel.Info, $"[{time:T}.{time.Millisecond.ToString()}] Load Configs finished", LogCategory.LoadLevel);
             GlobalService.DebugLog.Log("Load Configs finished", DebugLogType.ApplicationFlow);
         }
     }
