@@ -122,28 +122,37 @@ namespace Infrastructure.Loading
 
         private void SetupGameResources()
         {
-            _resources.Add(new AssetUniTaskAsyncLoader<AnimationsConfig>(ConfigPath.Animations, config => Data.Configs.Animations = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<AudioConfig>(ConfigPath.Audio, config => SayData.Configs.Audio = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<UiPrefabs>(ConfigPath.Ui, config => SayData.Configs.Ui = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<RateUsConfig>(ConfigPath.RateUs, config => Data.Configs.RateUsConfig = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<CoreConfig>(ConfigPath.Core, config => Data.Configs.Core = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<LogServiceConfig>(ConfigPath.LogServiceConfig, config => Data.Configs.LogServiceConfig = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<MessagesViewConfig>(ConfigPath.Messages, config => Data.Configs.MessagesConfig = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<StartConfig>(ConfigPath.Start, config => Data.Configs.Start = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<RewardedConfig>(ConfigPath.Rewarded, config => Data.Configs.RewardedConfig = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<HeartConfig>(ConfigPath.Heart, config => Data.Configs.HeartConfig = config));
+            AddResource<AnimationsConfig>(ConfigPath.Animations, config => Data.Configs.Animations = config);
+            AddResource<AudioConfig>(ConfigPath.Audio, config => SayData.Configs.Audio = config);
+            AddResource<UiPrefabs>(ConfigPath.Ui, config => SayData.Configs.Ui = config);
+            AddResource<RateUsConfig>(ConfigPath.RateUs, config => Data.Configs.RateUsConfig = config);
+            AddResource<CoreConfig>(ConfigPath.Core, config => Data.Configs.Core = config);
+            AddResource<LogServiceConfig>(ConfigPath.LogServiceConfig, config => Data.Configs.LogServiceConfig = config);
+            AddResource<MessagesViewConfig>(ConfigPath.Messages, config => Data.Configs.MessagesConfig = config);
+            AddResource<StartConfig>(ConfigPath.Start, config => Data.Configs.Start = config);
+            AddResource<RewardedConfig>(ConfigPath.Rewarded, config => Data.Configs.RewardedConfig = config);
+            AddResource<HeartConfig>(ConfigPath.Heart, config => Data.Configs.HeartConfig = config);
 
-            _resources.Add(new AssetUniTaskAsyncLoader<InputConfig>(ConfigPath.InputConfig, config => Data.Configs.InputConfig = config));
+            AddResource<InputConfig>(ConfigPath.InputConfig, config => Data.Configs.InputConfig = config);
 
-            _resources.Add(new AssetUniTaskAsyncLoader<NoAdsOfferConfig>(ConfigPath.NoAdsConfig, config => Data.Configs.NoAdsOfferConfig = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<AssetPreloadConfig>(ConfigPath.AssetPreloadConfig, config => Data.Configs.AssetPreloadConfig = config));
+            AddResource<NoAdsOfferConfig>(ConfigPath.NoAdsConfig, config => Data.Configs.NoAdsOfferConfig = config);
+            AddResource<AssetPreloadConfig>(ConfigPath.AssetPreloadConfig, config => Data.Configs.AssetPreloadConfig = config);
 
 #if SAYKIT_PURCHASING
-            _resources.Add(new AssetUniTaskAsyncLoader<PurchasesConfig>(ConfigPath.Purchase, config => Data.Configs.Purchase = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<StoreVisualConfig>(ConfigPath.StoreVisual, config => Data.Configs.StoreVisual = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<StoreConfig>(ConfigPath.StoreConfig, config => Data.Configs.StoreConfig = config));
-            _resources.Add(new AssetUniTaskAsyncLoader<StoreItemsConfig>(ConfigPath.StoreItemsConfig, config => Data.Configs.StoreItemsConfig = config));
+            AddResource<PurchasesConfig>(ConfigPath.Purchase, config => Data.Configs.Purchase = config);
+            AddResource<StoreVisualConfig>(ConfigPath.StoreVisual, config => Data.Configs.StoreVisual = config);
+            AddResource<StoreConfig>(ConfigPath.StoreConfig, config => Data.Configs.StoreConfig = config);
+            AddResource<StoreItemsConfig>(ConfigPath.StoreItemsConfig, config => Data.Configs.StoreItemsConfig = config);
 #endif
+        }
+
+        // Каждый загрузчик оборачивается проектной LoggingAssetLoader (TASK-134): пакетный
+        // AssetUniTaskAsyncloader не трогаем, а завершение каждого Load() логируем с его assetPath, чтобы
+        // висящий определялся по отсутствию своей строки "config loaded".
+        private void AddResource<T>(string assetPath, Action<T> assignAction) where T : UnityEngine.Object
+        {
+            var loader = new AssetUniTaskAsyncLoader<T>(assetPath, assignAction);
+            _resources.Add(new LoggingAssetLoader(loader, assetPath, _logService));
         }
 
         private async UniTask LoadResources(CancellationToken cancellationToken)
