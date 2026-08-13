@@ -6,36 +6,47 @@ using SGS.Infrastructure.Loading;
 namespace Infrastructure.Loading
 {
     // Проектная обёртка над пакетным IAssetUniTaskAsyncLoader (TASK-134). Пакет com.say.infrastructure
-    // не трогаем, поэтому точечная инструментация загрузчиков конфигов живёт здесь: по завершении Load()
-    // пишем строку с _assetPath в тот же канал _logService/LogCategory.LoadLevel, что и маркеры бута.
+    // не трогаем, поэтому точечная инструментация загрузчиков конфигов живёт здесь.
     //
-    // Диагностический контракт: висящий загрузчик определяется по ОТСУТСТВИЮ своей строки "config loaded".
-    // Все загрузчики стартуют синхронно и одновременно (LoadingGame.LoadResources), поэтому старт логировать
-    // незачем — сигналом является только завершение. Тот единственный, чья строка так и не появилась между
-    // "Load Configs start" и (не пришедшим) "Load Configs finished", и есть виновник вечного WhenAll.
+    // Диагностический контракт (уточнён по замеру 12:47:33): логируем И старт, И завершение каждого Load().
+    // Только пары «config load start» без «config loaded» отличают «Load() был вызван и не завершился» от
+    // «Load() вообще не вызван» — без старт-строки эти два случая в логе неразличимы. Плюс обёртка держит
+    // флаг IsCompleted, по которому call-site watchdog (LoadingGame) поimённо перечисляет зависшие загрузчики.
     internal sealed class LoggingAssetLoader : IAssetUniTaskAsyncLoader
     {
         private readonly IAssetUniTaskAsyncLoader _inner;
-        private readonly string _assetPath;
         private readonly ILogService _logService;
 
         public LoggingAssetLoader(IAssetUniTaskAsyncLoader inner, string assetPath, ILogService logService)
         {
             _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-            _assetPath = assetPath;
+            AssetPath = assetPath;
             _logService = logService ?? throw new ArgumentNullException(nameof(logService));
         }
+
+        public string AssetPath { get; }
+
+        // Выставляется ПОСЛЕ завершения _inner.Load(). Watchdog читает его, чтобы назвать висящих поимённо.
+        public bool IsCompleted { get; private set; }
 
         public float PercentComplete => _inner.PercentComplete;
 
         public async UniTask Load()
         {
+            Log("config load start");
+
             await _inner.Load();
 
+            IsCompleted = true;
+            Log("config loaded");
+        }
+
+        private void Log(string stage)
+        {
             var time = DateTime.Now;
             _logService.Log(
                 LogLevel.Info,
-                $"[{time:T}.{time.Millisecond.ToString()}] config loaded: {_assetPath}",
+                $"[{time:T}.{time.Millisecond.ToString()}] {stage}: {AssetPath}",
                 LogCategory.LoadLevel);
         }
     }

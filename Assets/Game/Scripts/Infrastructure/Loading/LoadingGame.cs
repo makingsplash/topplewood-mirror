@@ -147,8 +147,8 @@ namespace Infrastructure.Loading
         }
 
         // Каждый загрузчик оборачивается проектной LoggingAssetLoader (TASK-134): пакетный
-        // AssetUniTaskAsyncloader не трогаем, а завершение каждого Load() логируем с его assetPath, чтобы
-        // висящий определялся по отсутствию своей строки "config loaded".
+        // AssetUniTaskAsyncLoader не трогаем, а старт/завершение каждого Load() логируем с его assetPath,
+        // чтобы висящий определялся по паре «config load start» без «config loaded».
         private void AddResource<T>(string assetPath, Action<T> assignAction) where T : UnityEngine.Object
         {
             var loader = new AssetUniTaskAsyncLoader<T>(assetPath, assignAction);
@@ -166,6 +166,14 @@ namespace Infrastructure.Loading
                 tasks.Add(asyncLoader.Load());
 
 #if UNITY_EDITOR
+            // TASK-134: сторож висящей загрузки. Крутится ПАРАЛЛЕЛЬНО всему tasks.WhenAll ниже, поэтому
+            // покрывает то ожидание, которое реально висит, а не только цикл поллинга внутри WhenAll(progress).
+            // Отчёт идёт через _logService (тот же канал, что видимые маркеры бута), а не через Debug.LogWarning:
+            // Debug фильтруется filterLogType (см. InitializeGameSettings) и на прод-боте может быть срезан.
+            StartStuckLoaderWatchdog(cancellationToken).Forget();
+#endif
+
+#if UNITY_EDITOR
             // TASK-129: в редакторе SayKit ходит через SayKitBridgeEditor и без своего app key (TASK-064)
             // не доводит init до EInitState.Done — прод-бут висел бы здесь вечно. Ждём SayKit-состояния
             // ОГРАНИЧЕННО и, не дождавшись, продолжаем бут на локальном конфиге, ГРОМКО это объявив.
@@ -181,6 +189,42 @@ namespace Infrastructure.Loading
 
             await tasks.WhenAll(_loadingScreen.Progress, cancellationToken: cancellationToken);
         }
+
+#if UNITY_EDITOR
+        // Через N секунд, если tasks.WhenAll ещё висит, ГРОМКО перечисляем поимённо, какие загрузчики не
+        // завершились (LoggingAssetLoader.IsCompleted == false). Именно молчание превращало один висящий
+        // Addressables-загрузчик в вечное «загружается». Нормальный бут укладывается в ~1.5 c, порог с запасом.
+        // Ожидание НЕ прерываем: аборт = продолжить бут с незаданным конфигом → NRE ниже по стеку.
+        private const float StuckLoaderWatchdogSeconds = 12f;
+
+        private async UniTaskVoid StartStuckLoaderWatchdog(CancellationToken cancellationToken)
+        {
+            var canceled = await UniTask
+                .Delay(TimeSpan.FromSeconds(StuckLoaderWatchdogSeconds), DelayType.Realtime, cancellationToken: cancellationToken)
+                .SuppressCancellationThrow();
+
+            if (canceled)
+                return;
+
+            using var _ = ListPool<string>.Get(out var unfinished);
+            foreach (var resource in _resources)
+            {
+                if (resource is LoggingAssetLoader logging && !logging.IsCompleted)
+                    unfinished.Add(logging.AssetPath);
+            }
+
+            if (unfinished.Count == 0)
+                return; // все загрузчики завершились — бут просто идёт дальше, зависания нет
+
+            var time = DateTime.Now;
+            _logService.Log(
+                LogLevel.Warning,
+                $"[{time:T}.{time.Millisecond.ToString()}] Load Configs STUCK: " +
+                $"{unfinished.Count.ToString()}/{_resources.Count.ToString()} loader(s) still pending after " +
+                $"{StuckLoaderWatchdogSeconds.ToString()}s: {string.Join(", ", unfinished)}",
+                LogCategory.LoadLevel);
+        }
+#endif
 
 #if UNITY_EDITOR
         // Редакторный шорткат прод-бута (TASK-129). Плеер (#else выше) не тронут: на устройстве бут

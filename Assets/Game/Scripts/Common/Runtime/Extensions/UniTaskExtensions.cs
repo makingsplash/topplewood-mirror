@@ -9,14 +9,6 @@ namespace Common.Extensions
     {
         public static UniTask WhenAll(this IEnumerable<UniTask> tasks) =>
             UniTask.WhenAll(tasks);
-        
-#if UNITY_EDITOR
-        // TASK-134: молчание этого цикла превращало один висящий Addressables-загрузчик в вечное «загружается».
-        // В редакторе, если за N секунд остались Pending-таски, ГРОМКО (Warning) сообщаем сколько именно — так
-        // вечное ожидание перестаёт быть тихим. Идентичность зависшего таска здесь не видна (это анонимные
-        // UniTask), её даёт точечная инструментация call-site (см. LoggingAssetLoader в LoadingGame).
-        private const double WhenAllStuckWarningSeconds = 15d;
-#endif
 
         public static async UniTask WhenAll(this IEnumerable<UniTask> tasks, IProgress<float> progress, CancellationToken cancellationToken = default)
         {
@@ -24,11 +16,6 @@ namespace Common.Extensions
             using var __ = allTasks.ToPooledList(out var pendingTasks);
 
             var allTaskCount = allTasks.Count;
-
-#if UNITY_EDITOR
-            var startRealtime = UnityEngine.Time.realtimeSinceStartupAsDouble;
-            var stuckWarningEmitted = false;
-#endif
 
             while (pendingTasks.Count > 0)
             {
@@ -43,20 +30,6 @@ namespace Common.Extensions
                     }
                 }
 
-#if UNITY_EDITOR
-                if (!stuckWarningEmitted
-                    && pendingTasks.Count > 0
-                    && UnityEngine.Time.realtimeSinceStartupAsDouble - startRealtime >= WhenAllStuckWarningSeconds)
-                {
-                    stuckWarningEmitted = true;
-                    UnityEngine.Debug.LogWarning(
-                        $"[UniTaskExtensions.WhenAll] {pendingTasks.Count.ToString()}/{allTaskCount.ToString()} " +
-                        $"task(s) still Pending after {WhenAllStuckWarningSeconds.ToString()}s — this await will not " +
-                        "complete on its own. Identify the stuck one by the missing completion line in the log " +
-                        "(e.g. LoadingGame 'config loaded: <path>' markers).");
-                }
-#endif
-
                 await UniTask.Yield(cancellationToken);
             }
 
@@ -64,13 +37,13 @@ namespace Common.Extensions
             await UniTask.WhenAll(allTasks);
         }
 
-        public static UniTask.Awaiter GetAwaiter(this int milliseconds) => 
+        public static UniTask.Awaiter GetAwaiter(this int milliseconds) =>
             UniTask.Delay(milliseconds).GetAwaiter();
 
-        public static UniTask.Awaiter GetAwaiter(this float seconds) => 
+        public static UniTask.Awaiter GetAwaiter(this float seconds) =>
             UniTask.Delay(TimeSpan.FromSeconds(seconds)).GetAwaiter();
 
-        public static UniTask.Awaiter GetAwaiter(this double seconds) => 
+        public static UniTask.Awaiter GetAwaiter(this double seconds) =>
             UniTask.Delay(TimeSpan.FromSeconds(seconds)).GetAwaiter();
     }
 }
