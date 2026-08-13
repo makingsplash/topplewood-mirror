@@ -156,15 +156,62 @@ namespace Infrastructure.Loading
             foreach (var asyncLoader in _resources)
                 tasks.Add(asyncLoader.Load());
 
+#if UNITY_EDITOR
+            // TASK-129: в редакторе SayKit ходит через SayKitBridgeEditor и без своего app key (TASK-064)
+            // не доводит init до EInitState.Done — прод-бут висел бы здесь вечно. Ждём SayKit-состояния
+            // ОГРАНИЧЕННО и, не дождавшись, продолжаем бут на локальном конфиге, ГРОМКО это объявив.
+            tasks.Add(WaitForSayKitInitWithEditorTimeoutAsync(cancellationToken));
+#else
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Platform, cancellationToken: cancellationToken));
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.RemoteConfig, cancellationToken: cancellationToken));
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Consent, cancellationToken: cancellationToken));
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.IDFA, cancellationToken: cancellationToken));
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Gdpr, cancellationToken: cancellationToken));
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState == EInitState.Done, cancellationToken: cancellationToken));
+#endif
 
             await tasks.WhenAll(_loadingScreen.Progress, cancellationToken: cancellationToken);
         }
+
+#if UNITY_EDITOR
+        // Редакторный шорткат прод-бута (TASK-129). Плеер (#else выше) не тронут: на устройстве бут
+        // по-прежнему ждёт настоящий нативный init без таймаута. Здесь же ждём SayKit-состояния
+        // ограниченно; если за EditorSayKitInitTimeoutSeconds они не достигнуты — не тихий catch и не
+        // Debug.Log, а ГРОМКАЯ запись тем же наблюдаемым каналом _logService (ровно тот дефект молчания,
+        // который вскрыла эта задача), после чего бут продолжается на локальном конфиге. Настоящая
+        // причина неполного init — отсутствие своего app key, см. TASK-064.
+        private const float EditorSayKitInitTimeoutSeconds = 10f;
+
+        private async UniTask WaitForSayKitInitWithEditorTimeoutAsync(CancellationToken cancellationToken)
+        {
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(EditorSayKitInitTimeoutSeconds));
+            var token = timeoutCts.Token;
+
+            try
+            {
+                await UniTask.WhenAll(
+                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Platform, cancellationToken: token),
+                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.RemoteConfig, cancellationToken: token),
+                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Consent, cancellationToken: token),
+                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.IDFA, cancellationToken: token),
+                    UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Gdpr, cancellationToken: token),
+                    UniTask.WaitUntil(() => SayKit.GetInitState == EInitState.Done, cancellationToken: token));
+            }
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+            {
+                // Сработал наш таймаут, а не внешняя отмена (выход из play-mode) — её пропускаем наверх.
+                var time = DateTime.Now;
+                _logService.Log(
+                    LogLevel.Warning,
+                    $"[{time:T}.{time.Millisecond.ToString()}] SayKit init did not reach EInitState.Done in " +
+                    $"{EditorSayKitInitTimeoutSeconds}s (stuck at {SayKit.GetInitState}). EDITOR-ONLY: boot continues on " +
+                    "LOCAL config, without remote. Root cause is the missing own app key — see TASK-064. " +
+                    "Player build is unaffected (waits for real native init, no timeout).",
+                    LogCategory.LoadLevel);
+            }
+        }
+#endif
 
         private void InitializeGlobalServices()
         {
