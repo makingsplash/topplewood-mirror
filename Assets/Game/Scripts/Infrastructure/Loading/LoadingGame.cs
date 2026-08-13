@@ -74,12 +74,13 @@ namespace Infrastructure.Loading
             // по конфигам. Применяем его до выбора пресета, чтобы загрузить пресет,
             // выбранный ремоутом, а не локальным дефолтом.
             //
-            // TASK-134 (owner 15:38, п.4): в редакторе бут вставал уже ПОСЛЕ LoadResources — «Load Configs
-            // finished» не появлялся. Прогоняем оба хвостовых шага через RunBootStep: он именует фазу в
-            // логе (по её отсутствию видно, какая встала) и ТОЛЬКО В РЕДАКТОРЕ не даёт упавшей фазе тихо
-            // оборвать бут. Это не косметика: с заглушённым SayKit ремоут-конфиг пуст, а часть конфигов в
-            // редакторе может быть не разлита, отчего RemoteConfigUpdated (InitWithRemote по null-конфигу)
-            // кидает NRE — раньше он молча гасил бут до «finished». На устройстве (#else) поведение прежнее.
+            // TASK-134: прогоняем оба хвостовых шага бута через RunBootStep — он именует фазу в логе (по
+            // отсутствию её маркера видно, какая встала) и ТОЛЬКО В РЕДАКТОРЕ не даёт упавшей фазе тихо
+            // оборвать бут. Историческая ремарка: «бут вставал ПОСЛЕ LoadResources, finished не появлялся»
+            // (owner 15:38) оказалось артефактом лог-порога — маркеры Info гасились (owner 16:36); по факту
+            // хвост исполняется, оба boot step и finished в логе есть. Инструментация и editor-try/catch
+            // оставлены страховкой: RemoteConfigUpdated (InitWithRemote) может кинуть NRE, если ремоут-конфиг
+            // не разлит, и раньше это молча гасило бут — теперь названо Error'ом. Устройство (#else) — прежнее.
             RunBootStep("RemoteConfigUpdated", SayKitInit.RemoteConfigUpdated);
 
             RunBootStep("InitializeGlobalServices", InitializeGlobalServices);
@@ -178,13 +179,6 @@ namespace Infrastructure.Loading
             var time = DateTime.Now;
             _logService.Log(LogLevel.Info, $"[{time:T}.{time.Millisecond.ToString()}] Load Configs start", LogCategory.LoadLevel);
 
-#if UNITY_EDITOR
-            // TASK-134 (ВРЕМЕННО, диагностика — не фикс): раз в секунду печатать injected/utick/frame,
-            // чтобы на столле бута отличить «раннеры UniTask выпали» от «есть, но не тикают» от «живы,
-            // дело в провайдере». Самоснимается на выходе из play-mode. Удаляется прогоном фикса.
-            EditorBootLoopProbe.Begin(_logService);
-#endif
-
             await UniTask.Yield();
 
             using var _ = ListPool<UniTask>.Get(out var tasks);
@@ -197,10 +191,14 @@ namespace Infrastructure.Loading
             // ОГРАНИЧЕННО и, не дождавшись, продолжаем бут на локальном конфиге, ГРОМКО это объявив.
             tasks.Add(WaitForSayKitInitWithEditorTimeoutAsync(cancellationToken));
 
-            // TASK-134: и сами загрузчики конфигов в редакторе ждём ОГРАНИЧЕННО — Addressables-доставка
-            // в интерактивном редакторе молча умирает после ~4-5 операций (замеры владельца 12:47–13:40),
-            // tasks.WhenAll висел бы здесь вечно и бут не доходил до конца. По таймауту НЕ бросаем: называем
-            // зависшие загрузчики поимённо и продолжаем бут, чтобы уже загруженные конфиги были доступны.
+            // TASK-134: ограниченное ожидание загрузчиков в редакторе — СТРАХОВКА от зависшего бута, не фикс
+            // конкретного дефекта. По факту (замер владельца 16:32) все 13 конфигов грузятся за ~10 мс и бут
+            // доходит до конца; «мёртвой доставки Addressables после ~4-5 операций» НЕ существует — та картина
+            // была артефактом лог-порога (DevelopmentMinLevel=Warning гасил все Info-строки, см. п. ниже и
+            // LoggingAssetLoader). Настоящее зависание было в SayKit.init() из BeforeSceneLoad, блокировавшем
+            // главный поток; оно снято переносом init в начало StartAsync. Ожидание остаётся как дешёвый
+            // предохранитель: если какой-то загрузчик когда-нибудь зависнет, бут не встанет вечно — по
+            // таймауту НЕ бросаем, называем зависшие поимённо и продолжаем на уже загруженных конфигах.
             await WaitForResourcesWithEditorTimeoutAsync(tasks, cancellationToken);
 #else
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Platform, cancellationToken: cancellationToken));
@@ -257,9 +255,11 @@ namespace Infrastructure.Loading
             // врёт ли учёт или логирование теряет завершения. Теперь отчёт печатает ИМЕНА и completed, и
             // pending. Ключ к разночтению: в LoggingAssetLoader.Load() флаг IsCompleted и строка «config
             // loaded: <path>» стоят подряд без await между ними — атомарны. Значит completed-множество ЗДЕСЬ
-            // тождественно множеству строк «config loaded», которые код обязан был напечатать. Если отчёт
-            // называет 13 путей, а самостоятельных строк «config loaded» в логе меньше — теряет их ЛОГ (флаш
-            // на выходе из play-mode / переупорядочивание), учёт при этом честен. Список делает это проверяемым.
+            // тождественно множеству строк «config loaded», которые код обязан был напечатать. РАЗГАДКА
+            // (owner 16:36, замером): 9 недостающих строк не терялись — их молча гасил лог-порог
+            // (LogServiceConfig.DevelopmentMinLevel=Warning отбрасывал все Info на LoadLevel с момента
+            // загрузки пятого конфига). С порогом Info в логе видны все 13 «config loaded», учёт всегда был
+            // честен. Список completed/pending поимённо оставлен: он и делает такое разночтение проверяемым.
             using var pendingHandle = ListPool<string>.Get(out var pending);
             using var doneHandle = ListPool<string>.Get(out var completed);
             foreach (var resource in _resources)
@@ -301,23 +301,27 @@ namespace Infrastructure.Loading
 #endif
 
 #if UNITY_EDITOR
-        // Редакторный шорткат прод-бута (TASK-129). Плеер (#else выше) не тронут: на устройстве бут
-        // по-прежнему ждёт настоящий нативный init без таймаута. Здесь ждём EInitState.Done ОГРАНИЧЕННО —
-        // гоняем ожидание против фиксированного дедлайна UniTask.Delay через WhenAny, поэтому таймаут это
-        // ОБЫЧНАЯ ветка кода, а не путь через отмену/исключение: он срабатывает независимо от того, как
-        // UniTask прокидывает cancellation сквозь WaitUntil. Прежний вариант (linked CancellationTokenSource
-        // + CancelAfter, отмена → catch OperationCanceledException) эмпирически НЕ срабатывал — за 22 c при
-        // таймауте 10 c catch не исполнился ни разу (TASK-129, замер человека 11:06). Delay крутится на
-        // PlayerLoop по Realtime-часам (Stopwatch) и завершится, даже если init висит.
+        // Редакторное ограниченное ожидание SayKit init — СТРАХОВКА от зависшего бута (TASK-129/134). Плеер
+        // (#else выше) не тронут: на устройстве бут по-прежнему ждёт настоящий нативный init без таймаута.
+        // По факту (замер владельца 16:32, после переноса init из BeforeSceneLoad в начало StartAsync) SayKit
+        // в редакторе доходит до EInitState.Done за ~200 мс и таймаут НЕ срабатывает — «SayKit в редакторе
+        // без своего app key никогда не доходит до Done» больше НЕ верно (эндпоинт с пустым ключом отвечает
+        // 404 за 0.2 c, init всё равно доезжает до Done). Ожидание оставлено предохранителем: если init
+        // когда-нибудь зависнет, бут не встанет вечно.
         //
-        // Метод инструментирован на входе и в обеих ветках исхода: _logService — единственный канал,
-        // видимый в логе Unity (мост play-mode-логи не отдаёт), поэтому по этим записям человек локализует,
-        // где встаёт бут. Если после «did not reach» маркер «Load Configs finished» так и не появится —
-        // держит WhenAll кто-то из ресурс-загрузчиков (_resources), это отдельная находка, а не таймаут.
-        // Настоящая причина неполного init в редакторе — отсутствие своего app key, см. TASK-064.
-        // 3s (TASK-134, owner 15:38): with the SayKit runtime stubbed in-editor (SayKitInit,
-        // SAYKIT_SMOKE_DISABLE_RUNTIME) GetInitState stays None and never advances, so this wait ALWAYS
-        // times out — no reason to make every play-mode launch pay 10s for a state that cannot change.
+        // Механика таймаута: гоняем ожидание против фиксированного дедлайна UniTask.Delay через WhenAny, так
+        // что таймаут — ОБЫЧНАЯ ветка кода, а не путь через отмену/исключение. Delay крутится на PlayerLoop
+        // по Realtime-часам и завершится, даже если init висит. Важный урок задачи: до переноса init оба
+        // механизма таймаута (CancelAfter из 129 и этот Delay) «не срабатывали» не из-за семантики UniTask, а
+        // потому что SayKit.init() из BeforeSceneLoad БЛОКИРОВАЛ главный поток — PlayerLoop стоял, тикать было
+        // некому. Перенос init снял блокировку, и таймаут снова работоспособен (проверено экспериментом 15:38).
+        //
+        // Метод инструментирован на входе и в обеих ветках исхода через _logService/LogCategory.LoadLevel
+        // (единственный видимый в логе Unity канал: мост play-mode-логи не отдаёт), поэтому по этим записям
+        // локализуется, где встаёт бут. Info-строки видны только при DevelopmentMinLevel=Info — на этом сгорел
+        // день (owner 16:36); Warning-ветка таймаута проходила фильтр всегда.
+        // 3s (TASK-134, owner 15:38): 10s был налогом на каждый вход в play-mode; всё, что успевает,
+        // укладывается в ~200 мс, так что 3s — комфортный потолок над реальным init.
         private const float EditorSayKitInitTimeoutSeconds = 3f;
 
         private async UniTask WaitForSayKitInitWithEditorTimeoutAsync(CancellationToken cancellationToken)
