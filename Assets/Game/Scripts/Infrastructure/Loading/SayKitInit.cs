@@ -9,21 +9,30 @@ namespace Infrastructure.Loading
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Init()
         {
-#if SAYKIT_SMOKE_DISABLE_RUNTIME && !UNITY_EDITOR
-            // TASK-063 (owner-approved local smoke build): this project has no registered SayKit app and
-            // ships no matching Firebase config, and SayKit's Android entry points (ContentProvider +
-            // bridge activity) are stripped from the smoke APK's manifest — see
-            // Editor/SayKitSmokeBuildFixup.cs and TECH_DEBT TD-001. With the SayKit Java bridge therefore
-            // never initialized, this BeforeSceneLoad call to SayKit.init() throws
+#if SAYKIT_SMOKE_DISABLE_RUNTIME
+            // TASK-063 / TASK-134 (owner-approved local smoke build): this project has no registered SayKit
+            // app and ships no matching Firebase config. Neutralize the BeforeSceneLoad init entry in BOTH
+            // the player and the editor — the define lives in the Android scripting-defines list and the
+            // editor's active build target IS Android, so it is active in-editor too.
+            //
+            // On device (Java player): SayKit's Android entry points (ContentProvider + bridge activity) are
+            // stripped from the smoke APK's manifest (see Editor/SayKitSmokeBuildFixup.cs and TECH_DEBT
+            // TD-001), so with the Java bridge never initialized this SayKit.init() throws
             // NoClassDefFoundError(saygames.bridge.unity.SayKitBridge) / UninitializedPropertyAccessException
-            // every frame, which prevents the scene from rendering (black screen, ~74 err/s measured).
-            // Neutralize the runtime entry so the smoke build can open the first level.
-            // The SAYKIT_SMOKE_DISABLE_RUNTIME define lives in the Android scripting-defines list. The
-            // editor's active build target IS Android, so this define IS active in the editor too (TASK-129
-            // corrected the earlier claim that editor behaviour was untouched — it was not: play-mode boot
-            // hung forever because SayKit.init() never ran). The `&& !UNITY_EDITOR` guard restores that:
-            // the crash only exists in the Java player, so in-editor SayKit still initializes through
-            // SayKitBridgeEditor (which never touches the Java bridge) and the prod boot reaches Done.
+            // every frame and the scene never renders (black screen, ~74 err/s measured).
+            //
+            // In the EDITOR the problem is different and just as fatal: SayKit.init() BLOCKS the main thread.
+            // TASK-134 (owner, 15:38) captured the stalling main thread with `sample` —
+            //   -[EditorApplication TickTimer] → _pthread_cond_wait → __psynch_cvwait  (1883/2211 samples)
+            // SayKit's editor bridge dispatches init work through SKThreadService.RunOnMainThreadWithResult,
+            // a BLOCKING wait for a delegate to run on the main thread; init is entered from
+            // [RuntimeInitializeOnLoadMethod(BeforeSceneLoad)] with part of the work handed to a
+            // coroutine/thread, and the two deadlock. With the main thread parked, no play-loop frames are
+            // pumped, so Addressables delivery stops after the startup burst and none of the bounded editor
+            // timeouts (they tick on that same dead loop) ever fire — the prod boot hangs forever. TASK-129
+            // had removed this stub in-editor (`&& !UNITY_EDITOR`), which is exactly what introduced the
+            // block; TASK-134 restores it. The bounded editor waits in LoadingGame then time out on
+            // GetInitState==None and the boot continues on LOCAL config — the intended editor smoke path.
             // Reversible: drop the define once the game has its own SayKit/Firebase app (TD-001).
 #else
             SayKitConfig config = new SayKitConfig

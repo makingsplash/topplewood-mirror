@@ -62,9 +62,16 @@ namespace Infrastructure.Loading
             // Ремоут уже получен в LoadResources (EInitState.RemoteConfig), но ещё не разлит
             // по конфигам. Применяем его до выбора пресета, чтобы загрузить пресет,
             // выбранный ремоутом, а не локальным дефолтом.
-            SayKitInit.RemoteConfigUpdated();
+            //
+            // TASK-134 (owner 15:38, п.4): в редакторе бут вставал уже ПОСЛЕ LoadResources — «Load Configs
+            // finished» не появлялся. Прогоняем оба хвостовых шага через RunBootStep: он именует фазу в
+            // логе (по её отсутствию видно, какая встала) и ТОЛЬКО В РЕДАКТОРЕ не даёт упавшей фазе тихо
+            // оборвать бут. Это не косметика: с заглушённым SayKit ремоут-конфиг пуст, а часть конфигов в
+            // редакторе может быть не разлита, отчего RemoteConfigUpdated (InitWithRemote по null-конфигу)
+            // кидает NRE — раньше он молча гасил бут до «finished». На устройстве (#else) поведение прежнее.
+            RunBootStep("RemoteConfigUpdated", SayKitInit.RemoteConfigUpdated);
 
-            InitializeGlobalServices();
+            RunBootStep("InitializeGlobalServices", InitializeGlobalServices);
 
             // TODO: load the new game's main scene here — BEFORE hiding the loading screen — e.g.:
             //     await _sceneLoader.LoadSceneByAddressableAsync(SceneInBuild.Game, _loadingScreen.Progress);
@@ -203,7 +210,10 @@ namespace Infrastructure.Loading
         // отмену/исключение (прежний fire-and-forget сторож на UniTask.Delay(12s).Forget() за 22 c play-mode
         // ни разу не выстрелил — TASK-134, замеры 03; детерминированная ветка WhenAny надёжнее). Delay крутится
         // на PlayerLoop по Realtime-часам и завершится, даже если Addressables-доставка мертва.
-        private const float EditorResourceLoadTimeoutSeconds = 10f;
+        // 3s (TASK-134, owner 15:38): 10s was a per-play-mode-launch tax on every prod-path check. Everything
+        // that completes in the editor completes inside ~250ms, so 3s is a comfortable ceiling over the real
+        // startup burst while cutting the wait-for-nothing to a third.
+        private const float EditorResourceLoadTimeoutSeconds = 3f;
 
         private async UniTask WaitForResourcesWithEditorTimeoutAsync(
             IEnumerable<UniTask> tasks, CancellationToken cancellationToken)
@@ -231,23 +241,39 @@ namespace Infrastructure.Loading
         // Addressables-загрузчик в вечное «загружается».
         private void ReportUnfinishedResourceLoaders()
         {
-            using var _ = ListPool<string>.Get(out var unfinished);
+            // TASK-134 (owner 15:38, п.5): раньше отчёт печатал только счётчик «all N finished». Владелец
+            // видел «all 13 finished», хотя строк «config loaded» в логе было лишь 4 — и нельзя было понять,
+            // врёт ли учёт или логирование теряет завершения. Теперь отчёт печатает ИМЕНА и completed, и
+            // pending. Ключ к разночтению: в LoggingAssetLoader.Load() флаг IsCompleted и строка «config
+            // loaded: <path>» стоят подряд без await между ними — атомарны. Значит completed-множество ЗДЕСЬ
+            // тождественно множеству строк «config loaded», которые код обязан был напечатать. Если отчёт
+            // называет 13 путей, а самостоятельных строк «config loaded» в логе меньше — теряет их ЛОГ (флаш
+            // на выходе из play-mode / переупорядочивание), учёт при этом честен. Список делает это проверяемым.
+            using var pendingHandle = ListPool<string>.Get(out var pending);
+            using var doneHandle = ListPool<string>.Get(out var completed);
             foreach (var resource in _resources)
             {
-                if (resource is LoggingAssetLoader logging && !logging.IsCompleted)
-                    unfinished.Add(logging.AssetPath);
+                if (resource is not LoggingAssetLoader logging)
+                    continue;
+
+                if (logging.IsCompleted)
+                    completed.Add(logging.AssetPath);
+                else
+                    pending.Add(logging.AssetPath);
             }
 
             var time = DateTime.Now;
-            if (unfinished.Count == 0)
+            if (pending.Count == 0)
             {
                 // Все конфиги загрузились; дедлайн выиграл из-за неконфигового ожидания (напр. SayKit init).
-                // Бут всё равно продолжаем — но называем факт, чтобы таймаут не был молчаливым.
+                // Бут всё равно продолжаем — но называем факт (и completed поимённо), чтобы таймаут не был
+                // молчаливым и учёт был сверяем со строками «config loaded».
                 _logService.Log(
                     LogLevel.Warning,
                     $"[{time:T}.{time.Millisecond.ToString()}] Load Configs timed out after " +
-                    $"{EditorResourceLoadTimeoutSeconds.ToString()}s, but all {_resources.Count.ToString()} config " +
-                    "loader(s) finished. Boot continues (EDITOR-ONLY).",
+                    $"{EditorResourceLoadTimeoutSeconds.ToString()}s, but all {completed.Count.ToString()}/" +
+                    $"{_resources.Count.ToString()} config loader(s) finished. Boot continues (EDITOR-ONLY). " +
+                    $"Completed: {string.Join(", ", completed)}",
                     LogCategory.LoadLevel);
                 return;
             }
@@ -255,9 +281,10 @@ namespace Infrastructure.Loading
             _logService.Log(
                 LogLevel.Warning,
                 $"[{time:T}.{time.Millisecond.ToString()}] Load Configs timed out after " +
-                $"{EditorResourceLoadTimeoutSeconds.ToString()}s: {unfinished.Count.ToString()}/" +
+                $"{EditorResourceLoadTimeoutSeconds.ToString()}s: {pending.Count.ToString()}/" +
                 $"{_resources.Count.ToString()} config loader(s) still pending, boot continues WITHOUT them " +
-                $"(EDITOR-ONLY): {string.Join(", ", unfinished)}",
+                $"(EDITOR-ONLY). Pending: {string.Join(", ", pending)}. " +
+                $"Completed ({completed.Count.ToString()}): {string.Join(", ", completed)}",
                 LogCategory.LoadLevel);
         }
 #endif
@@ -277,7 +304,10 @@ namespace Infrastructure.Loading
         // где встаёт бут. Если после «did not reach» маркер «Load Configs finished» так и не появится —
         // держит WhenAll кто-то из ресурс-загрузчиков (_resources), это отдельная находка, а не таймаут.
         // Настоящая причина неполного init в редакторе — отсутствие своего app key, см. TASK-064.
-        private const float EditorSayKitInitTimeoutSeconds = 10f;
+        // 3s (TASK-134, owner 15:38): with the SayKit runtime stubbed in-editor (SayKitInit,
+        // SAYKIT_SMOKE_DISABLE_RUNTIME) GetInitState stays None and never advances, so this wait ALWAYS
+        // times out — no reason to make every play-mode launch pay 10s for a state that cannot change.
+        private const float EditorSayKitInitTimeoutSeconds = 3f;
 
         private async UniTask WaitForSayKitInitWithEditorTimeoutAsync(CancellationToken cancellationToken)
         {
@@ -319,6 +349,41 @@ namespace Infrastructure.Loading
             }
         }
 #endif
+
+        // Именованный шаг хвоста бута (TASK-134). Пишет маркер входа в фазу в тот же видимый канал
+        // (_logService/LogCategory.LoadLevel), что и «Load Configs start/finished», — по отсутствию маркера
+        // «finished» после маркера фазы человек/проверка локализует, ГДЕ встал бут. В редакторе фаза обёрнута
+        // try/catch: одна упавшая синхронная фаза (напр. RemoteConfigUpdated → NRE по невыгруженному конфигу
+        // при заглушённом SayKit) больше не гасит бут молча — называем её Error'ом и продолжаем, чтобы
+        // прод-путь оставался проверяемым. На устройстве (#else) фаза зовётся напрямую — прежнее поведение,
+        // любое исключение фатально, как и было.
+        private void RunBootStep(string stepName, Action step)
+        {
+#if UNITY_EDITOR
+            var enter = DateTime.Now;
+            _logService.Log(
+                LogLevel.Info,
+                $"[{enter:T}.{enter.Millisecond.ToString()}] boot step: {stepName}",
+                LogCategory.LoadLevel);
+
+            try
+            {
+                step();
+            }
+            catch (Exception e)
+            {
+                var failed = DateTime.Now;
+                _logService.Log(
+                    LogLevel.Error,
+                    $"[{failed:T}.{failed.Millisecond.ToString()}] boot step FAILED: {stepName} — " +
+                    $"{e.GetType().Name}: {e.Message}. EDITOR-ONLY: boot continues past it.",
+                    LogCategory.LoadLevel);
+            }
+#else
+            // Устройство: фаза зовётся напрямую, без маркера и без try/catch — поведение плеера не меняется.
+            step();
+#endif
+        }
 
         private void InitializeGlobalServices()
         {
