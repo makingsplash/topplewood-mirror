@@ -102,6 +102,13 @@ namespace Infrastructure.Loading
             // app_loaded должен уходить, когда игра полностью загружена
             // и игрок может взаимодействовать с экраном (см. доку SayKit).
             SayKit.trackApplicationLoaded();
+
+#if GPIE_DEVELOPMENT
+            // TASK-126 acceptance scaffolding (ВРЕМЕННО — удаляется вместе с DevAutoShowRestartPopupAsync,
+            // когда в прод-путь заведут дев-точку входа; см. докстринг метода и tech-debt этой задачи).
+            // Одна строка под дефайном — снять тривиально.
+            await DevAutoShowRestartPopupAsync();
+#endif
         }
 
         private UniTask ShowLoadingScreenAsync(CancellationToken cancellationToken)
@@ -435,6 +442,49 @@ namespace Infrastructure.Loading
             LocalServiceContainer.Register(new UiService());
             LocalServiceContainer.Register(new PauseService());
         }
+
+#if GPIE_DEVELOPMENT
+        // TASK-126 ACCEPTANCE SCAFFOLDING — ВРЕМЕННАЯ ОСНАСТКА, УДАЛЯЕТСЯ, когда в прод-путь появится
+        // штатная дев-точка входа (экранная кнопка DEV в рантайме, как BringupDebugMenuHost делает в
+        // bringup — заведено tech-debt этой задачи). Пока её нет, критерий приёмки «RestartPopup
+        // открывается штатным Service.UI.Show<RestartPopup>(ScreenNames.RestartPopup)» руками недостижим:
+        // прод-дебаг-меню в редакторе не открыть — DebugService.Init триггерит его тряской (только мобила)
+        // и клавиатурой под #if ENABLE_LEGACY_INPUT_MANAGER, а проект на новом Input System (activeInputHandler:1),
+        // так что клавиатурная ветка не компилируется. Поэтому в конце дев-бута показываем попап ровно тем
+        // же штатным путём, что и предмет приёмки. Показ НЕ молчаливый: логируем вход, успех и (Error) провал
+        // Show — канал _logService/LogCategory.LoadLevel единственный видимый в логе Unity (Debug.* режется
+        // filterLogType, см. InitializeGameSettings). Типы Ui.* заданы полными именами намеренно — чтобы в
+        // релизной сборке (без дефайна) не осталось неиспользуемых using'ов.
+        private async UniTask DevAutoShowRestartPopupAsync()
+        {
+            var enter = DateTime.Now;
+            _logService.Log(
+                LogLevel.Info,
+                $"[{enter:T}.{enter.Millisecond.ToString()}] DEV auto-show {Ui.ScreenNames.RestartPopup} " +
+                "(TASK-126 acceptance scaffolding, dev-only)",
+                LogCategory.LoadLevel);
+
+            try
+            {
+                await Service.UI.Show<Ui.Popups.RestartPopup>(Ui.ScreenNames.RestartPopup);
+
+                var shown = DateTime.Now;
+                _logService.Log(
+                    LogLevel.Info,
+                    $"[{shown:T}.{shown.Millisecond.ToString()}] DEV auto-show RestartPopup: shown OK",
+                    LogCategory.LoadLevel);
+            }
+            catch (Exception e)
+            {
+                var failed = DateTime.Now;
+                _logService.Log(
+                    LogLevel.Error,
+                    $"[{failed:T}.{failed.Millisecond.ToString()}] DEV auto-show RestartPopup FAILED: " +
+                    $"{e.GetType().Name}: {e.Message}",
+                    LogCategory.LoadLevel);
+            }
+        }
+#endif
 
         private void InitializeGlobalServices()
         {
