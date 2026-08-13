@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98fa0577e64140629ec3f07cd19f91e4, type: 3}
   m_Name: LogServiceConfig
   m_EditorClassIdentifier: 
-  <DevelopmentMinLevel>k__BackingField: 2
+  <DevelopmentMinLevel>k__BackingField: 1
   <ProductionMinLevel>k__BackingField: 2
   <CategoryOverrides>k__BackingField:
   - Category: 6
