@@ -166,18 +166,16 @@ namespace Infrastructure.Loading
                 tasks.Add(asyncLoader.Load());
 
 #if UNITY_EDITOR
-            // TASK-134: сторож висящей загрузки. Крутится ПАРАЛЛЕЛЬНО всему tasks.WhenAll ниже, поэтому
-            // покрывает то ожидание, которое реально висит, а не только цикл поллинга внутри WhenAll(progress).
-            // Отчёт идёт через _logService (тот же канал, что видимые маркеры бута), а не через Debug.LogWarning:
-            // Debug фильтруется filterLogType (см. InitializeGameSettings) и на прод-боте может быть срезан.
-            StartStuckLoaderWatchdog(cancellationToken).Forget();
-#endif
-
-#if UNITY_EDITOR
             // TASK-129: в редакторе SayKit ходит через SayKitBridgeEditor и без своего app key (TASK-064)
             // не доводит init до EInitState.Done — прод-бут висел бы здесь вечно. Ждём SayKit-состояния
             // ОГРАНИЧЕННО и, не дождавшись, продолжаем бут на локальном конфиге, ГРОМКО это объявив.
             tasks.Add(WaitForSayKitInitWithEditorTimeoutAsync(cancellationToken));
+
+            // TASK-134: и сами загрузчики конфигов в редакторе ждём ОГРАНИЧЕННО — Addressables-доставка
+            // в интерактивном редакторе молча умирает после ~4-5 операций (замеры владельца 12:47–13:40),
+            // tasks.WhenAll висел бы здесь вечно и бут не доходил до конца. По таймауту НЕ бросаем: называем
+            // зависшие загрузчики поимённо и продолжаем бут, чтобы уже загруженные конфиги были доступны.
+            await WaitForResourcesWithEditorTimeoutAsync(tasks, cancellationToken);
 #else
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Platform, cancellationToken: cancellationToken));
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.RemoteConfig, cancellationToken: cancellationToken));
@@ -185,27 +183,46 @@ namespace Infrastructure.Loading
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.IDFA, cancellationToken: cancellationToken));
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Gdpr, cancellationToken: cancellationToken));
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState == EInitState.Done, cancellationToken: cancellationToken));
-#endif
 
             await tasks.WhenAll(_loadingScreen.Progress, cancellationToken: cancellationToken);
+#endif
         }
 
 #if UNITY_EDITOR
-        // Через N секунд, если tasks.WhenAll ещё висит, ГРОМКО перечисляем поимённо, какие загрузчики не
-        // завершились (LoggingAssetLoader.IsCompleted == false). Именно молчание превращало один висящий
-        // Addressables-загрузчик в вечное «загружается». Нормальный бут укладывается в ~1.5 c, порог с запасом.
-        // Ожидание НЕ прерываем: аборт = продолжить бут с незаданным конфигом → NRE ниже по стеку.
-        private const float StuckLoaderWatchdogSeconds = 12f;
+        // Редакторный лимит ожидания загрузчиков конфигов (TASK-134). На устройстве (#else в LoadResources)
+        // ожидание без таймаута НЕ тронуто. Гоняем tasks.WhenAll против фиксированного дедлайна тем же приёмом
+        // WhenAny + UniTask.Delay, что и SayKit init выше: таймаут — ОБЫЧНАЯ ветка кода, а не путь через
+        // отмену/исключение (прежний fire-and-forget сторож на UniTask.Delay(12s).Forget() за 22 c play-mode
+        // ни разу не выстрелил — TASK-134, замеры 03; детерминированная ветка WhenAny надёжнее). Delay крутится
+        // на PlayerLoop по Realtime-часам и завершится, даже если Addressables-доставка мертва.
+        private const float EditorResourceLoadTimeoutSeconds = 10f;
 
-        private async UniTaskVoid StartStuckLoaderWatchdog(CancellationToken cancellationToken)
+        private async UniTask WaitForResourcesWithEditorTimeoutAsync(
+            IEnumerable<UniTask> tasks, CancellationToken cancellationToken)
         {
-            var canceled = await UniTask
-                .Delay(TimeSpan.FromSeconds(StuckLoaderWatchdogSeconds), DelayType.Realtime, cancellationToken: cancellationToken)
-                .SuppressCancellationThrow();
+            // Прогресс сохраняем как на устройстве; проигравшую ветку WhenAny не отменяем — осиротевший
+            // поллер продолжит крутиться до выхода из play-mode, где его снимет cancellationToken (та же
+            // модель, что у WaitForSayKitInitWithEditorTimeoutAsync).
+            var allTasks = tasks.WhenAll(_loadingScreen.Progress, cancellationToken: cancellationToken);
+            var deadline = UniTask.Delay(
+                TimeSpan.FromSeconds(EditorResourceLoadTimeoutSeconds),
+                DelayType.Realtime,
+                cancellationToken: cancellationToken);
 
-            if (canceled)
-                return;
+            var winnerIndex = await UniTask.WhenAny(allTasks, deadline);
+            if (winnerIndex == 0)
+                return; // все загрузчики (и SayKit-ожидание) завершились в срок — бут идёт дальше
 
+            ReportUnfinishedResourceLoaders();
+        }
+
+        // Warning с ПУТЯМИ незавершившихся загрузчиков (не только счётчиком — имена нам уже стоили прогона,
+        // TASK-134). Факт завершения отдаёт LoggingAssetLoader.IsCompleted. Канал — _logService/
+        // LogCategory.LoadLevel: единственный, видимый в логе Unity (мост play-mode-логи не отдаёт, а Debug.*
+        // режется filterLogType, см. InitializeGameSettings). Именно молчание превращало один висящий
+        // Addressables-загрузчик в вечное «загружается».
+        private void ReportUnfinishedResourceLoaders()
+        {
             using var _ = ListPool<string>.Get(out var unfinished);
             foreach (var resource in _resources)
             {
@@ -213,15 +230,26 @@ namespace Infrastructure.Loading
                     unfinished.Add(logging.AssetPath);
             }
 
-            if (unfinished.Count == 0)
-                return; // все загрузчики завершились — бут просто идёт дальше, зависания нет
-
             var time = DateTime.Now;
+            if (unfinished.Count == 0)
+            {
+                // Все конфиги загрузились; дедлайн выиграл из-за неконфигового ожидания (напр. SayKit init).
+                // Бут всё равно продолжаем — но называем факт, чтобы таймаут не был молчаливым.
+                _logService.Log(
+                    LogLevel.Warning,
+                    $"[{time:T}.{time.Millisecond.ToString()}] Load Configs timed out after " +
+                    $"{EditorResourceLoadTimeoutSeconds.ToString()}s, but all {_resources.Count.ToString()} config " +
+                    "loader(s) finished. Boot continues (EDITOR-ONLY).",
+                    LogCategory.LoadLevel);
+                return;
+            }
+
             _logService.Log(
                 LogLevel.Warning,
-                $"[{time:T}.{time.Millisecond.ToString()}] Load Configs STUCK: " +
-                $"{unfinished.Count.ToString()}/{_resources.Count.ToString()} loader(s) still pending after " +
-                $"{StuckLoaderWatchdogSeconds.ToString()}s: {string.Join(", ", unfinished)}",
+                $"[{time:T}.{time.Millisecond.ToString()}] Load Configs timed out after " +
+                $"{EditorResourceLoadTimeoutSeconds.ToString()}s: {unfinished.Count.ToString()}/" +
+                $"{_resources.Count.ToString()} config loader(s) still pending, boot continues WITHOUT them " +
+                $"(EDITOR-ONLY): {string.Join(", ", unfinished)}",
                 LogCategory.LoadLevel);
         }
 #endif
