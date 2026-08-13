@@ -159,6 +159,14 @@ namespace Infrastructure.Loading
         {
             var time = DateTime.Now;
             _logService.Log(LogLevel.Info, $"[{time:T}.{time.Millisecond.ToString()}] Load Configs start", LogCategory.LoadLevel);
+
+#if UNITY_EDITOR
+            // TASK-134 (ВРЕМЕННО, диагностика — не фикс): раз в секунду печатать injected/utick/frame,
+            // чтобы на столле бута отличить «раннеры UniTask выпали» от «есть, но не тикают» от «живы,
+            // дело в провайдере». Самоснимается на выходе из play-mode. Удаляется прогоном фикса.
+            EditorBootLoopProbe.Begin(_logService);
+#endif
+
             await UniTask.Yield();
 
             using var _ = ListPool<UniTask>.Get(out var tasks);
