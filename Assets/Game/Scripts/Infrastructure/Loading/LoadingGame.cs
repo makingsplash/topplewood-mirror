@@ -25,6 +25,7 @@ using Services.AssetPreload;
 using Ui.Screens.RateUs;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 using VContainer.Unity;
 using Game.Configs;
 using Game.Services.LogService;
@@ -98,6 +99,10 @@ namespace Infrastructure.Loading
 
             // Reveal the app. Without this the DontDestroyOnLoad loading screen stays on top forever.
             await _loadingScreen.HideIfActiveAsync(cancellationToken: cancellationToken);
+
+            // TASK-126 (owner 08:39): гасим статический ScreenSpaceOverlay-канвас сцены Loading здесь же,
+            // где приложение «показано» — сразу после того, как убран DontDestroyOnLoad-лоадинг-скрин.
+            HideLoadingSceneStaticCanvases();
 
             // app_loaded должен уходить, когда игра полностью загружена
             // и игрок может взаимодействовать с экраном (см. доку SayKit).
@@ -441,6 +446,51 @@ namespace Infrastructure.Loading
             LocalServiceContainer.Create();
             LocalServiceContainer.Register(new UiService());
             LocalServiceContainer.Register(new PauseService());
+        }
+
+        // TASK-126 (owner 08:39): статический канвас сцены Loading несёт полноэкранный Background в
+        // RenderMode.ScreenSpaceOverlay. Overlay в Unity композитится ПОСЛЕ всех камер и поверх любого
+        // camera-space-канваса НЕЗАВИСИМО от sortingOrder, поэтому этот белый лист закрывал RestartPopup,
+        // который наш UI-канвас (Canvas.prefab = ScreenSpaceCamera, _useSeparateCanvasCamera:1) рисует
+        // отдельной overlay-КАМЕРОЙ — отсюда «попап в иерархии есть, а экран белый».
+        //
+        // Почему это ФИКС, а не костыль: в проде эта сцена выгружается при загрузке игровой
+        // (LoadSceneMode.Single, см. TODO в StartAsync выше) — вместе со сценой исчезает и её канвас, и
+        // правка становится no-op. Пока игровой сцены нет, этот канвас — статический остаток выпотрошенного
+        // шаблона, который никто не скрывает (это НЕ лоадинг-скрин: тот живёт в DontDestroyOnLoad и уже
+        // корректно спрятан HideIfActiveAsync выше; grep LoadingScreen по Loading.unity == 0), поэтому он
+        // просто дефект.
+        //
+        // Ищем БЕЗ хардкода имён (owner п.1): перебираем корневые объекты активной сцены и гасим Canvas в
+        // ScreenSpaceOverlay. Такой обход по построению НЕ трогает (owner п.2): (а) лоадинг-скрин — он в
+        // псевдо-сцене DontDestroyOnLoad, а не в активной; (б) наш Canvas(Clone) — он ScreenSpaceCamera,
+        // а не Overlay, и под фильтр renderMode не попадает. Гасим сам GameObject (SetActive(false)), а не
+        // только Canvas.enabled — чтобы отсутствие рендера было проверяемо (unity_find_gameobjects покажет
+        // active:false, owner п.5). Метод идемпотентен и безопасен при нуле подходящих канвасов.
+        private void HideLoadingSceneStaticCanvases()
+        {
+            var scene = SceneManager.GetActiveScene();
+
+            using var handle = ListPool<string>.Get(out var hidden);
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var canvas in root.GetComponentsInChildren<Canvas>(true))
+                {
+                    if (canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                        continue;
+
+                    hidden.Add(canvas.name);
+                    canvas.gameObject.SetActive(false);
+                }
+            }
+
+            var time = DateTime.Now;
+            _logService.Log(
+                LogLevel.Info,
+                $"[{time:T}.{time.Millisecond.ToString()}] Hid {hidden.Count.ToString()} static " +
+                $"ScreenSpaceOverlay canvas(es) of scene '{scene.name}' (template remnant, NOT the " +
+                $"DontDestroyOnLoad loading screen). Hidden: [{string.Join(", ", hidden)}]",
+                LogCategory.LoadLevel);
         }
 
 #if GPIE_DEVELOPMENT
