@@ -37,6 +37,12 @@ namespace Game.Editor.McpBridge
         private static HttpListener _listener;
         private static Thread _listenerThread;
         private static readonly Dictionary<string, Func<JObject, object>> _handlers = new();
+        // Async handlers complete out-of-band: the enqueued main-thread action STARTS the work and
+        // later calls resolve/reject — possibly several frames on (e.g. a capture that only finishes
+        // after a rendered frame). `done` is not set when the action returns; the listener thread keeps
+        // waiting off the main thread, so the main thread stays free to tick EditorApplication.update
+        // and the render loop until the work completes. See CaptureHandler (TASK-139).
+        private static readonly Dictionary<string, Action<JObject, Action<object>, Action<string>>> _asyncHandlers = new();
         private static readonly Queue<Action> _mainThreadQueue = new();
         private static bool _running;
 
@@ -63,6 +69,14 @@ namespace Game.Editor.McpBridge
         public static void RegisterHandler(string method, Func<JObject, object> handler)
         {
             _handlers[method] = handler;
+        }
+
+        // Register a handler that finishes asynchronously: it receives resolve/reject and may call
+        // either one later (from a render callback, EditorApplication.update, etc.). Until then the
+        // main thread keeps ticking, which is what lets a capture wait for a real rendered frame.
+        public static void RegisterAsyncHandler(string method, Action<JObject, Action<object>, Action<string>> handler)
+        {
+            _asyncHandlers[method] = handler;
         }
 
         public static void Start()
@@ -231,34 +245,49 @@ namespace Game.Editor.McpBridge
                     return;
                 }
 
-                if (!_handlers.TryGetValue(request.method, out var handler))
+                var hasSync = _handlers.TryGetValue(request.method, out var handler);
+                var hasAsync = _asyncHandlers.TryGetValue(request.method, out var asyncHandler);
+                if (!hasSync && !hasAsync)
                 {
                     WriteResponse(response, new BridgeResponse { error = $"Unknown method: {request.method}" });
                     return;
                 }
 
-                // Execute handler on main thread (Unity API requirement)
+                // Execute handler on main thread (Unity API requirement). resolve/reject are single-fire:
+                // whichever lands first wins, later callbacks are no-ops. For sync handlers the enqueued
+                // action resolves inline; for async handlers it only starts the work and resolve/reject
+                // arrive later (still on the main thread), while this listener thread waits on `done`.
                 object handlerResult = null;
                 string handlerError = null;
                 var done = new ManualResetEventSlim(false);
-
-                _mainThreadQueue.Enqueue(() =>
+                var completed = 0;
+                Action<object> resolve = res =>
                 {
-                    try
-                    {
-                        handlerResult = handler(request.@params ?? new JObject());
-                    }
-                    catch (Exception ex)
-                    {
-                        handlerError = ex.Message;
-                    }
-                    finally
-                    {
-                        done.Set();
-                    }
-                });
+                    if (Interlocked.Exchange(ref completed, 1) == 0) { handlerResult = res; done.Set(); }
+                };
+                Action<string> reject = err =>
+                {
+                    if (Interlocked.Exchange(ref completed, 1) == 0) { handlerError = err; done.Set(); }
+                };
 
-                // Wait up to 25 seconds for main thread to process
+                if (hasAsync)
+                {
+                    _mainThreadQueue.Enqueue(() =>
+                    {
+                        try { asyncHandler(request.@params ?? new JObject(), resolve, reject); }
+                        catch (Exception ex) { reject(ex.Message); }
+                    });
+                }
+                else
+                {
+                    _mainThreadQueue.Enqueue(() =>
+                    {
+                        try { resolve(handler(request.@params ?? new JObject())); }
+                        catch (Exception ex) { reject(ex.Message); }
+                    });
+                }
+
+                // Wait up to 25 seconds for the handler to complete.
                 if (!done.Wait(TimeSpan.FromSeconds(25)))
                 {
                     WriteResponse(response, new BridgeResponse { error = "Main thread execution timed out" });
