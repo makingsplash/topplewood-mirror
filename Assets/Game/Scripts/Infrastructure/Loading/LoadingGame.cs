@@ -13,7 +13,10 @@ using SGS.Configs;
 using SGS.Data;
 using SGS.Infrastructure.Loading;
 using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
+using SGS.Services.Containers;
 using SGS.Services.DebugLog;
+using SGS.Services.Gameplay;
+using SGS.Services.Ui;
 using Tools.Constants;
 using Tools.Debug;
 using Ui.Components.Message;
@@ -22,6 +25,7 @@ using Services.AssetPreload;
 using Ui.Screens.RateUs;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 using VContainer.Unity;
 using Game.Configs;
 using Game.Services.LogService;
@@ -85,6 +89,10 @@ namespace Infrastructure.Loading
 
             RunBootStep("InitializeGlobalServices", InitializeGlobalServices);
 
+            // TASK-126: поднимаем app-level UI-скоуп ПРЯМО ЗДЕСЬ, на буте, а не за (незавершённой,
+            // TODO ниже) игровой сценой. Это единственная точка, где Service.UI начинает быть не-null.
+            RunBootStep("InitializeLocalServices", InitializeLocalServices);
+
             // TODO: load the new game's main scene here — BEFORE hiding the loading screen — e.g.:
             //     await _sceneLoader.LoadSceneByAddressableAsync(SceneInBuild.Game, _loadingScreen.Progress);
             // (also add the Game scene to ScenesConfig.asset with a valid addressable reference).
@@ -92,9 +100,20 @@ namespace Infrastructure.Loading
             // Reveal the app. Without this the DontDestroyOnLoad loading screen stays on top forever.
             await _loadingScreen.HideIfActiveAsync(cancellationToken: cancellationToken);
 
+            // TASK-126 (owner 08:39): гасим статический ScreenSpaceOverlay-канвас сцены Loading здесь же,
+            // где приложение «показано» — сразу после того, как убран DontDestroyOnLoad-лоадинг-скрин.
+            HideLoadingSceneStaticCanvases();
+
             // app_loaded должен уходить, когда игра полностью загружена
             // и игрок может взаимодействовать с экраном (см. доку SayKit).
             SayKit.trackApplicationLoaded();
+
+#if GPIE_DEVELOPMENT
+            // TASK-126 acceptance scaffolding (ВРЕМЕННО — удаляется вместе с DevAutoShowRestartPopupAsync,
+            // когда в прод-путь заведут дев-точку входа; см. докстринг метода и tech-debt этой задачи).
+            // Одна строка под дефайном — снять тривиально.
+            await DevAutoShowRestartPopupAsync();
+#endif
         }
 
         private UniTask ShowLoadingScreenAsync(CancellationToken cancellationToken)
@@ -399,6 +418,123 @@ namespace Infrastructure.Loading
             step();
 #endif
         }
+
+        // TASK-126: единственный app-lifetime bootstrap локального сервис-слоя. Service.UI читает
+        // ИМЕННО LocalServiceContainer (Service.cs) — НЕ VContainer-граф: RegisterEntryPoint<UiService>()
+        // в GameplayLifetimeScope клал сервис в другой контейнер, из которого Service.UI не читает (и был
+        // инертен — UiService не реализует ни одного VContainer entry-point-интерфейса), поэтому
+        // Service.UI всегда возвращал null. Мост — ровно та же форма, что GlobalService.Create
+        // (GlobalService.cs:23): Create() один раз + Register сервисов. UiService конструируется голым
+        // new (нет ctor-зависимостей); Register зовёт его Init() — это лишь взводит ленивый
+        // InitializeAsync, реальный Canvas инстанцируется на первом Show. Контейнер создаём РОВНО ОДИН
+        // РАЗ на app-lifetime: повторный Create() сделал бы DeInit старого инстанса и стёр реестр
+        // (LocalServiceContainer.cs) — поэтому пакетный per-level LevelController.Create (мёртвый путь,
+        // подклассов нет) сюда НЕ тащим.
+        //
+        // PauseService регистрируется ВМЕСТЕ с UiService не как scope-крип, а по необходимости: сам факт
+        // Create() делает Service.IsReady (== LocalServiceContainer.IsReady()) == true, а глобальный
+        // покадровый тикер GameTimerService (GlobalService, ServiceAddapter.cs) гейтится ровно этим флагом
+        // — `if (Service.IsReady && !Service.Pause.IsPaused)`. До TASK-126 контейнер не создавался, IsReady
+        // был false и гейт короткозамыкался; как только контейнер «готов», тикер начинает дёргать
+        // Service.Pause КАЖДЫЙ кадр — без регистрации PauseService это NRE на каждом Update/LateUpdate
+        // (поймано play-mode-прогоном этой задачи). Контракт «контейнер готов ⇒ Service.Pause резолвится»
+        // обязан держаться. PauseService — без ctor-зависимостей, Init() пустой. Прочие локальные сервисы
+        // (Pool/TimeScale/Messages/RewardedState) живого IsReady-гейтед потребителя пока НЕ имеют
+        // (единственный Service.IsReady в дереве — GameTimerService) → остаются tech-debt, вне scope.
+        private void InitializeLocalServices()
+        {
+            LocalServiceContainer.Create();
+            LocalServiceContainer.Register(new UiService());
+            LocalServiceContainer.Register(new PauseService());
+        }
+
+        // TASK-126 (owner 08:39): статический канвас сцены Loading несёт полноэкранный Background в
+        // RenderMode.ScreenSpaceOverlay. Overlay в Unity композитится ПОСЛЕ всех камер и поверх любого
+        // camera-space-канваса НЕЗАВИСИМО от sortingOrder, поэтому этот белый лист закрывал RestartPopup,
+        // который наш UI-канвас (Canvas.prefab = ScreenSpaceCamera, _useSeparateCanvasCamera:1) рисует
+        // отдельной overlay-КАМЕРОЙ — отсюда «попап в иерархии есть, а экран белый».
+        //
+        // Почему это ФИКС, а не костыль: в проде эта сцена выгружается при загрузке игровой
+        // (LoadSceneMode.Single, см. TODO в StartAsync выше) — вместе со сценой исчезает и её канвас, и
+        // правка становится no-op. Пока игровой сцены нет, этот канвас — статический остаток выпотрошенного
+        // шаблона, который никто не скрывает (это НЕ лоадинг-скрин: тот живёт в DontDestroyOnLoad и уже
+        // корректно спрятан HideIfActiveAsync выше; grep LoadingScreen по Loading.unity == 0), поэтому он
+        // просто дефект.
+        //
+        // Ищем БЕЗ хардкода имён (owner п.1): перебираем корневые объекты активной сцены и гасим Canvas в
+        // ScreenSpaceOverlay. Такой обход по построению НЕ трогает (owner п.2): (а) лоадинг-скрин — он в
+        // псевдо-сцене DontDestroyOnLoad, а не в активной; (б) наш Canvas(Clone) — он ScreenSpaceCamera,
+        // а не Overlay, и под фильтр renderMode не попадает. Гасим сам GameObject (SetActive(false)), а не
+        // только Canvas.enabled — чтобы отсутствие рендера было проверяемо (unity_find_gameobjects покажет
+        // active:false, owner п.5). Метод идемпотентен и безопасен при нуле подходящих канвасов.
+        private void HideLoadingSceneStaticCanvases()
+        {
+            var scene = SceneManager.GetActiveScene();
+
+            using var handle = ListPool<string>.Get(out var hidden);
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var canvas in root.GetComponentsInChildren<Canvas>(true))
+                {
+                    if (canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                        continue;
+
+                    hidden.Add(canvas.name);
+                    canvas.gameObject.SetActive(false);
+                }
+            }
+
+            var time = DateTime.Now;
+            _logService.Log(
+                LogLevel.Info,
+                $"[{time:T}.{time.Millisecond.ToString()}] Hid {hidden.Count.ToString()} static " +
+                $"ScreenSpaceOverlay canvas(es) of scene '{scene.name}' (template remnant, NOT the " +
+                $"DontDestroyOnLoad loading screen). Hidden: [{string.Join(", ", hidden)}]",
+                LogCategory.LoadLevel);
+        }
+
+#if GPIE_DEVELOPMENT
+        // TASK-126 ACCEPTANCE SCAFFOLDING — ВРЕМЕННАЯ ОСНАСТКА, УДАЛЯЕТСЯ, когда в прод-путь появится
+        // штатная дев-точка входа (экранная кнопка DEV в рантайме, как BringupDebugMenuHost делает в
+        // bringup — заведено tech-debt этой задачи). Пока её нет, критерий приёмки «RestartPopup
+        // открывается штатным Service.UI.Show<RestartPopup>(ScreenNames.RestartPopup)» руками недостижим:
+        // прод-дебаг-меню в редакторе не открыть — DebugService.Init триггерит его тряской (только мобила)
+        // и клавиатурой под #if ENABLE_LEGACY_INPUT_MANAGER, а проект на новом Input System (activeInputHandler:1),
+        // так что клавиатурная ветка не компилируется. Поэтому в конце дев-бута показываем попап ровно тем
+        // же штатным путём, что и предмет приёмки. Показ НЕ молчаливый: логируем вход, успех и (Error) провал
+        // Show — канал _logService/LogCategory.LoadLevel единственный видимый в логе Unity (Debug.* режется
+        // filterLogType, см. InitializeGameSettings). Типы Ui.* заданы полными именами намеренно — чтобы в
+        // релизной сборке (без дефайна) не осталось неиспользуемых using'ов.
+        private async UniTask DevAutoShowRestartPopupAsync()
+        {
+            var enter = DateTime.Now;
+            _logService.Log(
+                LogLevel.Info,
+                $"[{enter:T}.{enter.Millisecond.ToString()}] DEV auto-show {Ui.ScreenNames.RestartPopup} " +
+                "(TASK-126 acceptance scaffolding, dev-only)",
+                LogCategory.LoadLevel);
+
+            try
+            {
+                await Service.UI.Show<Ui.Popups.RestartPopup>(Ui.ScreenNames.RestartPopup);
+
+                var shown = DateTime.Now;
+                _logService.Log(
+                    LogLevel.Info,
+                    $"[{shown:T}.{shown.Millisecond.ToString()}] DEV auto-show RestartPopup: shown OK",
+                    LogCategory.LoadLevel);
+            }
+            catch (Exception e)
+            {
+                var failed = DateTime.Now;
+                _logService.Log(
+                    LogLevel.Error,
+                    $"[{failed:T}.{failed.Millisecond.ToString()}] DEV auto-show RestartPopup FAILED: " +
+                    $"{e.GetType().Name}: {e.Message}",
+                    LogCategory.LoadLevel);
+            }
+        }
+#endif
 
         private void InitializeGlobalServices()
         {
