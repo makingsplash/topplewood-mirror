@@ -112,6 +112,12 @@ namespace Infrastructure.Loading
             // would kill the Loading Main Camera that the gameplay presenters read as Camera.main. CreateChildFromPrefab
             // sets the child's parentReference to this scope itself (LifetimeScope.cs:270), so Root/Data/Service.UI —
             // all live by this point (after InitializeLocalServices, after LoadResources) — resolve normally.
+            //
+            // ORDER IS LOAD-BEARING (TASK-138): InitializeLocalServices (above) MUST run before this line. It creates
+            // the LocalServiceContainer + UiService, and GameplayLifetimeScope now registers Service.UI as a one-way
+            // app-level bridge (its GameplayInputScreenBlocker takes UiService via ctor) — that RegisterInstance(Service.UI)
+            // is evaluated during Configure() inside this CreateChildFromPrefab call. Reorder these two steps and
+            // Service.UI throws InvalidOperationException here. This is now a requirement, not an accident.
             _hostScope.CreateChildFromPrefab(_gameplayScopePrefab);
 
             // Reveal the app. Without this the DontDestroyOnLoad loading screen stays on top forever.
