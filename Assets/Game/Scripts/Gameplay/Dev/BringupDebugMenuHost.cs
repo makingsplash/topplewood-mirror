@@ -114,6 +114,18 @@ namespace Gameplay.Dev
             // owner), so it renders and receives clicks without an external UI canvas — the only missing piece
             // is a scene EventSystem, raised by EnsureEventSystem above.
             var go = UnityEngine.Object.Instantiate(_config.MainPrefab);
+
+            // TASK-117: the MainPrefab canvas ships ScreenSpaceOverlay at sortingOrder 2 (verified in
+            // DDM Main.prefab: single root Canvas, m_OverrideSorting:0, m_SortingOrder:2). The always-on RESTART
+            // button rides its own overlay canvas at short.MaxValue-1 = 32766 (RestartButtonPresenter, TASK-116).
+            // 32766 ≫ 2, so where the two overlap (top-right corner) RESTART's GraphicRaycaster wins the overlay
+            // hit-sort and swallows the tap meant for this menu's close "X" — the menu could not be closed by X.
+            // Lift this menu's canvas above RESTART (short.MaxValue = 32767 > 32766, a strict margin) so the X and
+            // every menu control win the raycast while the menu is open. This ties the DEV toggle canvas (also
+            // short.MaxValue) — harmless: both are dev overlays and X now closes the menu regardless. The whole host
+            // is #if GPIE_DEVELOPMENT, so player builds and the product play-screen layout are untouched.
+            go.GetComponent<Canvas>().sortingOrder = short.MaxValue;
+
             _menu = go.GetComponent<DDMMain>();
             _menu.Init(_config, BuildContent, _ => _menu = null);
         }
