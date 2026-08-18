@@ -121,9 +121,18 @@ namespace Gameplay.Dev
             // 32766 ≫ 2, so where the two overlap (top-right corner) RESTART's GraphicRaycaster wins the overlay
             // hit-sort and swallows the tap meant for this menu's close "X" — the menu could not be closed by X.
             // Lift this menu's canvas above RESTART (short.MaxValue = 32767 > 32766, a strict margin) so the X and
-            // every menu control win the raycast while the menu is open. This ties the DEV toggle canvas (also
-            // short.MaxValue) — harmless: both are dev overlays and X now closes the menu regardless. The whole host
-            // is #if GPIE_DEVELOPMENT, so player builds and the product play-screen layout are untouched.
+            // every menu control win the raycast while the menu is open.
+            //
+            // KNOWN LIMIT (measured, TASK-117): this leaves the menu canvas at the SAME order as the DEV toggle
+            // canvas (also short.MaxValue), and that tie is NOT harmless — DDM's page root is a full-screen raycast
+            // scrim (DDM Page.prefab: anchors 0,0–1,1 with RaycastTarget on), so while the menu is open the scrim
+            // overlaps the top-left DEV toggle at an equal order = an undefined raycast winner. The toggle cannot be
+            // lifted above the menu: Canvas.sortingOrder is a signed-16-bit field that WRAPS, not clamps (measured
+            // in play mode: 32768 → -32768, 40000 → -25536), so short.MaxValue is the ceiling and no strict tier
+            // exists above it while RESTART is fixed at 32766. Preserving the DEV emergency exit therefore needs a
+            // non-ordering lever (e.g. hide RESTART from this dev host while the menu is open) — owner decision
+            // pending, see TASK-117. The whole host is #if GPIE_DEVELOPMENT, so player builds and the product
+            // play-screen layout are untouched regardless.
             go.GetComponent<Canvas>().sortingOrder = short.MaxValue;
 
             _menu = go.GetComponent<DDMMain>();
