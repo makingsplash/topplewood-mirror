@@ -69,6 +69,18 @@ namespace Game.Code.Infrastructure
             // effect on what ships; it is the behaviour-preserving DI symmetry for the seam.
             builder.Register<ILevelResolutionFlow, ImmediateResolutionFlow>(Lifetime.Singleton);
 
+            // Play screen minimum (TASK-138): the always-on RESTART button + its confirm popup now live in the
+            // PROD graph, not only in bringup. Until this task the prod scope raised neither and was never
+            // instantiated at all (LoadingGame TODO) — RESTART existed solely in ShapeFillBringupLifetimeScope.
+            // No duplicate source of truth: each scope owns its own bindings and prod/bringup never coexist at
+            // runtime (same pattern as the twice-installed SequenceInstaller). ICampaignRestart is already bound by
+            // GameplayCoreInstaller. We keep the prod ImmediateResolutionFlow (above) — so PlayScreenInteraction.IsBusy
+            // stays false forever and the button is always interactable; the WIN/LOSE banner (SequencedResolutionFlow
+            // + PlayScreenConfig/IPlayScreenView) is intentionally NOT part of this minimum (acceptance needs level +
+            // RESTART + popup, not the banner).
+            builder.Register<PlayScreenInteraction>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<RestartButtonPresenter>();
+
             // Tutorial system prod impls (TASK-049): completion on the SDK-canon Data.Meta.CompletedTutorials,
             // gate on Data.Debug.DisableTutorial, funnel via the SayKit tutorial analytics. Context-independent
             // parts (input gate, view stub, definition, runner) live in GameplayCoreInstaller.
