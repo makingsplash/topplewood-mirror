@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: UI
   m_GUID: 76955c5ec0f0bf241aa3c25ea0cbc01a
   m_SerializeEntries:
+  - m_GUID: 4a15a8f4096354e56bc27cce3b85ae30
+    m_Address: Screens/LoseScreen.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f12c4bda10977d4e849bb2632ceebef
     m_Address: UiCamera
     m_ReadOnly: 0
