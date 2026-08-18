@@ -27,6 +27,7 @@ using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
 using VContainer.Unity;
+using Game.Code.Infrastructure;
 using Game.Configs;
 using Game.Services.LogService;
 using Gameplay.Configs;
@@ -45,14 +46,25 @@ namespace Infrastructure.Loading
         private readonly ILoadingScreen _loadingScreen;
         private readonly ILogService _logService;
 
+        // TASK-138: the host scope that owns this entry point (Bootstrap/Root, auto-registered by VContainer as
+        // LifetimeScope, LifetimeScope.cs:302) and the gameplay-session scope prefab it will raise as a CHILD. The
+        // prefab reference can only be serialized on a MonoBehaviour scope, so BootstrapLifetimeScope carries the
+        // [SerializeField] and RegisterInstance's it for us — LoadingGame is a plain IAsyncStartable and can't.
+        private readonly LifetimeScope _hostScope;
+        private readonly GameplayLifetimeScope _gameplayScopePrefab;
+
         public LoadingGame(
             ISceneLoader sceneLoader,
             ILoadingScreen loadingScreen,
-            ILogService logService)
+            ILogService logService,
+            LifetimeScope hostScope,
+            GameplayLifetimeScope gameplayScopePrefab)
         {
             _sceneLoader = sceneLoader ?? throw new ArgumentNullException(nameof(sceneLoader));
             _loadingScreen = loadingScreen ?? throw new ArgumentNullException(nameof(loadingScreen));
             _logService = logService ?? throw new ArgumentNullException(nameof(logService));
+            _hostScope = hostScope ?? throw new ArgumentNullException(nameof(hostScope));
+            _gameplayScopePrefab = gameplayScopePrefab ?? throw new ArgumentNullException(nameof(gameplayScopePrefab));
         }
 
         public async UniTask StartAsync(CancellationToken cancellationToken)
@@ -93,9 +105,20 @@ namespace Infrastructure.Loading
             // TODO ниже) игровой сценой. Это единственная точка, где Service.UI начинает быть не-null.
             RunBootStep("InitializeLocalServices", InitializeLocalServices);
 
-            // TODO: load the new game's main scene here — BEFORE hiding the loading screen — e.g.:
-            //     await _sceneLoader.LoadSceneByAddressableAsync(SceneInBuild.Game, _loadingScreen.Progress);
-            // (also add the Game scene to ScenesConfig.asset with a valid addressable reference).
+            // TASK-138: raise the gameplay session HERE — BEFORE hiding the loading screen — as a CHILD scope of
+            // this host inside the still-loaded Loading scene (ADR-0004, Variant B). We do NOT load a separate Game
+            // scene by addressable: LoadSceneMode.Single would unload Loading and destroy the Root scope, leaving
+            // GameplayLifetimeScope (a child that needs Root for IApplicationTriggers → SaveManager) parentless, and
+            // would kill the Loading Main Camera that the gameplay presenters read as Camera.main. CreateChildFromPrefab
+            // sets the child's parentReference to this scope itself (LifetimeScope.cs:270), so Root/Data/Service.UI —
+            // all live by this point (after InitializeLocalServices, after LoadResources) — resolve normally.
+            //
+            // ORDER IS LOAD-BEARING (TASK-138): InitializeLocalServices (above) MUST run before this line. It creates
+            // the LocalServiceContainer + UiService, and GameplayLifetimeScope now registers Service.UI as a one-way
+            // app-level bridge (its GameplayInputScreenBlocker takes UiService via ctor) — that RegisterInstance(Service.UI)
+            // is evaluated during Configure() inside this CreateChildFromPrefab call. Reorder these two steps and
+            // Service.UI throws InvalidOperationException here. This is now a requirement, not an accident.
+            _hostScope.CreateChildFromPrefab(_gameplayScopePrefab);
 
             // Reveal the app. Without this the DontDestroyOnLoad loading screen stays on top forever.
             await _loadingScreen.HideIfActiveAsync(cancellationToken: cancellationToken);
@@ -110,7 +133,10 @@ namespace Infrastructure.Loading
 
             // TASK-153: приёмочная оснастка автопоказа RestartPopup снята (был вызов DevAutoShowRestartPopupAsync
             // под #if GPIE_DEVELOPMENT). Требование владельца: на входе в игру попапов не показывается. Попап
-            // теперь открывается только штатным путём — тапом по RESTART в play-screen (RestartButtonPresenter).
+            // открывается только штатным путём — тапом по кнопке RESTART. TASK-138: до этой задачи кнопка жила
+            // ТОЛЬКО в bringup-скоупе, а прод-граф её не поднимал вовсе; теперь RestartButtonPresenter
+            // зарегистрирован и в прод-графе (GameplayLifetimeScope), поднятом выше как дочерний скоуп, — так что
+            // штатный путь к попапу существует и в проде, а не только в bringup.
         }
 
         private UniTask ShowLoadingScreenAsync(CancellationToken cancellationToken)
@@ -451,12 +477,14 @@ namespace Infrastructure.Loading
         // который наш UI-канвас (Canvas.prefab = ScreenSpaceCamera, _useSeparateCanvasCamera:1) рисует
         // отдельной overlay-КАМЕРОЙ — отсюда «попап в иерархии есть, а экран белый».
         //
-        // Почему это ФИКС, а не костыль: в проде эта сцена выгружается при загрузке игровой
-        // (LoadSceneMode.Single, см. TODO в StartAsync выше) — вместе со сценой исчезает и её канвас, и
-        // правка становится no-op. Пока игровой сцены нет, этот канвас — статический остаток выпотрошенного
-        // шаблона, который никто не скрывает (это НЕ лоадинг-скрин: тот живёт в DontDestroyOnLoad и уже
-        // корректно спрятан HideIfActiveAsync выше; grep LoadingScreen по Loading.unity == 0), поэтому он
-        // просто дефект.
+        // Почему это ФИКС, а не костыль: этот канвас — статический остаток выпотрошенного шаблона, который
+        // никто не скрывает (это НЕ лоадинг-скрин: тот живёт в DontDestroyOnLoad и уже корректно спрятан
+        // HideIfActiveAsync выше; grep LoadingScreen по Loading.unity == 0), поэтому он просто дефект.
+        // TASK-138: под Вариантом B (ADR-0004) прод-путь НЕ грузит отдельную игровую сцену — сессия
+        // поднимается дочерним скоупом ВНУТРИ живой Loading, сцена не выгружается. Значит эта правка —
+        // НЕСУЩАЯ, а не no-op: без неё белый overlay-лист остался бы и закрывал уровень с попапом. (Прежняя
+        // премиса «в проде сцена выгрузится LoadSceneMode.Single, и правка станет no-op» относилась к
+        // отвергнутому Варианту A и более не верна.)
         //
         // Ищем БЕЗ хардкода имён (owner п.1): перебираем корневые объекты активной сцены и гасим Canvas в
         // ScreenSpaceOverlay. Такой обход по построению НЕ трогает (owner п.2): (а) лоадинг-скрин — он в

@@ -45,8 +45,22 @@ namespace Gameplay.View
                 return;
 
             var camera = UnityEngine.Camera.main;
-            if (camera == null || !camera.orthographic)
+            if (camera == null)
                 return;
+
+            // ComputeOrthoSize frames content by writing camera.orthographicSize — a perspective camera IGNORES
+            // that, so the level renders in its default perspective frame while all downstream gameplay/view code
+            // assumes it was fitted (pieces off-screen, target card overlapped, RESTART covered). This silently
+            // mis-framed the prod Loading camera for a full iteration (TASK-138). Fail LOUD with a named cause
+            // instead of a silent early-return: the scene's Camera.main must be orthographic (as in bringup).
+            if (!camera.orthographic)
+            {
+                Debug.LogError(
+                    $"[camera-framing] Camera.main '{camera.name}' is perspective (orthographic=false); " +
+                    "CameraFramingPresenter fits the level by setting orthographicSize, which a perspective " +
+                    "camera ignores — the level renders UNFRAMED. Set the scene camera to orthographic.");
+                return;
+            }
 
             if (!CameraFramingMath.TryContentBounds(level, out var min, out var max))
                 return;

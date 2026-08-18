@@ -50,3 +50,5 @@ MonoBehaviour:
   autoInjectGameObjects: []
   _loadingGamePrefab: {fileID: 1213016149006720160, guid: 138307393c6a54812bc774c60685de12,
     type: 3}
+  _gameplayScopePrefab: {fileID: 4709923629882440949, guid: c42df7a68366a4fccb1e8b05fd26399f,
+    type: 3}
