@@ -55,6 +55,8 @@ namespace Gameplay.Dev
         private DDMMain _menu;
         private GameObject _eventSystem;
         private GameObject _buttonCanvas;
+        private GameObject _restartButton;    // product RESTART canvas GO we hide while the menu is open; restored on close.
+        private bool _restartButtonWasActive; // its activeSelf before we hid it — close RESTORES this, never force-enables.
 
         public BringupDebugMenuHost(
             ILevelSource levelSource, GameModel model, CampaignProgressionController campaign,
@@ -115,28 +117,76 @@ namespace Gameplay.Dev
             // is a scene EventSystem, raised by EnsureEventSystem above.
             var go = UnityEngine.Object.Instantiate(_config.MainPrefab);
 
-            // TASK-117: the MainPrefab canvas ships ScreenSpaceOverlay at sortingOrder 2 (verified in
-            // DDM Main.prefab: single root Canvas, m_OverrideSorting:0, m_SortingOrder:2). The always-on RESTART
-            // button rides its own overlay canvas at short.MaxValue-1 = 32766 (RestartButtonPresenter, TASK-116).
-            // 32766 ≫ 2, so where the two overlap (top-right corner) RESTART's GraphicRaycaster wins the overlay
-            // hit-sort and swallows the tap meant for this menu's close "X" — the menu could not be closed by X.
-            // Lift this menu's canvas above RESTART (short.MaxValue = 32767 > 32766, a strict margin) so the X and
-            // every menu control win the raycast while the menu is open.
+            // TASK-117 — why the menu's close "X" could not be tapped, and the lever that fixes it.
             //
-            // KNOWN LIMIT (measured, TASK-117): this leaves the menu canvas at the SAME order as the DEV toggle
-            // canvas (also short.MaxValue), and that tie is NOT harmless — DDM's page root is a full-screen raycast
-            // scrim (DDM Page.prefab: anchors 0,0–1,1 with RaycastTarget on), so while the menu is open the scrim
-            // overlaps the top-left DEV toggle at an equal order = an undefined raycast winner. The toggle cannot be
-            // lifted above the menu: Canvas.sortingOrder is a signed-16-bit field that WRAPS, not clamps (measured
-            // in play mode: 32768 → -32768, 40000 → -25536), so short.MaxValue is the ceiling and no strict tier
-            // exists above it while RESTART is fixed at 32766. Preserving the DEV emergency exit therefore needs a
-            // non-ordering lever (e.g. hide RESTART from this dev host while the menu is open) — owner decision
-            // pending, see TASK-117. The whole host is #if GPIE_DEVELOPMENT, so player builds and the product
-            // play-screen layout are untouched regardless.
-            go.GetComponent<Canvas>().sortingOrder = short.MaxValue;
+            // MECHANISM (measured, not guessed). Menu and RESTART are both ScreenSpaceOverlay canvases, so a tap in
+            // their overlap is decided by Canvas.sortingOrder — higher wins the GraphicRaycaster hit-sort. The
+            // always-on RESTART button (RestartButtonPresenter, TASK-116) rides its own overlay canvas at
+            // short.MaxValue-1 = 32766; the DDM MainPrefab canvas ships at sortingOrder 2 (DDM Main.prefab: single
+            // root Canvas, m_OverrideSorting:0). 32766 ≫ 2, so in the shared top-right corner RESTART swallowed the
+            // tap meant for the menu's "X" — the menu could not be closed by X.
+            //
+            // WHY NOT JUST RE-ORDER (measured). Canvas.sortingOrder is a signed 16-bit field that WRAPS, not clamps
+            // (play-mode probe: set 32768 → readback -32768; set 40000 → -25536). The ceiling is short.MaxValue
+            // (32767); anything above sinks to the BOTTOM of the stack. So above a fixed RESTART=32766 there is
+            // exactly ONE slot (32767) — you cannot stack two strictly-ordered canvases there. And DDM's page root is
+            // a FULL-SCREEN raycast scrim (DDM Page.prefab: anchors 0,0–1,1, RaycastTarget on), so a menu sharing an
+            // order with the DEV toggle (also short.MaxValue) is an undefined raycast winner in the toggle's corner —
+            // the emergency exit would stop being deterministic. Ordering alone cannot give both (X > RESTART) and
+            // (toggle > menu-scrim).
+            //
+            // LEVER (owner decision, TASK-117): remove the third participant instead of re-ordering. While the menu
+            // is open we HIDE the RESTART canvas (HideRestartButtonWhileMenuOpen, below), so X has no competitor in
+            // the top-right AND the menu no longer needs the top slot — it sits at short.MaxValue-1, STRICTLY below
+            // the DEV toggle (short.MaxValue), which makes the toggle emergency-exit win its corner deterministically.
+            // Resulting order:
+            //   menu open:   DEV toggle (32767) > menu scrim (32766) > [RESTART hidden]
+            //   menu closed: DEV toggle (32767) > RESTART (32766) > banner (31000) > gameplay
+            // The whole host is #if GPIE_DEVELOPMENT, so player builds and the product play-screen layout are
+            // untouched regardless.
+            go.GetComponent<Canvas>().sortingOrder = short.MaxValue - 1;
+
+            HideRestartButtonWhileMenuOpen();
 
             _menu = go.GetComponent<DDMMain>();
-            _menu.Init(_config, BuildContent, _ => _menu = null);
+            _menu.Init(_config, BuildContent, _ =>
+            {
+                _menu = null;
+                RestoreRestartButton();
+            });
+        }
+
+        // Hide the product RESTART canvas for as long as the menu is open — the non-ordering lever described in the
+        // TASK-117 comment in ToggleMenu. We SetActive(false) the whole GameObject rather than toggling Canvas.enabled:
+        // a disabled Canvas still leaves its graphics registered for raycasting in uGUI, so only deactivating the GO
+        // reliably removes RESTART from BOTH render and hit-testing. The button is found by its GameObject name
+        // ("[PlayScreen] RestartButton", set in RestartButtonPresenter.CreateButton) — a fragile, string-coupled seam,
+        // flagged here on purpose; DI injection was ruled out because exposing the canvas would mean editing the
+        // product presenter, which TASK-117 forbids. If the button was never built (menu opened outside the
+        // play-screen — e.g. a bringup scene with no RESTART presenter) GameObject.Find returns null and we silently
+        // no-op: the dev menu must open in any scene.
+        private void HideRestartButtonWhileMenuOpen()
+        {
+            _restartButton = GameObject.Find("[PlayScreen] RestartButton");
+            if (_restartButton == null)
+                return;
+
+            _restartButtonWasActive = _restartButton.activeSelf;
+            _restartButton.SetActive(false);
+        }
+
+        // Restore the RESTART canvas to the EXACT state it had before we hid it — not an unconditional enable, so a
+        // button that was already inactive for another reason (a future IsBusy/level-transition path) stays inactive
+        // (owner requirement: restore, don't force). Runs from the menu's close callback, which fires on every close
+        // path — X tap and DEV-toggle re-tap both destroy the menu GO, and OnDestroy invokes the callback, including
+        // teardown via Dispose. Cleared to null so a later open re-reads the live state.
+        private void RestoreRestartButton()
+        {
+            if (_restartButton == null)
+                return;
+
+            _restartButton.SetActive(_restartButtonWasActive);
+            _restartButton = null;
         }
 
         // bringup's ShapeFillBringup scene ships no EventSystem (gameplay taps use the raw new-Input-System
