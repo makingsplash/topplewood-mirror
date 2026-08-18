@@ -61,23 +61,25 @@ namespace Game.Code.Infrastructure
             builder.Register<ICampaignStore, MetaCampaignStore>(Lifetime.Singleton);
             builder.RegisterEntryPoint<SaveManager>();
 
-            // TASK-116: CampaignProgressionController now requires an ILevelResolutionFlow; prod binds the
-            // immediate impl so the transition still happens the instant the level resolves — bit-for-bit the
-            // pre-TASK-116 behaviour, no play screen. Required for this scope to resolve at all (a double bind of
-            // the interface is disallowed, so a context-dependent single bind here is the only correct option).
-            // Loading.unity is untouched and this scope is not in any build today (LoadingGame TODO) → zero runtime
-            // effect on what ships; it is the behaviour-preserving DI symmetry for the seam.
-            builder.Register<ILevelResolutionFlow, ImmediateResolutionFlow>(Lifetime.Singleton);
+            // Prod level-resolution flow (TASK-154): CampaignProgressionController drives its transition through
+            // ILevelResolutionFlow; prod binds LoseResolutionFlow — a Lost shows the LoseScreen (settle-beat →
+            // panel → wait for the "Try again" tap → transition), a Won auto-advances immediately (bit-for-bit as
+            // before). This REPLACES the earlier ImmediateResolutionFlow: prod no longer transitions a loss
+            // silently. PlayScreenConfig (the settle-beat number) is registered here because the flow needs it.
+            // A double bind of the interface is disallowed, so this single context-dependent bind is the only
+            // correct option; bringup keeps its own SequencedResolutionFlow. The flow never duplicates
+            // "won ? advance : reload" — that stays the single source of truth in CampaignProgressionController.
+            builder.RegisterInstance(new PlayScreenConfig());
+            builder.Register<ILevelResolutionFlow, LoseResolutionFlow>(Lifetime.Singleton);
 
-            // Play screen minimum (TASK-138): the always-on RESTART button + its confirm popup now live in the
-            // PROD graph, not only in bringup. Until this task the prod scope raised neither and was never
-            // instantiated at all (LoadingGame TODO) — RESTART existed solely in ShapeFillBringupLifetimeScope.
-            // No duplicate source of truth: each scope owns its own bindings and prod/bringup never coexist at
-            // runtime (same pattern as the twice-installed SequenceInstaller). ICampaignRestart is already bound by
-            // GameplayCoreInstaller. We keep the prod ImmediateResolutionFlow (above) — so PlayScreenInteraction.IsBusy
-            // stays false forever and the button is always interactable; the WIN/LOSE banner (SequencedResolutionFlow
-            // + PlayScreenConfig/IPlayScreenView) is intentionally NOT part of this minimum (acceptance needs level +
-            // RESTART + popup, not the banner).
+            // Play screen (TASK-138 → TASK-154): the always-on RESTART button + its confirm popup + the lose screen
+            // live in the PROD graph, raised as a child scope by LoadingGame (CreateChildFromPrefab). No duplicate
+            // source of truth: each scope owns its own bindings and prod/bringup never coexist at runtime (same
+            // pattern as the twice-installed SequenceInstaller). ICampaignRestart is already bound by
+            // GameplayCoreInstaller. PlayScreenInteraction.IsBusy is now driven by LoseResolutionFlow (true while the
+            // lose panel is pending/up), so RESTART is disabled during a resolution and cannot race the transition.
+            // The full WIN/LOSE banner (SequencedResolutionFlow + IPlayScreenView) is still NOT part of prod — only
+            // the lose screen is.
             builder.Register<PlayScreenInteraction>(Lifetime.Singleton);
             builder.RegisterEntryPoint<RestartButtonPresenter>();
 

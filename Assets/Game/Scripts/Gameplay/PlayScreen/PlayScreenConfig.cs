@@ -12,6 +12,14 @@ namespace Gameplay.PlayScreen
         /// <summary>Static hold after the banner intro, before the level advances/reloads (owner requirement §3).</summary>
         public float OutcomeHoldSeconds = 2f;
 
+        /// <summary>
+        /// Settle-beat before the prod lose panel appears (TASK-154): a pause so the player sees WHAT they missed
+        /// before <see cref="LoseResolutionFlow"/> shows <c>LoseScreen</c>. v1 = 1.2s, the midpoint of the
+        /// designer's 1.0–1.5s range (01-game-designer.md §96); config, not a constant, so game-balancer can tune
+        /// it against the working screen without a code change.
+        /// </summary>
+        public float LoseSettleSeconds = 1.2f;
+
         /// <summary>Banner intro (pop-in + fade) duration.</summary>
         public float BannerIntroSeconds = 0.45f;
 

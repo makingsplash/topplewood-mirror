@@ -75,8 +75,8 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
         // GameplayLifetimeScope, so bringup (the only path built into the APK) must raise its own copy or
         // ISequenceFactory is unresolvable. On top of it: the bringup (sequenced) ILevelResolutionFlow, the
         // procedural WIN/LOSE banner view, its config, the busy coordinator, and the always-on Restart button.
-        // The campaign controller now drives its transition through ILevelResolutionFlow (bit-for-bit the old
-        // behaviour is the prod ImmediateResolutionFlow; here it plays banner + 2s hold first). Registered before
+        // The campaign controller now drives its transition through ILevelResolutionFlow (prod's LoseResolutionFlow
+        // gates a loss with a screen and advances a win at once; here it plays banner + 2s hold first). Registered before
         // the dev DDM host: EventSystem ownership is order-independent by construction (idempotent guard in
         // RestartButtonPresenter + BringupDebugMenuHost), so this order is convenience, not a load-bearing invariant.
         new SequenceInstaller().Install(builder);
