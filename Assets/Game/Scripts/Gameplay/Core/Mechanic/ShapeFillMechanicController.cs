@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using Gameplay.Core.Adapters;
 using R3;
-#if GPIE_DEVELOPMENT
-using Game.Services.LogService; // TASK-138-DIAG (temporary; see the DIAG region at the bottom of the class)
-#endif
 
 namespace Gameplay.Core.Mechanic
 {
@@ -144,9 +141,6 @@ namespace Gameplay.Core.Mechanic
                 return;
 
             var hit = PickIdlePieceAt(new Vec2(intent.X, intent.Y));
-#if GPIE_DEVELOPMENT
-            DiagTap(intent, hit); // TASK-138-DIAG: log the tapped world point + which Idle piece it resolved to
-#endif
             if (hit == null)
                 return;
 
@@ -194,9 +188,6 @@ namespace Gameplay.Core.Mechanic
             piece.RestTimer = 0f;
             _viewByInstance[piece.InstanceId].SetState(PieceLifecycle.Falling);
             _model.RegisterAttempt(piece.InstanceId);
-#if GPIE_DEVELOPMENT
-            DiagRelease(piece); // TASK-138-DIAG: log the Idle->Falling transition
-#endif
         }
 
         /// <summary>
@@ -481,9 +472,6 @@ namespace Gameplay.Core.Mechanic
         /// <summary>Freeze a piece Placed at an exact pose and mirror it into the model + view.</summary>
         private void FreezePlaced(PieceInstance piece, Vec2 pos, float rot)
         {
-#if GPIE_DEVELOPMENT
-            DiagPlaced(piece, pos, rot); // TASK-138-DIAG: reads pre-set State, so it skips balance re-freezes
-#endif
             piece.State = PieceLifecycle.Placed;
             piece.Position = pos;
             piece.Rotation = rot;
@@ -533,9 +521,6 @@ namespace Gameplay.Core.Mechanic
             }
 
             var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
-#if GPIE_DEVELOPMENT
-            DiagResolve(result); // TASK-138-DIAG: on each state change, log why the field is/ isn't a win
-#endif
 
             if (result.AllSlotsFilled && !anyEssentialLost)
             {
@@ -644,203 +629,5 @@ namespace Gameplay.Core.Mechanic
             _levelLoadedSub?.Dispose();
             _levelLoadedSub = null;
         }
-
-#if GPIE_DEVELOPMENT
-        // ─────────────────────────────────────────────────────────────────────────────────────────────────────
-        // TASK-138-DIAG — TEMPORARY play-mode diagnostics (owner 18:01). Question being answered: the prod level
-        // reaches a rest that LOOKS like the target silhouette, yet no Won/Lost resolve fires. This logs the three
-        // things the owner asked for: (1) every tap's world point + which Idle piece it resolved to (or a miss +
-        // the nearest piece), (2) each placement's rest pose vs its nearest same-Kind slot with the level
-        // tolerances, (3) on every state change, the per-slot match verdict + the list of pieces NOT yet Placed.
-        //
-        // Safety: READ-ONLY. Nothing here mutates domain state, so poseHash and the sim sweep are byte-for-byte
-        // unchanged (a sim build has GPIE_DEVELOPMENT too — these lines will add console noise there but change no
-        // result). Logged at Warning with NO LogCategory so neither the LogServiceConfig min-level (=Warning in
-        // this project — Info is dropped) nor the runtime LogCategory mask can suppress it in the editor console.
-        //
-        // TO REMOVE (this file only, single concern): `grep -n TASK-138-DIAG` and delete every #if GPIE_DEVELOPMENT
-        // block — the 4 call sites (OnIntent, ReleasePiece, FreezePlaced, ResolveAtRest), the guarded `using` at
-        // the top, the _diagResolveSig field, and this whole region. Or git-revert the diagnostics commit.
-        // ─────────────────────────────────────────────────────────────────────────────────────────────────────
-
-        // Last logged resolve-state signature: ResolveAtRest runs every quiet tick, so DiagResolve fires only when
-        // the piece-state snapshot actually changes (a placement, a loss, a win) rather than every frame.
-        private int _diagResolveSig = -1;
-
-        private static void DiagLog(string message) =>
-            StaticLogService.Current.Log(LogLevel.Warning, "[TASK-138-DIAG] " + message);
-
-        private void DiagTap(InputIntent intent, PieceInstance hit)
-        {
-            if (hit != null)
-            {
-                DiagLog($"TAP world=({intent.X:F2},{intent.Y:F2}) -> HIT piece#{hit.InstanceId} " +
-                        $"kind={hit.Kind} centre=({hit.Position.X:F2},{hit.Position.Y:F2})");
-                return;
-            }
-
-            // Miss: name the nearest Idle piece + centre distance so "am I tapping where I aim?" is answerable.
-            var bestId = -1;
-            string bestKind = null;
-            var bestDist = 0f;
-            foreach (var piece in _model.Pieces)
-            {
-                if (piece.State != PieceLifecycle.Idle)
-                    continue;
-                var dx = piece.Position.X - intent.X;
-                var dy = piece.Position.Y - intent.Y;
-                var dist = MathF.Sqrt(dx * dx + dy * dy);
-                if (bestId < 0 || dist < bestDist)
-                {
-                    bestId = piece.InstanceId;
-                    bestKind = piece.Kind;
-                    bestDist = dist;
-                }
-            }
-
-            DiagLog(bestId < 0
-                ? $"TAP world=({intent.X:F2},{intent.Y:F2}) -> MISS (no Idle piece on field)"
-                : $"TAP world=({intent.X:F2},{intent.Y:F2}) -> MISS; nearest Idle piece#{bestId} " +
-                  $"kind={bestKind} centre-dist={bestDist:F2} (halo r={_tapTolerance.WorldRadius:F2})");
-        }
-
-        private void DiagRelease(PieceInstance piece) =>
-            DiagLog($"RELEASE piece#{piece.InstanceId} kind={piece.Kind} Idle->Falling " +
-                    $"from ({piece.Position.X:F2},{piece.Position.Y:F2})");
-
-        private void DiagPlaced(PieceInstance piece, Vec2 pos, float rot)
-        {
-            if (piece.State == PieceLifecycle.Placed)
-                return; // balance re-freeze at global rest — the first placement was already logged
-
-            var tol = _level.MatchTolerance;
-            var order = _typeByInstance.TryGetValue(piece.InstanceId, out var t) ? t.SymmetryOrder : 1;
-            var slots = _level.Target?.Slots;
-
-            var bestSlot = -1;
-            var bestPosErr = 0f;
-            var bestAngErr = 0f;
-            if (slots != null)
-            {
-                for (var s = 0; s < slots.Count; s++)
-                {
-                    if (slots[s].Kind != piece.Kind)
-                        continue;
-                    var posErr = (slots[s].Position - pos).Length;
-                    if (bestSlot < 0 || posErr < bestPosErr)
-                    {
-                        bestSlot = s;
-                        bestPosErr = posErr;
-                        bestAngErr = DiagSymReduce(rot - slots[s].Rotation, order);
-                    }
-                }
-            }
-
-            if (bestSlot < 0)
-            {
-                DiagLog($"PLACED piece#{piece.InstanceId} kind={piece.Kind} @({pos.X:F2},{pos.Y:F2})@{rot:F2}rad " +
-                        "-> NO same-kind slot");
-                return;
-            }
-
-            var posTol = tol.PosTol <= 0f ? 1e-6f : tol.PosTol;
-            var posOk = bestPosErr <= posTol;
-            var angOk = bestAngErr <= tol.AngTol;
-            DiagLog($"PLACED piece#{piece.InstanceId} kind={piece.Kind} @({pos.X:F2},{pos.Y:F2})@{rot:F2}rad " +
-                    $"-> nearest slot#{bestSlot}: posErr={bestPosErr:F3}/{posTol:F3}[{(posOk ? "OK" : "MISS")}] " +
-                    $"angErr={bestAngErr:F3}/{tol.AngTol:F3}[{(angOk ? "OK" : "MISS")}] " +
-                    $"=> {(posOk && angOk ? "ADMISSIBLE" : "REJECTED")}");
-        }
-
-        private void DiagResolve(MatchResult result)
-        {
-            int idle = 0, falling = 0, placed = 0, lost = 0;
-            foreach (var piece in _model.Pieces)
-            {
-                switch (piece.State)
-                {
-                    case PieceLifecycle.Idle: idle++; break;
-                    case PieceLifecycle.Falling: falling++; break;
-                    case PieceLifecycle.Placed: placed++; break;
-                    case PieceLifecycle.Lost: lost++; break;
-                }
-            }
-
-            var sig = ((idle * 97 + falling) * 97 + placed) * 97 + lost + (result.AllSlotsFilled ? 1 << 24 : 0);
-            if (sig == _diagResolveSig)
-                return; // no state change since the last log — stay quiet
-            _diagResolveSig = sig;
-
-            var tol = _level.MatchTolerance;
-            var posTol = tol.PosTol <= 0f ? 1e-6f : tol.PosTol;
-            DiagLog($"RESOLVE states[Idle={idle} Falling={falling} Placed={placed} Lost={lost}] " +
-                    $"match={result.SlotsFilled}/{result.SlotsTotal} totalErr={result.TotalError:F3} " +
-                    $"won={result.AllSlotsFilled} | tol pos={posTol:F3} ang={tol.AngTol:F3}rad rigid={tol.RigidityTol:F3}");
-
-            if (result.AllSlotsFilled)
-                return;
-
-            // Per-slot INDEPENDENT best candidate — a diagnostic view, not the evaluator's greedy global
-            // assignment (which can differ when two slots compete for one piece), but it still pinpoints which
-            // slot is short and by how much against the tolerances.
-            var slots = _level.Target?.Slots;
-            if (slots != null)
-            {
-                for (var s = 0; s < slots.Count; s++)
-                {
-                    var slot = slots[s];
-                    var bestId = -1;
-                    var bestPosErr = 0f;
-                    var bestAngErr = 0f;
-                    foreach (var piece in _model.Pieces)
-                    {
-                        if (piece.State != PieceLifecycle.Placed || piece.Kind != slot.Kind)
-                            continue;
-                        var posErr = (slot.Position - piece.Position).Length;
-                        if (bestId < 0 || posErr < bestPosErr)
-                        {
-                            var order = _typeByInstance.TryGetValue(piece.InstanceId, out var t) ? t.SymmetryOrder : 1;
-                            bestId = piece.InstanceId;
-                            bestPosErr = posErr;
-                            bestAngErr = DiagSymReduce(piece.Rotation - slot.Rotation, order);
-                        }
-                    }
-
-                    if (bestId < 0)
-                    {
-                        DiagLog($"  slot#{s} kind={slot.Kind} @({slot.Position.X:F2},{slot.Position.Y:F2}) " +
-                                "-> NO Placed piece of this kind");
-                        continue;
-                    }
-
-                    var posOk = bestPosErr <= posTol;
-                    var angOk = bestAngErr <= tol.AngTol;
-                    DiagLog($"  slot#{s} kind={slot.Kind} @({slot.Position.X:F2},{slot.Position.Y:F2}) " +
-                            $"-> best piece#{bestId} posErr={bestPosErr:F3}/{posTol:F3}[{(posOk ? "OK" : "MISS")}] " +
-                            $"angErr={bestAngErr:F3}/{tol.AngTol:F3}[{(angOk ? "OK" : "MISS")}]");
-                }
-            }
-
-            foreach (var piece in _model.Pieces)
-            {
-                if (piece.State != PieceLifecycle.Placed)
-                    DiagLog($"  unplaced piece#{piece.InstanceId} kind={piece.Kind} state={piece.State} " +
-                            $"@({piece.Position.X:F2},{piece.Position.Y:F2})");
-            }
-        }
-
-        // Mirror of PoseMatchEvaluator.SymmetryReduce so the diagnostic angErr matches the judge's admissibility.
-        private static float DiagSymReduce(float delta, int symmetryOrder)
-        {
-            var order = symmetryOrder < 1 ? 1 : symmetryOrder;
-            var period = (2f * MathF.PI) / order;
-            var d = delta % period;
-            if (d > period * 0.5f)
-                d -= period;
-            else if (d < -period * 0.5f)
-                d += period;
-            return MathF.Abs(d);
-        }
-#endif
     }
 }
