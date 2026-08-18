@@ -1,5 +1,9 @@
 using System;
+using Cysharp.Threading.Tasks;
 using R3;
+using Services;
+using Ui;
+using Ui.Popups;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -19,8 +23,9 @@ namespace Gameplay.PlayScreen
     /// DDM host is not compiled, and this is the sole EventSystem owner.
     ///
     /// The button is disabled while <see cref="PlayScreenInteraction.IsBusy"/> (the WIN/LOSE hold), so a restart
-    /// cannot race the auto-transition (Q1). Restart is neutral for the domain (Q3): it reloads the current level
-    /// via <see cref="ICampaignRestart"/> without resolving a loss.
+    /// cannot race the auto-transition (Q1). Tapping it opens the confirm popup (TASK-153) rather than reloading
+    /// directly; confirming reloads the current level via <see cref="ICampaignRestart"/> without resolving a loss,
+    /// so restart stays neutral for the domain (Q3).
     /// </summary>
     public sealed class RestartButtonPresenter : IStartable, IDisposable
     {
@@ -109,10 +114,33 @@ namespace Gameplay.PlayScreen
         private void OnRestartClicked()
         {
             // interactable already tracks !IsBusy; re-check defensively so the "no transition race" invariant
-            // holds even for a click queued the same frame IsBusy flips true.
+            // holds even for a click queued the same frame IsBusy flips true — and so the confirm popup never
+            // opens while an auto-transition is already underway (TASK-153, owner trap: no popup over a running
+            // reload).
             if (_interaction.IsBusy.Value)
                 return;
-            _restart.ReloadCurrent();
+            ShowRestartConfirmAsync().Forget();
+        }
+
+        // TASK-153: RESTART no longer reloads directly — it opens the pre-built confirm popup and hands
+        // ReloadCurrent as the confirmation action. Cancel needs no callback: RestartPopup.OnClickCancel/Submit
+        // both Close() themselves, and cancel is a pure close with no side effects. A second tap while the popup
+        // is open does NOT stack a second popup — UiService keys shown screens by name and Show<T> returns the
+        // already-shown controller (or the in-progress task) instead of instantiating again (UiService
+        // _shownScreens / _screensInProgress), so re-Setup on the same instance is a harmless re-assign.
+        // The confirm callback re-checks IsBusy at the moment ReloadCurrent actually runs, so a transition that
+        // began while the popup was open still cannot be raced (preserves the TASK-116 invariant at the call site).
+        private async UniTaskVoid ShowRestartConfirmAsync()
+        {
+            var popup = await Service.UI.Show<RestartPopup>(ScreenNames.RestartPopup);
+            popup.Setup(
+                onClickCancelRestart: null,
+                onClickConfirmRestart: () =>
+                {
+                    if (_interaction.IsBusy.Value)
+                        return;
+                    _restart.ReloadCurrent();
+                });
         }
 
         public void Dispose()
