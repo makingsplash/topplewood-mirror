@@ -21,13 +21,14 @@ namespace Gameplay.PlayScreen
         public float LoseSettleSeconds = 1.2f;
 
         /// <summary>
-        /// Settle-beat on the ASSEMBLED figure before the prod win panel appears (TASK-157): a pause to savour the
-        /// win (the figure reveal is the reward, design §2) before <see cref="GatedResolutionFlow"/> shows
-        /// <c>WinScreen</c>. v1 = 1.4s (owner decision: midpoint of the designer's 1.2–1.6s range, a touch longer
-        /// than <see cref="LoseSettleSeconds"/>); config, not a constant, so game-balancer can tune it against the
-        /// working screen without a code change.
+        /// Settle-beat before the prod win panel appears (TASK-157) before <see cref="GatedResolutionFlow"/> shows
+        /// <c>WinScreen</c>. v1 = 0.5s — DELIBERATELY SHORTER than <see cref="LoseSettleSeconds"/>, do NOT "align"
+        /// them from symmetry. The win resolves at GLOBAL REST, so the player is already looking at the assembled
+        /// figure while the pieces settle; a long beat here just DOUBLES that same pause and reads as a hang
+        /// (owner live-playtest 2026-08-19). The lose beat stays 1.2s because there it buys comprehension (WHAT
+        /// didn't fit), not savouring. Config, not a constant, so game-balancer can tune it without a code change.
         /// </summary>
-        public float WinSettleSeconds = 1.4f;
+        public float WinSettleSeconds = 0.5f;
 
         /// <summary>Banner intro (pop-in + fade) duration.</summary>
         public float BannerIntroSeconds = 0.45f;
