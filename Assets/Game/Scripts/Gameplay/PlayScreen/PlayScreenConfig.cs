@@ -14,11 +14,20 @@ namespace Gameplay.PlayScreen
 
         /// <summary>
         /// Settle-beat before the prod lose panel appears (TASK-154): a pause so the player sees WHAT they missed
-        /// before <see cref="LoseResolutionFlow"/> shows <c>LoseScreen</c>. v1 = 1.2s, the midpoint of the
+        /// before <see cref="GatedResolutionFlow"/> shows <c>LoseScreen</c>. v1 = 1.2s, the midpoint of the
         /// designer's 1.0–1.5s range (01-game-designer.md §96); config, not a constant, so game-balancer can tune
         /// it against the working screen without a code change.
         /// </summary>
         public float LoseSettleSeconds = 1.2f;
+
+        /// <summary>
+        /// Settle-beat on the ASSEMBLED figure before the prod win panel appears (TASK-157): a pause to savour the
+        /// win (the figure reveal is the reward, design §2) before <see cref="GatedResolutionFlow"/> shows
+        /// <c>WinScreen</c>. v1 = 1.4s (owner decision: midpoint of the designer's 1.2–1.6s range, a touch longer
+        /// than <see cref="LoseSettleSeconds"/>); config, not a constant, so game-balancer can tune it against the
+        /// working screen without a code change.
+        /// </summary>
+        public float WinSettleSeconds = 1.4f;
 
         /// <summary>Banner intro (pop-in + fade) duration.</summary>
         public float BannerIntroSeconds = 0.45f;

@@ -36,7 +36,9 @@ namespace Gameplay.PlayScreen
             _interaction = interaction;
         }
 
-        public void Present(GameOutcome outcome, Action applyTransition)
+        // isFinalLevel is presentational meta for the prod win screen (TASK-157); the bringup banner is
+        // outcome-only, so it is deliberately ignored here.
+        public void Present(GameOutcome outcome, Action applyTransition, bool isFinalLevel)
         {
             _interaction.IsBusy.Value = true;
 

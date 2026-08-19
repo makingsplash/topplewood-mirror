@@ -25,6 +25,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de2c80b5bc0484d33a32c677a8f1414e
+    m_Address: Screens/WinScreen.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e34ffff950ae84bb49c8372fcb3b686e
     m_Address: Screens/RestartPopup.prefab
     m_ReadOnly: 0
