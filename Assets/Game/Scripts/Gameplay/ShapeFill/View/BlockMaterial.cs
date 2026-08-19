@@ -21,7 +21,12 @@ namespace Gameplay.View
             {
                 if (_shared == null)
                 {
-                    var shader = Shader.Find("Universal Render Pipeline/Unlit")
+                    // Game/Wood Block рисует волокно, фаску и блик процедурно и держит тот же
+                    // _BaseColor per-instance, что и URP/Unlit, — покраска деталей не меняется.
+                    // Если шейдер не собрался (не попал в сборку / вырезан стриппингом),
+                    // откатываемся на прежнюю цепочку: деталь станет плоской, но не пропадёт.
+                    var shader = Shader.Find("Game/Wood Block")
+                                 ?? Shader.Find("Universal Render Pipeline/Unlit")
                                  ?? Shader.Find("Sprites/Default")
                                  ?? Shader.Find("Unlit/Color");
                     _shared = new Material(shader) { name = "ShapeFillBlockMaterial" };
@@ -32,6 +37,12 @@ namespace Gameplay.View
                     // no-op on fallback shaders (Sprites/Default, Unlit/Color) that have no _Cull property.
                     if (_shared.HasProperty(CullProperty))
                         _shared.SetFloat(CullProperty, (float)UnityEngine.Rendering.CullMode.Off);
+
+                    // Настройки стиля (WoodTuning) кладём СРАЗУ: иначе материал, созданный после
+                    // загрузки сохранённых чисел, поехал бы с дефолтами шейдера — и деталь в игре
+                    // отличалась бы от той, что владелец настроил в песочнице.
+                    // Именно ApplyToBlock, а не Apply: Apply сам берёт Shared и получилось бы кольцо.
+                    WoodTuning.Current.ApplyToBlock(_shared);
                 }
                 return _shared;
             }

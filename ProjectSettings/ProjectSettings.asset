@@ -1006,7 +1006,7 @@ PlayerSettings:
   cloudProjectId: fcf94f5d-127f-4420-8697-38d3a72971e8
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Drop Color Blocks
+  projectName: 'Color Tile Sort: Stack Puzzle'
   organizationId: say-games
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

@@ -63,12 +63,21 @@ namespace Gameplay.View
                 // wider than the bbox on the short axis, so fitting the bbox would let the square spill out of
                 // the band on non-square figures (Готово №2). S ≥ each axis ⇒ fit only decreases (Scale ceiling
                 // intact). Backdrop off ⇒ the legacy figure-bbox path is unchanged (no regression).
-                var fitExtentX = config.BackdropEnabled ? backdropSide : figureSize.x;
-                var fitExtentY = config.BackdropEnabled ? backdropSide : figureSize.y;
+                // Рамка шире белого квадрата на FramePadFraction с каждой стороны, и раньше подгонка
+                // её не учитывала: карточка «влезала» по квадрату, а деревянный багет вылезал за
+                // верхний край экрана и обрезался. Проявилось, когда потолок размера подняли до 0.75.
+                var framePad = WoodArt.Frame != null ? 1f + 2f * WoodArt.FramePadFraction : 1f;
+                var fitExtentX = (config.BackdropEnabled ? backdropSide : figureSize.x) * framePad;
+                var fitExtentY = (config.BackdropEnabled ? backdropSide : figureSize.y) * framePad;
                 var fit = Mathf.Min(
                     bandWorldW * pad / Mathf.Max(fitExtentX, 1e-3f),
                     bandWorldH * pad / Mathf.Max(fitExtentY, 1e-3f));
-                var scale = Mathf.Clamp(Mathf.Min(config.Scale, fit), config.MinScale, config.Scale);
+                // Потолок размера — из настроек стиля, а не из конфига: владелец крутит его
+                // ползунком в Play вместе с остальным деревом. Конфиг остаётся запасным значением.
+                var ceiling = WoodTuning.Current.PreviewScale > 0f
+                    ? WoodTuning.Current.PreviewScale
+                    : config.Scale;
+                var scale = Mathf.Clamp(Mathf.Min(ceiling, fit), config.MinScale, ceiling);
                 t.localScale = Vector3.one * scale;
             }
             else
@@ -111,10 +120,48 @@ namespace Gameplay.View
                     color = parsed;
                 color.a = 1f; // full opacity — a readable reference picture, unlike the paler on-field ghost.
 
-                var mpb = new MaterialPropertyBlock();
+                // Картинка-цель обязана быть того же цвета, что детали на поле, иначе игрок сверяет
+                // синее с зелёным. Поэтому ремап палитры (WoodTuning.PaletteToGame) идёт и здесь.
+                // Вид ОБЯЗАН попасть в слот: цветовая схема уровня раздаёт оттенки по видам, и без
+                // него превью красилось прежней общей палитрой — «фигуры другого цвета, чем у нас».
+                _slots.Add(new Slot { Renderer = renderer, LevelColor = color, Kind = slot.Kind });
+            }
+
+            Repaint();
+
+            // Палитру крутят ползунком в Play — без подписки превью осталось бы в старых цветах,
+            // пока поле уже перекрасилось. Сначала снимаем: Initialize зовётся заново на каждый
+            // уровень, и без этого подписки копились бы.
+            WoodTuning.Changed -= Repaint;
+            WoodTuning.Changed += Repaint;
+        }
+
+        private void OnDestroy() => WoodTuning.Changed -= Repaint;
+
+        private struct Slot
+        {
+            public MeshRenderer Renderer;
+            public Color LevelColor;
+            public string Kind;
+        }
+
+        private readonly List<Slot> _slots = new List<Slot>();
+
+        /// <summary>Перекрасить детали превью под текущую палитру. Цвет уровня помним исходным —
+        /// выключенный тумблер должен вернуть авторские цвета.</summary>
+        private void Repaint()
+        {
+            var tuning = WoodTuning.Current;
+            var mpb = new MaterialPropertyBlock();
+            foreach (var slot in _slots)
+            {
+                if (slot.Renderer == null)
+                    continue;
+                var color = tuning.ResolveLevelColor(slot.LevelColor, slot.Kind);
+                color.a = 1f;
                 mpb.SetColor(BlockMaterial.ColorProperty, color);
                 mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
-                renderer.SetPropertyBlock(mpb);
+                slot.Renderer.SetPropertyBlock(mpb);
             }
         }
 
@@ -139,6 +186,26 @@ namespace Gameplay.View
             var backdropTransform = backdrop.transform;
             backdropTransform.SetParent(parent, false);
             backdropTransform.localPosition = new Vector3(0f, 0f, BackdropZOffset);
+
+            // Арт владельца: деревянная рамка со белым полем внутри — она и есть подложка.
+            // 9-slice, потому что кант обязан остаться одной толщины на любой стороне фигуры.
+            // Спрайта нет — остаётся прежний белый квад из меша (никакой регрессии).
+            var frame = WoodArt.Frame;
+            if (frame != null)
+            {
+                var frameRenderer = backdrop.AddComponent<SpriteRenderer>();
+                frameRenderer.sprite = frame;
+                frameRenderer.drawMode = SpriteDrawMode.Sliced;
+                // Кант рисуется ПОВЕРХ стороны, поэтому рамку берём шире белого поля: иначе
+                // деревянный борт налез бы на детали превью.
+                frameRenderer.size = Vector2.one * side * (1f + 2f * WoodArt.FramePadFraction);
+                frameRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                frameRenderer.receiveShadows = false;
+
+                // Тень под картиной — просьба владельца: без неё рамка лежит на стене плоско.
+                FrameShadow.Attach(frameRenderer);
+                return;
+            }
 
             var meshFilter = backdrop.AddComponent<MeshFilter>();
             meshFilter.mesh = PieceMeshBuilder.Build(outline);

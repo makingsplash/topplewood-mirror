@@ -156,16 +156,30 @@ namespace Gameplay.Dev
             var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
             buttonGo.transform.SetParent(_buttonCanvas.transform, false);
 
-            buttonGo.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.12f, 0.7f);
-
+            var image = buttonGo.GetComponent<Image>();
             var rect = buttonGo.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 1f); // top-left corner, away from the play field's centre.
             rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
             rect.anchoredPosition = new Vector2(28f, -28f);
-            rect.sizeDelta = new Vector2(170f, 96f);
 
             buttonGo.GetComponent<Button>().onClick.AddListener(ToggleMenu);
+
+            // Деревянная кнопка от владельца: надпись «DEV ≡» в спрайте запечена, отдельной подписи нет.
+            var sprite = Gameplay.View.WoodArt.ButtonDev;
+            if (sprite != null)
+            {
+                image.sprite = sprite;
+                image.color = Color.white;
+                // Высота ОБЩАЯ для DEV и RESTART и лежит в настройках: владелец просил
+                // уменьшить их в полтора раза (116 → 77) и держать одинаковыми.
+                var height = Gameplay.View.WoodTuning.Current.UiButtonHeight;
+                rect.sizeDelta = new Vector2(height * sprite.rect.width / sprite.rect.height, height);
+                return;
+            }
+
+            image.color = new Color(0.12f, 0.12f, 0.12f, 0.7f);
+            rect.sizeDelta = new Vector2(170f, 96f);
 
             var labelGo = new GameObject("Label", typeof(Text));
             labelGo.transform.SetParent(buttonGo.transform, false);

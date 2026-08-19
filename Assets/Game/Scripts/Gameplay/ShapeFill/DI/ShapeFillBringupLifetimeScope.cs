@@ -86,6 +86,19 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
         builder.Register<ILevelResolutionFlow, SequencedResolutionFlow>(Lifetime.Singleton);
         builder.RegisterEntryPoint<RestartButtonPresenter>();
 
+        // Деревянная стена-фон (арт владельца). Своя точка входа: у камеры стоял сплошной цвет,
+        // объекта фона в сцене не было. Подгоняется под камеру каждый кадр, поэтому переезд камеры
+        // на новый уровень её не ломает — порядок регистрации относительно CameraFramingPresenter не важен.
+        builder.RegisterEntryPoint<Gameplay.View.WoodBackdropPresenter>();
+
+        // Сообщает вью, какой уровень идёт: по нему деталь находит свою цветовую схему Иттена.
+        // Порядок регистрации не важен — презентер сам перекрашивает уже созданные детали событием.
+        builder.RegisterEntryPoint<Gameplay.View.WoodLevelPalettePresenter>();
+
+        // Листва по верхним углам с тенью. Привязана к углам КАМЕРЫ и подгоняется каждый
+        // кадр — камера переезжает на каждый уровень, как и фон-стена.
+        builder.RegisterEntryPoint<Gameplay.View.WoodFoliagePresenter>();
+
 #if GPIE_DEVELOPMENT
         // Dev/QA level-switch cheat (TASK-047): the reachable SayKit DynamicDebugMenu UI, hosted inside this
         // bringup scope so it can inject CampaignProgressionController by ordinary DI (replaces the removed IMGUI

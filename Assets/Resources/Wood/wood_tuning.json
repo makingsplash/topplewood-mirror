@@ -1,0 +1,365 @@
+{
+    "CornerRadius": 0.09498315304517746,
+    "CornerSegments": 4,
+    "StyleScale": 0.4000000059604645,
+    "DetailRefSize": 1.0,
+    "DetailScale": 0.0,
+    "GrainScale": 2.9574432373046875,
+    "GrainStrength": 0.08500000089406967,
+    "GrainWarp": 0.2750283181667328,
+    "GrainSharp": 2.5999999046325684,
+    "GrainVary": 0.6000000238418579,
+    "GrainEmboss": 0.02800000086426735,
+    "GrainNoise": 0.07000000029802322,
+    "GrainAngle": 0.0,
+    "GrainAlignLong": 1.0,
+    "GrainSpace": 0.0,
+    "LightAngle": 80.54622650146484,
+    "BevelWidth": 0.0670674741268158,
+    "BevelLight": 0.3155897259712219,
+    "BevelDark": 0.6548593044281006,
+    "RimWidth": 0.035891804844141006,
+    "RimLight": 0.20000000298023224,
+    "RimDark": 0.31261202692985535,
+    "LineWidth": 0.011530346237123013,
+    "LineDark": 0.2070784568786621,
+    "Ao": 0.0,
+    "AoWidth": 0.19305528700351715,
+    "Saturation": 1.1256886720657349,
+    "Brightness": 1.0441009998321533,
+    "IdleBrightness": 1.0,
+    "IdleSaturation": 1.0,
+    "ActiveBrightness": 1.1200000047683716,
+    "ActiveSaturation": 1.100000023841858,
+    "ArmedWhite": 0.4000000059604645,
+    "ShadowOnlyOnWall": true,
+    "ShadowAlpha": 0.34204989671707153,
+    "ShadowSoft": 0.05485622584819794,
+    "ShadowOffsetX": -0.0017301084008067846,
+    "ShadowOffsetY": -0.1305844485759735,
+    "ShadowScale": 1.0494043827056885,
+    "FrameShadowAlpha": 0.5,
+    "FrameShadowOffsetX": 0.04500000178813934,
+    "FrameShadowOffsetY": -0.06499999761581421,
+    "FrameShadowSoft": 0.029999999329447746,
+    "FrameShadowScale": 1.0299999713897705,
+    "PaletteToGame": true,
+    "Palette": [
+        "#48699A",
+        "#5C8E3E",
+        "#CBA016",
+        "#C7681D",
+        "#BA3C32",
+        "#8A5A3B",
+        "#2F8C86",
+        "#5A55A3",
+        "#8B5A9E",
+        "#B8577A",
+        "#DFC694"
+    ],
+    "PieceOverrides": [],
+    "IttenPalettes": true,
+    "PreviewScale": 0.75,
+    "FoliageWidth": 0.405,
+    "FoliageOverhang": 0.0,
+    "FoliageZ": 1.2,
+    "FoliageShadowAlpha": 0.28,
+    "FoliageShadowOffsetX": 0.039,
+    "FoliageShadowOffsetY": -0.078,
+    "FoliageShadowScale": 1.02,
+    "UiButtonHeight": 77.0,
+    "LevelPalettes": [
+        {
+            "LevelId": "sailboat",
+            "Kinds": [
+                "hull",
+                "sail"
+            ],
+            "Colors": [
+                "#BA3C32",
+                "#2F8C86"
+            ]
+        },
+        {
+            "LevelId": "robot",
+            "Kinds": [
+                "torso",
+                "leg",
+                "head"
+            ],
+            "Colors": [
+                "#2F8C86",
+                "#BA3C32",
+                "#B8577A"
+            ]
+        },
+        {
+            "LevelId": "locomotive",
+            "Kinds": [
+                "frame",
+                "cab",
+                "boiler",
+                "wheel",
+                "cab_roof",
+                "chimney"
+            ],
+            "Colors": [
+                "#B8577A",
+                "#2F8C86",
+                "#48699A",
+                "#5C8E3E",
+                "#BA3C32",
+                "#CBA016"
+            ]
+        },
+        {
+            "LevelId": "giraffe",
+            "Kinds": [
+                "head",
+                "body",
+                "neck",
+                "leg",
+                "horn_b",
+                "horn_a"
+            ],
+            "Colors": [
+                "#5C8E3E",
+                "#8B5A9E",
+                "#2F8C86",
+                "#CBA016",
+                "#5A55A3",
+                "#48699A"
+            ]
+        },
+        {
+            "LevelId": "grand_seesaw",
+            "Kinds": [
+                "beam",
+                "pan",
+                "weight",
+                "fulcrum",
+                "cap"
+            ],
+            "Colors": [
+                "#8B5A9E",
+                "#5C8E3E",
+                "#5A55A3",
+                "#2F8C86",
+                "#CBA016"
+            ]
+        },
+        {
+            "LevelId": "well",
+            "Kinds": [
+                "bucket_bar",
+                "roof_beam",
+                "post",
+                "wall",
+                "roof",
+                "bucket"
+            ],
+            "Colors": [
+                "#CBA016",
+                "#48699A",
+                "#8B5A9E",
+                "#5A55A3",
+                "#C7681D",
+                "#2F8C86"
+            ]
+        },
+        {
+            "LevelId": "video_launcher",
+            "Kinds": [
+                "hammer",
+                "stick",
+                "ball"
+            ],
+            "Colors": [
+                "#5A55A3",
+                "#CBA016",
+                "#2F8C86"
+            ]
+        },
+        {
+            "LevelId": "pagoda",
+            "Kinds": [
+                "tier1",
+                "tier2",
+                "roof1",
+                "roof2",
+                "base",
+                "finial"
+            ],
+            "Colors": [
+                "#C7681D",
+                "#48699A",
+                "#8B5A9E",
+                "#CBA016",
+                "#2F8C86",
+                "#5A55A3"
+            ]
+        },
+        {
+            "LevelId": "lever_lid",
+            "Kinds": [
+                "stem",
+                "cap",
+                "lever",
+                "hexagon"
+            ],
+            "Colors": [
+                "#48699A",
+                "#C7681D",
+                "#8B5A9E",
+                "#5C8E3E"
+            ]
+        },
+        {
+            "LevelId": "table_lamp",
+            "Kinds": [
+                "stem",
+                "shade",
+                "base"
+            ],
+            "Colors": [
+                "#BA3C32",
+                "#2F8C86",
+                "#48699A"
+            ]
+        },
+        {
+            "LevelId": "flower",
+            "Kinds": [
+                "stem",
+                "blossom",
+                "calyx",
+                "leaf_l",
+                "leaf_r",
+                "center"
+            ],
+            "Colors": [
+                "#2F8C86",
+                "#BA3C32",
+                "#5C8E3E",
+                "#B8577A",
+                "#C7681D",
+                "#48699A"
+            ]
+        },
+        {
+            "LevelId": "libra_scales",
+            "Kinds": [
+                "beam",
+                "pan",
+                "weight",
+                "pillar",
+                "cap",
+                "pointer"
+            ],
+            "Colors": [
+                "#B8577A",
+                "#2F8C86",
+                "#BA3C32",
+                "#48699A",
+                "#5A55A3",
+                "#5C8E3E"
+            ]
+        },
+        {
+            "LevelId": "high_striker",
+            "Kinds": [
+                "column",
+                "bell",
+                "base",
+                "puck",
+                "hammer",
+                "stick"
+            ],
+            "Colors": [
+                "#5C8E3E",
+                "#8B5A9E",
+                "#5A55A3",
+                "#2F8C86",
+                "#BA3C32",
+                "#CBA016"
+            ]
+        },
+        {
+            "LevelId": "grandfather_clock",
+            "Kinds": [
+                "case",
+                "hood",
+                "plinth",
+                "dial",
+                "waist",
+                "foot",
+                "crown"
+            ],
+            "Colors": [
+                "#8B5A9E",
+                "#5C8E3E",
+                "#2F8C86",
+                "#5A55A3",
+                "#BA3C32",
+                "#B8577A",
+                "#CBA016"
+            ]
+        },
+        {
+            "LevelId": "mailbox",
+            "Kinds": [
+                "tray",
+                "letter",
+                "back",
+                "flag",
+                "post"
+            ],
+            "Colors": [
+                "#CBA016",
+                "#48699A",
+                "#8B5A9E",
+                "#5C8E3E",
+                "#5A55A3"
+            ]
+        },
+        {
+            "LevelId": "air_dunk",
+            "Kinds": [
+                "rim_floor",
+                "ball",
+                "rim_r",
+                "pole",
+                "rim_l"
+            ],
+            "Colors": [
+                "#5A55A3",
+                "#CBA016",
+                "#2F8C86",
+                "#5C8E3E",
+                "#C7681D"
+            ]
+        },
+        {
+            "LevelId": "piggy_bank",
+            "Kinds": [
+                "belly",
+                "coin",
+                "wall_r",
+                "leg",
+                "snout",
+                "wall_l"
+            ],
+            "Colors": [
+                "#C7681D",
+                "#48699A",
+                "#8B5A9E",
+                "#2F8C86",
+                "#5A55A3",
+                "#5C8E3E"
+            ]
+        }
+    ],
+    "EnvironmentColor": "#7A5C3E",
+    "StaticAsWood": true,
+    "FoliageDropY": 0.0
+}
