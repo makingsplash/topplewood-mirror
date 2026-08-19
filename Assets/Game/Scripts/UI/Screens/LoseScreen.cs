@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace Ui.Screens
 {
     /// <summary>
-    /// Lose screen (TASK-154): shown by <see cref="Gameplay.PlayScreen.LoseResolutionFlow"/> when a level resolves
+    /// Lose screen (TASK-154): shown by <see cref="Gameplay.PlayScreen.GatedResolutionFlow"/> when a level resolves
     /// Lost. One blameless message + one "Try again" button. The screen decides *when* to transition, never *what*:
     /// the button runs the campaign controller's own transition callback (the flow's <c>applyTransition</c>, i.e.
     /// the Lost-retry path), it does NOT reload the level itself — the "won ? advance : reload" logic stays the
