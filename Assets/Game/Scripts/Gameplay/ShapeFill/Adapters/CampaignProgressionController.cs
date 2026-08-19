@@ -150,6 +150,22 @@ namespace Gameplay.Adapters
             _index = Clamp(index);
             _controller.ReloadLevel(_index);
         }
+
+        /// <summary>
+        /// Dev/QA hook (TASK-113; consumed only by <c>GameDebugMenuRestartBridge</c>): re-read the campaign
+        /// pointer from <see cref="ICampaignStore"/> and reload in place. This is the meaning of "restart" for the
+        /// prod <c>GameDebugMenu</c> — NOT an Application relaunch. Distinct from the two neighbouring paths:
+        /// <see cref="ReloadCurrent"/> reloads the STALE in-memory index, and <see cref="DevJumpToLevel"/> takes
+        /// the index as an argument (bringup has no SayData.Meta to read). The prod menu's "Reset Progress" /
+        /// "Go to Level" write <c>Data.Meta.CurrentLevel</c> to disk but never notified the in-memory owner, so
+        /// only re-reading the store here makes them take effect — the next WIN/LOSS then resolves from the
+        /// resynced index instead of the stale one. Editor/dev only.
+        /// </summary>
+        public void ResyncFromStore()
+        {
+            _index = Clamp(_store.ReadLevelIndex());
+            _controller.ReloadLevel(_index);
+        }
 #endif
 
         public void Dispose()

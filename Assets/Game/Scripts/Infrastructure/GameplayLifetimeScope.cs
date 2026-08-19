@@ -3,6 +3,9 @@ using DataStorage;
 using Gameplay.Adapters;
 using Gameplay.Core;
 using Gameplay.DI;
+#if GPIE_DEVELOPMENT
+using Gameplay.Dev;
+#endif
 using Gameplay.PlayScreen;
 using Gameplay.Sequence.DI;
 using Gameplay.Tutorial;
@@ -82,6 +85,14 @@ namespace Game.Code.Infrastructure
             // the win/lose screens are.
             builder.Register<PlayScreenInteraction>(Lifetime.Singleton);
             builder.RegisterEntryPoint<RestartButtonPresenter>();
+
+#if GPIE_DEVELOPMENT
+            // TASK-113: deliver the prod GameDebugMenu "Reset Progress"/"Go to Level" restart request (an
+            // otherwise-unsubscribed GlobalService.Debug.OnDebugMenuClose) to the campaign owner + reload in place.
+            // Prod scope only — this is where the index owner (CampaignProgressionController, via GameplayCoreInstaller)
+            // and PlayScreenInteraction both live; bringup gates its own menu locally (BringupDebugMenuHost).
+            builder.RegisterEntryPoint<GameDebugMenuRestartBridge>();
+#endif
 
             // Tutorial system prod impls (TASK-049): completion on the SDK-canon Data.Meta.CompletedTutorials,
             // gate on Data.Debug.DisableTutorial, funnel via the SayKit tutorial analytics. Context-independent
