@@ -9,6 +9,7 @@ using Gameplay.Dev;
 using Gameplay.PlayScreen;
 using Gameplay.Sequence.DI;
 using Gameplay.Tutorial;
+using Gameplay.View;
 using Services;
 using Services.Gameplay;
 using SGS.Services.Date_Time;
@@ -85,6 +86,18 @@ namespace Game.Code.Infrastructure
             // the win/lose screens are.
             builder.Register<PlayScreenInteraction>(Lifetime.Singleton);
             builder.RegisterEntryPoint<RestartButtonPresenter>();
+
+            // TASK-164: вуд-арт-слой художника (ветка art/andrei-v1). Ветка вешала эти три презентера
+            // ТОЛЬКО в ShapeFillBringupLifetimeScope, но bringup-сцены в билде нет — единственный enabled-путь
+            // это Loading → ЭТОТ прод-скоуп (child-scope, TASK-138/ADR-0004). Без дорегистрации здесь собранный
+            // APK остался бы grey-box при зелёном компайле. Все три резолвятся в прод-графе: Backdrop/Foliage
+            // без ctor-зависимостей (WoodArt/WoodTuning/Camera.main — статика), Palette тянет GameModel, который
+            // регистрирует GameplayCoreInstaller (общий с bringup). Вуд-скин RESTART-кнопки применяется в проде
+            // сам — он живёт внутри RestartButtonPresenter выше. Порядок регистрации не несущий: каждый презентер
+            // подгоняется под камеру покадрово / перекрашивает детали событием (см. их докстринги).
+            builder.RegisterEntryPoint<WoodBackdropPresenter>();
+            builder.RegisterEntryPoint<WoodLevelPalettePresenter>();
+            builder.RegisterEntryPoint<WoodFoliagePresenter>();
 
 #if GPIE_DEVELOPMENT
             // TASK-113: deliver the prod GameDebugMenu "Reset Progress"/"Go to Level" restart request (an
