@@ -82,33 +82,51 @@ namespace Gameplay.PlayScreen
 
             var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
             buttonGo.transform.SetParent(_canvas.transform, false);
-            buttonGo.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.12f, 0.7f);
 
+            var image = buttonGo.GetComponent<Image>();
             var rect = buttonGo.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(1f, 1f); // top-right corner (owner requirement).
             rect.anchorMax = new Vector2(1f, 1f);
             rect.pivot = new Vector2(1f, 1f);
             rect.anchoredPosition = new Vector2(-28f, -28f);
-            rect.sizeDelta = new Vector2(230f, 96f);
+
+            // Деревянная кнопка от владельца. Текст «RESTART» в спрайте ЗАПЕЧЁН, поэтому подписи
+            // рядом нет и растягивать спрайт по частям (9-slice) нельзя — только целиком, в пропорции.
+            var sprite = Gameplay.View.WoodArt.ButtonRestart;
+            if (sprite != null)
+            {
+                image.sprite = sprite;
+                image.color = Color.white;
+                // Высота ОБЩАЯ для DEV и RESTART и лежит в настройках: владелец просил
+                // уменьшить их в полтора раза (116 → 77) и держать одинаковыми.
+                var height = Gameplay.View.WoodTuning.Current.UiButtonHeight;
+                rect.sizeDelta = new Vector2(height * sprite.rect.width / sprite.rect.height, height);
+            }
+            else
+            {
+                // Прежний вид: тёмная плашка с подписью (спрайт не найден — но кнопка обязана быть).
+                image.color = new Color(0.12f, 0.12f, 0.12f, 0.7f);
+                rect.sizeDelta = new Vector2(230f, 96f);
+
+                var labelGo = new GameObject("Label", typeof(Text));
+                labelGo.transform.SetParent(buttonGo.transform, false);
+
+                var label = labelGo.GetComponent<Text>();
+                label.text = "RESTART";
+                label.alignment = TextAnchor.MiddleCenter;
+                label.color = Color.white;
+                label.fontSize = 34;
+                label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+                var labelRect = (RectTransform)labelGo.transform;
+                labelRect.anchorMin = Vector2.zero;
+                labelRect.anchorMax = Vector2.one;
+                labelRect.offsetMin = Vector2.zero;
+                labelRect.offsetMax = Vector2.zero;
+            }
 
             _button = buttonGo.GetComponent<Button>();
             _button.onClick.AddListener(OnRestartClicked);
-
-            var labelGo = new GameObject("Label", typeof(Text));
-            labelGo.transform.SetParent(buttonGo.transform, false);
-
-            var label = labelGo.GetComponent<Text>();
-            label.text = "RESTART";
-            label.alignment = TextAnchor.MiddleCenter;
-            label.color = Color.white;
-            label.fontSize = 34;
-            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-
-            var labelRect = (RectTransform)labelGo.transform;
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
         }
 
         private void OnRestartClicked()

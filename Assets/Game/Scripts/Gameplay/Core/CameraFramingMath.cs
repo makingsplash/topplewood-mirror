@@ -12,6 +12,15 @@ namespace Gameplay.Core
     /// </summary>
     public static class CameraFramingMath
     {
+        /// <summary>
+        /// Половина габарита коробки, зарезервированной в кадре под корпус вентилятора зоны воздуха: столько
+        /// он занимает ЗА входной гранью вдоль потока и столько же на каждую щёку поперёк. Вью обязан
+        /// в неё уложиться — см. <c>AirZoneView.BuildFan</c>, там ширина и вылет зажимаются этим же
+        /// числом. Держать их согласованными обязательно: разъедутся — либо вентилятор снова уедет за
+        /// край на узком телефоне, либо кадр начнёт резервировать пустоту и зря отдалять уровень.
+        /// </summary>
+        public const float AirZoneFanReserve = 1.15f;
+
         /// <summary>Union AABB (world space) of every piece's start silhouette, the target slots and the static
         /// geometry — the full content the player must see and reach. Returns false when there is no content.</summary>
         public static bool TryContentBounds(LevelData level, out Vec2 min, out Vec2 max)
@@ -72,6 +81,47 @@ namespace Gameplay.Core
                         Accumulate(v, ref minX, ref minY, ref maxX, ref maxY);
                         any = true;
                     }
+                }
+            }
+
+            // Зоны воздуха и КОРПУС ВЕНТИЛЯТОРА. Сама зона почти всегда лежит внутри контента, а вот
+            // вентилятор стоит СНАРУЖИ входной грани — и на узком телефоне его резало краем кадра:
+            // замер piggy_bank дал 0.45 мировой единицы за левым краем при 19.5:9 и 20:9, при 9:16 и
+            // на планшете он влезал. Владелец: «в уровнях на мобиле вентилятор должен быть виден
+            // всегда» — значит кадр обязан вмещать и его, а не только область силы.
+            //
+            // Резерв <see cref="AirZoneFanReserve"/> — это КОРОБКА, в которую вью обязан уложить
+            // вентилятор (AirZoneView.BuildFan зажимает по ней и ширину, и вылет за грань). Число
+            // живёт здесь одно на всех: его видит и живая камера, и предсказание орто-размера в
+            // LevelDataValidator, поэтому кадр и предсказание не могут разъехаться.
+            if (level.AirZones != null)
+            {
+                foreach (var zone in level.AirZones)
+                {
+                    var region = zone.Region;
+                    Accumulate(region.Min, ref minX, ref minY, ref maxX, ref maxY);
+                    Accumulate(region.Max, ref minX, ref minY, ref maxX, ref maxY);
+
+                    var dir = zone.Direction;
+                    var halfX = (region.Max.X - region.Min.X) * 0.5f;
+                    var halfY = (region.Max.Y - region.Min.Y) * 0.5f;
+                    var centreX = (region.Min.X + region.Max.X) * 0.5f;
+                    var centreY = (region.Min.Y + region.Max.Y) * 0.5f;
+
+                    // Опорная функция: расстояние от центра до ВХОДНОЙ грани вдоль потока. Работает
+                    // и для косой зоны, а не только для четырёх сторон света.
+                    var extentAlong = MathF.Abs(dir.X) * halfX + MathF.Abs(dir.Y) * halfY;
+                    var backX = centreX - dir.X * (extentAlong + AirZoneFanReserve);
+                    var backY = centreY - dir.Y * (extentAlong + AirZoneFanReserve);
+
+                    // Поперёк потока корпус тоже не шире резерва — берём обе его щеки.
+                    var perpX = -dir.Y;
+                    var perpY = dir.X;
+                    Accumulate(new Vec2(backX + perpX * AirZoneFanReserve, backY + perpY * AirZoneFanReserve),
+                        ref minX, ref minY, ref maxX, ref maxY);
+                    Accumulate(new Vec2(backX - perpX * AirZoneFanReserve, backY - perpY * AirZoneFanReserve),
+                        ref minX, ref minY, ref maxX, ref maxY);
+                    any = true;
                 }
             }
 

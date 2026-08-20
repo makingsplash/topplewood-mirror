@@ -24,7 +24,7 @@ namespace Gameplay.View
             var go = new GameObject($"PieceView_{type.Kind}");
             go.transform.SetParent(Root, false);
             var view = go.AddComponent<PieceView>();
-            view.Initialize(type.Shape, type.Color);
+            view.Initialize(type.Shape, type.Color, type.Kind);
             return view;
         }
     }
