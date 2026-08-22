@@ -76,6 +76,14 @@ namespace Gameplay.Sim
         // never touches the gated runs. null/empty → pass OFF.
         private string _stepLogLevelId;
 
+        // TASK-179: opt-in TARGETED sweep. SIM_ONLY=<comma-separated levelIds> (set by run-sim.sh --only) restricts
+        // the sweep to the named levels only — fast per-level physics iteration instead of judging the whole lineage,
+        // which grows linearly with level count. null/empty → full sweep, byte-for-byte unchanged. A targeted run
+        // writes a SEPARATE level-sim-only_<ts> report carrying a `scope` marker and SKIPS the M0 confirmation
+        // (a lineage-level determinism/accel probe, not per-level), so it can never be mistaken for — nor gate — the
+        // full lineage. An unknown id is a LOUD failure (never a silent empty sweep that reports PASS).
+        private string _onlyLevelIds;
+
         private void Awake()
         {
             // Best-effort (RFC-Δ §7): if an interactive/MCP play-mode entered, keep the loop ticking without
@@ -94,6 +102,12 @@ namespace Gameplay.Sim
                 _runImpatientPass = true;
                 _impatientGapSteps = gap;
             }
+
+            // TASK-179: headless opt-in for the targeted sweep (no scene edit; committed scene stays default),
+            // mirroring the SIM_TIMING_GAP/SIM_STEPLOG opt-ins. SIM_ONLY carries the comma-separated target levelIds.
+            var onlyEnv = Environment.GetEnvironmentVariable("SIM_ONLY");
+            if (Application.isBatchMode && !string.IsNullOrEmpty(onlyEnv))
+                _onlyLevelIds = onlyEnv;
 
 #if GPIE_DEVELOPMENT
             // TASK-070/076: headless opt-in for the per-step logging pass (no scene edit; committed scene stays
@@ -127,6 +141,37 @@ namespace Gameplay.Sim
             {
                 Debug.LogError($"[level-sim] failed to load campaign '{JsonLevelSource.CampaignFileName}': {e}");
                 ok = false;
+            }
+
+            // TASK-179: restrict the sweep to SIM_ONLY (--only) before any run. An unknown id fails LOUDLY (ok=false
+            // → exit 1) rather than sweeping an empty/short set that reports PASS — the worst outcome per the ticket.
+            // run-sim.sh pre-validates ids against the snapshot before launching Unity; this is the SECOND line
+            // (a real JSON parse vs the shell grep, and it reads the SAME manifest the batch actually loaded).
+            if (ok && !string.IsNullOrEmpty(_onlyLevelIds))
+            {
+                var filtered = FilterToOnly(levels, _onlyLevelIds, out var missing);
+                var available = new StringBuilder();
+                foreach (var l in levels)
+                    available.Append(available.Length == 0 ? string.Empty : ", ").Append(l.LevelId);
+                if (missing.Count > 0)
+                {
+                    Debug.LogError($"[level-sim] --only: level(s) not found in campaign: {string.Join(", ", missing)} " +
+                                   $"— NO sweep run. Available: {available}");
+                    ok = false;
+                }
+                else if (filtered.Count == 0)
+                {
+                    Debug.LogError("[level-sim] --only: filter resolved to ZERO levels (SIM_ONLY empty after trim) " +
+                                   $"— refusing an empty sweep. Available: {available}");
+                    ok = false;
+                }
+                else
+                {
+                    Debug.Log($"[level-sim] --only: TARGETED sweep over {filtered.Count} level(s): " +
+                              $"{string.Join(", ", ExtractLevelIds(filtered))} — PARTIAL report (level-sim-only_*), " +
+                              "M0 skipped, NOT the lineage gate.");
+                    levels = filtered;
+                }
             }
 
             if (ok)
@@ -262,15 +307,24 @@ namespace Gameplay.Sim
                 ok = false;
             }
 
+            // TASK-179: M0 confirmation (100-repeat determinism + accel experiments on levels[0]) is a lineage-level
+            // platform probe (ADR-0001), not a per-level check — running it would defeat the whole point of a fast
+            // targeted sweep. A partial run skips it (m0 stays null in the partial report; the `scope` marker records
+            // why). The default full sweep is unchanged.
+            var partial = !string.IsNullOrEmpty(_onlyLevelIds);
             object m0 = null;
-            if (ok)
+            if (ok && !partial)
             {
                 yield return StartCoroutine(BuildM0Summary(levels, runs, result => m0 = result));
                 if (_m0Faulted)
                     ok = false;
             }
+            else if (ok && partial)
+            {
+                Debug.Log("[level-sim] --only: M0 confirmation SKIPPED (lineage-level probe, not per-level).");
+            }
 
-            var written = WriteReports(runs, stats, m0, out var dir, out var csvPath, out var jsonPath);
+            var written = WriteReports(runs, stats, m0, partial, out var dir, out var csvPath, out var jsonPath);
             LogSummary(stats, m0);
 
             // exitCode = tool health, NOT a finding: 0 ⇔ report on disk without exception; 1 ⇔ threw / no report /
@@ -753,6 +807,46 @@ namespace Gameplay.Sim
             Debug.Log($"[TAP-AUDIT] total tap-spacing warnings across {levels.Count} level(s): {total}");
         }
 
+        // TASK-179: restrict a loaded campaign to the SIM_ONLY level ids (targeted sweep). Returns the surviving
+        // levels in manifest order; any requested id absent from the campaign is collected into <paramref
+        // name="missing"/> so the caller fails loudly instead of silently sweeping a short/empty set. Duplicate and
+        // blank ids in the CSV are ignored; matching is exact on LevelId.
+        private static IReadOnlyList<LevelData> FilterToOnly(
+            IReadOnlyList<LevelData> all, string csv, out List<string> missing)
+        {
+            var wanted = new List<string>();
+            foreach (var raw in csv.Split(','))
+            {
+                var id = raw.Trim();
+                if (id.Length > 0 && !wanted.Contains(id))
+                    wanted.Add(id);
+            }
+
+            var present = new HashSet<string>();
+            foreach (var l in all)
+                present.Add(l.LevelId);
+
+            missing = new List<string>();
+            foreach (var id in wanted)
+                if (!present.Contains(id))
+                    missing.Add(id);
+
+            var keep = new HashSet<string>(wanted);
+            var filtered = new List<LevelData>();
+            foreach (var l in all)
+                if (keep.Contains(l.LevelId))
+                    filtered.Add(l);
+            return filtered;
+        }
+
+        private static List<string> ExtractLevelIds(IReadOnlyList<LevelData> levels)
+        {
+            var ids = new List<string>(levels.Count);
+            foreach (var l in levels)
+                ids.Add(l.LevelId);
+            return ids;
+        }
+
         private static IReadOnlyList<LevelData> LoadLevels()
         {
             var source = new JsonLevelSource(new StreamingAssetsLevelStore(), new LevelDataValidator(new TapZoneConfig()));
@@ -893,7 +987,7 @@ namespace Gameplay.Sim
         }
 
         private bool WriteReports(IReadOnlyList<SimRunResult> runs, IReadOnlyList<LevelSolveStats> stats, object m0,
-            out string dir, out string csvPath, out string jsonPath)
+            bool partial, out string dir, out string csvPath, out string jsonPath)
         {
             csvPath = null;
             jsonPath = null;
@@ -905,15 +999,36 @@ namespace Gameplay.Sim
                 // Provenance is captured from the tree the sweep actually ran in (repo root = the projectPath),
                 // so a sim-worktree run stamps that worktree's detached ref, not the main tree's (TASK-058).
                 var provenance = SimProvenance.Capture(ResolveRepoRoot(), _startWallClock);
-                var json = SimReportWriter.BuildJson(runs, stats, m0, provenance);
+                // TASK-179: a targeted (--only) sweep writes a SEPARATE level-sim-only_<ts> report (the `-` after
+                // "level-sim" keeps it OUT of the lineage gate's `level-sim_*.json` glob, same convention as the
+                // timing report) AND embeds a `scope` marker so sim-gate.py stamps the verdict PARTIAL. The default
+                // full sweep gets scope==null → byte-for-byte identical report as before.
+                object scope = null;
+                var prefix = "level-sim";
+                if (partial)
+                {
+                    var swept = new List<string>();
+                    foreach (var r in runs)
+                        if (!swept.Contains(r.LevelId))
+                            swept.Add(r.LevelId);
+                    scope = new
+                    {
+                        kind = "partial",
+                        onlyLevels = swept,
+                        note = "TASK-179 targeted sweep (--only): judges ONLY these levels; NOT the full-lineage " +
+                               "gate. M0 confirmation skipped.",
+                    };
+                    prefix = "level-sim-only";
+                }
+                var json = SimReportWriter.BuildJson(runs, stats, m0, provenance, scope);
                 var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
 
                 Directory.CreateDirectory(dir);
-                csvPath = Path.Combine(dir, $"level-sim_{stamp}.csv");
-                jsonPath = Path.Combine(dir, $"level-sim_{stamp}.json");
+                csvPath = Path.Combine(dir, $"{prefix}_{stamp}.csv");
+                jsonPath = Path.Combine(dir, $"{prefix}_{stamp}.json");
                 File.WriteAllText(csvPath, csv);
                 File.WriteAllText(jsonPath, json);
-                Debug.Log($"[level-sim] wrote report to {dir} (level-sim_{stamp}.csv / .json)");
+                Debug.Log($"[level-sim] wrote report to {dir} ({prefix}_{stamp}.csv / .json)");
                 return true;
             }
             catch (Exception e)
