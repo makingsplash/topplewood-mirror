@@ -89,8 +89,27 @@ namespace Tools.Debug
                     context.Main.CloseMenu();
                 });
 
+#if GPIE_DEVELOPMENT
+            // TASK-174: page the line-up ◀/▶ — the jump happens IMMEDIATELY and the menu STAYS OPEN (unlike the
+            // number input above, which closes it). GameDebugMenuLevelStep is a dev-only type, so both the calls and
+            // the StepLevel helper are guarded; the reference is fully qualified because in a player build the
+            // Gameplay.Dev namespace is empty and a `using` would not compile.
+            DDMButton.Create(context, "◀ Prev", () => StepLevel(-1));
+            DDMButton.Create(context, "Next ▶", () => StepLevel(1));
+#endif
+
             DDMLabel.Create(context, $"Level restarts: {Data.Meta.CurrentLevelRestarts.Value}, revives: {Data.Meta.CurrentLevelRevives.Value}");
         }
+
+#if GPIE_DEVELOPMENT
+        private static void StepLevel(int delta)
+        {
+            Gameplay.Dev.GameDebugMenuLevelStep.Request(delta);   // in-scope: clamp + persist + reload, SYNCHRONOUS
+            _level = SayData.Meta.CurrentLevel.Value;             // sync app bookkeeping to the clamped value
+            Data.Meta.ClearProgress(_level - 1);                  // parity with "Go to Level" (no-op for ShapeFill)
+            // NO CloseMenu() — the menu stays open (the core of the task).
+        }
+#endif
 
         private static void CreateResources(DDMContext context)
         {

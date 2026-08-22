@@ -166,6 +166,27 @@ namespace Gameplay.Adapters
             _index = Clamp(_store.ReadLevelIndex());
             _controller.ReloadLevel(_index);
         }
+
+        /// <summary>
+        /// Dev/QA hook (TASK-174; consumed only by <c>GameDebugMenuRestartBridge</c>): step the campaign pointer by
+        /// <paramref name="delta"/> (±1) WITH PERSIST — this backs the prod ◀/▶ arrows that page through the
+        /// line-up WITHOUT closing the debug menu. Clamped to the line-up bounds (no wrap): at an edge this is a
+        /// silent no-op (neither a re-write nor a reload). Persist goes through <see cref="ICampaignStore.WriteLevelIndex"/>,
+        /// so prod coherently writes both <c>CurrentLevel</c> and <c>CurrentLevelIndex</c> and flushes durably
+        /// (survives a kill) — unlike the number-input "Go to Level", which writes only <c>CurrentLevel</c>. Then a
+        /// reset-in-place reload (clean re-entry, same path as <see cref="ResyncFromStore"/>). Distinct from
+        /// <see cref="DevJumpToLevel"/>, which is non-persisting by design-lock (RFC Q2, bringup-only) and is not
+        /// called here. Editor/dev only.
+        /// </summary>
+        public void DevStepPersisted(int delta)
+        {
+            var target = Clamp(_index + delta);
+            if (target == _index)
+                return;                       // line-up edge — no wrap, silent no-op
+            _store.WriteLevelIndex(target);   // prod: CurrentLevel(+Index) + durable flush, coherently
+            _index = target;
+            _controller.ReloadLevel(_index);
+        }
 #endif
 
         public void Dispose()
