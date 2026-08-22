@@ -56,27 +56,29 @@ namespace Gameplay.Core.Sim
 
         public static string BuildJson(
             IReadOnlyList<SimRunResult> runs, IReadOnlyList<LevelSolveStats> stats, object m0Summary,
-            SimProvenance provenance)
+            SimProvenance provenance, object scope = null)
         {
             // `generator` is now an object (was the bare string "level-sim v0"): it carries the git provenance
             // of the run (TASK-058) so acceptance reads the ref/dirty from the artifact, not from file mtime.
             // sim-gate.py reads only `runs`, so widening this key does not touch judging.
-            var payload = new
+            var generator = new
             {
-                generator = new
-                {
-                    name = GeneratorName,
-                    commit = provenance.Commit,
-                    branch = provenance.Branch,
-                    dirty = provenance.Dirty,
-                    worktree = provenance.Worktree,
-                    startedAt = provenance.StartedAt,
-                },
-                stats,
-                m0 = m0Summary,
-                runs,
+                name = GeneratorName,
+                commit = provenance.Commit,
+                branch = provenance.Branch,
+                dirty = provenance.Dirty,
+                worktree = provenance.Worktree,
+                startedAt = provenance.StartedAt,
             };
-            return JsonConvert.SerializeObject(payload, Formatting.Indented);
+            // TASK-179: a targeted (--only) sweep passes a non-null `scope` marker; sim-gate.py reads it and stamps
+            // the verdict PARTIAL so it can never be mistaken for the full-lineage gate. The DEFAULT (scope == null)
+            // path serialises the exact same payload shape as before → the full report stays byte-for-byte unchanged
+            // (adding a `"scope": null` key would break that, so the field is present ONLY on partial reports).
+            if (scope == null)
+                return JsonConvert.SerializeObject(
+                    new { generator, stats, m0 = m0Summary, runs }, Formatting.Indented);
+            return JsonConvert.SerializeObject(
+                new { scope, generator, stats, m0 = m0Summary, runs }, Formatting.Indented);
         }
 
         private static string F(float v) => v.ToString("0.#####", CultureInfo.InvariantCulture);
