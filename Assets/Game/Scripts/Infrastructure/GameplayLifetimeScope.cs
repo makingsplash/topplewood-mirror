@@ -105,6 +105,16 @@ namespace Game.Code.Infrastructure
             // Prod scope only — this is where the index owner (CampaignProgressionController, via GameplayCoreInstaller)
             // and PlayScreenInteraction both live; bringup gates its own menu locally (BringupDebugMenuHost).
             builder.RegisterEntryPoint<GameDebugMenuRestartBridge>();
+
+            // TASK-172: visible, keyboard-free entry into the cheats from the prod Loading path. Owner directive
+            // (2026-08-21): the game boots only through Loading.unity, but there the SayKit DDM menu opens only by the
+            // undiscoverable shake (Escape is legacy-input-only; the project runs the new Input System). This adds a
+            // corner DEV button + backquote that flip SayData.Debug.DebugMenuShown — the same observable seam shake
+            // flips — so DebugService raises the existing GameDebugMenu; plus an always-visible level indicator and a
+            // RESTART-hide while the menu is open (fixes the TASK-117 z-order collision on the prod path). Prod scope
+            // only, same reason as the bridge above: the shared GameplayCoreInstaller would raise a second menu in
+            // bringup and needs the prod-only DebugService/SayData graph bringup does not hold.
+            builder.RegisterEntryPoint<GameDebugMenuEntryPoint>();
 #endif
 
             // Tutorial system prod impls (TASK-049): completion on the SDK-canon Data.Meta.CompletedTutorials,
