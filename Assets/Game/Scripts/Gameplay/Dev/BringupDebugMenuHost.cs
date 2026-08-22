@@ -7,9 +7,7 @@ using Gameplay.Core;
 using Gameplay.Tutorial;
 using Tools.Constants;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using VContainer.Unity;
 
@@ -32,9 +30,10 @@ namespace Gameplay.Dev
     /// "meta↔gameplay-scope bridge", no statics involved.
     ///
     /// Triggers (either opens the menu): an always-visible on-screen <b>DEV</b> button built at runtime in
-    /// <see cref="CreateToggleButton"/> — the discoverable, keyboard-free entry point that works on device and
-    /// in the Editor (TASK-062, the template's cut prefab button rebuilt in code since the Unity bridge has no
-    /// prefab-save op) — and the backquote (`) key in <see cref="Tick"/>, an Editor convenience kept because
+    /// <see cref="DevOverlayUi.CreateToggleButton"/> — the discoverable, keyboard-free entry point that works on
+    /// device and in the Editor (TASK-062, the template's cut prefab button rebuilt in code since the Unity bridge
+    /// has no prefab-save op; shared with the prod entry point since TASK-172) — and the backquote (`) key in
+    /// <see cref="Tick"/>, an Editor convenience kept because
     /// bringup is usually played there. The button lives on its own DontDestroyOnLoad overlay canvas pinned to
     /// a screen corner; gameplay taps ride the raw PointerTapInputSource (not uGUI), an independent pipeline, so
     /// a detail under the button stays tappable. The switch semantics mirror the retired overlay: live
@@ -51,12 +50,12 @@ namespace Gameplay.Dev
         private readonly ITutorialProgressStore _tutorialProgress;
         private readonly TutorialDefinition _tutorial;
 
+        private readonly RestartButtonGuard _restartGuard = new(); // hides the product RESTART canvas while the menu is open (TASK-117).
+
         private DebugItemsConfig _config;
         private DDMMain _menu;
         private GameObject _eventSystem;
         private GameObject _buttonCanvas;
-        private GameObject _restartButton;    // product RESTART canvas GO we hide while the menu is open; restored on close.
-        private bool _restartButtonWasActive; // its activeSelf before we hid it — close RESTORES this, never force-enables.
 
         public BringupDebugMenuHost(
             ILevelSource levelSource, GameModel model, CampaignProgressionController campaign,
@@ -88,10 +87,12 @@ namespace Gameplay.Dev
             // The menu is NOT shown on start — it is toggled by the button/key so it never occludes gameplay.
             _config = Resources.Load<DebugItemsConfig>(ConfigPath.DebugItems);
 
-            // The always-visible on-screen entry point (TASK-062). Its own uGUI button needs an EventSystem to
-            // receive clicks, so raise one now instead of lazily in ToggleMenu.
-            EnsureEventSystem();
-            CreateToggleButton();
+            // The always-visible on-screen entry point (TASK-062), shared with the prod path via DevOverlayUi
+            // (TASK-172). Its own uGUI button needs an EventSystem to receive clicks, so raise one now instead of
+            // lazily in ToggleMenu. EnsureEventSystem sets _eventSystem only when it creates one itself (null if a
+            // pre-existing EventSystem was found), so Dispose destroys exactly the one we own.
+            DevOverlayUi.EnsureEventSystem(out _eventSystem);
+            _buttonCanvas = DevOverlayUi.CreateToggleButton(ToggleMenu);
         }
 
         public void Tick()
@@ -110,7 +111,11 @@ namespace Gameplay.Dev
                 return;
             }
 
-            EnsureEventSystem();
+            // Defensive re-ensure (the button in Start already raised one); keep _eventSystem pointing at the GO we
+            // own — only overwrite it when EnsureEventSystem actually created a new one, never clobber it with null.
+            DevOverlayUi.EnsureEventSystem(out var ensured);
+            if (ensured != null)
+                _eventSystem = ensured;
 
             // MainPrefab carries its own screen-space Canvas + GraphicRaycaster + CanvasScaler (verified by the
             // owner), so it renders and receives clicks without an external UI canvas — the only missing piece
@@ -146,129 +151,18 @@ namespace Gameplay.Dev
             // untouched regardless.
             go.GetComponent<Canvas>().sortingOrder = short.MaxValue - 1;
 
-            HideRestartButtonWhileMenuOpen();
+            // While the menu is open, hide the product RESTART canvas so X has no competitor in the top-right — the
+            // non-ordering lever from the TASK-117 comment above, now shared with the prod path (RestartButtonGuard,
+            // TASK-172). Runs from the close callback on every close path (X tap and DEV-toggle re-tap both destroy
+            // the menu GO, and OnDestroy invokes the callback).
+            _restartGuard.Hide();
 
             _menu = go.GetComponent<DDMMain>();
             _menu.Init(_config, BuildContent, _ =>
             {
                 _menu = null;
-                RestoreRestartButton();
+                _restartGuard.Restore();
             });
-        }
-
-        // Hide the product RESTART canvas for as long as the menu is open — the non-ordering lever described in the
-        // TASK-117 comment in ToggleMenu. We SetActive(false) the whole GameObject rather than toggling Canvas.enabled:
-        // a disabled Canvas still leaves its graphics registered for raycasting in uGUI, so only deactivating the GO
-        // reliably removes RESTART from BOTH render and hit-testing. The button is found by its GameObject name
-        // ("[PlayScreen] RestartButton", set in RestartButtonPresenter.CreateButton) — a fragile, string-coupled seam,
-        // flagged here on purpose; DI injection was ruled out because exposing the canvas would mean editing the
-        // product presenter, which TASK-117 forbids. If the button was never built (menu opened outside the
-        // play-screen — e.g. a bringup scene with no RESTART presenter) GameObject.Find returns null and we silently
-        // no-op: the dev menu must open in any scene.
-        private void HideRestartButtonWhileMenuOpen()
-        {
-            _restartButton = GameObject.Find("[PlayScreen] RestartButton");
-            if (_restartButton == null)
-                return;
-
-            _restartButtonWasActive = _restartButton.activeSelf;
-            _restartButton.SetActive(false);
-        }
-
-        // Restore the RESTART canvas to the EXACT state it had before we hid it — not an unconditional enable, so a
-        // button that was already inactive for another reason (a future IsBusy/level-transition path) stays inactive
-        // (owner requirement: restore, don't force). Runs from the menu's close callback, which fires on every close
-        // path — X tap and DEV-toggle re-tap both destroy the menu GO, and OnDestroy invokes the callback, including
-        // teardown via Dispose. Cleared to null so a later open re-reads the live state.
-        private void RestoreRestartButton()
-        {
-            if (_restartButton == null)
-                return;
-
-            _restartButton.SetActive(_restartButtonWasActive);
-            _restartButton = null;
-        }
-
-        // bringup's ShapeFillBringup scene ships no EventSystem (gameplay taps use the raw new-Input-System
-        // PointerTapInputSource, not uGUI), so DDM's uGUI buttons would receive no clicks. Raise one on demand
-        // with the module for the project's active input handling (Input System package → InputSystemUIInputModule;
-        // ProjectSettings activeInputHandler:1). DontDestroyOnLoad so a level reload does not drop it.
-        private void EnsureEventSystem()
-        {
-            if (UnityEngine.Object.FindFirstObjectByType<EventSystem>() != null)
-                return;
-
-            _eventSystem = new GameObject("[Dev] EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
-            UnityEngine.Object.DontDestroyOnLoad(_eventSystem);
-        }
-
-        // The visible, keyboard-free entry point (TASK-062). The template shipped a draggable prefab button
-        // (com.say.services.common DebugMenuButtonUi) instantiated by DebugService from UiPrefabs.asset, but that
-        // path never runs in ShapeFillBringup (it skips LoadingGame/DebugService) and the prefab asset itself was
-        // cut from the repo. Rebuild the affordance in code — no prefab asset, so nothing for the Unity bridge's
-        // missing prefab-save op to author. A small corner button on its own overlay canvas keeps the play field
-        // clear; gameplay taps ride the raw PointerTapInputSource (not uGUI), so anything under the button is still
-        // reachable even without moving it.
-        private void CreateToggleButton()
-        {
-            _buttonCanvas = new GameObject("[Dev] DebugMenuButton",
-                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            UnityEngine.Object.DontDestroyOnLoad(_buttonCanvas);
-
-            var canvas = _buttonCanvas.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = short.MaxValue; // above any gameplay/UI so it is never occluded.
-
-            var scaler = _buttonCanvas.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080f, 1920f);
-            scaler.matchWidthOrHeight = 0.5f;
-
-            var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
-            buttonGo.transform.SetParent(_buttonCanvas.transform, false);
-
-            var image = buttonGo.GetComponent<Image>();
-            var rect = buttonGo.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0f, 1f); // top-left corner, away from the play field's centre.
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(28f, -28f);
-
-            buttonGo.GetComponent<Button>().onClick.AddListener(ToggleMenu);
-
-            // Деревянная кнопка от владельца: надпись «DEV ≡» в спрайте запечена, отдельной подписи нет.
-            var sprite = Gameplay.View.WoodArt.ButtonDev;
-            if (sprite != null)
-            {
-                image.sprite = sprite;
-                image.color = Color.white;
-                // Высота ОБЩАЯ для DEV и RESTART и лежит в настройках: владелец просил
-                // уменьшить их в полтора раза (116 → 77) и держать одинаковыми.
-                var height = Gameplay.View.WoodTuning.Current.UiButtonHeight;
-                rect.sizeDelta = new Vector2(height * sprite.rect.width / sprite.rect.height, height);
-                return;
-            }
-
-            image.color = new Color(0.12f, 0.12f, 0.12f, 0.7f);
-            rect.sizeDelta = new Vector2(170f, 96f);
-
-            var labelGo = new GameObject("Label", typeof(Text));
-            labelGo.transform.SetParent(buttonGo.transform, false);
-
-            var label = labelGo.GetComponent<Text>();
-            label.text = "DEV ≡";
-            label.alignment = TextAnchor.MiddleCenter;
-            label.color = Color.white;
-            label.fontSize = 40;
-            // Built-in font of Unity 6 (renamed from Arial.ttf pre-2022). If unavailable the glyphs just do not
-            // draw — the button image and its click still work, so this is a cosmetic best-effort, not a gate.
-            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-
-            var labelRect = labelGo.GetComponent<RectTransform>();
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
         }
 
         // Content generator handed the live DDMContext by DDMMain — mirrors the retired overlay's UX.
