@@ -48,9 +48,21 @@ namespace Gameplay.Dev
         // += , NOT = : OnDebugMenuClose is a multicast Action. Prod assigns the sibling OnDebugMenuShown with =,
         // but the close seam must accumulate — clobbering it would silently drop any future subscriber. No other
         // subscriber exists today, so += is safe now and correct later; Dispose's -= restores the balance.
-        public void Start() => GlobalService.Debug.OnDebugMenuClose += HandleClose;
+        public void Start()
+        {
+            GlobalService.Debug.OnDebugMenuClose += HandleClose;
+            // Second seam (TASK-174): the ◀/▶ arrows page levels WITHOUT closing the menu, so they cannot ride the
+            // close event above — they emit through the project-owned GameDebugMenuLevelStep signal instead.
+            GameDebugMenuLevelStep.Requested += HandleStep;
+        }
 
-        public void Dispose() => GlobalService.Debug.OnDebugMenuClose -= HandleClose;
+        public void Dispose()
+        {
+            GlobalService.Debug.OnDebugMenuClose -= HandleClose;
+            // -= is mandatory: the static event outlives this scope; a leaked delegate would fire into a dead
+            // controller (same contract as OnDebugMenuClose above).
+            GameDebugMenuLevelStep.Requested -= HandleStep;
+        }
 
         private void HandleClose(bool isRestart)
         {
@@ -73,6 +85,22 @@ namespace Gameplay.Dev
             }
 
             _campaign.ResyncFromStore();
+        }
+
+        // ◀/▶ level step (TASK-174). Same IsBusy gate as HandleClose: while the win/lose panel is pending/up we
+        // touch neither the index nor the reload, so the panel's captured applyTransition stays valid and fires on
+        // the tap. Log the skip so the no-op is not silent (dev-UX: close the panel first, then step). delta is
+        // clamped to the line-up bounds in DevStepPersisted (edge = no-op, no wrap).
+        private void HandleStep(int delta)
+        {
+            if (_interaction.IsBusy.Value)
+            {
+                GlobalService.DebugLog.Log(
+                    "[TASK-174] level step skipped: resolution panel open", DebugLogType.ApplicationFlow);
+                return;
+            }
+
+            _campaign.DevStepPersisted(delta);
         }
     }
 }
