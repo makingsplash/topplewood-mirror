@@ -80,21 +80,28 @@ namespace Gameplay.Core
         /// guard is on START poses of non-<c>Preplaced</c> pieces (the only tapable ones; preplaced pieces are Dynamic
         /// furniture, never tapped). Metric v1 = centre-to-centre (StartPosition): exact for the compact pieces that
         /// are actually the problem (horn/head/ear); elongated planks are large and never a tap problem (edge-to-edge
-        /// is the tech-debt refinement). Phase 1 emits WARNINGS; flipping <c>EnforceMinDistanceAsError</c> makes them
-        /// ERRORS (phase 2, after the corpus is cleaned).
+        /// is the tech-debt refinement, TASK-087).
+        ///
+        /// TASK-181: this is the STRUCTURAL, side-effect-free heart of the check — it returns the audit as data (see
+        /// <see cref="TapSpacingAudit"/>) so the sim sweep can serialise it into its report, not only log it. It is
+        /// PHASE-INDEPENDENT: it just enumerates the too-close pairs; whether they load as WARNINGS or ERRORS is the
+        /// caller's decision, driven by <see cref="TapZoneConfig.EnforceMinDistanceAsError"/> in
+        /// <see cref="ValidateTapSpacing"/>. An early exit (&lt;2 tapable pieces, or content that will not frame)
+        /// returns an empty audit with MinTapWorld=0.
         /// </summary>
-        private void ValidateTapSpacing(LevelData level, List<string> errors, List<string> warnings)
+        public TapSpacingAudit AuditTapSpacing(LevelData level)
         {
-            if (level.Pieces == null || level.Pieces.Count < 2)
-                return;
+            if (level?.Pieces == null || level.Pieces.Count < 2)
+                return new TapSpacingAudit(level?.LevelId, 0f, 0f, null);
             if (!CameraFramingMath.TryContentBounds(level, out var min, out var max))
-                return;
+                return new TapSpacingAudit(level.LevelId, 0f, 0f, null);
 
             var orthoSize = CameraFramingMath.ComputeOrthoSize(
                 min, max, _tapZone.ReferenceAspect,
                 _tapZone.RefMargin, _tapZone.RefPreviewBand, _tapZone.RefMinOrthoSize);
             var minWorld = _tapZone.MinTapDp * _tapZone.RefKDevice * orthoSize; // tap-zone DIAMETER in world units
 
+            var violations = new List<TapSpacingViolation>();
             for (var i = 0; i < level.Pieces.Count; i++)
             {
                 if (level.Pieces[i].Preplaced)
@@ -106,16 +113,33 @@ namespace Gameplay.Core
                     var dist = (level.Pieces[i].StartPosition - level.Pieces[j].StartPosition).Length;
                     if (dist >= minWorld)
                         continue;
-
-                    var msg =
-                        $"Tap spacing: Pieces[{i}] '{level.Pieces[i].Type?.Kind}' and Pieces[{j}] " +
-                        $"'{level.Pieces[j].Type?.Kind}' start {dist:F3} apart — closer than the {minWorld:F3} world " +
-                        $"tap zone ({_tapZone.MinTapDp}dp @ orthoSize {orthoSize:F2}); their tap targets merge.";
-                    if (_tapZone.EnforceMinDistanceAsError)
-                        errors.Add(msg);
-                    else
-                        warnings.Add(msg);
+                    violations.Add(new TapSpacingViolation(
+                        i, level.Pieces[i].Type?.Kind, j, level.Pieces[j].Type?.Kind, dist));
                 }
+            }
+            return new TapSpacingAudit(level.LevelId, minWorld, orthoSize, violations);
+        }
+
+        /// <summary>
+        /// Phase-1/2 policy wrapper around <see cref="AuditTapSpacing"/>: formats each structural violation into the
+        /// author-facing message and routes it to <paramref name="errors"/> or <paramref name="warnings"/> per
+        /// <see cref="TapZoneConfig.EnforceMinDistanceAsError"/> (false = non-blocking WARNING, this task's phase 1;
+        /// true = hard ERROR, phase 2 after the corpus is cleaned). The message text is preserved byte-for-byte from
+        /// TASK-085 so load-time strings and any snapshot of them are unchanged.
+        /// </summary>
+        private void ValidateTapSpacing(LevelData level, List<string> errors, List<string> warnings)
+        {
+            var audit = AuditTapSpacing(level);
+            foreach (var v in audit.Violations)
+            {
+                var msg =
+                    $"Tap spacing: Pieces[{v.IndexA}] '{v.KindA}' and Pieces[{v.IndexB}] " +
+                    $"'{v.KindB}' start {v.Distance:F3} apart — closer than the {audit.MinTapWorld:F3} world " +
+                    $"tap zone ({_tapZone.MinTapDp}dp @ orthoSize {audit.OrthoSize:F2}); their tap targets merge.";
+                if (_tapZone.EnforceMinDistanceAsError)
+                    errors.Add(msg);
+                else
+                    warnings.Add(msg);
             }
         }
 

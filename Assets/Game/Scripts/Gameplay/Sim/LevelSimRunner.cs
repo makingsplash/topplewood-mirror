@@ -131,6 +131,7 @@ namespace Gameplay.Sim
             var ok = true;
             var runs = new List<SimRunResult>();
             IReadOnlyList<LevelData> levels = null;
+            IReadOnlyList<TapSpacingAudit> tapAudits = Array.Empty<TapSpacingAudit>(); // TASK-181
 
             // GAP-1 (human 2026-07-23): sweep the ACTUAL shipped campaign, not embedded stubs.
             try
@@ -176,7 +177,7 @@ namespace Gameplay.Sim
 
             if (ok)
             {
-                AuditTapSpacing(levels);
+                tapAudits = AuditTapSpacing(levels);
                 foreach (var level in levels)
                 {
                     // TASK-075: print the authored-touching classification of every slot pair (once per level) so QA
@@ -324,7 +325,12 @@ namespace Gameplay.Sim
                 Debug.Log("[level-sim] --only: M0 confirmation SKIPPED (lineage-level probe, not per-level).");
             }
 
-            var written = WriteReports(runs, stats, m0, partial, out var dir, out var csvPath, out var jsonPath);
+            // TASK-181: fold the per-level tap-spacing audit into the report as a `tapAudit` block. Uses the default
+            // TapZoneConfig — the SAME one AuditTapSpacing predicted with — for the corpus-level minTapDp/enforced
+            // provenance. Null when the sweep produced no audits (e.g. load failed) so a broken run carries no
+            // misleading empty block.
+            object tapAudit = tapAudits.Count > 0 ? BuildTapAuditReport(new TapZoneConfig(), tapAudits) : null;
+            var written = WriteReports(runs, stats, m0, tapAudit, partial, out var dir, out var csvPath, out var jsonPath);
             LogSummary(stats, m0);
 
             // exitCode = tool health, NOT a finding: 0 ⇔ report on disk without exception; 1 ⇔ threw / no report /
@@ -788,23 +794,88 @@ namespace Gameplay.Sim
         // duplicate loader. JsonLevelSource validates eagerly and throws on malformed content (fail-fast → exit 1).
         // TASK-085: enumerate every campaign level through the tap-spacing check and log each warning, so the
         // author-time audit of "tapable pieces closer than the min tap zone" falls out of the normal sweep (RFC §7's
-        // sanctioned enumerate-all-levels method). Log-only; never gates (the check is a WARNING in phase 1). Uses a
-        // fresh validator with the default TapZoneConfig — the SAME reference-device prediction the shipped validator
-        // emits at load — so the count here is exactly what LevelDataValidator would report.
-        private static void AuditTapSpacing(IReadOnlyList<LevelData> levels)
+        // sanctioned enumerate-all-levels method). Log-only for the gate; never gates (the check is a WARNING in
+        // phase 1). Uses a fresh validator with the default TapZoneConfig — the SAME reference-device prediction the
+        // shipped validator emits at load — so the count here is exactly what LevelDataValidator would report.
+        // TASK-181: the audit is now ALSO returned as data (one TapSpacingAudit per level) so WriteReports can lift it
+        // into the report's `tapAudit` block instead of only the log. Both channels derive from the SAME
+        // LevelDataValidator.AuditTapSpacing geometry, so the [TAP-AUDIT] line count can never drift from
+        // tapAudit.totalViolations (owner's parity check). This pass is now SCOPED to tap spacing: the [TAP-AUDIT]
+        // prefix and the total count only ever cover "Tap spacing" warnings. Other validator warnings (e.g. the
+        // TASK-107 air-zone hover-guard bypass on air_dunk) previously rode under [TAP-AUDIT] incidentally — they now
+        // log under [LEVEL-WARN] so no sweep signal is lost (JsonLevelSource discards warnings, so this pass is their
+        // only surfacing) without inflating the tap-spacing count.
+        private static IReadOnlyList<TapSpacingAudit> AuditTapSpacing(IReadOnlyList<LevelData> levels)
         {
             var validator = new LevelDataValidator(new TapZoneConfig());
+            var audits = new List<TapSpacingAudit>(levels.Count);
             var total = 0;
             foreach (var level in levels)
             {
+                audits.Add(validator.AuditTapSpacing(level));
+
+                // Log channel: reuse the validator's own warning STRINGS (byte-identical [TAP-AUDIT] lines to
+                // TASK-085) while the structured block above comes from the same geometry — one source of truth. A
+                // "Tap spacing" warning is a tap violation (counted); anything else is a different check, surfaced
+                // under [LEVEL-WARN] so it stays visible without polluting the tap-spacing count.
                 var result = validator.Validate(level);
                 foreach (var w in result.Warnings)
                 {
-                    total++;
-                    Debug.Log($"[TAP-AUDIT] {level.LevelId}: {w}");
+                    if (w.StartsWith("Tap spacing:", StringComparison.Ordinal))
+                    {
+                        total++;
+                        Debug.Log($"[TAP-AUDIT] {level.LevelId}: {w}");
+                    }
+                    else
+                    {
+                        Debug.Log($"[LEVEL-WARN] {level.LevelId}: {w}");
+                    }
                 }
             }
             Debug.Log($"[TAP-AUDIT] total tap-spacing warnings across {levels.Count} level(s): {total}");
+            return audits;
+        }
+
+        // TASK-181: assemble the machine-readable `tapAudit` block (sibling of stats/m0/runs in the JSON report) from
+        // the per-level structural audits. minTapDp/enforcedAsError are corpus-level provenance (which phase, what
+        // threshold produced the numbers); totalViolations is the sum across levels — and because both it and the
+        // [TAP-AUDIT] log lines derive from LevelDataValidator.AuditTapSpacing, it equals the [TAP-AUDIT] line count.
+        // Every swept level gets an entry even when clean (violations: []), so "no entry" (level not swept) is
+        // distinguishable from "0 violations". Serialised only when non-null → the timing report is unaffected.
+        private static object BuildTapAuditReport(TapZoneConfig config, IReadOnlyList<TapSpacingAudit> audits)
+        {
+            var total = 0;
+            var levels = new List<object>(audits.Count);
+            foreach (var a in audits)
+            {
+                var violations = new List<object>(a.Violations.Count);
+                foreach (var v in a.Violations)
+                {
+                    total++;
+                    violations.Add(new
+                    {
+                        indexA = v.IndexA,
+                        kindA = v.KindA,
+                        indexB = v.IndexB,
+                        kindB = v.KindB,
+                        distance = v.Distance,
+                    });
+                }
+                levels.Add(new
+                {
+                    levelId = a.LevelId,
+                    minTapWorld = a.MinTapWorld,
+                    orthoSize = a.OrthoSize,
+                    violations,
+                });
+            }
+            return new
+            {
+                minTapDp = config.MinTapDp,
+                enforcedAsError = config.EnforceMinDistanceAsError,
+                totalViolations = total,
+                levels,
+            };
         }
 
         // TASK-179: restrict a loaded campaign to the SIM_ONLY level ids (targeted sweep). Returns the surviving
@@ -987,7 +1058,7 @@ namespace Gameplay.Sim
         }
 
         private bool WriteReports(IReadOnlyList<SimRunResult> runs, IReadOnlyList<LevelSolveStats> stats, object m0,
-            bool partial, out string dir, out string csvPath, out string jsonPath)
+            object tapAudit, bool partial, out string dir, out string csvPath, out string jsonPath)
         {
             csvPath = null;
             jsonPath = null;
@@ -1020,7 +1091,7 @@ namespace Gameplay.Sim
                     };
                     prefix = "level-sim-only";
                 }
-                var json = SimReportWriter.BuildJson(runs, stats, m0, provenance, scope);
+                var json = SimReportWriter.BuildJson(runs, stats, m0, provenance, tapAudit, scope);
                 var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
 
                 Directory.CreateDirectory(dir);
