@@ -9,7 +9,11 @@ namespace Gameplay.Core
         Lost,
     }
 
-    /// <summary>Provenance of a level (GAME_RULES §5). v0 = Authored.</summary>
+    /// <summary>Provenance of a level (GAME_RULES §5). <see cref="Generated"/> became reachable from data in TASK-185:
+    /// the DTO <c>source</c> field parses to it (<c>LevelDataDto.ParseSource</c>); absent → <see cref="Authored"/>, so
+    /// every hand-authored level is unchanged. The offline family generator
+    /// (<c>Gameplay.Sim.Editor.LevelFamilyGenerator</c>) tags its emitted levels <see cref="Generated"/>. There is
+    /// still no RUNTIME consumer of <see cref="LevelData.Source"/> — the tag is descriptive (analytics/QA filter).</summary>
     public enum LevelSourceKind
     {
         Authored,

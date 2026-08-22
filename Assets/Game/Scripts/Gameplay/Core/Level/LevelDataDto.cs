@@ -31,6 +31,7 @@ namespace Gameplay.Core
         [JsonProperty("gravity")] public Vec2Dto Gravity { get; set; }
         [JsonProperty("pieceTypes")] public List<PieceTypeDto> PieceTypes { get; set; } = new();
         [JsonProperty("physicsMode")] public string PhysicsMode { get; set; } // null/absent → Assembly (TASK-021)
+        [JsonProperty("source")] public string Source { get; set; } // null/absent → Authored (TASK-185)
         [JsonProperty("freezeLoadsAtRest")] public bool FreezeLoadsAtRest { get; set; } // absent → false (TASK-031d)
         [JsonProperty("target")] public TargetFigureDto Target { get; set; }
         [JsonProperty("pieces")] public List<PiecePlacementDto> Pieces { get; set; } = new();
@@ -91,11 +92,32 @@ namespace Gameplay.Core
                 Gravity = Gravity.ToDomain(),
                 Seed = Seed,
                 DifficultyTier = DifficultyTier,
-                Source = LevelSourceKind.Authored,
+                Source = ParseSource(Source),
                 PhysicsMode = ParsePhysicsMode(PhysicsMode),
                 FreezeLoadsAtRest = FreezeLoadsAtRest,
                 AirZones = airZones,
             };
+        }
+
+        /// <summary>TASK-185: map the optional <c>source</c> provenance string to the domain enum. Absent/empty →
+        /// Authored so every pre-TASK-185 level (and any hand-authored level) parses byte-for-byte unchanged — the
+        /// same back-compat contract as <c>physicsMode</c>/<c>airZones</c> (no schema bump, no migration). An unknown
+        /// value is a hard authoring error (mirrors <see cref="ParsePhysicsMode"/>). This makes
+        /// <see cref="LevelSourceKind.Generated"/> reachable from data for the first time: before this the domain enum
+        /// value existed but <c>ToDomain()</c> hardcoded <c>Authored</c>, so no content path could tag a level as
+        /// generated (see the family generator, <c>Gameplay.Sim.Editor.LevelFamilyGenerator</c>).</summary>
+        private LevelSourceKind ParseSource(string raw)
+        {
+            if (string.IsNullOrEmpty(raw))
+                return LevelSourceKind.Authored;
+            switch (raw)
+            {
+                case "authored": return LevelSourceKind.Authored;
+                case "generated": return LevelSourceKind.Generated;
+                default:
+                    throw new InvalidOperationException(
+                        $"Level '{LevelId}': unknown source '{raw}' (expected 'authored' or 'generated').");
+            }
         }
 
         /// <summary>Map the optional <c>physicsMode</c> string to the domain enum. Absent/empty → Assembly (the
