@@ -10744,6 +10744,294 @@
         }
       ],
       "airZones": []
+    },
+    {
+      "levelId": "tipping_sail",
+      "seed": 330,
+      "difficultyTier": 9,
+      "physicsMode": "balance",
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633, "rigidityTol": 0.15 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "fulcrum", "color": "#12A5A5", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 0.29 } },
+        { "kind": "beam", "color": "#2E7CD6", "symmetryOrder": 2, "pivot": true, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 3.0, "height": 0.3 } },
+        { "kind": "sail", "color": "#5B4FE0", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "kind": "ballast", "color": "#B24BD1", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 0.4 } }
+      ],
+      "target": {
+        "outline": [ { "x": -1.4, "y": -0.55 }, { "x": 1.4, "y": -0.55 }, { "x": 1.4, "y": 1.0 }, { "x": -1.4, "y": 1.0 } ],
+        "slots": [
+          { "kind": "fulcrum", "position": { "x": 0, "y": -0.39 }, "rotation": 0 },
+          { "kind": "beam", "position": { "x": 0, "y": -0.09 }, "rotation": 0 },
+          { "kind": "sail", "position": { "x": -0.9, "y": 0.31 }, "rotation": 0 },
+          { "kind": "sail", "position": { "x": 0.9, "y": 0.31 }, "rotation": 0 },
+          { "kind": "ballast", "position": { "x": -0.9, "y": 0.71 }, "rotation": 0 },
+          { "kind": "ballast", "position": { "x": 0.9, "y": 0.71 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "fulcrum", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
+        { "kind": "beam", "startPosition": { "x": 0, "y": 4.0 }, "startRotation": 0 },
+        { "kind": "sail", "startPosition": { "x": -0.9, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "sail", "startPosition": { "x": 0.9, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "ballast", "startPosition": { "x": -0.9, "y": 6.6 }, "startRotation": 0 },
+        { "kind": "ballast", "startPosition": { "x": 0.9, "y": 6.6 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.6, "y": -0.85 }, { "x": 1.6, "y": -0.85 }, { "x": 1.6, "y": -0.55 }, { "x": -1.6, "y": -0.55 } ] }
+      ]
+    },
+    {
+      "levelId": "counterweight_crane",
+      "seed": 332,
+      "difficultyTier": 8,
+      "physicsMode": "balance",
+      "matchTolerance": { "posTol": 0.32, "angTol": 0.43633, "rigidityTol": 0.15 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "fulcrum", "color": "#5B4FE0", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 0.7, "height": 0.29 } },
+        { "kind": "beam", "color": "#B24BD1", "symmetryOrder": 2, "pivot": true, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 4.0, "height": 0.3 } },
+        { "kind": "load", "color": "#E84B8A", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+      ],
+      "target": {
+        "outline": [ { "x": -1.1, "y": -0.55 }, { "x": 2.1, "y": -0.55 }, { "x": 2.1, "y": 1.4 }, { "x": -1.1, "y": 1.4 } ],
+        "slots": [
+          { "kind": "fulcrum", "position": { "x": 0, "y": -0.39 }, "rotation": 0 },
+          { "kind": "beam", "position": { "x": 0, "y": -0.09 }, "rotation": 0 },
+          { "kind": "load", "position": { "x": -0.6, "y": 0.36 }, "rotation": 0 },
+          { "kind": "load", "position": { "x": -0.6, "y": 0.86 }, "rotation": 0 },
+          { "kind": "load", "position": { "x": -0.6, "y": 1.36 }, "rotation": 0 },
+          { "kind": "load", "position": { "x": 1.8, "y": 0.36 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "fulcrum", "startPosition": { "x": 0, "y": 3.0 }, "startRotation": 0 },
+        { "kind": "beam", "startPosition": { "x": 0, "y": 4.0 }, "startRotation": 0 },
+        { "kind": "load", "startPosition": { "x": -0.6, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "load", "startPosition": { "x": -0.6, "y": 5.7 }, "startRotation": 0 },
+        { "kind": "load", "startPosition": { "x": -0.6, "y": 6.4 }, "startRotation": 0 },
+        { "kind": "load", "startPosition": { "x": 1.8, "y": 5.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.2, "y": -0.85 }, { "x": 2.2, "y": -0.85 }, { "x": 2.2, "y": -0.55 }, { "x": -2.2, "y": -0.55 } ] }
+      ]
+    },
+    {
+      "levelId": "corbel_gate",
+      "seed": 334,
+      "difficultyTier": 8,
+      "physicsMode": "assembly",
+      "matchTolerance": { "posTol": 0.3, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "foot", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.4 } },
+        { "kind": "step1", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.35 } },
+        { "kind": "step2", "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.35 } },
+        { "kind": "keystone", "color": "#2E7CD6", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.32, "segments": 24 } }
+      ],
+      "target": {
+        "outline": [ { "x": -1.5, "y": 0.0 }, { "x": 1.5, "y": 0.0 }, { "x": 1.5, "y": 1.45 }, { "x": -1.5, "y": 1.45 } ],
+        "slots": [
+          { "kind": "foot", "position": { "x": -1.1, "y": 0.2 }, "rotation": 0 },
+          { "kind": "foot", "position": { "x": 1.1, "y": 0.2 }, "rotation": 0 },
+          { "kind": "step1", "position": { "x": -0.85, "y": 0.575 }, "rotation": 0 },
+          { "kind": "step1", "position": { "x": 0.85, "y": 0.575 }, "rotation": 0 },
+          { "kind": "step2", "position": { "x": -0.6, "y": 0.925 }, "rotation": 0 },
+          { "kind": "step2", "position": { "x": 0.6, "y": 0.925 }, "rotation": 0 },
+          { "kind": "keystone", "position": { "x": 0, "y": 1.1 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "foot", "startPosition": { "x": -1.1, "y": 3.2 }, "startRotation": 0 },
+        { "kind": "foot", "startPosition": { "x": 1.1, "y": 3.2 }, "startRotation": 0 },
+        { "kind": "step1", "startPosition": { "x": -0.85, "y": 6.6 }, "startRotation": 0 },
+        { "kind": "step1", "startPosition": { "x": 0.85, "y": 6.6 }, "startRotation": 0 },
+        { "kind": "step2", "startPosition": { "x": -0.6, "y": 2.0 }, "startRotation": 0 },
+        { "kind": "step2", "startPosition": { "x": 0.6, "y": 2.0 }, "startRotation": 0 },
+        { "kind": "keystone", "startPosition": { "x": 0, "y": 4.8 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.6, "y": -0.3 }, { "x": 1.6, "y": -0.3 }, { "x": 1.6, "y": 0.0 }, { "x": -1.6, "y": 0.0 } ] }
+      ]
+    },
+    {
+      "levelId": "orchard_swing",
+      "seed": 336,
+      "difficultyTier": 8,
+      "physicsMode": "assembly",
+      "matchTolerance": { "posTol": 0.3, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "trunk", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 1.0 } },
+        { "kind": "branch", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.6, "height": 0.3 } },
+        { "kind": "apple", "color": "#12A5A5", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.3, "segments": 24 } }
+      ],
+      "target": {
+        "outline": [ { "x": -2.0, "y": 0.0 }, { "x": 2.0, "y": 0.0 }, { "x": 2.0, "y": 1.3 }, { "x": -2.0, "y": 1.3 } ],
+        "slots": [
+          { "kind": "trunk", "position": { "x": -1.0, "y": 0.5 }, "rotation": 0 },
+          { "kind": "trunk", "position": { "x": 1.0, "y": 0.5 }, "rotation": 0 },
+          { "kind": "branch", "position": { "x": 0, "y": 1.15 }, "rotation": 0 },
+          { "kind": "apple", "position": { "x": -1.9, "y": 0.3 }, "rotation": 0 },
+          { "kind": "apple", "position": { "x": 1.9, "y": 0.3 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "trunk", "startPosition": { "x": -1.0, "y": 4.5 }, "startRotation": 0 },
+        { "kind": "trunk", "startPosition": { "x": 1.0, "y": 4.5 }, "startRotation": 0 },
+        { "kind": "branch", "startPosition": { "x": 0, "y": 2.4 }, "startRotation": 0 },
+        { "kind": "apple", "startPosition": { "x": -1.9, "y": 6.0 }, "startRotation": 0 },
+        { "kind": "apple", "startPosition": { "x": 1.9, "y": 6.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.4, "y": -0.3 }, { "x": 2.4, "y": -0.3 }, { "x": 2.4, "y": 0.0 }, { "x": -2.4, "y": 0.0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.35, "y": 0.0 }, { "x": -2.25, "y": 0.0 }, { "x": -2.25, "y": 0.55 }, { "x": -2.35, "y": 0.55 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.55, "y": 0.0 }, { "x": -1.45, "y": 0.0 }, { "x": -1.45, "y": 0.55 }, { "x": -1.55, "y": 0.55 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.45, "y": 0.0 }, { "x": 1.55, "y": 0.0 }, { "x": 1.55, "y": 0.55 }, { "x": 1.45, "y": 0.55 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 2.25, "y": 0.0 }, { "x": 2.35, "y": 0.0 }, { "x": 2.35, "y": 0.55 }, { "x": 2.25, "y": 0.55 } ] }
+      ]
+    },
+    {
+      "levelId": "air_arch",
+      "seed": 338,
+      "difficultyTier": 8,
+      "physicsMode": "assembly",
+      "matchTolerance": { "posTol": 0.3, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "base", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.3 } },
+        { "kind": "pier", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.6 } },
+        { "kind": "keystone", "color": "#12A5A5", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.15, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+      ],
+      "target": {
+        "outline": [ { "x": 0.6, "y": 0.0 }, { "x": 2.0, "y": 0.0 }, { "x": 2.0, "y": 0.3 }, { "x": 1.0, "y": 0.3 }, { "x": 1.0, "y": 1.9 }, { "x": 0.1, "y": 1.9 }, { "x": 0.1, "y": 1.4 }, { "x": 0.6, "y": 1.4 } ],
+        "slots": [
+          { "kind": "base", "position": { "x": 1.3, "y": 0.15 }, "rotation": 0 },
+          { "kind": "pier", "position": { "x": 0.8, "y": 1.1 }, "rotation": 0 },
+          { "kind": "keystone", "position": { "x": 0.35, "y": 1.65 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "base", "startPosition": { "x": 1.3, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "pier", "startPosition": { "x": 0.8, "y": 3.5 }, "startRotation": 0 },
+        { "kind": "keystone", "startPosition": { "x": -1.3, "y": 6.8 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.5, "y": -0.6 }, { "x": 3.0, "y": -0.6 }, { "x": 3.0, "y": 0.0 }, { "x": -3.5, "y": 0.0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.6, "y": 1.3 }, { "x": 0.55, "y": 1.3 }, { "x": 0.55, "y": 1.4 }, { "x": -0.6, "y": 1.4 } ] }
+      ],
+      "airZones": [
+        { "region": { "min": { "x": -3.0, "y": 1.2 }, "max": { "x": 0.55, "y": 7.5 } }, "direction": { "x": 1, "y": 0 }, "acceleration": 3.0, "color": "#CFE8F5" }
+      ]
+    },
+    {
+      "levelId": "wind_cradle",
+      "seed": 339,
+      "difficultyTier": 7,
+      "physicsMode": "assembly",
+      "matchTolerance": { "posTol": 0.3, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "base", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.3 } },
+        { "kind": "wall", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.6 } },
+        { "kind": "dome", "color": "#12A5A5", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.15, "restitution": 0.05 }, "shape": { "primitive": "halfdisc", "radius": 0.35, "segments": 7 } }
+      ],
+      "target": {
+        "outline": [ { "x": 0.6, "y": 0.0 }, { "x": 2.0, "y": 0.0 }, { "x": 2.0, "y": 0.3 }, { "x": 1.0, "y": 0.3 }, { "x": 1.0, "y": 1.9 }, { "x": -0.15, "y": 1.9 }, { "x": -0.15, "y": 1.4 }, { "x": 0.6, "y": 1.4 } ],
+        "slots": [
+          { "kind": "base", "position": { "x": 1.3, "y": 0.15 }, "rotation": 0 },
+          { "kind": "wall", "position": { "x": 0.8, "y": 1.1 }, "rotation": 0 },
+          { "kind": "dome", "position": { "x": 0.2, "y": 1.4 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "base", "startPosition": { "x": 1.3, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "wall", "startPosition": { "x": 0.8, "y": 3.5 }, "startRotation": 0 },
+        { "kind": "dome", "startPosition": { "x": -1.5, "y": 6.8 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.5, "y": -0.6 }, { "x": 3.0, "y": -0.6 }, { "x": 3.0, "y": 0.0 }, { "x": -3.5, "y": 0.0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.6, "y": 1.3 }, { "x": 0.55, "y": 1.3 }, { "x": 0.55, "y": 1.4 }, { "x": -0.6, "y": 1.4 } ] }
+      ],
+      "airZones": [
+        { "region": { "min": { "x": -3.0, "y": 1.2 }, "max": { "x": 0.55, "y": 7.5 } }, "direction": { "x": 1, "y": 0 }, "acceleration": 3.0, "color": "#CFE8F5" }
+      ]
+    },
+    {
+      "levelId": "crossflow_loom",
+      "seed": 340,
+      "difficultyTier": 8,
+      "physicsMode": "assembly",
+      "matchTolerance": { "posTol": 0.3, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "frame", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.6, "height": 0.3 } },
+        { "kind": "thread", "color": "#4CAF50", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "kind": "foot", "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.6, "height": 0.3 } }
+      ],
+      "target": {
+        "outline": [ { "x": -1.4, "y": 0.0 }, { "x": 1.4, "y": 0.0 }, { "x": 1.4, "y": 1.1 }, { "x": -1.4, "y": 1.1 } ],
+        "slots": [
+          { "kind": "foot", "position": { "x": 0, "y": 0.15 }, "rotation": 0 },
+          { "kind": "thread", "position": { "x": -0.8, "y": 0.55 }, "rotation": 0 },
+          { "kind": "thread", "position": { "x": 0, "y": 0.55 }, "rotation": 0 },
+          { "kind": "thread", "position": { "x": 0.8, "y": 0.55 }, "rotation": 0 },
+          { "kind": "frame", "position": { "x": 0, "y": 0.95 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "foot", "startPosition": { "x": 0, "y": 3.5 }, "startRotation": 0 },
+        { "kind": "thread", "startPosition": { "x": -0.8, "y": 5.4 }, "startRotation": 0 },
+        { "kind": "thread", "startPosition": { "x": 0, "y": 6.4 }, "startRotation": 0 },
+        { "kind": "thread", "startPosition": { "x": 0.8, "y": 5.4 }, "startRotation": 0 },
+        { "kind": "frame", "startPosition": { "x": 0, "y": 2.4 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.5, "y": -0.3 }, { "x": 1.5, "y": -0.3 }, { "x": 1.5, "y": 0.0 }, { "x": -1.5, "y": 0.0 } ] }
+      ],
+      "airZones": []
+    },
+    {
+      "levelId": "dolmen_press",
+      "seed": 341,
+      "difficultyTier": 8,
+      "physicsMode": "assembly",
+      "matchTolerance": { "posTol": 0.3, "angTol": 0.43633 },
+      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "base", "color": "#F2801D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 3.0, "height": 0.3 } },
+        { "kind": "post", "color": "#F4C20D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.35, "height": 0.9 } },
+        { "kind": "deck", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 2.8, "height": 0.3 } },
+        { "kind": "cap", "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.3 } }
+      ],
+      "target": {
+        "outline": [ { "x": -1.6, "y": 0.0 }, { "x": 1.6, "y": 0.0 }, { "x": 1.6, "y": 1.8 }, { "x": -1.6, "y": 1.8 } ],
+        "slots": [
+          { "kind": "base", "position": { "x": 0, "y": 0.15 }, "rotation": 0 },
+          { "kind": "post", "position": { "x": -1.1, "y": 0.75 }, "rotation": 0 },
+          { "kind": "post", "position": { "x": 1.1, "y": 0.75 }, "rotation": 0 },
+          { "kind": "deck", "position": { "x": 0, "y": 1.35 }, "rotation": 0 },
+          { "kind": "cap", "position": { "x": 0, "y": 1.65 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "base", "startPosition": { "x": 0, "y": 3.4 }, "startRotation": 0 },
+        { "kind": "post", "startPosition": { "x": -1.1, "y": 4.2 }, "startRotation": 0 },
+        { "kind": "post", "startPosition": { "x": 1.1, "y": 4.2 }, "startRotation": 0 },
+        { "kind": "deck", "startPosition": { "x": 0, "y": 2.3 }, "startRotation": 0 },
+        { "kind": "cap", "startPosition": { "x": 0, "y": 5.0 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.7, "y": -0.3 }, { "x": 1.7, "y": -0.3 }, { "x": 1.7, "y": 0.0 }, { "x": -1.7, "y": 0.0 } ] }
+      ]
     }
   ]
 }
