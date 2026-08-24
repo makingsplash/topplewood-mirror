@@ -5159,7 +5159,12 @@
         { "kind": "nest_floor", "color": "#E8853B", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.40, "height": 0.24 } },
         { "kind": "nest_l", "color": "#F2801D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.18, "height": 0.55 } },
         { "kind": "nest_r", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.18, "height": 0.60 } },
-        { "kind": "bird", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.4, "segments": 24 } }
+        { "kind": "bird", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.4, "segments": 24 } },
+        { "kind": "oak", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.5, "height": 2.6 } },
+        { "kind": "turf_a", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.55 } },
+        { "kind": "stone", "color": "#B24BD1", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.4 } },
+        { "kind": "turf_b", "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.5, "height": 0.5 } },
+        { "kind": "turf_c", "color": "#5B4FE0", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.45 } }
       ],
       "target": {
         "outline": [ { "x": 0.5, "y": 0.0 }, { "x": 2.1, "y": 0.0 }, { "x": 2.1, "y": 3.2 }, { "x": 0.5, "y": 3.2 } ],
@@ -5168,7 +5173,12 @@
           { "kind": "nest_floor", "position": { "x": 1.32, "y": 2.18 }, "rotation": 0 },
           { "kind": "nest_l", "position": { "x": 0.73, "y": 2.575 }, "rotation": 0 },
           { "kind": "nest_r", "position": { "x": 1.81, "y": 2.60 }, "rotation": 0 },
-          { "kind": "bird", "position": { "x": 1.32, "y": 2.70 }, "rotation": 0 }
+          { "kind": "bird", "position": { "x": 1.32, "y": 2.70 }, "rotation": 0 },
+          { "kind": "oak", "position": { "x": -3.55, "y": 1.30 }, "rotation": 0 },
+          { "kind": "turf_a", "position": { "x": -2.45, "y": 0.275 }, "rotation": 0 },
+          { "kind": "stone", "position": { "x": -2.45, "y": 0.75 }, "rotation": 0 },
+          { "kind": "turf_b", "position": { "x": -1.15, "y": 0.25 }, "rotation": 0 },
+          { "kind": "turf_c", "position": { "x": 0.0, "y": 0.225 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -5176,7 +5186,12 @@
         { "kind": "nest_floor", "startPosition": { "x": 1.32, "y": 6.80 }, "startRotation": 0 },
         { "kind": "nest_l", "startPosition": { "x": 0.73, "y": 8.00 }, "startRotation": 0 },
         { "kind": "nest_r", "startPosition": { "x": 1.81, "y": 5.90 }, "startRotation": 0 },
-        { "kind": "bird", "startPosition": { "x": -3.77, "y": 5.59 }, "startRotation": 0 }
+        { "kind": "bird", "startPosition": { "x": -3.77, "y": 5.59 }, "startRotation": 0 },
+        { "kind": "oak", "startPosition": { "x": -3.55, "y": 1.30 }, "startRotation": 0, "preplaced": true },
+        { "kind": "turf_a", "startPosition": { "x": -2.45, "y": 0.275 }, "startRotation": 0, "preplaced": true },
+        { "kind": "stone", "startPosition": { "x": -2.45, "y": 0.75 }, "startRotation": 0, "preplaced": true },
+        { "kind": "turf_b", "startPosition": { "x": -1.15, "y": 0.25 }, "startRotation": 0, "preplaced": true },
+        { "kind": "turf_c", "startPosition": { "x": 0.0, "y": 0.225 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -4.4, "y": -0.6 }, { "x": 3.2, "y": -0.6 }, { "x": 3.2, "y": 0.0 }, { "x": -4.4, "y": 0.0 } ] },
@@ -5254,7 +5269,10 @@
         { "kind": "cheek_l", "color": "#B24BD1", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.20, "height": 0.48 } },
         { "kind": "cheek_r", "color": "#E84B8A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.20, "height": 0.48 } },
         { "kind": "nose", "color": "#E23B3B", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.40, "height": 0.40 } },
-        { "kind": "fly", "color": "#F4C20D", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.35, "segments": 24 } }
+        { "kind": "fly", "color": "#F4C20D", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.35, "segments": 24 } },
+        { "kind": "reed", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.4, "height": 1.0 } },
+        { "kind": "bank", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 0.5 } },
+        { "kind": "stone", "color": "#B24BD1", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.4 } }
       ],
       "target": {
         "outline": [ { "x": -0.85, "y": 0.0 }, { "x": 1.60, "y": 0.0 }, { "x": 1.95, "y": 0.94 }, { "x": 1.55, "y": 1.42 }, { "x": -0.65, "y": 1.42 }, { "x": -0.85, "y": 0.70 } ],
@@ -5265,7 +5283,10 @@
           { "kind": "cheek_l", "position": { "x": -0.55, "y": 1.18 }, "rotation": 0 },
           { "kind": "cheek_r", "position": { "x": 1.30, "y": 1.18 }, "rotation": 0 },
           { "kind": "nose", "position": { "x": 1.75, "y": 1.14 }, "rotation": 0 },
-          { "kind": "fly", "position": { "x": 0.85, "y": 1.29 }, "rotation": 0 }
+          { "kind": "fly", "position": { "x": 0.85, "y": 1.29 }, "rotation": 0 },
+          { "kind": "reed", "position": { "x": -2.75, "y": 0.5 }, "rotation": 0 },
+          { "kind": "bank", "position": { "x": -1.75, "y": 0.25 }, "rotation": 0 },
+          { "kind": "stone", "position": { "x": -1.75, "y": 0.70 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -5275,7 +5296,10 @@
         { "kind": "cheek_l", "startPosition": { "x": -0.55, "y": 6.80 }, "startRotation": 0 },
         { "kind": "cheek_r", "startPosition": { "x": 1.30, "y": 5.00 }, "startRotation": 0 },
         { "kind": "nose", "startPosition": { "x": 1.75, "y": 7.00 }, "startRotation": 0 },
-        { "kind": "fly", "startPosition": { "x": -2.60, "y": 7.60 }, "startRotation": 0 }
+        { "kind": "fly", "startPosition": { "x": -2.60, "y": 7.60 }, "startRotation": 0 },
+        { "kind": "reed", "startPosition": { "x": -2.75, "y": 0.5 }, "startRotation": 0, "preplaced": true },
+        { "kind": "bank", "startPosition": { "x": -1.75, "y": 0.25 }, "startRotation": 0, "preplaced": true },
+        { "kind": "stone", "startPosition": { "x": -1.75, "y": 0.70 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.0, "y": -0.6 }, { "x": 2.2, "y": -0.6 }, { "x": 2.2, "y": 0.0 }, { "x": -3.0, "y": 0.0 } ] }
@@ -5350,7 +5374,12 @@
         { "kind": "sill", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.45, "height": 0.20 } },
         { "kind": "win_back", "color": "#3B7DD8", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.40, "height": 0.35 } },
         { "kind": "hand", "color": "#E23B3B", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.45 } },
-        { "kind": "cuckoo", "color": "#F4C20D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+        { "kind": "cuckoo", "color": "#F4C20D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "kind": "mantel", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.05, "height": 0.35 } },
+        { "kind": "pine", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.55, "topWidth": 0.18, "height": 1.05 } },
+        { "kind": "col", "color": "#E8853B", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.42, "height": 1.0 } },
+        { "kind": "knob", "color": "#E23B3B", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.34, "height": 0.34 } },
+        { "kind": "sconce", "color": "#B24BD1", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.34, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -2.275, "y": -0.5 }, { "x": -1.075, "y": -0.5 }, { "x": -1.075, "y": 1.25 }, { "x": -0.95, "y": 1.25 }, { "x": -0.95, "y": 1.45 }, { "x": -1.61, "y": 1.45 }, { "x": -1.61, "y": 1.8 }, { "x": -2.06, "y": 1.8 }, { "x": -2.06, "y": 1.45 }, { "x": -2.4, "y": 1.45 }, { "x": -2.4, "y": 1.25 }, { "x": -2.275, "y": 1.25 } ],
@@ -5359,7 +5388,12 @@
           { "kind": "sill", "position": { "x": -1.675, "y": 1.35 }, "rotation": 0 },
           { "kind": "win_back", "position": { "x": -1.81, "y": 1.625 }, "rotation": 0 },
           { "kind": "cuckoo", "position": { "x": -1.36, "y": 1.745 }, "rotation": 0 },
-          { "kind": "hand", "position": { "x": -1.81, "y": 2.025 }, "rotation": 0 }
+          { "kind": "hand", "position": { "x": -1.81, "y": 2.025 }, "rotation": 0 },
+          { "kind": "mantel", "position": { "x": 0.24, "y": -0.325 }, "rotation": 0 },
+          { "kind": "pine", "position": { "x": 0.0, "y": 0.375 }, "rotation": 0 },
+          { "kind": "col", "position": { "x": 0.55, "y": 0.35 }, "rotation": 0 },
+          { "kind": "knob", "position": { "x": 0.55, "y": 1.02 }, "rotation": 0 },
+          { "kind": "sconce", "position": { "x": -0.60, "y": -0.25 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -5367,7 +5401,12 @@
         { "kind": "sill", "startPosition": { "x": -1.675, "y": 6.30 }, "startRotation": 0 },
         { "kind": "win_back", "startPosition": { "x": -1.81, "y": 7.60 }, "startRotation": 0 },
         { "kind": "cuckoo", "startPosition": { "x": -0.50, "y": 4.50 }, "startRotation": 0 },
-        { "kind": "hand", "startPosition": { "x": -1.81, "y": 5.40 }, "startRotation": 0 }
+        { "kind": "hand", "startPosition": { "x": -1.81, "y": 5.40 }, "startRotation": 0 },
+        { "kind": "mantel", "startPosition": { "x": 0.24, "y": -0.325 }, "startRotation": 0, "preplaced": true },
+        { "kind": "pine", "startPosition": { "x": 0.0, "y": 0.375 }, "startRotation": 0, "preplaced": true },
+        { "kind": "col", "startPosition": { "x": 0.55, "y": 0.35 }, "startRotation": 0, "preplaced": true },
+        { "kind": "knob", "startPosition": { "x": 0.55, "y": 1.02 }, "startRotation": 0, "preplaced": true },
+        { "kind": "sconce", "startPosition": { "x": -0.60, "y": -0.25 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.6, "y": -0.8 }, { "x": 0.8, "y": -0.8 }, { "x": 0.8, "y": -0.5 }, { "x": -2.6, "y": -0.5 } ] }
@@ -5442,7 +5481,12 @@
         { "kind": "crater_floor", "color": "#E84B8A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.40, "height": 0.24 } },
         { "kind": "crater_l", "color": "#F2801D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.18, "height": 0.55 } },
         { "kind": "crater_r", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.18, "height": 0.60 } },
-        { "kind": "cherry", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.4, "segments": 24 } }
+        { "kind": "cherry", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.4, "segments": 24 } },
+        { "kind": "candle", "color": "#E84B8A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.5, "height": 2.6 } },
+        { "kind": "macaron", "color": "#F2801D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.55 } },
+        { "kind": "sprinkle", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.4 } },
+        { "kind": "plate", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.5, "height": 0.5 } },
+        { "kind": "icing", "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.45 } }
       ],
       "target": {
         "outline": [ { "x": 0.4, "y": 0.0 }, { "x": 2.24, "y": 0.0 }, { "x": 2.02, "y": 2.9 }, { "x": 0.62, "y": 2.9 } ],
@@ -5451,7 +5495,12 @@
           { "kind": "crater_floor", "position": { "x": 1.32, "y": 2.18 }, "rotation": 0 },
           { "kind": "crater_l", "position": { "x": 0.73, "y": 2.575 }, "rotation": 0 },
           { "kind": "crater_r", "position": { "x": 1.81, "y": 2.60 }, "rotation": 0 },
-          { "kind": "cherry", "position": { "x": 1.32, "y": 2.70 }, "rotation": 0 }
+          { "kind": "cherry", "position": { "x": 1.32, "y": 2.70 }, "rotation": 0 },
+          { "kind": "candle", "position": { "x": -3.55, "y": 1.30 }, "rotation": 0 },
+          { "kind": "macaron", "position": { "x": -2.45, "y": 0.275 }, "rotation": 0 },
+          { "kind": "sprinkle", "position": { "x": -2.45, "y": 0.75 }, "rotation": 0 },
+          { "kind": "plate", "position": { "x": -1.15, "y": 0.25 }, "rotation": 0 },
+          { "kind": "icing", "position": { "x": 0.0, "y": 0.225 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -5459,7 +5508,12 @@
         { "kind": "crater_floor", "startPosition": { "x": 1.32, "y": 6.80 }, "startRotation": 0 },
         { "kind": "crater_l", "startPosition": { "x": 0.73, "y": 8.00 }, "startRotation": 0 },
         { "kind": "crater_r", "startPosition": { "x": 1.81, "y": 5.90 }, "startRotation": 0 },
-        { "kind": "cherry", "startPosition": { "x": -3.77, "y": 5.59 }, "startRotation": 0 }
+        { "kind": "cherry", "startPosition": { "x": -3.77, "y": 5.59 }, "startRotation": 0 },
+        { "kind": "candle", "startPosition": { "x": -3.55, "y": 1.30 }, "startRotation": 0, "preplaced": true },
+        { "kind": "macaron", "startPosition": { "x": -2.45, "y": 0.275 }, "startRotation": 0, "preplaced": true },
+        { "kind": "sprinkle", "startPosition": { "x": -2.45, "y": 0.75 }, "startRotation": 0, "preplaced": true },
+        { "kind": "plate", "startPosition": { "x": -1.15, "y": 0.25 }, "startRotation": 0, "preplaced": true },
+        { "kind": "icing", "startPosition": { "x": 0.0, "y": 0.225 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -4.4, "y": -0.6 }, { "x": 2.4, "y": -0.6 }, { "x": 2.4, "y": 0.0 }, { "x": -4.4, "y": 0.0 } ] },
@@ -5535,7 +5589,12 @@
         { "kind": "tray", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.45, "height": 0.20 } },
         { "kind": "tray_back", "color": "#3B7DD8", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.40, "height": 0.35 } },
         { "kind": "button", "color": "#E23B3B", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.45 } },
-        { "kind": "snack", "color": "#F4C20D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+        { "kind": "snack", "color": "#F4C20D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "kind": "plinth", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.05, "height": 0.35 } },
+        { "kind": "plant", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.55, "topWidth": 0.18, "height": 1.05 } },
+        { "kind": "pillar", "color": "#E8853B", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.42, "height": 1.0 } },
+        { "kind": "cap", "color": "#E23B3B", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.34, "height": 0.34 } },
+        { "kind": "bin", "color": "#B24BD1", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.34, "height": 0.5 } }
       ],
       "target": {
         "outline": [ { "x": -2.4, "y": -0.5 }, { "x": -0.9, "y": -0.5 }, { "x": -0.9, "y": 2.3 }, { "x": -2.4, "y": 2.3 } ],
@@ -5544,7 +5603,12 @@
           { "kind": "tray", "position": { "x": -1.675, "y": 1.35 }, "rotation": 0 },
           { "kind": "tray_back", "position": { "x": -1.81, "y": 1.625 }, "rotation": 0 },
           { "kind": "snack", "position": { "x": -1.36, "y": 1.745 }, "rotation": 0 },
-          { "kind": "button", "position": { "x": -1.81, "y": 2.025 }, "rotation": 0 }
+          { "kind": "button", "position": { "x": -1.81, "y": 2.025 }, "rotation": 0 },
+          { "kind": "plinth", "position": { "x": 0.24, "y": -0.325 }, "rotation": 0 },
+          { "kind": "plant", "position": { "x": 0.0, "y": 0.375 }, "rotation": 0 },
+          { "kind": "pillar", "position": { "x": 0.55, "y": 0.35 }, "rotation": 0 },
+          { "kind": "cap", "position": { "x": 0.55, "y": 1.02 }, "rotation": 0 },
+          { "kind": "bin", "position": { "x": -0.60, "y": -0.25 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -5552,7 +5616,12 @@
         { "kind": "tray", "startPosition": { "x": -1.675, "y": 6.30 }, "startRotation": 0 },
         { "kind": "tray_back", "startPosition": { "x": -1.81, "y": 7.60 }, "startRotation": 0 },
         { "kind": "snack", "startPosition": { "x": -0.50, "y": 4.50 }, "startRotation": 0 },
-        { "kind": "button", "startPosition": { "x": -1.81, "y": 5.40 }, "startRotation": 0 }
+        { "kind": "button", "startPosition": { "x": -1.81, "y": 5.40 }, "startRotation": 0 },
+        { "kind": "plinth", "startPosition": { "x": 0.24, "y": -0.325 }, "startRotation": 0, "preplaced": true },
+        { "kind": "plant", "startPosition": { "x": 0.0, "y": 0.375 }, "startRotation": 0, "preplaced": true },
+        { "kind": "pillar", "startPosition": { "x": 0.55, "y": 0.35 }, "startRotation": 0, "preplaced": true },
+        { "kind": "cap", "startPosition": { "x": 0.55, "y": 1.02 }, "startRotation": 0, "preplaced": true },
+        { "kind": "bin", "startPosition": { "x": -0.60, "y": -0.25 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.6, "y": -0.8 }, { "x": 0.8, "y": -0.8 }, { "x": 0.8, "y": -0.5 }, { "x": -2.6, "y": -0.5 } ] }
@@ -5574,7 +5643,12 @@
         { "kind": "sill_floor", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.40, "height": 0.24 } },
         { "kind": "sill_l", "color": "#E8853B", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.18, "height": 0.55 } },
         { "kind": "sill_r", "color": "#F2801D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.18, "height": 0.60 } },
-        { "kind": "sun", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.4, "segments": 24 } }
+        { "kind": "sun", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.4, "segments": 24 } },
+        { "kind": "spire", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.5, "height": 2.6 } },
+        { "kind": "hill_a", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.55 } },
+        { "kind": "boulder", "color": "#B24BD1", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.4 } },
+        { "kind": "hill_b", "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.5, "height": 0.5 } },
+        { "kind": "hill_c", "color": "#5B4FE0", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.45 } }
       ],
       "target": {
         "outline": [ { "x": 0.5, "y": 0.0 }, { "x": 2.1, "y": 0.0 }, { "x": 2.1, "y": 3.1 }, { "x": 0.5, "y": 3.1 } ],
@@ -5583,7 +5657,12 @@
           { "kind": "sill_floor", "position": { "x": 1.32, "y": 2.18 }, "rotation": 0 },
           { "kind": "sill_l", "position": { "x": 0.73, "y": 2.575 }, "rotation": 0 },
           { "kind": "sill_r", "position": { "x": 1.81, "y": 2.60 }, "rotation": 0 },
-          { "kind": "sun", "position": { "x": 1.32, "y": 2.70 }, "rotation": 0 }
+          { "kind": "sun", "position": { "x": 1.32, "y": 2.70 }, "rotation": 0 },
+          { "kind": "spire", "position": { "x": -3.55, "y": 1.30 }, "rotation": 0 },
+          { "kind": "hill_a", "position": { "x": -2.45, "y": 0.275 }, "rotation": 0 },
+          { "kind": "boulder", "position": { "x": -2.45, "y": 0.75 }, "rotation": 0 },
+          { "kind": "hill_b", "position": { "x": -1.15, "y": 0.25 }, "rotation": 0 },
+          { "kind": "hill_c", "position": { "x": 0.0, "y": 0.225 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -5591,7 +5670,12 @@
         { "kind": "sill_floor", "startPosition": { "x": 1.32, "y": 6.80 }, "startRotation": 0 },
         { "kind": "sill_l", "startPosition": { "x": 0.73, "y": 8.00 }, "startRotation": 0 },
         { "kind": "sill_r", "startPosition": { "x": 1.81, "y": 5.90 }, "startRotation": 0 },
-        { "kind": "sun", "startPosition": { "x": -3.77, "y": 5.59 }, "startRotation": 0 }
+        { "kind": "sun", "startPosition": { "x": -3.77, "y": 5.59 }, "startRotation": 0 },
+        { "kind": "spire", "startPosition": { "x": -3.55, "y": 1.30 }, "startRotation": 0, "preplaced": true },
+        { "kind": "hill_a", "startPosition": { "x": -2.45, "y": 0.275 }, "startRotation": 0, "preplaced": true },
+        { "kind": "boulder", "startPosition": { "x": -2.45, "y": 0.75 }, "startRotation": 0, "preplaced": true },
+        { "kind": "hill_b", "startPosition": { "x": -1.15, "y": 0.25 }, "startRotation": 0, "preplaced": true },
+        { "kind": "hill_c", "startPosition": { "x": 0.0, "y": 0.225 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -4.4, "y": -0.6 }, { "x": 3.4, "y": -0.6 }, { "x": 3.4, "y": 0.0 }, { "x": -4.4, "y": 0.0 } ] },
@@ -5614,7 +5698,12 @@
         { "kind": "bowl_floor", "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.60, "height": 0.24 } },
         { "kind": "bowl_l", "color": "#5B4FE0", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.18, "height": 0.55 } },
         { "kind": "bowl_r", "color": "#B24BD1", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.18, "height": 0.60 } },
-        { "kind": "ice", "color": "#E8F0FA", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } }
+        { "kind": "ice", "color": "#E8F0FA", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 0.5 } },
+        { "kind": "bottle", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.5, "height": 2.6 } },
+        { "kind": "napkin", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.8, "height": 0.55 } },
+        { "kind": "cube_deco", "color": "#3B7DD8", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.6, "height": 0.4 } },
+        { "kind": "table", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.5, "height": 0.5 } },
+        { "kind": "coaster", "color": "#E84B8A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.45 } }
       ],
       "target": {
         "outline": [ { "x": 0.5, "y": 0.0 }, { "x": 2.14, "y": 0.0 }, { "x": 2.12, "y": 2.9 }, { "x": 0.52, "y": 2.9 } ],
@@ -5623,7 +5712,12 @@
           { "kind": "bowl_floor", "position": { "x": 1.32, "y": 2.18 }, "rotation": 0 },
           { "kind": "bowl_l", "position": { "x": 0.73, "y": 2.575 }, "rotation": 0 },
           { "kind": "bowl_r", "position": { "x": 1.81, "y": 2.60 }, "rotation": 0 },
-          { "kind": "ice", "position": { "x": 1.32, "y": 2.70 }, "rotation": 0 }
+          { "kind": "ice", "position": { "x": 1.32, "y": 2.70 }, "rotation": 0 },
+          { "kind": "bottle", "position": { "x": -3.55, "y": 1.30 }, "rotation": 0 },
+          { "kind": "napkin", "position": { "x": -2.45, "y": 0.275 }, "rotation": 0 },
+          { "kind": "cube_deco", "position": { "x": -2.45, "y": 0.75 }, "rotation": 0 },
+          { "kind": "table", "position": { "x": -1.15, "y": 0.25 }, "rotation": 0 },
+          { "kind": "coaster", "position": { "x": 0.0, "y": 0.225 }, "rotation": 0 }
         ]
       },
       "pieces": [
@@ -5631,7 +5725,12 @@
         { "kind": "bowl_floor", "startPosition": { "x": 1.32, "y": 6.80 }, "startRotation": 0 },
         { "kind": "bowl_l", "startPosition": { "x": 0.73, "y": 8.00 }, "startRotation": 0 },
         { "kind": "bowl_r", "startPosition": { "x": 1.81, "y": 5.90 }, "startRotation": 0 },
-        { "kind": "ice", "startPosition": { "x": -3.77, "y": 5.59 }, "startRotation": 0 }
+        { "kind": "ice", "startPosition": { "x": -3.77, "y": 5.59 }, "startRotation": 0 },
+        { "kind": "bottle", "startPosition": { "x": -3.55, "y": 1.30 }, "startRotation": 0, "preplaced": true },
+        { "kind": "napkin", "startPosition": { "x": -2.45, "y": 0.275 }, "startRotation": 0, "preplaced": true },
+        { "kind": "cube_deco", "startPosition": { "x": -2.45, "y": 0.75 }, "startRotation": 0, "preplaced": true },
+        { "kind": "table", "startPosition": { "x": -1.15, "y": 0.25 }, "startRotation": 0, "preplaced": true },
+        { "kind": "coaster", "startPosition": { "x": 0.0, "y": 0.225 }, "startRotation": 0, "preplaced": true }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -4.4, "y": -0.6 }, { "x": 2.4, "y": -0.6 }, { "x": 2.4, "y": 0.0 }, { "x": -4.4, "y": 0.0 } ] },
