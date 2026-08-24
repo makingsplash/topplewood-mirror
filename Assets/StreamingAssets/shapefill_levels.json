@@ -5081,19 +5081,19 @@
         ]
       },
       "pieces": [
-        { "kind": "leg", "startPosition": { "x": -1.5, "y": 4.75 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": -0.55, "y": 6.55 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 0.55, "y": 4.75 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 1.5, "y": 5.2 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": -1.5, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": -0.55, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": 0.55, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": 1.5, "y": 0.05 }, "startRotation": 0, "preplaced": true },
         { "kind": "body", "startPosition": { "x": 0, "y": 6.9 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -0.95, "y": 5.2 }, "startRotation": 0 },
-        { "kind": "ear", "startPosition": { "x": -1.35, "y": 6.1 }, "startRotation": 0 },
+        { "kind": "head", "startPosition": { "x": -0.95, "y": 5.5 }, "startRotation": 0 },
+        { "kind": "ear", "startPosition": { "x": -1.35, "y": 6.5 }, "startRotation": 0 },
         { "kind": "ear", "startPosition": { "x": -0.55, "y": 4.3 }, "startRotation": 0 },
-        { "kind": "trunk_lo", "startPosition": { "x": -2.35, "y": 5.65 }, "startRotation": 0 },
-        { "kind": "trunk_mid", "startPosition": { "x": -2.35, "y": 6.55 }, "startRotation": 0 },
-        { "kind": "trunk_up", "startPosition": { "x": -2.35, "y": 4.3 }, "startRotation": 0 },
-        { "kind": "tail_lo", "startPosition": { "x": 2.35, "y": 4.75 }, "startRotation": 0 },
-        { "kind": "tail_up", "startPosition": { "x": 2.35, "y": 6.1 }, "startRotation": 0 }
+        { "kind": "trunk_lo", "startPosition": { "x": -2.35, "y": -0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "trunk_mid", "startPosition": { "x": -2.35, "y": 4.3 }, "startRotation": 0 },
+        { "kind": "trunk_up", "startPosition": { "x": -2.35, "y": 6.5 }, "startRotation": 0 },
+        { "kind": "tail_lo", "startPosition": { "x": 2.35, "y": -0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "tail_up", "startPosition": { "x": 2.35, "y": 5.9 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.9, "y": -0.8 }, { "x": 2.9, "y": -0.8 }, { "x": 2.9, "y": -0.5 }, { "x": -2.9, "y": -0.5 } ] }
@@ -5135,18 +5135,18 @@
         ]
       },
       "pieces": [
-        { "kind": "leg", "startPosition": { "x": -1.1, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": -0.5, "y": 4.5 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 0.5, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 1.1, "y": 4.9 }, "startRotation": 0 },
-        { "kind": "body", "startPosition": { "x": 0, "y": 6.85 }, "startRotation": 0 },
-        { "kind": "neck", "startPosition": { "x": -1.0, "y": 4.9 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -1.0, "y": 4.0 }, "startRotation": 0 },
-        { "kind": "ear", "startPosition": { "x": -1.2, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "ear", "startPosition": { "x": -0.8, "y": 6.4 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": -1.1, "y": 0.1 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": -0.5, "y": 0.1 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": 0.5, "y": 0.1 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": 1.1, "y": 0.1 }, "startRotation": 0, "preplaced": true },
+        { "kind": "body", "startPosition": { "x": 0, "y": 1.2 }, "startRotation": 0, "preplaced": true },
+        { "kind": "neck", "startPosition": { "x": -1.0, "y": 2.35 }, "startRotation": 0, "preplaced": true },
+        { "kind": "head", "startPosition": { "x": -1.0, "y": 4.5 }, "startRotation": 0 },
+        { "kind": "ear", "startPosition": { "x": -1.2, "y": 5.6 }, "startRotation": 0 },
+        { "kind": "ear", "startPosition": { "x": -0.8, "y": 6.7 }, "startRotation": 0 },
         { "kind": "saddle", "startPosition": { "x": 0.2, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "tail_lo", "startPosition": { "x": 1.6, "y": 4.5 }, "startRotation": 0 },
-        { "kind": "tail_up", "startPosition": { "x": 1.6, "y": 5.9 }, "startRotation": 0 }
+        { "kind": "tail_lo", "startPosition": { "x": 1.6, "y": 0 }, "startRotation": 0, "preplaced": true },
+        { "kind": "tail_up", "startPosition": { "x": 1.6, "y": 6.0 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.5, "y": -0.8 }, { "x": 1.9, "y": -0.8 }, { "x": 1.9, "y": -0.5 }, { "x": -1.5, "y": -0.5 } ] }
@@ -5189,19 +5189,19 @@
         ]
       },
       "pieces": [
-        { "kind": "leg", "startPosition": { "x": -1.2, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": -0.5, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 0.5, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 1.2, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "body", "startPosition": { "x": 0, "y": 6.9 }, "startRotation": 0 },
-        { "kind": "hump", "startPosition": { "x": -0.35, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "hump", "startPosition": { "x": 0.8, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "neck_lo", "startPosition": { "x": -1.15, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "neck_up", "startPosition": { "x": -1.15, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -1.2, "y": 5.5 }, "startRotation": 0 },
-        { "kind": "ear", "startPosition": { "x": -1.4, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "ear", "startPosition": { "x": -1.0, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "tail", "startPosition": { "x": 1.55, "y": 5.9 }, "startRotation": 0 }
+        { "kind": "leg", "startPosition": { "x": -1.2, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": -0.5, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": 0.5, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": 1.2, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "body", "startPosition": { "x": 0, "y": 1.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "hump", "startPosition": { "x": -0.35, "y": 5.9 }, "startRotation": 0 },
+        { "kind": "hump", "startPosition": { "x": 0.8, "y": 4.6 }, "startRotation": 0 },
+        { "kind": "neck_lo", "startPosition": { "x": -1.15, "y": 1.95 }, "startRotation": 0, "preplaced": true },
+        { "kind": "neck_up", "startPosition": { "x": -1.15, "y": 2.85 }, "startRotation": 0, "preplaced": true },
+        { "kind": "head", "startPosition": { "x": -1.2, "y": 4.6 }, "startRotation": 0 },
+        { "kind": "ear", "startPosition": { "x": -1.4, "y": 5.8 }, "startRotation": 0 },
+        { "kind": "ear", "startPosition": { "x": -1.0, "y": 6.9 }, "startRotation": 0 },
+        { "kind": "tail", "startPosition": { "x": 1.55, "y": 6.5 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.6, "y": -0.8 }, { "x": 1.75, "y": -0.8 }, { "x": 1.75, "y": -0.5 }, { "x": -1.6, "y": -0.5 } ] }
@@ -5244,17 +5244,17 @@
         ]
       },
       "pieces": [
-        { "kind": "foot", "startPosition": { "x": -0.85, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "foot", "startPosition": { "x": -0.35, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "body", "startPosition": { "x": -0.6, "y": 6.9 }, "startRotation": 0 },
-        { "kind": "neck", "startPosition": { "x": -0.6, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -0.6, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "crest", "startPosition": { "x": -0.6, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "fan_a", "startPosition": { "x": 1.4, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "fan_b", "startPosition": { "x": 1.4, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "fan_c", "startPosition": { "x": 1.4, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "fan_d", "startPosition": { "x": 1.4, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "fan_e", "startPosition": { "x": 1.4, "y": 6.9 }, "startRotation": 0 }
+        { "kind": "foot", "startPosition": { "x": -0.85, "y": 3.2 }, "startRotation": 0 },
+        { "kind": "foot", "startPosition": { "x": -0.35, "y": 4.0 }, "startRotation": 0 },
+        { "kind": "body", "startPosition": { "x": -0.6, "y": 4.6 }, "startRotation": 0 },
+        { "kind": "neck", "startPosition": { "x": -0.6, "y": 5.3 }, "startRotation": 0 },
+        { "kind": "head", "startPosition": { "x": -0.6, "y": 6.0 }, "startRotation": 0 },
+        { "kind": "crest", "startPosition": { "x": -0.6, "y": 6.7 }, "startRotation": 0 },
+        { "kind": "fan_a", "startPosition": { "x": 1.4, "y": 3.2 }, "startRotation": 0 },
+        { "kind": "fan_b", "startPosition": { "x": 1.4, "y": 3.9 }, "startRotation": 0 },
+        { "kind": "fan_c", "startPosition": { "x": 1.4, "y": 4.6 }, "startRotation": 0 },
+        { "kind": "fan_d", "startPosition": { "x": 1.4, "y": 5.3 }, "startRotation": 0 },
+        { "kind": "fan_e", "startPosition": { "x": 1.4, "y": 6.0 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.15, "y": -0.8 }, { "x": 2.65, "y": -0.8 }, { "x": 2.65, "y": -0.5 }, { "x": -1.15, "y": -0.5 } ] }
@@ -5296,16 +5296,16 @@
         ]
       },
       "pieces": [
-        { "kind": "keel", "startPosition": { "x": 0, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "body", "startPosition": { "x": 0, "y": 6.9 }, "startRotation": 0 },
-        { "kind": "breast", "startPosition": { "x": -0.05, "y": 5.5 }, "startRotation": 0 },
-        { "kind": "wing", "startPosition": { "x": 0.75, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "neck_lo", "startPosition": { "x": -0.8, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "neck_mid", "startPosition": { "x": -0.8, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "neck_up", "startPosition": { "x": -0.8, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "neck_tip", "startPosition": { "x": -0.8, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -0.85, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "beak", "startPosition": { "x": -0.95, "y": 4.6 }, "startRotation": 0 }
+        { "kind": "keel", "startPosition": { "x": 0, "y": -0.3 }, "startRotation": 0, "preplaced": true },
+        { "kind": "body", "startPosition": { "x": 0, "y": 0.3 }, "startRotation": 0, "preplaced": true },
+        { "kind": "breast", "startPosition": { "x": -0.05, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "wing", "startPosition": { "x": 0.75, "y": 5.5 }, "startRotation": 0 },
+        { "kind": "neck_lo", "startPosition": { "x": -0.8, "y": 1.075 }, "startRotation": 0, "preplaced": true },
+        { "kind": "neck_mid", "startPosition": { "x": -0.8, "y": 1.825 }, "startRotation": 0, "preplaced": true },
+        { "kind": "neck_up", "startPosition": { "x": -0.8, "y": 2.575 }, "startRotation": 0, "preplaced": true },
+        { "kind": "neck_tip", "startPosition": { "x": -0.8, "y": 3.325 }, "startRotation": 0, "preplaced": true },
+        { "kind": "head", "startPosition": { "x": -0.85, "y": 3.925 }, "startRotation": 0, "preplaced": true },
+        { "kind": "beak", "startPosition": { "x": -0.95, "y": 6.0 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.05, "y": -0.8 }, { "x": 1.35, "y": -0.8 }, { "x": 1.35, "y": -0.5 }, { "x": -1.05, "y": -0.5 } ] }
@@ -5346,16 +5346,16 @@
         ]
       },
       "pieces": [
-        { "kind": "foot", "startPosition": { "x": -0.6, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "foot", "startPosition": { "x": 0.6, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": -0.6, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 0.6, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "body_lo", "startPosition": { "x": 0, "y": 6.9 }, "startRotation": 0 },
-        { "kind": "body_up", "startPosition": { "x": -0.15, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -0.35, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "ear", "startPosition": { "x": -0.5, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "ear", "startPosition": { "x": -0.2, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "tail", "startPosition": { "x": 1.65, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "foot", "startPosition": { "x": -0.6, "y": -0.35 }, "startRotation": 0, "preplaced": true },
+        { "kind": "foot", "startPosition": { "x": 0.6, "y": -0.35 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": -0.6, "y": 0.25 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": 0.6, "y": 0.25 }, "startRotation": 0, "preplaced": true },
+        { "kind": "body_lo", "startPosition": { "x": 0, "y": 1.2 }, "startRotation": 0, "preplaced": true },
+        { "kind": "body_up", "startPosition": { "x": -0.15, "y": 5.6 }, "startRotation": 0 },
+        { "kind": "head", "startPosition": { "x": -0.35, "y": 4.2 }, "startRotation": 0 },
+        { "kind": "ear", "startPosition": { "x": -0.5, "y": 4.9 }, "startRotation": 0 },
+        { "kind": "ear", "startPosition": { "x": -0.2, "y": 6.3 }, "startRotation": 0 },
+        { "kind": "tail", "startPosition": { "x": 1.65, "y": 4.6 }, "startRotation": 0 },
         { "kind": "tail_tip", "startPosition": { "x": 1.65, "y": 6.4 }, "startRotation": 0 }
       ],
       "staticGeometry": [
@@ -5400,18 +5400,18 @@
         ]
       },
       "pieces": [
-        { "kind": "foot", "startPosition": { "x": -0.35, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "foot", "startPosition": { "x": 0.25, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "body", "startPosition": { "x": -0.05, "y": 6.9 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -0.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "beak", "startPosition": { "x": -0.5, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "comb_s", "startPosition": { "x": -0.15, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "comb_m", "startPosition": { "x": 0.15, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "comb_s", "startPosition": { "x": 0.45, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "tail_a", "startPosition": { "x": 1.5, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "tail_b", "startPosition": { "x": 1.5, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "tail_c", "startPosition": { "x": 1.5, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "tail_d", "startPosition": { "x": 1.5, "y": 5.9 }, "startRotation": 0 }
+        { "kind": "foot", "startPosition": { "x": -0.35, "y": 5.40 }, "startRotation": 0 },
+        { "kind": "foot", "startPosition": { "x": 0.25, "y": 5.95 }, "startRotation": 0 },
+        { "kind": "body", "startPosition": { "x": -0.05, "y": 3.05 }, "startRotation": 0 },
+        { "kind": "head", "startPosition": { "x": -0.05, "y": 6.95 }, "startRotation": 0 },
+        { "kind": "beak", "startPosition": { "x": -0.5, "y": 6.10 }, "startRotation": 0 },
+        { "kind": "comb_s", "startPosition": { "x": -0.15, "y": 4.70 }, "startRotation": 0 },
+        { "kind": "comb_m", "startPosition": { "x": 0.15, "y": 4.05 }, "startRotation": 0 },
+        { "kind": "comb_s", "startPosition": { "x": 0.45, "y": 4.95 }, "startRotation": 0 },
+        { "kind": "tail_a", "startPosition": { "x": 1.5, "y": 4.15 }, "startRotation": 0 },
+        { "kind": "tail_b", "startPosition": { "x": 1.5, "y": 3.20 }, "startRotation": 0 },
+        { "kind": "tail_c", "startPosition": { "x": 1.5, "y": 5.45 }, "startRotation": 0 },
+        { "kind": "tail_d", "startPosition": { "x": 1.5, "y": 6.20 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.7, "y": -0.8 }, { "x": 2.35, "y": -0.8 }, { "x": 2.35, "y": -0.5 }, { "x": -0.7, "y": -0.5 } ] }
@@ -5451,16 +5451,16 @@
         ]
       },
       "pieces": [
-        { "kind": "leg", "startPosition": { "x": -1.0, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": -0.45, "y": 4.5 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 0.45, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 1.0, "y": 4.9 }, "startRotation": 0 },
-        { "kind": "body", "startPosition": { "x": 0, "y": 6.85 }, "startRotation": 0 },
-        { "kind": "neck", "startPosition": { "x": -0.9, "y": 4.9 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -0.9, "y": 5.9 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": -1.0, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": -0.45, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": 0.45, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "leg", "startPosition": { "x": 1.0, "y": 0.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "body", "startPosition": { "x": 0, "y": 1.1 }, "startRotation": 0, "preplaced": true },
+        { "kind": "neck", "startPosition": { "x": -0.9, "y": 2.05 }, "startRotation": 0, "preplaced": true },
+        { "kind": "head", "startPosition": { "x": -0.9, "y": 2.8 }, "startRotation": 0, "preplaced": true },
         { "kind": "brow", "startPosition": { "x": -0.85, "y": 4.5 }, "startRotation": 0 },
-        { "kind": "antler", "startPosition": { "x": -1.35, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "antler", "startPosition": { "x": -0.35, "y": 5.4 }, "startRotation": 0 },
+        { "kind": "antler", "startPosition": { "x": -1.35, "y": 5.4 }, "startRotation": 0 },
+        { "kind": "antler", "startPosition": { "x": -0.35, "y": 5.9 }, "startRotation": 0 },
         { "kind": "tine", "startPosition": { "x": -0.85, "y": 6.4 }, "startRotation": 0 }
       ],
       "staticGeometry": [
@@ -5506,20 +5506,20 @@
         ]
       },
       "pieces": [
-        { "kind": "leg", "startPosition": { "x": -1.0, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": -0.4, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 0.4, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 1.0, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "body", "startPosition": { "x": 0, "y": 6.9 }, "startRotation": 0 },
-        { "kind": "jaw", "startPosition": { "x": -2.1, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "snout", "startPosition": { "x": -2.1, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "tooth", "startPosition": { "x": -2.4, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "tooth", "startPosition": { "x": -1.8, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "tail_a", "startPosition": { "x": 1.85, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "tail_b", "startPosition": { "x": 2.65, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "tail_c", "startPosition": { "x": 3.3, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "eye", "startPosition": { "x": -0.5, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "eye", "startPosition": { "x": 0.0, "y": 5.5 }, "startRotation": 0 }
+        { "kind": "leg", "startPosition": { "x": -1.0, "y": 6.30 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": -0.4, "y": 5.70 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": 0.4, "y": 5.35 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": 1.0, "y": 3.90 }, "startRotation": 0 },
+        { "kind": "body", "startPosition": { "x": 0, "y": 3.25 }, "startRotation": 0 },
+        { "kind": "jaw", "startPosition": { "x": -2.1, "y": 6.65 }, "startRotation": 0 },
+        { "kind": "snout", "startPosition": { "x": -2.1, "y": 5.55 }, "startRotation": 0 },
+        { "kind": "tooth", "startPosition": { "x": -2.4, "y": 3.50 }, "startRotation": 0 },
+        { "kind": "tooth", "startPosition": { "x": -1.8, "y": 4.50 }, "startRotation": 0 },
+        { "kind": "tail_a", "startPosition": { "x": 1.85, "y": 4.30 }, "startRotation": 0 },
+        { "kind": "tail_b", "startPosition": { "x": 2.65, "y": 5.45 }, "startRotation": 0 },
+        { "kind": "tail_c", "startPosition": { "x": 3.3, "y": 4.70 }, "startRotation": 0 },
+        { "kind": "eye", "startPosition": { "x": -0.5, "y": 3.95 }, "startRotation": 0 },
+        { "kind": "eye", "startPosition": { "x": 0.0, "y": 6.60 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.8, "y": -0.8 }, { "x": 3.8, "y": -0.8 }, { "x": 3.8, "y": -0.5 }, { "x": -2.8, "y": -0.5 } ] }
@@ -5560,17 +5560,17 @@
         ]
       },
       "pieces": [
-        { "kind": "leg", "startPosition": { "x": -1.05, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": -0.4, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 0.4, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 1.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "plastron", "startPosition": { "x": 0, "y": 6.9 }, "startRotation": 0 },
-        { "kind": "shell_lo", "startPosition": { "x": 0, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "shell_dome", "startPosition": { "x": 0, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "neck_lo", "startPosition": { "x": -1.55, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "neck_up", "startPosition": { "x": -1.55, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -1.7, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "tail", "startPosition": { "x": 1.45, "y": 5.9 }, "startRotation": 0 }
+        { "kind": "leg", "startPosition": { "x": -1.05, "y": 3.10 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": -0.4, "y": 6.00 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": 0.4, "y": 6.15 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": 1.05, "y": 6.25 }, "startRotation": 0 },
+        { "kind": "plastron", "startPosition": { "x": 0, "y": 6.70 }, "startRotation": 0 },
+        { "kind": "shell_lo", "startPosition": { "x": 0, "y": 5.20 }, "startRotation": 0 },
+        { "kind": "shell_dome", "startPosition": { "x": 0, "y": 4.45 }, "startRotation": 0 },
+        { "kind": "neck_lo", "startPosition": { "x": -1.55, "y": 4.90 }, "startRotation": 0 },
+        { "kind": "neck_up", "startPosition": { "x": -1.55, "y": 6.55 }, "startRotation": 0 },
+        { "kind": "head", "startPosition": { "x": -1.7, "y": 3.60 }, "startRotation": 0 },
+        { "kind": "tail", "startPosition": { "x": 1.45, "y": 3.95 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.95, "y": -0.8 }, { "x": 1.65, "y": -0.8 }, { "x": 1.65, "y": -0.5 }, { "x": -1.95, "y": -0.5 } ] }
@@ -5611,17 +5611,17 @@
         ]
       },
       "pieces": [
-        { "kind": "foot", "startPosition": { "x": -0.45, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "foot", "startPosition": { "x": 0.45, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "base", "startPosition": { "x": 0, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "body_lo", "startPosition": { "x": 0, "y": 6.9 }, "startRotation": 0 },
-        { "kind": "body_up", "startPosition": { "x": 0, "y": 5.5 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": 0, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "beak", "startPosition": { "x": -0.25, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "eye", "startPosition": { "x": 0.1, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "eye", "startPosition": { "x": 0.3, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "wing", "startPosition": { "x": -0.95, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "wing", "startPosition": { "x": 0.95, "y": 4.6 }, "startRotation": 0 }
+        { "kind": "foot", "startPosition": { "x": -0.45, "y": -0.35 }, "startRotation": 0, "preplaced": true },
+        { "kind": "foot", "startPosition": { "x": 0.45, "y": -0.35 }, "startRotation": 0, "preplaced": true },
+        { "kind": "base", "startPosition": { "x": 0, "y": 0.1 }, "startRotation": 0, "preplaced": true },
+        { "kind": "body_lo", "startPosition": { "x": 0, "y": 3.50 }, "startRotation": 0 },
+        { "kind": "body_up", "startPosition": { "x": 0, "y": 6.10 }, "startRotation": 0 },
+        { "kind": "head", "startPosition": { "x": 0, "y": 4.80 }, "startRotation": 0 },
+        { "kind": "beak", "startPosition": { "x": -0.25, "y": 6.90 }, "startRotation": 0 },
+        { "kind": "eye", "startPosition": { "x": 0.1, "y": 4.15 }, "startRotation": 0 },
+        { "kind": "eye", "startPosition": { "x": 0.3, "y": 5.45 }, "startRotation": 0 },
+        { "kind": "wing", "startPosition": { "x": -0.95, "y": 6.40 }, "startRotation": 0 },
+        { "kind": "wing", "startPosition": { "x": 0.95, "y": 5.05 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.25, "y": -0.8 }, { "x": 1.25, "y": -0.8 }, { "x": 1.25, "y": -0.5 }, { "x": -1.25, "y": -0.5 } ] }
@@ -5665,19 +5665,19 @@
         ]
       },
       "pieces": [
-        { "kind": "leg", "startPosition": { "x": -1.0, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": -0.4, "y": 4.5 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 0.4, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "leg", "startPosition": { "x": 1.0, "y": 4.9 }, "startRotation": 0 },
-        { "kind": "body", "startPosition": { "x": -0.2, "y": 6.85 }, "startRotation": 0 },
-        { "kind": "head", "startPosition": { "x": -0.55, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "muzzle", "startPosition": { "x": -1.3, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "ear", "startPosition": { "x": -0.8, "y": 4.5 }, "startRotation": 0 },
-        { "kind": "ear", "startPosition": { "x": -0.3, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "nose", "startPosition": { "x": -1.3, "y": 4.5 }, "startRotation": 0 },
-        { "kind": "tail_lo", "startPosition": { "x": 1.5, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "tail_up", "startPosition": { "x": 1.5, "y": 6.4 }, "startRotation": 0 },
-        { "kind": "haunch", "startPosition": { "x": 0.85, "y": 5.0 }, "startRotation": 0 }
+        { "kind": "leg", "startPosition": { "x": -1.0, "y": 5.80 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": -0.4, "y": 5.10 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": 0.4, "y": 6.40 }, "startRotation": 0 },
+        { "kind": "leg", "startPosition": { "x": 1.0, "y": 6.75 }, "startRotation": 0 },
+        { "kind": "body", "startPosition": { "x": -0.2, "y": 3.10 }, "startRotation": 0 },
+        { "kind": "head", "startPosition": { "x": -0.55, "y": 6.70 }, "startRotation": 0 },
+        { "kind": "muzzle", "startPosition": { "x": -1.3, "y": 6.80 }, "startRotation": 0 },
+        { "kind": "ear", "startPosition": { "x": -0.8, "y": 4.50 }, "startRotation": 0 },
+        { "kind": "ear", "startPosition": { "x": -0.3, "y": 5.95 }, "startRotation": 0 },
+        { "kind": "nose", "startPosition": { "x": -1.3, "y": 4.95 }, "startRotation": 0 },
+        { "kind": "tail_lo", "startPosition": { "x": 1.5, "y": 3.15 }, "startRotation": 0 },
+        { "kind": "tail_up", "startPosition": { "x": 1.5, "y": 5.25 }, "startRotation": 0 },
+        { "kind": "haunch", "startPosition": { "x": 0.85, "y": 4.85 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.65, "y": -0.8 }, { "x": 1.9, "y": -0.8 }, { "x": 1.9, "y": -0.5 }, { "x": -1.65, "y": -0.5 } ] }
