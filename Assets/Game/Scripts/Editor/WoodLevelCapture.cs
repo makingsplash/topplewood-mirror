@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Gameplay.Core;
 // Именно using, а не Gameplay.Dev.WoodSandbox по месту: файл лежит в namespace Game.Editor, и
 // короткое имя компилятор ищет сначала внутри Game — то есть как несуществующий Game.Gameplay.Dev
@@ -43,11 +44,36 @@ namespace Game.Editor
         private const string LevelsPath = "Assets/StreamingAssets/shapefill_levels.json";
 
         /// <summary>
-        /// Уровни съёмки. Сейчас это ВСЕ три уровня с зонами воздуха — их и проверяем.
-        /// Комментарий про grand_seesaw / giraffe / well остался от съёмки масштаба деталей;
-        /// вернуть эти имена сюда, когда снова понадобится вилка размеров.
+        /// Дефолтные уровни съёмки, когда <c>WOOD_CAPTURE_ONLY</c> не задан. Сейчас это ВСЕ три уровня с
+        /// зонами воздуха — их и проверяем. Комментарий про grand_seesaw / giraffe / well остался от съёмки
+        /// масштаба деталей; вернуть эти имена сюда, когда снова понадобится вилка размеров.
         /// </summary>
         private static readonly string[] Wanted = { "mailbox", "air_dunk", "piggy_bank" };
+
+        /// <summary>
+        /// Список levelId для съёмки. По умолчанию — <see cref="Wanted"/>; env <c>WOOD_CAPTURE_ONLY</c>
+        /// (csv levelId) его ПЕРЕОПРЕДЕЛЯЕТ — оркестратору нужно снимать произвольную волну кампании
+        /// (§D15-процесс: скрины после каждой волны на вердикт владельца), не трогая этот файл. Пустое/нет →
+        /// дефолт. Паттерн зеркалит <c>SIM_ONLY</c>/<c>SIM_STEPLOG</c> в LevelSimRunner: env выставляет
+        /// обёртка/вызов executeMethod, batch-Unity читает. Портируемость: имена уровней НЕ зашиты — они
+        /// приходят аргументом из env (дефолт остаётся проектным ярлыком воздуха, а не единственным путём).
+        /// </summary>
+        private static IReadOnlyList<string> CaptureIds()
+        {
+            var raw = System.Environment.GetEnvironmentVariable("WOOD_CAPTURE_ONLY");
+            if (string.IsNullOrWhiteSpace(raw))
+                return Wanted;
+
+            var ids = raw.Split(',')
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .ToArray();
+            if (ids.Length == 0)
+                return Wanted;
+
+            Debug.Log($"[wood] WOOD_CAPTURE_ONLY: снимаю {ids.Length} уровень(ей): {string.Join(", ", ids)}");
+            return ids;
+        }
 
         [MenuItem("Tools/Wood Style/Снять настоящие уровни")]
         public static void CaptureLevels()
@@ -226,7 +252,7 @@ namespace Game.Editor
             Debug.Log($"[wood] прогон '{suffix}': опорный размер {tuning.DetailRefSize:0.##}, " +
                       $"толщины следуют размеру {tuning.DetailScale:0.##}");
 
-            foreach (var id in Wanted)
+            foreach (var id in CaptureIds())
             {
                 var level = levels.Find(l => l.LevelId == id);
                 if (level == null)
