@@ -5152,27 +5152,27 @@
         { "kind": "crater", "color": "#C0392B", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.4, "topWidth": 1.0, "height": 0.6 } }
       ],
       "target": {
-        "outline": [ { "x": -3.4, "y": 0 }, { "x": -2.0, "y": 0 }, { "x": -2.0, "y": 4.5 }, { "x": -3.4, "y": 4.5 } ],
+        "outline": [ { "x": -4.1, "y": 0 }, { "x": -2.7, "y": 0 }, { "x": -2.7, "y": 4.5 }, { "x": -4.1, "y": 4.5 } ],
         "slots": [
-          { "kind": "cone_lo", "position": { "x": -2.7, "y": 0.4 }, "rotation": 0 },
-          { "kind": "cone_hi", "position": { "x": -2.7, "y": 2.1 }, "rotation": 0 },
-          { "kind": "crater", "position": { "x": -2.7, "y": 3.7 }, "rotation": 0 },
-          { "kind": "lava_rock", "position": { "x": -2.7, "y": 4.5 }, "rotation": 0 }
+          { "kind": "cone_lo", "position": { "x": -3.4, "y": 0.4 }, "rotation": 0 },
+          { "kind": "cone_hi", "position": { "x": -3.4, "y": 2.1 }, "rotation": 0 },
+          { "kind": "crater", "position": { "x": -3.4, "y": 3.7 }, "rotation": 0 },
+          { "kind": "lava_rock", "position": { "x": -3.4, "y": 4.5 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "beam", "startPosition": { "x": 1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true, "expendable": true },
-        { "kind": "hammer", "startPosition": { "x": -0.25, "y": 9.2 }, "startRotation": 0, "expendable": true },
-        { "kind": "lava_rock", "startPosition": { "x": 2.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "cone_hi", "startPosition": { "x": -2.7, "y": 3.9 }, "startRotation": 0 },
-        { "kind": "crater", "startPosition": { "x": -2.7, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "cone_lo", "startPosition": { "x": -2.7, "y": 6.8 }, "startRotation": 0 }
+        { "kind": "beam", "startPosition": { "x": 1.05, "y": 2.0 }, "startRotation": 0, "preplaced": true, "expendable": true },
+        { "kind": "hammer", "startPosition": { "x": -0.25, "y": 9.5 }, "startRotation": 0, "expendable": true },
+        { "kind": "lava_rock", "startPosition": { "x": 2.05, "y": 2.6 }, "startRotation": 0 },
+        { "kind": "cone_hi", "startPosition": { "x": -3.4, "y": 3.9 }, "startRotation": 0 },
+        { "kind": "crater", "startPosition": { "x": -3.4, "y": 5.4 }, "startRotation": 0 },
+        { "kind": "cone_lo", "startPosition": { "x": -3.4, "y": 6.8 }, "startRotation": 0 }
       ],
       "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.9, "y": -3.0 }, { "x": 3.5, "y": -3.0 }, { "x": 3.5, "y": 0.9 }, { "x": 0.9, "y": 0.9 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": -0.3 }, { "x": -1.95, "y": -0.3 }, { "x": -1.95, "y": 0 }, { "x": -3.6, "y": 0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": 3.9 }, { "x": -3.5, "y": 3.9 }, { "x": -3.5, "y": 5.6 }, { "x": -3.6, "y": 5.6 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.9, "y": 3.9 }, { "x": -1.8, "y": 3.9 }, { "x": -1.8, "y": 5.2 }, { "x": -1.9, "y": 5.2 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.9, "y": -1.0 }, { "x": 3.5, "y": -1.0 }, { "x": 3.5, "y": 1.7 }, { "x": 0.9, "y": 1.7 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -4.3, "y": -0.3 }, { "x": -2.6, "y": -0.3 }, { "x": -2.6, "y": 0 }, { "x": -4.3, "y": 0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -4.3, "y": 3.9 }, { "x": -4.2, "y": 3.9 }, { "x": -4.2, "y": 5.6 }, { "x": -4.3, "y": 5.6 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -2.7, "y": 3.9 }, { "x": -2.6, "y": 3.9 }, { "x": -2.6, "y": 5.2 }, { "x": -2.7, "y": 5.2 } ] }
       ]
     },
     {
@@ -5193,27 +5193,27 @@
         { "kind": "arch", "color": "#9AA6BC", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 1.2, "topWidth": 0.9, "height": 0.6 } }
       ],
       "target": {
-        "outline": [ { "x": -3.5, "y": 0 }, { "x": -1.9, "y": 0 }, { "x": -1.9, "y": 4.5 }, { "x": -3.5, "y": 4.5 } ],
+        "outline": [ { "x": -5.0, "y": 0 }, { "x": -3.4, "y": 0 }, { "x": -3.4, "y": 4.5 }, { "x": -5.0, "y": 4.5 } ],
         "slots": [
-          { "kind": "foot", "position": { "x": -2.7, "y": 0.4 }, "rotation": 0 },
-          { "kind": "gate", "position": { "x": -2.7, "y": 2.1 }, "rotation": 0 },
-          { "kind": "arch", "position": { "x": -2.7, "y": 3.7 }, "rotation": 0 },
-          { "kind": "keystone", "position": { "x": -2.7, "y": 4.5 }, "rotation": 0 }
+          { "kind": "foot", "position": { "x": -4.2, "y": 0.4 }, "rotation": 0 },
+          { "kind": "gate", "position": { "x": -4.2, "y": 2.1 }, "rotation": 0 },
+          { "kind": "arch", "position": { "x": -4.2, "y": 3.7 }, "rotation": 0 },
+          { "kind": "keystone", "position": { "x": -4.2, "y": 4.5 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "beam", "startPosition": { "x": 1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true, "expendable": true },
-        { "kind": "hammer", "startPosition": { "x": -0.25, "y": 9.2 }, "startRotation": 0, "expendable": true },
-        { "kind": "keystone", "startPosition": { "x": 2.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "gate", "startPosition": { "x": -2.7, "y": 3.9 }, "startRotation": 0 },
-        { "kind": "arch", "startPosition": { "x": -2.7, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "foot", "startPosition": { "x": -2.7, "y": 6.8 }, "startRotation": 0 }
+        { "kind": "beam", "startPosition": { "x": 1.05, "y": 2.8 }, "startRotation": 0, "preplaced": true, "expendable": true },
+        { "kind": "hammer", "startPosition": { "x": -0.25, "y": 9.8 }, "startRotation": 0, "expendable": true },
+        { "kind": "keystone", "startPosition": { "x": 2.05, "y": 3.4 }, "startRotation": 0 },
+        { "kind": "gate", "startPosition": { "x": -4.2, "y": 3.9 }, "startRotation": 0 },
+        { "kind": "arch", "startPosition": { "x": -4.2, "y": 5.4 }, "startRotation": 0 },
+        { "kind": "foot", "startPosition": { "x": -4.2, "y": 6.8 }, "startRotation": 0 }
       ],
       "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.9, "y": -3.0 }, { "x": 3.5, "y": -3.0 }, { "x": 3.5, "y": 0.9 }, { "x": 0.9, "y": 0.9 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": -0.3 }, { "x": -1.95, "y": -0.3 }, { "x": -1.95, "y": 0 }, { "x": -3.6, "y": 0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": 3.9 }, { "x": -3.5, "y": 3.9 }, { "x": -3.5, "y": 5.6 }, { "x": -3.6, "y": 5.6 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.9, "y": 3.9 }, { "x": -1.8, "y": 3.9 }, { "x": -1.8, "y": 5.2 }, { "x": -1.9, "y": 5.2 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.9, "y": -1.0 }, { "x": 3.5, "y": -1.0 }, { "x": 3.5, "y": 2.5 }, { "x": 0.9, "y": 2.5 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -5.1, "y": -0.3 }, { "x": -3.4, "y": -0.3 }, { "x": -3.4, "y": 0 }, { "x": -5.1, "y": 0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -5.1, "y": 3.9 }, { "x": -5.0, "y": 3.9 }, { "x": -5.0, "y": 5.6 }, { "x": -5.1, "y": 5.6 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.4, "y": 3.9 }, { "x": -3.3, "y": 3.9 }, { "x": -3.3, "y": 5.2 }, { "x": -3.4, "y": 5.2 } ] }
       ]
     },
     {
@@ -5353,27 +5353,27 @@
         { "kind": "nest", "color": "#C9A227", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.8, "topWidth": 1.4, "height": 0.6 } }
       ],
       "target": {
-        "outline": [ { "x": -3.0, "y": 0 }, { "x": -2.4, "y": 0 }, { "x": -2.4, "y": 4.5 }, { "x": -3.0, "y": 4.5 } ],
+        "outline": [ { "x": 3.9, "y": 0 }, { "x": 4.5, "y": 0 }, { "x": 4.5, "y": 4.5 }, { "x": 3.9, "y": 4.5 } ],
         "slots": [
-          { "kind": "hull", "position": { "x": -2.7, "y": 0.4 }, "rotation": 0 },
-          { "kind": "mast", "position": { "x": -2.7, "y": 2.1 }, "rotation": 0 },
-          { "kind": "nest", "position": { "x": -2.7, "y": 3.7 }, "rotation": 0 },
-          { "kind": "lookout", "position": { "x": -2.7, "y": 4.5 }, "rotation": 0 }
+          { "kind": "hull", "position": { "x": 4.2, "y": 0.4 }, "rotation": 0 },
+          { "kind": "mast", "position": { "x": 4.2, "y": 2.1 }, "rotation": 0 },
+          { "kind": "nest", "position": { "x": 4.2, "y": 3.7 }, "rotation": 0 },
+          { "kind": "lookout", "position": { "x": 4.2, "y": 4.5 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "beam", "startPosition": { "x": 1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true, "expendable": true },
-        { "kind": "hammer", "startPosition": { "x": -0.25, "y": 9.2 }, "startRotation": 0, "expendable": true },
-        { "kind": "lookout", "startPosition": { "x": 2.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "mast", "startPosition": { "x": -2.7, "y": 3.9 }, "startRotation": 0 },
-        { "kind": "nest", "startPosition": { "x": -2.7, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "hull", "startPosition": { "x": -2.7, "y": 6.8 }, "startRotation": 0 }
+        { "kind": "beam", "startPosition": { "x": -1.05, "y": 2.8 }, "startRotation": 0, "preplaced": true, "expendable": true },
+        { "kind": "hammer", "startPosition": { "x": 0.25, "y": 9.8 }, "startRotation": 0, "expendable": true },
+        { "kind": "lookout", "startPosition": { "x": -2.05, "y": 3.4 }, "startRotation": 0 },
+        { "kind": "mast", "startPosition": { "x": 4.2, "y": 3.9 }, "startRotation": 0 },
+        { "kind": "nest", "startPosition": { "x": 4.2, "y": 5.4 }, "startRotation": 0 },
+        { "kind": "hull", "startPosition": { "x": 4.2, "y": 6.8 }, "startRotation": 0 }
       ],
       "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.9, "y": -3.0 }, { "x": 3.5, "y": -3.0 }, { "x": 3.5, "y": 0.9 }, { "x": 0.9, "y": 0.9 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": -0.3 }, { "x": -1.95, "y": -0.3 }, { "x": -1.95, "y": 0 }, { "x": -3.6, "y": 0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": 3.9 }, { "x": -3.5, "y": 3.9 }, { "x": -3.5, "y": 5.6 }, { "x": -3.6, "y": 5.6 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.9, "y": 3.9 }, { "x": -1.8, "y": 3.9 }, { "x": -1.8, "y": 5.2 }, { "x": -1.9, "y": 5.2 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.5, "y": -1.0 }, { "x": -0.9, "y": -1.0 }, { "x": -0.9, "y": 2.5 }, { "x": -3.5, "y": 2.5 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 3.4, "y": -0.3 }, { "x": 5.1, "y": -0.3 }, { "x": 5.1, "y": 0 }, { "x": 3.4, "y": 0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 5.0, "y": 3.9 }, { "x": 5.1, "y": 3.9 }, { "x": 5.1, "y": 5.6 }, { "x": 5.0, "y": 5.6 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 3.3, "y": 3.9 }, { "x": 3.4, "y": 3.9 }, { "x": 3.4, "y": 5.2 }, { "x": 3.3, "y": 5.2 } ] }
       ]
     },
     {
@@ -5394,27 +5394,27 @@
         { "kind": "muzzle", "color": "#2C2C2C", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.9, "topWidth": 1.3, "height": 0.6 } }
       ],
       "target": {
-        "outline": [ { "x": -3.4, "y": 0 }, { "x": -2.0, "y": 0 }, { "x": -2.0, "y": 4.5 }, { "x": -3.4, "y": 4.5 } ],
+        "outline": [ { "x": 4.1, "y": 0 }, { "x": 2.7, "y": 0 }, { "x": 2.7, "y": 4.5 }, { "x": 4.1, "y": 4.5 } ],
         "slots": [
-          { "kind": "carriage", "position": { "x": -2.7, "y": 0.4 }, "rotation": 0 },
-          { "kind": "barrel", "position": { "x": -2.7, "y": 2.1 }, "rotation": 0 },
-          { "kind": "muzzle", "position": { "x": -2.7, "y": 3.7 }, "rotation": 0 },
-          { "kind": "cannonball", "position": { "x": -2.7, "y": 4.5 }, "rotation": 0 }
+          { "kind": "carriage", "position": { "x": 3.4, "y": 0.4 }, "rotation": 0 },
+          { "kind": "barrel", "position": { "x": 3.4, "y": 2.1 }, "rotation": 0 },
+          { "kind": "muzzle", "position": { "x": 3.4, "y": 3.7 }, "rotation": 0 },
+          { "kind": "cannonball", "position": { "x": 3.4, "y": 4.5 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "arm", "startPosition": { "x": 1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true, "expendable": true },
-        { "kind": "boulder", "startPosition": { "x": -0.25, "y": 9.2 }, "startRotation": 0, "expendable": true },
-        { "kind": "cannonball", "startPosition": { "x": 2.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "barrel", "startPosition": { "x": -2.7, "y": 3.9 }, "startRotation": 0 },
-        { "kind": "muzzle", "startPosition": { "x": -2.7, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "carriage", "startPosition": { "x": -2.7, "y": 6.8 }, "startRotation": 0 }
+        { "kind": "arm", "startPosition": { "x": -1.05, "y": 2.0 }, "startRotation": 0, "preplaced": true, "expendable": true },
+        { "kind": "boulder", "startPosition": { "x": 0.25, "y": 9.5 }, "startRotation": 0, "expendable": true },
+        { "kind": "cannonball", "startPosition": { "x": -2.05, "y": 2.6 }, "startRotation": 0 },
+        { "kind": "barrel", "startPosition": { "x": 3.4, "y": 3.9 }, "startRotation": 0 },
+        { "kind": "muzzle", "startPosition": { "x": 3.4, "y": 5.4 }, "startRotation": 0 },
+        { "kind": "carriage", "startPosition": { "x": 3.4, "y": 6.8 }, "startRotation": 0 }
       ],
       "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.9, "y": -3.0 }, { "x": 3.5, "y": -3.0 }, { "x": 3.5, "y": 0.9 }, { "x": 0.9, "y": 0.9 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": -0.3 }, { "x": -1.95, "y": -0.3 }, { "x": -1.95, "y": 0 }, { "x": -3.6, "y": 0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": 3.9 }, { "x": -3.5, "y": 3.9 }, { "x": -3.5, "y": 5.6 }, { "x": -3.6, "y": 5.6 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.9, "y": 3.9 }, { "x": -1.8, "y": 3.9 }, { "x": -1.8, "y": 5.2 }, { "x": -1.9, "y": 5.2 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.5, "y": -1.0 }, { "x": -0.9, "y": -1.0 }, { "x": -0.9, "y": 1.7 }, { "x": -3.5, "y": 1.7 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 2.6, "y": -0.3 }, { "x": 4.3, "y": -0.3 }, { "x": 4.3, "y": 0 }, { "x": 2.6, "y": 0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 4.2, "y": 3.9 }, { "x": 4.3, "y": 3.9 }, { "x": 4.3, "y": 5.6 }, { "x": 4.2, "y": 5.6 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 2.6, "y": 3.9 }, { "x": 2.7, "y": 3.9 }, { "x": 2.7, "y": 5.2 }, { "x": 2.6, "y": 5.2 } ] }
       ]
     },
     {
@@ -5435,27 +5435,27 @@
         { "kind": "lantern", "color": "#C0392B", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.2, "height": 0.6 } }
       ],
       "target": {
-        "outline": [ { "x": -3.3, "y": 0 }, { "x": -2.1, "y": 0 }, { "x": -2.1, "y": 4.5 }, { "x": -3.3, "y": 4.5 } ],
+        "outline": [ { "x": 3.3, "y": 0 }, { "x": 2.1, "y": 0 }, { "x": 2.1, "y": 4.5 }, { "x": 3.3, "y": 4.5 } ],
         "slots": [
-          { "kind": "plinth", "position": { "x": -2.7, "y": 0.4 }, "rotation": 0 },
-          { "kind": "pillar", "position": { "x": -2.7, "y": 2.1 }, "rotation": 0 },
-          { "kind": "lantern", "position": { "x": -2.7, "y": 3.7 }, "rotation": 0 },
-          { "kind": "flame", "position": { "x": -2.7, "y": 4.5 }, "rotation": 0 }
+          { "kind": "plinth", "position": { "x": 2.7, "y": 0.4 }, "rotation": 0 },
+          { "kind": "pillar", "position": { "x": 2.7, "y": 2.1 }, "rotation": 0 },
+          { "kind": "lantern", "position": { "x": 2.7, "y": 3.7 }, "rotation": 0 },
+          { "kind": "flame", "position": { "x": 2.7, "y": 4.5 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "beam", "startPosition": { "x": 1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true, "expendable": true },
-        { "kind": "hammer", "startPosition": { "x": -0.25, "y": 9.2 }, "startRotation": 0, "expendable": true },
-        { "kind": "flame", "startPosition": { "x": 2.05, "y": 5.0 }, "startRotation": 0 },
-        { "kind": "pillar", "startPosition": { "x": -2.7, "y": 3.9 }, "startRotation": 0 },
-        { "kind": "lantern", "startPosition": { "x": -2.7, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "plinth", "startPosition": { "x": -2.7, "y": 6.8 }, "startRotation": 0 }
+        { "kind": "beam", "startPosition": { "x": -1.05, "y": 1.2 }, "startRotation": 0, "preplaced": true, "expendable": true },
+        { "kind": "hammer", "startPosition": { "x": 0.25, "y": 9.2 }, "startRotation": 0, "expendable": true },
+        { "kind": "flame", "startPosition": { "x": -2.05, "y": 5.0 }, "startRotation": 0 },
+        { "kind": "pillar", "startPosition": { "x": 2.7, "y": 3.9 }, "startRotation": 0 },
+        { "kind": "lantern", "startPosition": { "x": 2.7, "y": 5.4 }, "startRotation": 0 },
+        { "kind": "plinth", "startPosition": { "x": 2.7, "y": 6.8 }, "startRotation": 0 }
       ],
       "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.9, "y": -3.0 }, { "x": 3.5, "y": -3.0 }, { "x": 3.5, "y": 0.9 }, { "x": 0.9, "y": 0.9 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": -0.3 }, { "x": -1.95, "y": -0.3 }, { "x": -1.95, "y": 0 }, { "x": -3.6, "y": 0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.6, "y": 3.9 }, { "x": -3.5, "y": 3.9 }, { "x": -3.5, "y": 5.6 }, { "x": -3.6, "y": 5.6 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.9, "y": 3.9 }, { "x": -1.8, "y": 3.9 }, { "x": -1.8, "y": 5.2 }, { "x": -1.9, "y": 5.2 } ] }
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.5, "y": -3.0 }, { "x": -0.9, "y": -3.0 }, { "x": -0.9, "y": 0.9 }, { "x": -3.5, "y": 0.9 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.95, "y": -0.3 }, { "x": 3.6, "y": -0.3 }, { "x": 3.6, "y": 0 }, { "x": 1.95, "y": 0 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 3.5, "y": 3.9 }, { "x": 3.6, "y": 3.9 }, { "x": 3.6, "y": 5.6 }, { "x": 3.5, "y": 5.6 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.8, "y": 3.9 }, { "x": 1.9, "y": 3.9 }, { "x": 1.9, "y": 5.2 }, { "x": 1.8, "y": 5.2 } ] }
       ]
     },
     {
