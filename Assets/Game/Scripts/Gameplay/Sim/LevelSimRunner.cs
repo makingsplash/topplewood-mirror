@@ -330,7 +330,18 @@ namespace Gameplay.Sim
             // provenance. Null when the sweep produced no audits (e.g. load failed) so a broken run carries no
             // misleading empty block.
             object tapAudit = tapAudits.Count > 0 ? BuildTapAuditReport(new TapZoneConfig(), tapAudits) : null;
-            var written = WriteReports(runs, stats, m0, tapAudit, partial, out var dir, out var csvPath, out var jsonPath);
+
+            // TASK-220 (§D16 phase 1): fold the per-level LOSEABILITY audit into the report as a `loseability` block —
+            // sibling of tapAudit/stats/m0/runs. PURE aggregation of the runs already produced (per-order outcomes) —
+            // ZERO extra simulation. Built ONLY for the FULL lineage sweep: the WARNING is position-gated ("позиции
+            // 11+" in manifest order), which is meaningless over a --only subset, so a partial sweep carries no block
+            // (loseability stays null), mirroring the M0 skip. WARNING-only — it never moves the verdict (sim-gate.py
+            // reads only `runs`); threshold/error-mode is phase 2 after game-balancer calibrates per tier.
+            object loseability = !partial && levels != null && runs.Count > 0
+                ? BuildLoseabilityReport(levels, runs, UnloseablePositionThreshold)
+                : null;
+            var written = WriteReports(runs, stats, m0, tapAudit, loseability, partial,
+                out var dir, out var csvPath, out var jsonPath);
             LogSummary(stats, m0);
 
             // exitCode = tool health, NOT a finding: 0 ⇔ report on disk without exception; 1 ⇔ threw / no report /
@@ -878,6 +889,96 @@ namespace Gameplay.Sim
             };
         }
 
+        // TASK-220 (§D16 phase 1): the 1-based manifest position from which an unloseable level (orderWinRate==1.0)
+        // is WARNED. Early levels (positions 1..10) are ALLOWED to be unloseable — they teach the mechanic — so the
+        // flag only fires from position 11. Corpus-level provenance, stamped into the report's `loseability` block.
+        private const int UnloseablePositionThreshold = 11;
+
+        // TASK-220 (§D16 phase 1): assemble the machine-readable `loseability` block (sibling of tapAudit/stats/m0/runs)
+        // from the release-order sweep runs already produced — ZERO extra simulation. For each level, over its
+        // release-order permutations ONLY (the "player picks an arbitrary order" cases; the intended-solution policies
+        // slot-ascending / pair-release ARE meant to win and are EXCLUDED — else every level would read winnable and
+        // the metric would be blind), count how many orders WIN (all repeats Solved; the sim is deterministic so an
+        // order wins-all or loses-all, and a split repeat reads as not-won → the level stays "loseable", the safe
+        // direction). orderWinRate==1.0 means EVERY arbitrary release order wins ⇒ the player literally cannot lose.
+        // Healthy lineage references: ball_cradle 0/61 (only the policy wins), balance levels 0/N (§L9 negative gate);
+        // the three rejected campaigns read 1.0 ("wins any order") — the "too easy" signal the owner flagged three
+        // times. `loseable` = at least one arbitrary order loses. `unloseable` = orderWinRate==1.0 AND position ≥
+        // threshold. Logs a [LOSEABILITY] line per flagged level + a one-line corpus summary so the orchestrator sees
+        // it without reading JSON; and unloseableCount equals the number of ⚠ lines (parity, like tapAudit). Every
+        // swept level gets an entry (so "no entry" = "not swept", not "0 orders"). timingSensitive is null in phase 1:
+        // it needs the OPT-IN impatient pass (a SEPARATE report, absent from the gated runs) — phase 2 wires it once
+        // game-balancer calibrates the per-tier thresholds.
+        private static object BuildLoseabilityReport(
+            IReadOnlyList<LevelData> levels, IReadOnlyList<SimRunResult> runs, int positionThreshold)
+        {
+            // Per level → per release-order OrderKey → [repeats, solvedRepeats]. Only PolicyId=="release-order".
+            var byLevel = new Dictionary<string, Dictionary<string, int[]>>();
+            foreach (var r in runs)
+            {
+                if (r.PolicyId != "release-order")
+                    continue;
+                if (!byLevel.TryGetValue(r.LevelId, out var orders))
+                    byLevel[r.LevelId] = orders = new Dictionary<string, int[]>();
+                if (!orders.TryGetValue(r.OrderKey, out var tally))
+                    orders[r.OrderKey] = tally = new int[2];
+                tally[0]++;
+                if (r.Solved)
+                    tally[1]++;
+            }
+
+            var levelReports = new List<object>(levels.Count);
+            var eligible = 0;          // levels at position ≥ threshold — the set the summary is "of"
+            var unloseableCount = 0;
+            for (var i = 0; i < levels.Count; i++)
+            {
+                var position = i + 1;  // 1-based manifest position
+                byLevel.TryGetValue(levels[i].LevelId, out var orders);
+                var ordersTried = orders?.Count ?? 0;
+                var ordersWon = 0;
+                if (orders != null)
+                    foreach (var t in orders.Values)
+                        if (t[0] > 0 && t[1] == t[0])
+                            ordersWon++;
+                var orderWinRate = ordersTried == 0 ? 0f : (float)ordersWon / ordersTried;
+                var loseable = ordersWon < ordersTried; // at least one arbitrary order loses
+                var atOrPastThreshold = position >= positionThreshold;
+                if (atOrPastThreshold)
+                    eligible++;
+                // ordersTried>0 guards the degenerate all-preplaced level (no release order) out of the flag.
+                var unloseable = atOrPastThreshold && ordersTried > 0 && ordersWon == ordersTried;
+                if (unloseable)
+                {
+                    unloseableCount++;
+                    Debug.Log($"[LOSEABILITY] {levels[i].LevelId} (pos {position}): orderWinRate=1.0 " +
+                              $"({ordersWon}/{ordersTried} orders won) ⚠ unloseable — every arbitrary release order wins.");
+                }
+                levelReports.Add(new
+                {
+                    levelId = levels[i].LevelId,
+                    position,
+                    ordersTried,
+                    ordersWon,
+                    orderWinRate,
+                    loseable,
+                    timingSensitive = (bool?)null, // phase 2: needs the opt-in impatient pass (separate report)
+                    unloseable,
+                });
+            }
+
+            // Console summary (RFC-style grep line): the one-liner the orchestrator reads without opening JSON.
+            Debug.Log($"[level-sim] LOSEABILITY: {unloseableCount} unloseable of {eligible} " +
+                      $"(позиции {positionThreshold}+)");
+
+            return new
+            {
+                positionThreshold,
+                unloseableCount,
+                eligibleLevels = eligible,
+                levels = levelReports,
+            };
+        }
+
         // TASK-179: restrict a loaded campaign to the SIM_ONLY level ids (targeted sweep). Returns the surviving
         // levels in manifest order; any requested id absent from the campaign is collected into <paramref
         // name="missing"/> so the caller fails loudly instead of silently sweeping a short/empty set. Duplicate and
@@ -1058,7 +1159,7 @@ namespace Gameplay.Sim
         }
 
         private bool WriteReports(IReadOnlyList<SimRunResult> runs, IReadOnlyList<LevelSolveStats> stats, object m0,
-            object tapAudit, bool partial, out string dir, out string csvPath, out string jsonPath)
+            object tapAudit, object loseability, bool partial, out string dir, out string csvPath, out string jsonPath)
         {
             csvPath = null;
             jsonPath = null;
@@ -1091,7 +1192,7 @@ namespace Gameplay.Sim
                     };
                     prefix = "level-sim-only";
                 }
-                var json = SimReportWriter.BuildJson(runs, stats, m0, provenance, tapAudit, scope);
+                var json = SimReportWriter.BuildJson(runs, stats, m0, provenance, tapAudit, scope, loseability);
                 var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
 
                 Directory.CreateDirectory(dir);
