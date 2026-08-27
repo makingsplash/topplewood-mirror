@@ -65,7 +65,13 @@ namespace Iliai.UiBuild
             catch (IOException e) { Debug.LogError($"[uibuild] результат не записан: {e.Message}"); }
         }
 
-        static string Execute(string raw)
+        /// <summary>
+        /// Диспетчер команды (JSON → компилятор). internal, потому что тот же контракт исполняет и
+        /// батч-энтрипоинт <see cref="UiBuildBatch"/> (worktree-слот без открытого редактора) — оба
+        /// транспорта зовут РОВНО одну сборку, чтобы «у редактора собралось / у батча нет» не стало
+        /// двумя разными процессами.
+        /// </summary>
+        internal static string Execute(string raw)
         {
             object parsed;
             try { parsed = UiJson.Parse(raw); }
