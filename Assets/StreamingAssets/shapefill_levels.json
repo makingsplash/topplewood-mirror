@@ -2166,7 +2166,7 @@
     },
     {
       "levelId": "lever_lid",
-      "winningOrder": [2, 3, 1],
+      "winningOrder": [1, 2, 3],
       "seed": 60,
       "difficultyTier": 10,
       "physicsMode": "catapult",
@@ -2658,7 +2658,7 @@
     },
     {
       "levelId": "flower",
-      "winningOrder": [2, 3, 5, 0, 4, 1],
+      "winningOrder": [3, 5, 2, 0, 4, 1],
       "seed": 218,
       "difficultyTier": 5,
       "matchTolerance": {
@@ -2922,7 +2922,6 @@
     },
     {
       "levelId": "libra_scales",
-      "winningOrder": [0, 1, 2, 3, 4, 5, 6, 7, 8],
       "seed": 244,
       "difficultyTier": 7,
       "physicsMode": "balance",
@@ -4791,7 +4790,7 @@
     },
     {
       "levelId": "toy_pyramid",
-      "winningOrder": [0, 1, 2, 3, 4, 5],
+      "winningOrder": [2, 1, 4, 0, 3, 5],
       "seed": 280,
       "difficultyTier": 4,
       "physicsMode": "assembly",
@@ -4952,7 +4951,7 @@
     },
     {
       "levelId": "fruit_bowl",
-      "winningOrder": [0, 2, 3, 1],
+      "winningOrder": [0, 1, 2, 3],
       "seed": 300,
       "difficultyTier": 5,
       "physicsMode": "assembly",
@@ -4993,7 +4992,7 @@
     },
     {
       "levelId": "golf_cup",
-      "winningOrder": [0, 1, 2],
+      "winningOrder": [1, 2, 0],
       "seed": 309,
       "difficultyTier": 7,
       "physicsMode": "assembly",
@@ -5065,7 +5064,7 @@
     },
     {
       "levelId": "stag",
-      "winningOrder": [7, 10, 8, 9],
+      "winningOrder": [7, 8, 9, 10],
       "seed": 408,
       "difficultyTier": 11,
       "physicsMode": "assembly",
