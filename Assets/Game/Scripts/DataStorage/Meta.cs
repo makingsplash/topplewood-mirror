@@ -38,6 +38,13 @@ namespace DataStorage
 
         public readonly PlayerPrefsInt LevelRewardBackupAmount = new ("Meta.LevelRewardBackupAmount", 0);
 
+        // TASK-237: Hint booster charges — meta-state beside Gold/Hearts (survive an app restart, NOT in-level).
+        // Additive PlayerPrefs keys: a missing key defaults (0/false/MinValue), so the one-time seed still fires on
+        // an upgrading install — no schema bump, no migration (architect §8).
+        public readonly PlayerPrefsInt HintCharges = new ("Meta.HintCharges", 0);
+        public readonly PlayerPrefsBool HintSeeded = new ("Meta.HintSeeded", false);
+        public readonly PlayerPrefsDateTime HintLastDailyRefill = new ("Meta.HintLastDailyRefill", DateTime.MinValue);
+
         public bool ForceShowHomeScreen = false;
         public bool ForceSkipHomeScreen = false;
 

@@ -69,6 +69,11 @@ namespace Gameplay.Core
             //    up-flow (verdict is judged on global rest — a piece held aloft never rests → Timeout, not a verdict).
             ValidateAirZones(level, errors, warnings);
 
+            // 9. Certified winning order (TASK-237): OPTIONAL. Null → OK (no hint). If present, every index must be
+            //    in range, reference a NON-preplaced piece, and be free of duplicates — a bad order is authoring-brak
+            //    (the hint would point at a preplaced/absent piece), exactly like an unknown physicsMode.
+            ValidateWinningOrder(level, errors);
+
             return new ValidationResult(errors, warnings);
         }
 
@@ -250,6 +255,32 @@ namespace Gameplay.Core
         /// <summary>AABB overlap test for two domain <see cref="Rect"/>s (touching edges count as overlap).</summary>
         private static bool RectsOverlap(Rect a, Rect b)
             => a.Min.X <= b.Max.X && a.Max.X >= b.Min.X && a.Min.Y <= b.Max.Y && a.Max.Y >= b.Min.Y;
+
+        /// <summary>TASK-237: optional certified winning order check. Absent → OK (the hint is simply unavailable).
+        /// When present, each placement index must be in <c>[0, Pieces.Count)</c>, reference a NON-preplaced (tapable)
+        /// piece, and be unique — a preplaced/out-of-range/duplicate entry means the hint would point at a piece the
+        /// player cannot tap, an authoring error (mirrors the unknown-primitive/physicsMode throws elsewhere).</summary>
+        private static void ValidateWinningOrder(LevelData level, List<string> errors)
+        {
+            if (level.WinningOrder == null)
+                return;
+
+            var pieceCount = level.Pieces?.Count ?? 0;
+            var seen = new HashSet<int>();
+            foreach (var index in level.WinningOrder)
+            {
+                if (index < 0 || index >= pieceCount)
+                {
+                    errors.Add($"WinningOrder index {index} is out of range [0, {pieceCount}).");
+                    continue;
+                }
+                if (!seen.Add(index))
+                    errors.Add($"WinningOrder index {index} is listed more than once.");
+                if (level.Pieces[index].Preplaced)
+                    errors.Add($"WinningOrder index {index} references a preplaced piece — the hint can only point " +
+                               "at a tapable piece.");
+            }
+        }
 
         private static void ValidateTarget(LevelData level, List<string> errors)
         {

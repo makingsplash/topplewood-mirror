@@ -87,6 +87,15 @@ namespace Game.Code.Infrastructure
             builder.Register<PlayScreenInteraction>(Lifetime.Singleton);
             builder.RegisterEntryPoint<RestartButtonPresenter>();
 
+            // TASK-237: Hint booster — prod-only (the sim never builds these; they are not in GameplayCoreInstaller,
+            // so the "sim does not create presenters/boosters" invariant holds, exactly like the tutorial). The
+            // charge store + faucet are plain Singletons; LevelFailStreak is an entry point (needs Start) also
+            // resolvable by concrete type for the presenter; the button is an entry point like RestartButton.
+            builder.Register<IBoosterChargeStore, MetaBoosterChargeStore>(Lifetime.Singleton);
+            builder.Register<HintBoosterService>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<LevelFailStreak>().AsSelf();
+            builder.RegisterEntryPoint<HintBoosterPresenter>();
+
             // TASK-164: вуд-арт-слой художника (ветка art/andrei-v1). Ветка вешала эти три презентера
             // ТОЛЬКО в ShapeFillBringupLifetimeScope, но bringup-сцены в билде нет — единственный enabled-путь
             // это Loading → ЭТОТ прод-скоуп (child-scope, TASK-138/ADR-0004). Без дорегистрации здесь собранный

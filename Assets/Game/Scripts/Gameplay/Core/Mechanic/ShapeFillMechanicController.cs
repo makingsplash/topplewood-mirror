@@ -101,6 +101,10 @@ namespace Gameplay.Core.Mechanic
             _levelLoadedSub = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
         }
 
+        // TASK-237: exposed for the Hint booster — an open coalescence window means a piece is armed but not yet
+        // flushed, so revealing it again would spend on an already-armed piece (the presenter treats it as no-op).
+        public bool HasPendingRelease => _pendingRelease.Count > 0 || _coalesceWindowStepsLeft > 0;
+
         private void OnLevelLoaded()
         {
             _level = _model.CurrentLevel;

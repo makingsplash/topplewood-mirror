@@ -37,6 +37,7 @@ namespace Gameplay.Core
         [JsonProperty("pieces")] public List<PiecePlacementDto> Pieces { get; set; } = new();
         [JsonProperty("staticGeometry")] public List<PolygonDto> StaticGeometry { get; set; } = new();
         [JsonProperty("airZones")] public List<AirZoneDto> AirZones { get; set; } = new(); // absent/empty → null → no flow (TASK-097)
+        [JsonProperty("winningOrder")] public List<int> WinningOrder { get; set; } // absent/empty → null → no hint (TASK-237)
 
         public LevelData ToDomain()
         {
@@ -96,6 +97,8 @@ namespace Gameplay.Core
                 PhysicsMode = ParsePhysicsMode(PhysicsMode),
                 FreezeLoadsAtRest = FreezeLoadsAtRest,
                 AirZones = airZones,
+                // TASK-237: absent/empty → null so every pre-TASK-237 level maps to no hint, exactly like AirZones.
+                WinningOrder = (WinningOrder != null && WinningOrder.Count > 0) ? WinningOrder : null,
             };
         }
 

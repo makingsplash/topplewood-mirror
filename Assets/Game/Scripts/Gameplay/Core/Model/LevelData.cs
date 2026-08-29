@@ -55,5 +55,14 @@ namespace Gameplay.Core
         /// mass-independent acceleration to every RELEASED Dynamic body whose centre is inside it (see
         /// <see cref="AirZone"/>). Consumers guard on null (mirrors <see cref="Decoys"/> / <see cref="StaticVisuals"/>).</summary>
         public AirZone[] AirZones { get; set; }
+
+        /// <summary>TASK-237: certified winning release order (placement indices) — the source of the Hint booster's
+        /// "next piece" (<see cref="Gameplay.Core.Mechanic.NextHintResolver"/>), and, later, of the tutorial (closes
+        /// the dormant TASK-078/079 hardcode). Absent → null → the hint is a no-op (it never GUESSES an order). The
+        /// order is the sim's deterministic winning policy order (slot-ascending for assembly, pair-release for
+        /// balance/catapult), so "the hint never lies" is true by construction (balancer §7). The sim does NOT read
+        /// this field (its bot policies compute their own order) → poseHash is byte-for-byte; consumers guard on null
+        /// (mirrors <see cref="AirZones"/>/<see cref="Decoys"/>/<see cref="StaticVisuals"/>).</summary>
+        public IReadOnlyList<int> WinningOrder { get; set; }
     }
 }

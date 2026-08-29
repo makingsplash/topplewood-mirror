@@ -29,6 +29,7 @@ namespace DataStorage
         public MessagesViewConfig MessagesConfig;
         public RateUsConfig RateUsConfig;
         public HeartConfig HeartConfig;
+        public BoostersConfig BoostersConfig;
 
         public InputConfig InputConfig;
         public NoAdsOfferConfig NoAdsOfferConfig;
@@ -51,6 +52,10 @@ namespace DataStorage
             Init(InputConfig, remoteConfig);
             Init(NoAdsOfferConfig, remoteConfig);
             Init(HeartConfig, remoteConfig);
+            // TASK-237: the BoostersConfig ScriptableObject is assigned in the editor; guard the null so a build
+            // without it assigned still boots (the booster then runs on its C# defaults — see HintBoosterService).
+            if (BoostersConfig != null)
+                Init(BoostersConfig, remoteConfig);
             Init(AssetPreloadConfig, remoteConfig);
 
 #if SAYKIT_PURCHASING

@@ -139,6 +139,7 @@
     },
     {
       "levelId": "robot",
+      "winningOrder": [0, 1, 2, 3],
       "seed": 22,
       "difficultyTier": 4,
       "matchTolerance": {
@@ -321,6 +322,7 @@
     },
     {
       "levelId": "locomotive",
+      "winningOrder": [0, 1, 2, 4, 3, 6, 5],
       "seed": 142,
       "difficultyTier": 8,
       "matchTolerance": {
@@ -684,6 +686,7 @@
     },
     {
       "levelId": "giraffe",
+      "winningOrder": [0, 1, 2, 3, 4, 5, 6],
       "seed": 44,
       "difficultyTier": 8,
       "matchTolerance": {
@@ -959,6 +962,7 @@
     },
     {
       "levelId": "grand_seesaw",
+      "winningOrder": [0, 1, 2, 3, 4, 5, 6, 7],
       "seed": 48,
       "difficultyTier": 8,
       "physicsMode": "balance",
@@ -1239,6 +1243,7 @@
     },
     {
       "levelId": "well",
+      "winningOrder": [0, 1, 2, 3, 4, 5, 6, 7],
       "seed": 47,
       "difficultyTier": 8,
       "matchTolerance": {
@@ -1530,6 +1535,7 @@
     },
     {
       "levelId": "video_launcher",
+      "winningOrder": [0, 1, 2],
       "seed": 57,
       "difficultyTier": 10,
       "physicsMode": "catapult",
@@ -1897,6 +1903,7 @@
     },
     {
       "levelId": "pagoda",
+      "winningOrder": [0, 1, 2, 3, 4, 5],
       "seed": 149,
       "difficultyTier": 7,
       "matchTolerance": {
@@ -2159,6 +2166,7 @@
     },
     {
       "levelId": "lever_lid",
+      "winningOrder": [2, 3, 1],
       "seed": 60,
       "difficultyTier": 10,
       "physicsMode": "catapult",
@@ -2482,6 +2490,7 @@
     },
     {
       "levelId": "table_lamp",
+      "winningOrder": [0, 1, 2],
       "seed": 205,
       "difficultyTier": 3,
       "matchTolerance": {
@@ -2649,6 +2658,7 @@
     },
     {
       "levelId": "flower",
+      "winningOrder": [2, 3, 5, 0, 4, 1],
       "seed": 218,
       "difficultyTier": 5,
       "matchTolerance": {
@@ -2912,6 +2922,7 @@
     },
     {
       "levelId": "libra_scales",
+      "winningOrder": [0, 1, 2, 3, 4, 5, 6, 7, 8],
       "seed": 244,
       "difficultyTier": 7,
       "physicsMode": "balance",
@@ -3223,6 +3234,7 @@
     },
     {
       "levelId": "high_striker",
+      "winningOrder": [5, 3, 4, 2, 1],
       "seed": 254,
       "difficultyTier": 10,
       "physicsMode": "catapult",
@@ -3537,6 +3549,7 @@
     },
     {
       "levelId": "grandfather_clock",
+      "winningOrder": [0, 1, 2, 3, 4, 5, 6, 7],
       "seed": 262,
       "difficultyTier": 8,
       "matchTolerance": {
@@ -3843,6 +3856,7 @@
     },
     {
       "levelId": "mailbox",
+      "winningOrder": [0, 1, 2, 3, 4],
       "seed": 260,
       "difficultyTier": 5,
       "matchTolerance": {
@@ -4139,6 +4153,7 @@
     },
     {
       "levelId": "air_dunk",
+      "winningOrder": [0, 1, 2, 3, 4],
       "seed": 264,
       "difficultyTier": 6,
       "physicsMode": "assembly",
@@ -4443,6 +4458,7 @@
     },
     {
       "levelId": "piggy_bank",
+      "winningOrder": [0, 1, 2, 5, 3, 4, 6],
       "seed": 270,
       "difficultyTier": 6,
       "physicsMode": "assembly",
@@ -4775,6 +4791,7 @@
     },
     {
       "levelId": "toy_pyramid",
+      "winningOrder": [0, 1, 2, 3, 4, 5],
       "seed": 280,
       "difficultyTier": 4,
       "physicsMode": "assembly",
@@ -4935,6 +4952,7 @@
     },
     {
       "levelId": "fruit_bowl",
+      "winningOrder": [0, 2, 3, 1],
       "seed": 300,
       "difficultyTier": 5,
       "physicsMode": "assembly",
@@ -4975,6 +4993,7 @@
     },
     {
       "levelId": "golf_cup",
+      "winningOrder": [0, 1, 2],
       "seed": 309,
       "difficultyTier": 7,
       "physicsMode": "assembly",
@@ -5008,6 +5027,7 @@
     },
     {
       "levelId": "corbel_arch",
+      "winningOrder": [0, 1, 2, 3, 4, 5, 6],
       "seed": 322,
       "difficultyTier": 8,
       "physicsMode": "assembly",
@@ -5045,6 +5065,7 @@
     },
     {
       "levelId": "stag",
+      "winningOrder": [7, 10, 8, 9],
       "seed": 408,
       "difficultyTier": 11,
       "physicsMode": "assembly",
@@ -5095,6 +5116,7 @@
     },
     {
       "levelId": "crows_nest",
+      "winningOrder": [5, 3, 4, 2, 1],
       "seed": 307,
       "difficultyTier": 9,
       "physicsMode": "catapult",

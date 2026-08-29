@@ -9,5 +9,10 @@ namespace Gameplay.Core
     {
         void Tick(float dt);
         void OnIntent(InputIntent intent);
+
+        /// <summary>TASK-237: true while a balance coalescence window is arming (a piece has been tapped but not yet
+        /// flushed). The Hint booster reads this to avoid spending a charge on an already-armed piece — it treats an
+        /// open window as a neutral no-op. Always false for the single-release assembly path.</summary>
+        bool HasPendingRelease { get; }
     }
 }
