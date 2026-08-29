@@ -42,19 +42,22 @@ namespace Gameplay.View
         public bool ShowOnFieldGhost = false;
 
         /// <summary>
-        /// Show a white square backdrop behind the preview figure (TASK-110), so the silhouette reads
-        /// apart from the screen background. Default ON. Lives inside the preview root, so it inherits the
-        /// band anchor + auto-fit scale; the auto-fit denominator switches to the square side when enabled.
+        /// Show a canvas backdrop behind the preview figure (TASK-110/238), so the silhouette reads apart
+        /// from the screen background. Default ON. Lives inside the preview root, so it inherits the band
+        /// anchor + auto-fit scale; the auto-fit denominator switches to the square side when enabled.
         /// </summary>
         public bool BackdropEnabled = true;
 
         /// <summary>
-        /// Hex colour of the backdrop (TASK-110), e.g. "#FFFFFF". Parsed via ColorUtility.TryParseHtmlString
-        /// (invalid ⇒ white), consistent with how piece/static colours arrive as hex from data. Rendered
-        /// OPAQUE through <see cref="BlockMaterial.Shared"/> — the alpha channel is NOT blended
-        /// (translucency is a separate translucent-material path, tracked as tech-debt).
+        /// Hex colour of the backdrop CANVAS (TASK-110/238), default warm parchment "#EBE2CF". This is the
+        /// LIVE, owner-tunable tone of the cream canvas mesh drawn behind the wooden frame (whose centre is
+        /// transparent) — NOT a dead fallback: in the shipping build the frame's baked-white centre was
+        /// removed and this colour fills the window (TASK-238, replacing the old cold-white "#FFFFFF").
+        /// Parsed via ColorUtility.TryParseHtmlString (invalid ⇒ white), consistent with how piece/static
+        /// colours arrive as hex from data. Rendered OPAQUE through <see cref="BlockMaterial.Shared"/> — the
+        /// alpha channel is NOT blended (translucency is a separate translucent-material path, tech-debt TASK-111).
         /// </summary>
-        public string BackdropColorHex = "#FFFFFF";
+        public string BackdropColorHex = "#EBE2CF";
 
         /// <summary>
         /// Padding (in the figure's local units) from the figure bbox to the square edge (TASK-110):

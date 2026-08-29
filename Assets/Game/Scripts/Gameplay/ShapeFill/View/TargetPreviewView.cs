@@ -10,9 +10,11 @@ namespace Gameplay.View
     /// (<see cref="TargetPreviewConfig.Scale"/>) and anchored to a camera viewport point above the field.
     /// Pure static reference — no collisions, no physics tick, not in the save snapshot. The domain never
     /// references it, so headless simulation is unaffected.
-    /// A white square backdrop (TASK-110, <see cref="TargetPreviewConfig.BackdropEnabled"/>) is drawn behind
-    /// the silhouette so it reads apart from the screen background; it lives inside this preview root, so it
-    /// shares the band anchor and auto-fit scale and adds nothing to physics/save/poseHash.
+    /// A canvas backdrop (TASK-110/238, <see cref="TargetPreviewConfig.BackdropEnabled"/>) is drawn behind the
+    /// silhouette so it reads apart from the screen background. In the shipping build it is a warm parchment
+    /// canvas (<c>#EBE2CF</c>) framed by the wooden sprite: the frame's centre is transparent and the cream
+    /// mesh shows through it (TASK-238, replacing the old cold-white square). It lives inside this preview
+    /// root, so it shares the band anchor and auto-fit scale and adds nothing to physics/save/poseHash.
     /// </summary>
     public sealed class TargetPreviewView : MonoBehaviour
     {
@@ -21,6 +23,12 @@ namespace Gameplay.View
         // Local +z nudge of the backdrop so it renders behind the slot meshes (opaque depth-order, same trick
         // StaticGeometryView uses). Kept a private const — the ticket asked for colour/alpha/padding config, not z.
         private const float BackdropZOffset = 0.1f;
+
+        // TASK-238: кремовый холст сидит ЧУТЬ позади рамки (больше z = дальше от камеры), но БЛИЖЕ, чем
+        // тень рамки (FrameShadow.ZBehind = 0.05 в локали рамки). Так холст закрывает тёмную сердцевину
+        // тени, которая иначе просвечивала бы сквозь ставший прозрачным центр рамки, не задевая вынос
+        // тени на стену. Держим < 0.05, чтобы порядок «тень → холст → рамка → детали» не сломался.
+        private const float BackdropCanvasBehind = 0.025f;
 
         public void Initialize(
             TargetFigure target,
@@ -166,12 +174,66 @@ namespace Gameplay.View
         }
 
         /// <summary>
-        /// TASK-110: build the white square backdrop as a child of the preview root, centred on the figure
-        /// (already at local (0,0)), one axis long: <paramref name="side"/> = max-axis + 2·padding. Rendered
-        /// OPAQUE via the shared block material (colour from <see cref="TargetPreviewConfig.BackdropColorHex"/>,
-        /// alpha forced to 1 — the opaque path does not blend alpha). Same mesh triangulation as the pieces.
+        /// Build the preview backdrop as a child of the preview root, centred on the figure (already at
+        /// local (0,0)). Two shapes in the shipping (framed) case, one in the fallback:
+        /// <list type="bullet">
+        /// <item>Wooden frame present (shipping): a cream CANVAS mesh sits behind the frame and the wooden
+        /// frame sprite (9-slice) draws on top. The frame sprite's centre is transparent (TASK-238 re-issue,
+        /// the former baked-white centre → alpha 0), so the cream canvas shows through the window while the
+        /// wooden border overlaps its edges. Canvas colour comes from
+        /// <see cref="TargetPreviewConfig.BackdropColorHex"/> — a LIVE, owner-tunable value now, not a dead
+        /// fallback: warm parchment <c>#EBE2CF</c> by default, replacing the old cold-white square.</item>
+        /// <item>No frame sprite (bringup fallback, <c>WoodArt.Frame == null</c>): a single coloured square
+        /// mesh at <see cref="BackdropZOffset"/>, same colour source — no regression from the legacy path.</item>
+        /// </list>
+        /// All rendered OPAQUE via the shared block material (<paramref name="side"/> = max-axis + 2·padding;
+        /// alpha forced to 1 — the opaque path does not blend alpha; translucency stays TASK-111 tech-debt).
         /// </summary>
         private static void BuildBackdrop(Transform parent, float side, TargetPreviewConfig config)
+        {
+            var frame = WoodArt.Frame;
+            if (frame != null)
+            {
+                // Рамка шире холста на FramePadFraction с каждой стороны — багет обязан лечь ПОВЕРХ края
+                // холста, иначе деревянный борт налез бы на детали превью.
+                var frameSize = side * (1f + 2f * WoodArt.FramePadFraction);
+
+                // TASK-238: кремовый холст ЗА рамкой. Центр спрайта рамки теперь прозрачен (перевыпуск:
+                // запечённый белый центр → alpha 0), поэтому опаковый холст виден сквозь окно, а деревянный
+                // борт накрывает его края. Размер — во всю рамку (не по окну): бевель борта уходит за
+                // 9-slice-кайму в тянущуюся зону, поэтому холст размером в окно обрезал бы его; лишнее по
+                // краям всё равно скрыто непрозрачным багетом.
+                BuildCanvasMesh(parent, "PreviewCanvas", frameSize, config, BackdropZOffset + BackdropCanvasBehind);
+
+                var backdrop = new GameObject("PreviewBackdrop");
+                var backdropTransform = backdrop.transform;
+                backdropTransform.SetParent(parent, false);
+                backdropTransform.localPosition = new Vector3(0f, 0f, BackdropZOffset);
+
+                var frameRenderer = backdrop.AddComponent<SpriteRenderer>();
+                frameRenderer.sprite = frame;
+                frameRenderer.drawMode = SpriteDrawMode.Sliced;
+                frameRenderer.size = Vector2.one * frameSize;
+                frameRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                frameRenderer.receiveShadows = false;
+
+                // Тень под картиной — просьба владельца: без неё рамка лежит на стене плоско.
+                FrameShadow.Attach(frameRenderer);
+                return;
+            }
+
+            // Спрайта рамки нет (bringup) — рисуем прежний одиночный цветной квад (никакой регрессии).
+            BuildCanvasMesh(parent, "PreviewBackdrop", side, config, BackdropZOffset);
+        }
+
+        /// <summary>
+        /// One OPAQUE coloured square-canvas mesh (<paramref name="side"/> wide) as a child of the preview
+        /// root, centred on the figure. Colour from <see cref="TargetPreviewConfig.BackdropColorHex"/>
+        /// (invalid ⇒ white), alpha forced to 1 (the opaque material does not blend alpha). Same mesh
+        /// triangulation as the pieces. Placed at local <paramref name="zOffset"/> along +z.
+        /// </summary>
+        private static void BuildCanvasMesh(Transform parent, string name, float side,
+            TargetPreviewConfig config, float zOffset)
         {
             var half = side * 0.5f;
             var outline = new[]
@@ -182,35 +244,15 @@ namespace Gameplay.View
                 new Vec2(-half, half),
             };
 
-            var backdrop = new GameObject("PreviewBackdrop");
-            var backdropTransform = backdrop.transform;
-            backdropTransform.SetParent(parent, false);
-            backdropTransform.localPosition = new Vector3(0f, 0f, BackdropZOffset);
+            var canvas = new GameObject(name);
+            var canvasTransform = canvas.transform;
+            canvasTransform.SetParent(parent, false);
+            canvasTransform.localPosition = new Vector3(0f, 0f, zOffset);
 
-            // Арт владельца: деревянная рамка со белым полем внутри — она и есть подложка.
-            // 9-slice, потому что кант обязан остаться одной толщины на любой стороне фигуры.
-            // Спрайта нет — остаётся прежний белый квад из меша (никакой регрессии).
-            var frame = WoodArt.Frame;
-            if (frame != null)
-            {
-                var frameRenderer = backdrop.AddComponent<SpriteRenderer>();
-                frameRenderer.sprite = frame;
-                frameRenderer.drawMode = SpriteDrawMode.Sliced;
-                // Кант рисуется ПОВЕРХ стороны, поэтому рамку берём шире белого поля: иначе
-                // деревянный борт налез бы на детали превью.
-                frameRenderer.size = Vector2.one * side * (1f + 2f * WoodArt.FramePadFraction);
-                frameRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                frameRenderer.receiveShadows = false;
-
-                // Тень под картиной — просьба владельца: без неё рамка лежит на стене плоско.
-                FrameShadow.Attach(frameRenderer);
-                return;
-            }
-
-            var meshFilter = backdrop.AddComponent<MeshFilter>();
+            var meshFilter = canvas.AddComponent<MeshFilter>();
             meshFilter.mesh = PieceMeshBuilder.Build(outline);
 
-            var renderer = backdrop.AddComponent<MeshRenderer>();
+            var renderer = canvas.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = BlockMaterial.Shared;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
