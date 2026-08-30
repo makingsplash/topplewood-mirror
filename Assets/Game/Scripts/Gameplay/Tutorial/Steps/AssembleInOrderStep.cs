@@ -48,8 +48,10 @@ namespace Gameplay.Tutorial
 
                     var target = targets[index];
                     // Hand the view the piece's pose AND shape so it can trace a contour matching the silhouette
-                    // (TASK-083). Read-only domain access — TypeFor is the same seam HitTest below uses.
-                    context.View.Highlight(target.Position, target.Rotation, context.Model.TypeFor(target).Shape);
+                    // (TASK-083). Read-only domain access — TypeFor is the same seam HitTest below uses. The FTUE tour
+                    // keeps the pointing finger (TASK-263 §2): the tutorial teaches the tap, so it still points.
+                    context.View.Highlight(target.Position, target.Rotation, context.Model.TypeFor(target).Shape,
+                        HighlightStyle.FingerPoint);
 
                     // Admit only a tap that resolves to THIS piece; build the new gate handle BEFORE swapping the
                     // SerialDisposable so the old handle's dispose (ClearAllow) is a no-op (last-wins) — no gap.
