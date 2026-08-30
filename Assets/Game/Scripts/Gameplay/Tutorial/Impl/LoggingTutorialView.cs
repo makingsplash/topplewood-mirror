@@ -12,10 +12,10 @@ namespace Gameplay.Tutorial
     /// </summary>
     public sealed class LoggingTutorialView : ITutorialView
     {
-        public void Highlight(Vec2 origin, float rotation, Shape shape)
+        public void Highlight(Vec2 origin, float rotation, Shape shape, HighlightStyle style)
         {
             Debug.unityLogger.Log(LogType.Log,
-                $"[{LogCategory.Tutorial}] highlight {shape.Primitive} at ({origin.X:0.##}, {origin.Y:0.##}) rot {rotation:0.##}");
+                $"[{LogCategory.Tutorial}] highlight ({style}) {shape.Primitive} at ({origin.X:0.##}, {origin.Y:0.##}) rot {rotation:0.##}");
         }
 
         public void Clear()

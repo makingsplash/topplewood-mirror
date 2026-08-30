@@ -10,8 +10,10 @@ namespace Gameplay.Tutorial
 {
     /// <summary>
     /// Real <see cref="ITutorialView"/> (TASK-078 §1, TASK-083): a code-built screen-space overlay that draws a
-    /// green CONTOUR matching the highlighted piece's silhouette (outline, not fill, so the piece stays visible)
-    /// plus a finger sprite that taps it. Context-independent — it builds its own overlay Canvas and needs no
+    /// green CONTOUR matching the highlighted piece's silhouette (outline, not fill, so the piece stays visible). The
+    /// <see cref="HighlightStyle"/> picks the feel (TASK-263 §2): <c>FingerPoint</c> adds a tapping finger sprite
+    /// over a scale-pulsing contour (FTUE tutorial); <c>PulseOutline</c> blinks the contour alpha with NO finger
+    /// (Hint booster). Context-independent — it builds its own overlay Canvas and needs no
     /// SayKit UI / addressables / Data, so it works in both prod and bringup (swapping the logging stub for it is
     /// a one-line installer change). The overlay does NOT eat input (raycastTarget off, no GraphicRaycaster), so
     /// the tap still reaches gameplay.
@@ -26,7 +28,8 @@ namespace Gameplay.Tutorial
     /// render-state / z-bias reasoning needed. The contour geometry is the SAME tessellation the piece MESH uses
     /// (<see cref="ShapeVisualOutline"/>, TASK-074) projected orthographically; there is no second tessellation
     /// (the source-divergence defect TASK-075 guards against). Arc primitives (half-disc wheels) and rotation come
-    /// out of that path for free. Pulse is by SCALE (owner replaced the TASK-078 alpha blink). The finger is a real
+    /// out of that path for free. FingerPoint pulses by SCALE (owner replaced the TASK-078 alpha blink); PulseOutline
+    /// blinks by ALPHA (TASK-263 §2a — owner asked for a blinking outline). The finger (FingerPoint only) is a real
     /// sprite from <c>Resources/Tutorial/tutorial_finger</c>, positioned by its off-centre TIP; it falls back to a
     /// placeholder white square (logged once) if the asset is missing so the tour never breaks silently.
     /// </summary>
@@ -34,9 +37,9 @@ namespace Gameplay.Tutorial
     {
         private Overlay _overlay;
 
-        public void Highlight(Vec2 origin, float rotation, Shape shape)
+        public void Highlight(Vec2 origin, float rotation, Shape shape, HighlightStyle style)
         {
-            (_overlay ??= Overlay.Create()).Show(origin, rotation, shape);
+            (_overlay ??= Overlay.Create()).Show(origin, rotation, shape, style);
         }
 
         public void Clear() => _overlay?.Hide();
@@ -57,6 +60,15 @@ namespace Gameplay.Tutorial
             private const float OutlineWidthPx = 6f;
             private static readonly Color OutlineColor = new Color32(0x39, 0xD3, 0x53, 0xFF); // green, vertex-tinted
 
+            // FingerPoint feel (unchanged from TASK-078).
+            private const float ContourPulseScale = 1.06f;
+            private const float ContourPulseHalfSec = 0.6f;
+            private const float FingerTapScale = 0.78f;
+            private const float FingerTapHalfSec = 0.45f;
+            // PulseOutline feel (TASK-263 §2a): a BLINKING contour — alpha yoyo between full and BlinkMinAlpha.
+            private const float BlinkMinAlpha = 0.2f;
+            private const float BlinkHalfSec = 0.5f; // ~1s full blink cycle
+
             // The finger sprite's TIP is off-centre: measured (−0.266, −0.390) of the sprite size from its centre
             // in image space (y-down, owner 2026-08-04). To land the tip on the target, offset the sprite centre by
             // (+0.266, −0.390)·size in UI space (y-up) so the fingertip points at the piece and the hand falls
@@ -70,6 +82,9 @@ namespace Gameplay.Tutorial
             private RectTransform _canvasRect; // overlay canvas rect — reference space for the screen→UI conversion
             private UnityEngine.Camera _camera; // fully-qualified: Gameplay.Camera namespace shadows the bare name
             private OutlineContour _outline;
+            private Image _finger;           // only shown in FingerPoint style
+            private Tween _contourTween;     // active contour pulse/blink — recreated per Show, killed on restyle/Hide
+            private Tween _fingerTween;      // active finger tap-pulse — FingerPoint only
             private Vector3 _worldOrigin;    // the piece's pose-origin (finger target)
             private Vec2[] _worldOutline;    // the piece silhouette in WORLD space at its pose (constant while Idle)
             private Vector2[] _screenLocal;  // scratch: outline vertices in overlay-local px, rebuilt each frame
@@ -121,18 +136,52 @@ namespace Gameplay.Tutorial
                 _outline.WidthPx = OutlineWidthPx;
                 _outline.raycastTarget = false; // never intercept the gameplay tap
 
-                var finger = NewImage("Finger", _anchor, FingerSpriteCache.Get(), FingerSizePx, FingerOffset);
-
-                // Contour: gentle pulse (scale), looping forever. Small amplitude so it does not spoil aiming.
-                _outline.transform.DOScale(1.06f, 0.6f)
-                    .SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine).SetLink(_outline.gameObject);
-
-                // Finger: tap pulse (scale down then back), looping forever.
-                finger.transform.DOScale(0.78f, 0.45f)
-                    .SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine).SetLink(finger.gameObject);
+                _finger = NewImage("Finger", _anchor, FingerSpriteCache.Get(), FingerSizePx, FingerOffset);
+                // The pulse/blink tweens are style-dependent (TASK-263 §2) → created per Show in ApplyStyle, not here.
             }
 
-            public void Show(Vec2 origin, float rotation, Shape shape)
+            // Reconfigure the finger visibility + the contour animation for the requested style. Called on every
+            // Show; kills the prior tweens first so repeated hints never stack loops on the same node.
+            private void ApplyStyle(HighlightStyle style)
+            {
+                _contourTween?.Kill();
+                _fingerTween?.Kill();
+                _contourTween = null;
+                _fingerTween = null;
+
+                // Reset the mutable animation state so a restyle starts from a clean baseline.
+                _outline.transform.localScale = Vector3.one;
+                SetOutlineAlpha(1f);
+                if (_finger != null)
+                    _finger.gameObject.SetActive(style == HighlightStyle.FingerPoint);
+
+                if (style == HighlightStyle.FingerPoint)
+                {
+                    // Steady contour scale-pulse + finger tap-pulse (TASK-078 owner-chosen feel), looping forever.
+                    _contourTween = _outline.transform.DOScale(ContourPulseScale, ContourPulseHalfSec)
+                        .SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine).SetLink(_outline.gameObject);
+                    if (_finger != null)
+                        _fingerTween = _finger.transform.DOScale(FingerTapScale, FingerTapHalfSec)
+                            .SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine).SetLink(_finger.gameObject);
+                    return;
+                }
+
+                // PulseOutline (TASK-263 §2a): blink the contour alpha (no finger). SetUpdate(true) so the blink keeps
+                // going on unscaled time — a hint can be revealed while a resolution hold has scaled time.
+                _contourTween = DOTween.To(GetOutlineAlpha, SetOutlineAlpha, BlinkMinAlpha, BlinkHalfSec)
+                    .SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine).SetUpdate(true).SetLink(_outline.gameObject);
+            }
+
+            private float GetOutlineAlpha() => _outline.color.a;
+
+            private void SetOutlineAlpha(float a)
+            {
+                var c = _outline.color;
+                c.a = a;
+                _outline.color = c;
+            }
+
+            public void Show(Vec2 origin, float rotation, Shape shape, HighlightStyle style)
             {
                 _worldOrigin = new Vector3(origin.X, origin.Y, 0f);
                 // ONE source of contour geometry: the same view tessellation the piece mesh uses (arcs smooth,
@@ -142,11 +191,16 @@ namespace Gameplay.Tutorial
                 _screenLocal = new Vector2[_worldOutline.Length];
                 _active = true;
                 gameObject.SetActive(true);
+                ApplyStyle(style); // finger visibility + contour pulse/blink for this consumer
                 Reposition(); // place correctly on the first frame too, before LateUpdate runs
             }
 
             public void Hide()
             {
+                _contourTween?.Kill();
+                _fingerTween?.Kill();
+                _contourTween = null;
+                _fingerTween = null;
                 _active = false;
                 if (this != null && gameObject != null)
                     gameObject.SetActive(false);

@@ -50,6 +50,14 @@ namespace Gameplay.PlayScreen
         private Tween _glowPulse;
         private CompositeDisposable _subs;
         private CancellationTokenSource _highlightCts;
+        // InstanceId of the piece currently outlined by a hint (-1 = none). Lets the tap-driven clear (TASK-263 §2b)
+        // fire the moment the PLAYER releases THAT piece, instead of waiting out the fallback timer.
+        private int _activeHighlightId = -1;
+
+        // Fallback-only: how long the blinking outline lingers if the player never taps the revealed piece. The
+        // PRIMARY clear is now event-driven (PieceReleased), so this is generous — long enough to keep guiding, short
+        // enough that an ignored hint eventually tidies itself up (was a hard 2.5s timer pre-TASK-263).
+        private const float HighlightFallbackSec = 6f;
 
         private bool _onCooldown;
         private bool _proactiveSuppressed;
@@ -82,6 +90,9 @@ namespace Gameplay.PlayScreen
             _interaction.IsBusy.Subscribe(_ => RefreshState()).AddTo(_subs);
             _hint.Charges.Subscribe(_ => RefreshState()).AddTo(_subs);
             _failStreak.Current.Subscribe(_ => RefreshProactive()).AddTo(_subs);
+            // TASK-263 §2b: kill the hint outline the instant the player releases the piece it pointed at — the same
+            // "piece actually left Idle" signal the tutorial uses (PieceReleased), so it is event-driven, not a timer.
+            _model.PieceReleased.Subscribe(OnPieceReleased).AddTo(_subs);
             _model.LevelLoaded.Subscribe(_ =>
             {
                 // New level (or reload): drop any active highlight, clear the proactive affordance, and let a
@@ -152,9 +163,38 @@ namespace Gameplay.PlayScreen
             _button = buttonGo.GetComponent<Button>();
             _button.onClick.AddListener(OnHintClicked);
 
+            BuildShadow(buttonRect, sprite);
             BuildGlow(buttonGo.transform);
             BuildBadge(buttonGo.transform);
             BuildTooltip();
+        }
+
+        // Drop-shadow node (TASK-263 §2, art-director §shadow): the SECOND half of the contrast fix — the sprite
+        // carries the emboss (bevel+rim), this node lifts the whole button off the wall like a real piece casting a
+        // shadow. NOT baked into the sprite. It reuses the button silhouette tinted dark + low-chroma (never a
+        // saturated accent), sits as the FIRST canvas sibling so it renders BEHIND the button (a child of the button
+        // would draw in FRONT of the icon in uGUI), and is offset down. Skipped when the sprite is missing — a
+        // square shadow under a placeholder token would read as a bug, not a shadow.
+        private void BuildShadow(RectTransform buttonRect, Sprite sprite)
+        {
+            if (sprite == null)
+                return;
+
+            var shadowGo = new GameObject("ButtonShadow", typeof(Image));
+            shadowGo.transform.SetParent(_canvas.transform, false);
+            shadowGo.transform.SetAsFirstSibling(); // behind the button (and everything else on the canvas)
+
+            var rect = shadowGo.GetComponent<RectTransform>();
+            rect.anchorMin = buttonRect.anchorMin;
+            rect.anchorMax = buttonRect.anchorMax;
+            rect.pivot = buttonRect.pivot;
+            rect.sizeDelta = buttonRect.sizeDelta + new Vector2(8f, 8f);       // slight spread for a soft edge
+            rect.anchoredPosition = buttonRect.anchoredPosition + new Vector2(0f, -14f); // cast downward
+
+            var shadow = shadowGo.GetComponent<Image>();
+            shadow.sprite = sprite;                       // same silhouette → shadow matches the lamp shape
+            shadow.color = new Color(0.06f, 0.05f, 0.03f, 0.4f); // dark, low-chroma, translucent (not an accent)
+            shadow.raycastTarget = false;
         }
 
         // Proactive glow — behind the button (first sibling), wider, non-raycasting. Placeholder = warm low-chroma
@@ -175,8 +215,9 @@ namespace Gameplay.PlayScreen
             glowGo.SetActive(false);
         }
 
-        // Charge badge — a dynamic count node (never baked into the art, ui-composer §2). Legacy uGUI Text, the
-        // RestartButton idiom for a code-built label.
+        // Charge badge — a ROUND semi-embossed wooden backing sprite (charge_badge, TASK-263 §3, closes TASK-248)
+        // under a dynamic count node (the number is NEVER baked into the art, ui-composer §2). Legacy uGUI Text, the
+        // RestartButton idiom for a code-built label. Falls back to the flat dark token if the sprite is missing.
         private void BuildBadge(Transform parent)
         {
             var badgeGo = new GameObject("ChargeBadge", typeof(Image));
@@ -187,7 +228,18 @@ namespace Gameplay.PlayScreen
             badgeRect.sizeDelta = new Vector2(64f, 64f);
 
             var badge = badgeGo.GetComponent<Image>();
-            badge.color = new Color(0.15f, 0.12f, 0.09f, 0.92f);
+            var badgeSprite = Resources.Load<Sprite>("Booster/charge_badge");
+            if (badgeSprite != null)
+            {
+                badge.sprite = badgeSprite;
+                badge.color = Color.white; // wooden token carries its own tone; white keeps it un-tinted
+            }
+            else
+            {
+                Debug.unityLogger.Log(LogType.Warning,
+                    "[booster] спрайт 'Booster/charge_badge' не найден — бейдж рисуется плоским токеном");
+                badge.color = new Color(0.15f, 0.12f, 0.09f, 0.92f);
+            }
             badge.raycastTarget = false;
 
             var labelGo = new GameObject("Count", typeof(Text));
@@ -366,9 +418,20 @@ namespace Gameplay.PlayScreen
                 return;
 
             var shape = _model.TypeFor(piece).Shape;
-            _highlightView.Highlight(piece.Position, piece.Rotation, shape);
+            // Blinking silhouette outline, NO finger (TASK-263 §2a): a finger reads as "run the tutorial"; the hint
+            // just says "this is the next piece".
+            _highlightView.Highlight(piece.Position, piece.Rotation, shape, HighlightStyle.PulseOutline);
+            _activeHighlightId = instanceId;
             HideProactive(); // accepted: drop the affordance for this level.
             AutoClearHighlightAsync().Forget();
+        }
+
+        // TASK-263 §2b: the player released a piece. If it is the one the hint is pointing at, clear immediately —
+        // event-driven, no timer wait. Releases of any OTHER piece leave the hint alone (it still points at its own).
+        private void OnPieceReleased(int instanceId)
+        {
+            if (_activeHighlightId >= 0 && instanceId == _activeHighlightId)
+                ClearHighlight();
         }
 
         private async UniTaskVoid AutoClearHighlightAsync()
@@ -380,12 +443,13 @@ namespace Gameplay.PlayScreen
 
             try
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(2.5f), cancellationToken: token);
-                _highlightView.Clear();
+                // Fallback only (the tap-driven clear above is the primary path): tidy up an ignored hint.
+                await UniTask.Delay(TimeSpan.FromSeconds(HighlightFallbackSec), cancellationToken: token);
+                ClearHighlight();
             }
             catch (OperationCanceledException)
             {
-                // Superseded by a newer highlight or a level reload — that path clears the view itself.
+                // Superseded by a newer highlight, a tap-driven clear, or a level reload — that path clears the view.
             }
         }
 
@@ -409,6 +473,7 @@ namespace Gameplay.PlayScreen
             _highlightCts?.Cancel();
             _highlightCts?.Dispose();
             _highlightCts = null;
+            _activeHighlightId = -1;
             _highlightView.Clear();
         }
 
