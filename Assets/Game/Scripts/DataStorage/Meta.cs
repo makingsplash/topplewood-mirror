@@ -45,6 +45,15 @@ namespace DataStorage
         public readonly PlayerPrefsBool HintSeeded = new ("Meta.HintSeeded", false);
         public readonly PlayerPrefsDateTime HintLastDailyRefill = new ("Meta.HintLastDailyRefill", DateTime.MinValue);
 
+        // TASK-240: coin economy — additive PlayerPrefs keys (a missing key defaults, so the one-time seed still
+        // fires on an upgrading install; no schema bump, no migration — architect §9).
+        // StartGoldSeeded guards the one-time start-gold grant (EconomySeedService).
+        public readonly PlayerPrefsBool StartGoldSeeded = new ("Meta.StartGoldSeeded", false);
+        // RewardedLevelIds is the durable first-clear set the level-reward faucet gates on: full reward only the
+        // first time a LevelId is cleared, a replay pays ReplayReward. Keyed by stable id (reorder-safe), not the
+        // wrapping campaign index (architect §5).
+        public readonly PlayerPrefsListString RewardedLevelIds = new ("Meta.RewardedLevelIds");
+
         public bool ForceShowHomeScreen = false;
         public bool ForceSkipHomeScreen = false;
 

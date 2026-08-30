@@ -96,6 +96,14 @@ namespace Game.Code.Infrastructure
             builder.RegisterEntryPoint<LevelFailStreak>().AsSelf();
             builder.RegisterEntryPoint<HintBoosterPresenter>();
 
+            // TASK-240: coin economy — prod-only (NOT in GameplayCoreInstaller, so the sim never builds these and
+            // the economy stays sim-invisible, exactly like the Hint booster above). LevelRewardService is the
+            // level-reward faucet on LevelResolved (.AsSelf so GatedResolutionFlow can read LastReward for the win
+            // screen); EconomySeedService seeds the start bank once; the ×2 button binds to the stub doubler.
+            builder.RegisterEntryPoint<LevelRewardService>().AsSelf();
+            builder.RegisterEntryPoint<EconomySeedService>();
+            builder.Register<IWinRewardDoubler, StubWinRewardDoubler>(Lifetime.Singleton);
+
             // TASK-164: вуд-арт-слой художника (ветка art/andrei-v1). Ветка вешала эти три презентера
             // ТОЛЬКО в ShapeFillBringupLifetimeScope, но bringup-сцены в билде нет — единственный enabled-путь
             // это Loading → ЭТОТ прод-скоуп (child-scope, TASK-138/ADR-0004). Без дорегистрации здесь собранный

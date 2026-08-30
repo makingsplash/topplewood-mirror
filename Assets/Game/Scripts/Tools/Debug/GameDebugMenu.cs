@@ -62,8 +62,24 @@ namespace Tools.Debug
                 // setting CurrentLevel=1 (the campaign reads only CurrentLevel) and keeping the 0-based mirror
                 // coherent, then flushing durably.
                 PlayerPrefsCollection.Instance.DeleteAllPrefs();
+
+                // TASK-162: DeleteAllPrefs only wipes the backend — it does NOT refresh the in-memory RealtimeValue
+                // caches, so Gold/Hearts/HintCharges keep returning the stale value and the next SaveDataIfChanged
+                // writes it straight back (the counter never even fires OnChanged). RefreshAll re-reads every live
+                // pref from the wiped backend → each returns its default, and OnChanged updates the HUD counters.
+                // With live gold (TASK-240) this is what makes a dev reset honest.
+                PlayerPrefsCollection.Instance.RefreshAll();
+
                 SayData.Meta.CurrentLevel.Value = 1;
                 SayData.Meta.CurrentLevelIndex.Value = 0;
+
+                // Re-seed the start bank so the reset lands on a true fresh-install state WITHOUT relaunching (Reset
+                // is a reload-in-place, not a reboot — architect §7). The guard was just cleared by RefreshAll, so
+                // this fires; on a real fresh install the boot-time EconomySeedService already did it. (Hint charges
+                // re-seed on the next process launch via HintBoosterService's ctor — a dev-only same-session gap,
+                // noted in the ticket.)
+                Services.Gameplay.EconomySeedService.SeedIfNeeded();
+
                 PlayerPrefsCollection.Instance.SaveDataIfChanged();
 
                 context.Main.SetRestart();

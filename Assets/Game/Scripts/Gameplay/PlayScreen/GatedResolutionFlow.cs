@@ -1,8 +1,11 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using DataStorage;
+using Gameplay.Configs;
 using Gameplay.Core;
 using Services;
+using Services.Gameplay;
 using Ui;
 using Ui.Screens;
 
@@ -44,12 +47,20 @@ namespace Gameplay.PlayScreen
     {
         private readonly PlayScreenConfig _config;
         private readonly PlayScreenInteraction _interaction;
+        private readonly LevelRewardService _reward;
+        private readonly CoreConfig _core;
+        private readonly IWinRewardDoubler _rewardDoubler;
         private readonly CancellationTokenSource _cts = new();
 
-        public GatedResolutionFlow(PlayScreenConfig config, PlayScreenInteraction interaction)
+        public GatedResolutionFlow(
+            PlayScreenConfig config, PlayScreenInteraction interaction, LevelRewardService reward,
+            CoreConfig core, IWinRewardDoubler rewardDoubler)
         {
             _config = config;
             _interaction = interaction;
+            _reward = reward;
+            _core = core;
+            _rewardDoubler = rewardDoubler;
         }
 
         public void Present(GameOutcome outcome, Action applyTransition, bool isFinalLevel)
@@ -80,11 +91,19 @@ namespace Gameplay.PlayScreen
             await UniTask.Delay(TimeSpan.FromSeconds(_config.WinSettleSeconds), cancellationToken: ct);
 
             var screen = await Service.UI.Show<WinScreen>(ScreenNames.WinScreen);
+
+            // The faucet (LevelRewardService) computed this synchronously during the LevelResolved dispatch, i.e.
+            // before this settle-beat delay elapsed, so LastReward is always the value for the level just won
+            // (TASK-240, architect §8). 0 on a replay → the screen hides the reward row.
+            var reward = _reward.LastReward;
+            var x2Available = _core.WinScreenX2Enabled
+                              && Data.Meta.CurrentLevel.Value >= _core.WinScreenX2ButtonStartLevel;
+
             screen.Setup(onNext: () =>
             {
                 applyTransition?.Invoke();
                 _interaction.IsBusy.Value = false;
-            }, isFinalLevel);
+            }, isFinalLevel, reward, x2Available, onX2: () => _rewardDoubler.TryDouble(reward, _ => { }));
         }
 
         private async UniTaskVoid PresentLostAsync(Action applyTransition, CancellationToken ct)

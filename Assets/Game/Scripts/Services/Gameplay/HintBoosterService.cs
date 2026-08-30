@@ -101,5 +101,48 @@ namespace Services.Gameplay
             _store.Grant(BoosterId.Hint, amount, ChargeSource.FreeGrant, Cfg.StockCap);
             _charges.Value = _store.Get(BoosterId.Hint);
         }
+
+        /// <summary>The SKUs the coin store offers for Hint charges (TASK-240, balancer §1): a single charge or the
+        /// discounted 3-pack. The count doubles as the pack size for pricing.</summary>
+        public enum HintSku
+        {
+            Single = 1,
+            Pack3 = 3,
+        }
+
+        public enum PurchaseResult
+        {
+            Ok,
+            Insufficient,   // not enough gold
+            AtCap,          // the SKU would overflow the stock cap → the UI must gate it
+        }
+
+        /// <summary>Buy Hint charges for coins (TASK-240, architect §4 — the <see cref="ChargeSource.CoinPurchase"/>
+        /// call the seam was built for). ATOMIC and cap-safe: a SKU that would overflow the cap is refused WHOLE
+        /// (never a partial grant charged in full), and gold is debited only after the affordability check, so a
+        /// short balance never debits. The wallet write is durable (<c>ForceSave</c>), mirroring the faucet.
+        /// The UI is expected to gate an over-cap or unaffordable SKU up front; this method is the authoritative
+        /// backstop.</summary>
+        public PurchaseResult TryPurchaseCharges(HintSku sku)
+        {
+            var cfg = Cfg;
+            var count = (int)sku;
+
+            // Whole-SKU cap check (architect §4.1): refuse rather than clamp — clamping would grant fewer than paid.
+            if (_store.Get(BoosterId.Hint) + count > cfg.StockCap)
+                return PurchaseResult.AtCap;
+
+            var price = sku == HintSku.Pack3 ? cfg.CoinPricePack3 : count * cfg.CoinPricePerCharge;
+
+            if (Data.Meta.GoldAmount.Value < price)
+                return PurchaseResult.Insufficient;
+
+            // Debit first, then grant — both durable. Order matches the atomic-spend contract (never grant unpaid).
+            Data.Meta.GoldAmount.Value -= price;
+            Data.Meta.GoldAmount.ForceSave();
+            _store.Grant(BoosterId.Hint, count, ChargeSource.CoinPurchase, cfg.StockCap);
+            _charges.Value = _store.Get(BoosterId.Hint);
+            return PurchaseResult.Ok;
+        }
     }
 }
