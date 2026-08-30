@@ -205,10 +205,19 @@ namespace Gameplay.View
                 // центр → alpha 0), поэтому холст виден сквозь окно, а деревянный борт накрывает его края.
                 // TASK-267 (вердикт владельца: сплошной тон плохо смотрится) — холст стал СПРАЙТОМ деревянной
                 // фактуры (C2 «limed oak darker», не сливается с ореховой стеной) вместо однотонного меша;
-                // спрайта нет ⇒ деградируем на прежний кремовый меш (см. BuildCanvas). Размер — во всю рамку
-                // (не по окну): бевель борта уходит за 9-slice-кайму в тянущуюся зону, поэтому холст размером в
-                // окно обрезал бы его; лишнее по краям всё равно скрыто непрозрачным багетом.
-                BuildCanvas(parent, frameSize, config, BackdropZOffset + BackdropCanvasBehind);
+                // спрайта нет ⇒ деградируем на прежний кремовый меш (см. BuildCanvas).
+                //
+                // TASK-267 доработка (вердикт владельца по живому кадру: «фактура ок, но бэк выходит за
+                // рамки»): холст НЕ тянем во всю рамку (frameSize). У wood_frame.png скруглённые ВНЕШНИЕ углы
+                // с альфой — квадратный холст размером в рамку выглядывал светлыми углами из-под них. Прежняя
+                // посылка «лишнее скрыто непрозрачным багетом» ложна на ВНЕШНЕМ контуре с альфа-скруглением.
+                // Ужимаем до СЕРЕДИНЫ опакового кольца багета: side·(1+FramePadFraction). Геометрия (окно ≈
+                // side, внешняя кромка = frameSize = side·1.28): окно покрыто с запасом (+0.07·side на сторону
+                // по осям), но углы квадрата холста (диаг. радиус side·1.14/2·√2 ≈ 0.806·side) остаются
+                // глубоко под опаковым деревом — внешний угол рамы на диаг. радиусе ≈ 0.905·side. Одна точка
+                // на обе ветки BuildCanvas (спрайт И кремовый меш-фолбэк): у меша был тот же дефект.
+                var canvasSize = side * (1f + WoodArt.FramePadFraction);
+                BuildCanvas(parent, canvasSize, config, BackdropZOffset + BackdropCanvasBehind);
 
                 var backdrop = new GameObject("PreviewBackdrop");
                 var backdropTransform = backdrop.transform;
@@ -233,10 +242,13 @@ namespace Gameplay.View
 
         /// <summary>
         /// Build the preview canvas behind the wooden frame (TASK-267). If <see cref="WoodArt.Canvas"/> is
-        /// present, it is a light-wood TEXTURE sprite stretched to <paramref name="side"/> world units (the full
-        /// frame extent, so the wooden border overlaps its edges) at local <paramref name="zOffset"/> — same
-        /// draw-mode idiom as the frame sprite (<see cref="SpriteDrawMode.Sliced"/> with a zero border ⇒ pure
-        /// stretch, resolution-independent). Owner verdict (2026-08-30): a solid tone read flat and foreign on
+        /// present, it is a light-wood TEXTURE sprite stretched to <paramref name="side"/> world units at local
+        /// <paramref name="zOffset"/> — same draw-mode idiom as the frame sprite
+        /// (<see cref="SpriteDrawMode.Sliced"/> with a zero border ⇒ pure stretch, resolution-independent). The
+        /// caller sizes <paramref name="side"/> to sit INSIDE the frame's opaque ring (mid-ring,
+        /// <c>S·(1+FramePadFraction)</c>), NOT at its outer edge: the frame has rounded alpha corners and a
+        /// canvas at the full frame extent peeked out from under them (TASK-267 rework, owner verdict on the
+        /// live frame). Owner verdict (2026-08-30): a solid tone read flat and foreign on
         /// the wooden scene; the wood texture (variant C2 «limed oak darker») separates from the walnut wall.
         /// If the sprite is absent (<c>WoodArt.Canvas == null</c>) it degrades to the former OPAQUE parchment
         /// mesh (<see cref="BuildCanvasMesh"/>, colour from <see cref="TargetPreviewConfig.BackdropColorHex"/>) —
