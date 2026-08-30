@@ -24,6 +24,9 @@ namespace Gameplay.PlayScreen
     /// pure UI hint: it never moves a piece, widens tolerance, or touches physics/state, so the sim is unaffected
     /// (architect §9). Charges are meta-state (<see cref="HintBoosterService"/>); a no-op (nothing to reveal, level
     /// ineligible, or an armed balance coalescence window) shows neutral feedback WITHOUT spending (balancer §1.2).
+    /// At 0 charges on a usable level the button follows the f2p convention (owner TASK-263): it does NOT alpha-fade,
+    /// it stays fully visible with a muted grey tint and a "+" badge, and a tap buys one charge for coins
+    /// (<see cref="HintBoosterService.TryPurchaseCharges"/>, TASK-240) — a short shake, never a modal, on a short balance.
     ///
     /// The EventSystem is raised with the SAME idempotent guard as <see cref="RestartButtonPresenter"/> (create only
     /// if none, destroy only our own) so ownership is order-independent whichever HUD presenter starts first. The
@@ -48,8 +51,12 @@ namespace Gameplay.PlayScreen
         private Image _glow;
         private GameObject _tooltip;
         private Tween _glowPulse;
+        private Tween _shake;
         private CompositeDisposable _subs;
         private CancellationTokenSource _highlightCts;
+        // Icon tone in the READY state (white with a sprite, the warm fallback token without one), captured at build
+        // so RefreshState can restore it after the empty-charge grey tint.
+        private Color _iconBaseColor = Color.white;
         // InstanceId of the piece currently outlined by a hint (-1 = none). Lets the tap-driven clear (TASK-263 §2b)
         // fire the moment the PLAYER releases THAT piece, instead of waiting out the fallback timer.
         private int _activeHighlightId = -1;
@@ -58,6 +65,14 @@ namespace Gameplay.PlayScreen
         // PRIMARY clear is now event-driven (PieceReleased), so this is generous — long enough to keep guiding, short
         // enough that an ignored hint eventually tidies itself up (was a hard 2.5s timer pre-TASK-263).
         private const float HighlightFallbackSec = 6f;
+
+        // Empty-state (0 charges) icon tint — a muted grey MULTIPLY held at FULL alpha, so the button stays clearly
+        // visible and tappable instead of fading toward invisible (owner 19:10, genre convention: at 0 boosters the
+        // button changes tone, it does not disappear). NOTE: an Image color is a per-channel multiply, so this
+        // darkens/mutes the wood but cannot truly hue-desaturate; a literal grey would need a grayscale UI material
+        // (follow-up lever if the live verdict wants more grey). At full alpha it still reads plainly "inactive, buy
+        // me" against the ready state's full-colour icon + numeric badge.
+        private static readonly Color EmptyTint = new(0.58f, 0.56f, 0.53f, 1f);
 
         private bool _onCooldown;
         private bool _proactiveSuppressed;
@@ -159,6 +174,7 @@ namespace Gameplay.PlayScreen
                     "[booster] спрайт 'Booster/hint_button' не найден — кнопка рисуется плоским токеном");
                 _icon.color = new Color(0.72f, 0.52f, 0.22f, 0.95f); // warm low-chroma wood accent (not success-green).
             }
+            _iconBaseColor = _icon.color;
 
             _button = buttonGo.GetComponent<Button>();
             _button.onClick.AddListener(OnHintClicked);
@@ -306,21 +322,36 @@ namespace Gameplay.PlayScreen
                 return;
 
             var charges = _hint.Charges.CurrentValue;
-            if (_countLabel != null)
-                _countLabel.text = charges.ToString();
+            var busy = _interaction.IsBusy.Value || _onCooldown;
+            var eligible = LevelEligible();
 
-            var interactable = charges > 0
-                               && !_interaction.IsBusy.Value
-                               && !_onCooldown
-                               && LevelEligible();
+            // Empty-charge offer (owner 19:10, genre convention): on a usable level with 0 charges and no transient
+            // busy/cooldown, the button does NOT fade toward invisible. It stays fully opaque with a muted grey tint,
+            // the badge shows "+" instead of a count, and a tap buys a charge for coins (TASK-240). IsBusy / cooldown /
+            // an ineligible level keep the previous disabled alpha-dim, unchanged.
+            var buyOffer = charges == 0 && eligible && !busy;
+
+            // Interactable when a tap does something: reveal (charges>0) or buy (empty offer). Busy/cooldown and an
+            // ineligible level stay non-interactable exactly as before.
+            var interactable = !busy && eligible && (charges > 0 || buyOffer);
             _button.interactable = interactable;
 
-            // Dimming through alpha reads clearer on wood than a grey tint (ui-composer §3).
-            var alpha = interactable ? 1f : 0.5f;
+            if (_countLabel != null)
+                _countLabel.text = buyOffer ? "+" : charges.ToString();
+
             if (_icon != null)
             {
-                var c = _icon.color;
-                c.a = alpha;
+                Color c;
+                if (buyOffer)
+                {
+                    c = EmptyTint; // grey tint at FULL alpha — visible & tappable, the opposite of the old fade.
+                }
+                else
+                {
+                    // Ready → base tone at full alpha; disabled (busy/cooldown/ineligible) → the old 0.5 alpha-dim.
+                    c = _iconBaseColor;
+                    c.a = interactable ? 1f : 0.5f;
+                }
                 _icon.color = c;
             }
         }
@@ -387,6 +418,14 @@ namespace Gameplay.PlayScreen
             if (_interaction.IsBusy.Value || _onCooldown)
                 return;
 
+            // Empty-state tap = buy a charge for coins (owner 19:10, TASK-240). The button is only interactable at 0
+            // charges on an eligible level, so a coin spent here is always usable on this level.
+            if (_hint.Charges.CurrentValue <= 0)
+            {
+                TryBuyCharge();
+                return;
+            }
+
             // Balance coalescence window open → the tapped-but-unflushed piece is still Idle; revealing it again
             // would spend on an already-armed piece. Treat as a neutral no-op (architect §13 flag 2).
             if (_mechanic.HasPendingRelease)
@@ -401,6 +440,31 @@ namespace Gameplay.PlayScreen
 
             RevealPiece(instanceId);
             CooldownAsync().Forget();
+        }
+
+        // Empty-state buy path (owner 19:10): spend coins for a single Hint charge (TASK-240). On success the Charges
+        // reactive fires → RefreshState flips the button back to the ready look (numeric badge, full colour). On a
+        // short balance a brief non-blocking shake — NEVER a modal (one-tap is sacrosanct). AtCap cannot occur from 0
+        // charges (0 + 1 ≤ StockCap always), so a non-Ok result here is always an affordability miss.
+        private void TryBuyCharge()
+        {
+            var result = _hint.TryPurchaseCharges(HintBoosterService.HintSku.Single);
+            if (result != HintBoosterService.PurchaseResult.Ok)
+                ShakeButton();
+        }
+
+        // Short horizontal shake as non-blocking "can't afford" feedback (owner 19:10: shake/tooltip, not a modal). A
+        // fresh shake completes any in-flight one first so anchoredPosition never drifts; SetUpdate(true) keeps it
+        // alive under a time-scaled resolution hold.
+        private void ShakeButton()
+        {
+            if (_button == null)
+                return;
+
+            _shake?.Kill(true);
+            _shake = ((RectTransform)_button.transform)
+                .DOShakeAnchorPos(0.35f, new Vector2(16f, 0f), 20, 0f)
+                .SetUpdate(true);
         }
 
         private void RevealPiece(int instanceId)
@@ -484,6 +548,9 @@ namespace Gameplay.PlayScreen
 
             _glowPulse?.Kill();
             _glowPulse = null;
+
+            _shake?.Kill();
+            _shake = null;
 
             _highlightCts?.Cancel();
             _highlightCts?.Dispose();
