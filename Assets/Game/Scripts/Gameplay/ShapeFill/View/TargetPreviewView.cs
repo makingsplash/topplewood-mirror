@@ -10,11 +10,13 @@ namespace Gameplay.View
     /// (<see cref="TargetPreviewConfig.Scale"/>) and anchored to a camera viewport point above the field.
     /// Pure static reference — no collisions, no physics tick, not in the save snapshot. The domain never
     /// references it, so headless simulation is unaffected.
-    /// A canvas backdrop (TASK-110/238, <see cref="TargetPreviewConfig.BackdropEnabled"/>) is drawn behind the
-    /// silhouette so it reads apart from the screen background. In the shipping build it is a warm parchment
-    /// canvas (<c>#EBE2CF</c>) framed by the wooden sprite: the frame's centre is transparent and the cream
-    /// mesh shows through it (TASK-238, replacing the old cold-white square). It lives inside this preview
-    /// root, so it shares the band anchor and auto-fit scale and adds nothing to physics/save/poseHash.
+    /// A canvas backdrop (TASK-110/238/267, <see cref="TargetPreviewConfig.BackdropEnabled"/>) is drawn behind
+    /// the silhouette so it reads apart from the screen background. In the shipping build it is a light-wood
+    /// TEXTURE sprite (<see cref="WoodArt.Canvas"/>, TASK-267 owner verdict: a solid tone read flat/foreign)
+    /// framed by the wooden sprite: the frame's centre is transparent and the wood canvas shows through it. When
+    /// the canvas sprite is absent it degrades to the former warm-parchment mesh
+    /// (<see cref="TargetPreviewConfig.BackdropColorHex"/>, <c>#EBE2CF</c>). It lives inside this preview root,
+    /// so it shares the band anchor and auto-fit scale and adds nothing to physics/save/poseHash.
     /// </summary>
     public sealed class TargetPreviewView : MonoBehaviour
     {
@@ -177,12 +179,13 @@ namespace Gameplay.View
         /// Build the preview backdrop as a child of the preview root, centred on the figure (already at
         /// local (0,0)). Two shapes in the shipping (framed) case, one in the fallback:
         /// <list type="bullet">
-        /// <item>Wooden frame present (shipping): a cream CANVAS mesh sits behind the frame and the wooden
-        /// frame sprite (9-slice) draws on top. The frame sprite's centre is transparent (TASK-238 re-issue,
-        /// the former baked-white centre → alpha 0), so the cream canvas shows through the window while the
-        /// wooden border overlaps its edges. Canvas colour comes from
-        /// <see cref="TargetPreviewConfig.BackdropColorHex"/> — a LIVE, owner-tunable value now, not a dead
-        /// fallback: warm parchment <c>#EBE2CF</c> by default, replacing the old cold-white square.</item>
+        /// <item>Wooden frame present (shipping): a light-wood CANVAS (<see cref="BuildCanvas"/>) sits behind the
+        /// frame and the wooden frame sprite (9-slice) draws on top. The frame sprite's centre is transparent
+        /// (TASK-238 re-issue, the former baked-white centre → alpha 0), so the canvas shows through the window
+        /// while the wooden border overlaps its edges. The canvas is the wood-texture sprite
+        /// <see cref="WoodArt.Canvas"/> (TASK-267 owner verdict — a solid tone read flat); when that sprite is
+        /// absent it degrades to the former warm-parchment mesh coloured by
+        /// <see cref="TargetPreviewConfig.BackdropColorHex"/> (<c>#EBE2CF</c>).</item>
         /// <item>No frame sprite (bringup fallback, <c>WoodArt.Frame == null</c>): a single coloured square
         /// mesh at <see cref="BackdropZOffset"/>, same colour source — no regression from the legacy path.</item>
         /// </list>
@@ -198,12 +201,14 @@ namespace Gameplay.View
                 // холста, иначе деревянный борт налез бы на детали превью.
                 var frameSize = side * (1f + 2f * WoodArt.FramePadFraction);
 
-                // TASK-238: кремовый холст ЗА рамкой. Центр спрайта рамки теперь прозрачен (перевыпуск:
-                // запечённый белый центр → alpha 0), поэтому опаковый холст виден сквозь окно, а деревянный
-                // борт накрывает его края. Размер — во всю рамку (не по окну): бевель борта уходит за
-                // 9-slice-кайму в тянущуюся зону, поэтому холст размером в окно обрезал бы его; лишнее по
-                // краям всё равно скрыто непрозрачным багетом.
-                BuildCanvasMesh(parent, "PreviewCanvas", frameSize, config, BackdropZOffset + BackdropCanvasBehind);
+                // TASK-238/267: холст ЗА рамкой. Центр спрайта рамки прозрачен (перевыпуск: запечённый белый
+                // центр → alpha 0), поэтому холст виден сквозь окно, а деревянный борт накрывает его края.
+                // TASK-267 (вердикт владельца: сплошной тон плохо смотрится) — холст стал СПРАЙТОМ деревянной
+                // фактуры (C2 «limed oak darker», не сливается с ореховой стеной) вместо однотонного меша;
+                // спрайта нет ⇒ деградируем на прежний кремовый меш (см. BuildCanvas). Размер — во всю рамку
+                // (не по окну): бевель борта уходит за 9-slice-кайму в тянущуюся зону, поэтому холст размером в
+                // окно обрезал бы его; лишнее по краям всё равно скрыто непрозрачным багетом.
+                BuildCanvas(parent, frameSize, config, BackdropZOffset + BackdropCanvasBehind);
 
                 var backdrop = new GameObject("PreviewBackdrop");
                 var backdropTransform = backdrop.transform;
@@ -224,6 +229,42 @@ namespace Gameplay.View
 
             // Спрайта рамки нет (bringup) — рисуем прежний одиночный цветной квад (никакой регрессии).
             BuildCanvasMesh(parent, "PreviewBackdrop", side, config, BackdropZOffset);
+        }
+
+        /// <summary>
+        /// Build the preview canvas behind the wooden frame (TASK-267). If <see cref="WoodArt.Canvas"/> is
+        /// present, it is a light-wood TEXTURE sprite stretched to <paramref name="side"/> world units (the full
+        /// frame extent, so the wooden border overlaps its edges) at local <paramref name="zOffset"/> — same
+        /// draw-mode idiom as the frame sprite (<see cref="SpriteDrawMode.Sliced"/> with a zero border ⇒ pure
+        /// stretch, resolution-independent). Owner verdict (2026-08-30): a solid tone read flat and foreign on
+        /// the wooden scene; the wood texture (variant C2 «limed oak darker») separates from the walnut wall.
+        /// If the sprite is absent (<c>WoodArt.Canvas == null</c>) it degrades to the former OPAQUE parchment
+        /// mesh (<see cref="BuildCanvasMesh"/>, colour from <see cref="TargetPreviewConfig.BackdropColorHex"/>) —
+        /// no regression. Drawn opaque; translucency stays TASK-111 tech-debt.
+        /// </summary>
+        private static void BuildCanvas(Transform parent, float side, TargetPreviewConfig config, float zOffset)
+        {
+            var sprite = WoodArt.Canvas;
+            if (sprite == null)
+            {
+                // Спрайта фактуры нет — прежний однотонный кремовый холст (никакой регрессии).
+                BuildCanvasMesh(parent, "PreviewCanvas", side, config, zOffset);
+                return;
+            }
+
+            var canvas = new GameObject("PreviewCanvas");
+            var canvasTransform = canvas.transform;
+            canvasTransform.SetParent(parent, false);
+            canvasTransform.localPosition = new Vector3(0f, 0f, zOffset);
+
+            var renderer = canvas.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            // Тянем спрайт на весь квад тем же идиомом, что рамку: Sliced + size. Кайма спрайта нулевая
+            // (spriteBorder=0), поэтому «центр» 9-slice = весь спрайт → чистое растяжение до side без тайлинга.
+            renderer.drawMode = SpriteDrawMode.Sliced;
+            renderer.size = Vector2.one * side;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
         }
 
         /// <summary>

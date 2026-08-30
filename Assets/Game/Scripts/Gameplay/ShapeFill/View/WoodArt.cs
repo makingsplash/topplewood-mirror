@@ -17,6 +17,7 @@ namespace Gameplay.View
         private const string BackgroundPath = "Wood/wood_background";
         private const string ShelfPath = "Wood/wood_shelf";
         private const string FramePath = "Wood/wood_frame";
+        private const string CanvasPath = "Wood/wood_canvas";
         private const string ButtonDevPath = "Wood/wood_button_dev";
         private const string ButtonRestartPath = "Wood/wood_button_restart";
         private const string LeavesLeftPath = "Wood/wood_leaves_left";
@@ -31,15 +32,23 @@ namespace Gameplay.View
         /// <summary>Насколько рамка превью шире белого поля внутри (в долях стороны).</summary>
         public const float FramePadFraction = 0.14f;
 
-        private static Sprite _background, _shelf, _frame, _buttonDev, _buttonRestart, _leavesLeft, _leavesRight;
+        private static Sprite _background, _shelf, _frame, _canvas, _buttonDev, _buttonRestart, _leavesLeft, _leavesRight;
         private static Sprite[] _fanFrames = System.Array.Empty<Sprite>();
         private static bool _fanLoaded;
-        private static bool _backgroundLoaded, _shelfLoaded, _frameLoaded, _buttonDevLoaded, _buttonRestartLoaded,
-            _leavesLeftLoaded, _leavesRightLoaded;
+        private static bool _backgroundLoaded, _shelfLoaded, _frameLoaded, _canvasLoaded, _buttonDevLoaded,
+            _buttonRestartLoaded, _leavesLeftLoaded, _leavesRightLoaded;
 
         public static Sprite Background => Get(ref _background, ref _backgroundLoaded, BackgroundPath);
         public static Sprite Shelf => Get(ref _shelf, ref _shelfLoaded, ShelfPath);
         public static Sprite Frame => Get(ref _frame, ref _frameLoaded, FramePath);
+
+        /// <summary>
+        /// Фактура холста ПРЕВЬЮ (TASK-267, вердикт владельца: сплошной тон заменён деревянной текстурой,
+        /// вариант C2 «limed oak darker» — светлое дерево, не сливается с ореховой стеной). Спрайт лежит ЗА
+        /// прозрачным окном рамки. Пусто (спрайт не найден) — <see cref="TargetPreviewView"/> деградирует на
+        /// прежний однотонный меш из <c>TargetPreviewConfig.BackdropColorHex</c> (никакой регрессии).
+        /// </summary>
+        public static Sprite Canvas => Get(ref _canvas, ref _canvasLoaded, CanvasPath);
         public static Sprite ButtonDev => Get(ref _buttonDev, ref _buttonDevLoaded, ButtonDevPath);
         public static Sprite ButtonRestart => Get(ref _buttonRestart, ref _buttonRestartLoaded, ButtonRestartPath);
 
@@ -100,9 +109,9 @@ namespace Gameplay.View
         /// </summary>
         public static void ResetCache()
         {
-            _background = _shelf = _frame = _buttonDev = _buttonRestart = _leavesLeft = _leavesRight = null;
-            _backgroundLoaded = _shelfLoaded = _frameLoaded = _buttonDevLoaded = _buttonRestartLoaded =
-                _leavesLeftLoaded = _leavesRightLoaded = false;
+            _background = _shelf = _frame = _canvas = _buttonDev = _buttonRestart = _leavesLeft = _leavesRight = null;
+            _backgroundLoaded = _shelfLoaded = _frameLoaded = _canvasLoaded = _buttonDevLoaded =
+                _buttonRestartLoaded = _leavesLeftLoaded = _leavesRightLoaded = false;
             _fanFrames = System.Array.Empty<Sprite>();
             _fanLoaded = false;
         }
