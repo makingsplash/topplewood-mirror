@@ -19,9 +19,16 @@ namespace Gameplay.Core.Mechanic
     /// TASK-043 (assist-layer removal): the whole pre-physics assist layer is gone — the in-fall snap-to-slot
     /// crystallisation, the soft-settle glide, the hybrid balance load-snap, and the TASK-042 honesty scaffolding
     /// (baseline map, snap-admissibility, win-only two-pass, support/overlap guards, reason counters) that existed
-    /// only to gate those assists. A released piece now falls, hits, rotates and comes to rest under honest physics
-    /// (variant B), is frozen EXACTLY at its physical rest pose, and the pose-match JUDGES the settled result from
-    /// those physical poses (posTol/angTol + the rigidity spread in <see cref="PoseMatchEvaluator"/>). The honesty
+    /// only to gate those assists. A released piece now falls, hits, rotates and comes to rest under honest physics.
+    ///
+    /// TASK-305 (freeze-at-rest removal, owner variant A): the freeze mechanism is GONE from every mode. A rested
+    /// piece is marked Placed at its physical rest pose but stays a live DYNAMIC body — nothing is ever locked
+    /// kinematic (the <c>FreezeAt</c> seam is deleted). The verdict is now UNIFORM across modes: it is judged only at
+    /// GLOBAL rest of the whole field (the balance path, extended to all modes), so removing the support from under a
+    /// placed piece makes the construction react instead of hanging (the owner's counterweight_span defect). The
+    /// pose-match JUDGES the settled result from those live physical poses (posTol/angTol + the rigidity spread in
+    /// <see cref="PoseMatchEvaluator"/>). Determinism now holds ONLY for self-supporting figures; a non-self-supporting
+    /// figure (cantilever/overhang/top-heavy) is metastable and shows up as a sweep victim (ADR-0005). The honesty
     /// detector remains, but sim-local (see <c>SimRun</c>), as a regression instrument.
     /// </summary>
     public sealed class ShapeFillMechanicController : IMechanicController, IDisposable
@@ -47,17 +54,20 @@ namespace Gameplay.Core.Mechanic
         private LevelData _level;
         // Balance physics mode (TASK-021 → free-beam TASK-023): the beam is a FREE Dynamic body resting on the
         // fulcrum (no world hinge/pin/limits), loads are released as synchronous groups (coalescence window), there
-        // is no in-fall snap, and the verdict waits for GLOBAL rest so a still-swinging beam is never judged. Since
-        // TASK-043 the balance path freezes every load at its physical rest pose (no slot glide). Assembly mode is
-        // the ordinary freeze-on-rest stack.
+        // is no in-fall snap. Since TASK-305 (freeze removal, variant A) this flag gates ONLY the INPUT concern —
+        // symmetric-pair coalescence — and no longer the physics/verdict path: every mode now keeps its pieces
+        // Dynamic and defers the verdict to GLOBAL rest (the two concerns the flag used to conflate are split; the
+        // rest-gated verdict is unconditional, see Tick/ReadyForNextRelease/ResolveAtRest). Assembly and catapult
+        // release on every tap; balance coalesces.
         private bool _balanceMode;
-        // Catapult sub-mode of balance (TASK-025 → de-pinned TASK-027): _balanceMode is ALSO true here, so the whole
-        // free-body machinery (no snap, PlaceDynamic for arm+loads, global-rest verdict) runs unchanged. The arm is a
+        // Catapult sub-mode of balance (TASK-025 → de-pinned TASK-027): _balanceMode is ALSO true here, so input
+        // coalescence is engaged-then-suppressed (see below). The free-body machinery (no snap, Dynamic arm+loads,
+        // global-rest verdict) is now the UNIVERSAL path (TASK-305), not catapult-specific. The arm is a
         // FREE Dynamic body on a LOW fulcrum, its tilt limited by the NATURAL ground-stop. _catapultMode adds only ONE
         // delta: coalescence is suppressed so the charge→overload chain is released as sequential SINGLE taps.
         private bool _catapultMode;
-        // Time the whole field has stayed below the rest speed, in balance mode only — the verdict fires only
-        // once it exceeds RestDurationSeconds (the beam and everything on it have stopped swinging).
+        // Time the whole field has stayed below the rest speed (ALL modes since TASK-305) — the verdict fires only
+        // once it exceeds RestDurationSeconds (every Dynamic piece has stopped moving).
         private float _globalRestTimer;
 
         // Monotone level-load counter (TASK-069 crash fix). Bumped once per (re)load in OnLevelLoaded so Tick can
@@ -278,12 +288,11 @@ namespace Gameplay.Core.Mechanic
                 }
                 else if (piece.State == PieceLifecycle.Placed && !_simulation.IsWithinBounds(bodyId))
                 {
-                    // TASK-059: a Placed piece is only ever bounds-checked HERE. In balance/catapult it stays
-                    // Dynamic and rides the beam, so a later drop can knock it off the field; without this it
-                    // keeps falling forever, GlobalRestReached never fires, and the level hangs on Timeout. Same
-                    // verdict as a Falling piece (symmetry): essential → immediate Lost; expendable → silent
-                    // leave. In assembly mode a Placed piece is frozen kinematic in-bounds, so this never trips.
-                    // LosePastBounds despawns the body, so skip MirrorPose this iteration.
+                    // TASK-059: a Placed piece is only ever bounds-checked HERE. Since TASK-305 a Placed piece stays
+                    // Dynamic in EVERY mode, so a later drop (or an unstable stack) can knock it off the field;
+                    // without this it keeps falling forever, GlobalRestReached never fires, and the level hangs on
+                    // Timeout. Same verdict as a Falling piece (symmetry): essential → immediate Lost; expendable →
+                    // silent leave. LosePastBounds despawns the body, so skip MirrorPose this iteration.
                     LosePastBounds(piece, bodyId);
                     continue;
                 }
@@ -303,26 +312,25 @@ namespace Gameplay.Core.Mechanic
             if (anyFalling)
                 return;
 
-            // Balance mode: placed pieces stay Dynamic and keep swinging on the beam, so "nothing Falling" is NOT
-            // yet rest. Hold the verdict until the whole field has been quiet for RestDurationSeconds, then judge
-            // the settled pose (beam within angTol of level ⇒ balanced). _lastGlobalRestReached is cached here for
-            // ReadyForNextRelease (the sim's next-group gate). Assembly mode is unaffected.
-            if (_balanceMode)
-            {
-                _lastGlobalRestReached = GlobalRestReached(dt);
-                if (!_lastGlobalRestReached)
-                    return;
-            }
+            // TASK-305: EVERY mode now keeps its placed pieces Dynamic (no freeze), so "nothing Falling" is NOT yet
+            // rest — a placed piece can still be settling or be shoved by a later drop. Hold the verdict until the
+            // whole field has been quiet for RestDurationSeconds, then judge the settled poses. _lastGlobalRestReached
+            // is cached here for ReadyForNextRelease (the sim's next-group gate). A metastable figure that never
+            // reaches global rest times out — the honest signal that it was not self-supporting (ADR-0005).
+            _lastGlobalRestReached = GlobalRestReached(dt);
+            if (!_lastGlobalRestReached)
+                return;
 
             ResolveAtRest();
         }
 
         /// <summary>
-        /// Field-readiness gate for the sim driver's next release group (TASK-023 §5.2) — encapsulates BOTH modes
-        /// so the sim never re-derives it. Never ready while anything is Falling. Assembly ≡ the old "no Falling
-        /// piece" quiet check (byte-for-byte). Balance additionally waits until the coalescence group has flushed
-        /// (nothing armed, window closed) and the whole field has reached global rest — so the next pair is released
-        /// only onto a beam that has stopped swinging.
+        /// Field-readiness gate for the sim driver's next release group (TASK-023 §5.2) — encapsulates every mode
+        /// so the sim never re-derives it. Never ready while anything is Falling. Since TASK-305 (freeze removal)
+        /// ALL modes additionally wait until the whole field has reached global rest — a placed piece now stays
+        /// Dynamic, so the next drop must land on a field that has actually settled, not on one still micro-drifting
+        /// (else the poseHash diverges). Balance additionally waits until the coalescence group has flushed (nothing
+        /// armed, window closed).
         /// </summary>
         public bool ReadyForNextRelease
         {
@@ -332,20 +340,18 @@ namespace Gameplay.Core.Mechanic
                     if (piece.State == PieceLifecycle.Falling)
                         return false;
 
-                if (!_balanceMode)
-                    return true; // assembly: identical to the pre-TASK-023 IsFieldQuiet
-
                 if (_pendingRelease.Count > 0 || _coalesceWindowStepsLeft > 0)
-                    return false; // a group is still arming
-                return _lastGlobalRestReached; // beam + loads have come to global rest
+                    return false; // a balance coalescence group is still arming
+                return _lastGlobalRestReached; // the whole field has come to global rest
             }
         }
 
         /// <summary>
-        /// True once EVERY live body has stayed below the rest speed for RestDurationSeconds (balance mode only).
-        /// A placed-but-Dynamic pivot beam and the loads riding it keep swinging after they leave the Falling
-        /// state; judging the figure before they settle would read a mid-crank pose (and a divergent poseHash).
-        /// Any body still moving resets the timer, so the gate reflects a genuine single global rest.
+        /// True once EVERY live body has stayed below the rest speed for RestDurationSeconds (ALL modes since
+        /// TASK-305). A placed-but-Dynamic piece keeps moving after it leaves the Falling state — a load riding a
+        /// beam, or an assembly piece still nudged by a later drop; judging the figure before it settles would read
+        /// a mid-motion pose (and a divergent poseHash). Any body still moving resets the timer, so the gate
+        /// reflects a genuine single global rest.
         /// </summary>
         private bool GlobalRestReached(float dt)
         {
@@ -405,76 +411,25 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
-        /// Freeze a piece at its physical rest pose (TASK-043, honest physics only). Freezing (kinematic) kills
-        /// post-rest drift and makes the piece a rigid support the next drop cannot shove (RFC 07 §2.1). Assembly
-        /// pieces reach here after falling and coming to rest on the floor or an already-Placed piece; the pose is
-        /// whatever physics produced and the win check judges it from there. Balance-mode pieces return early to
-        /// <see cref="PlaceDynamic"/> — they stay Dynamic and keep riding the beam until global rest.
+        /// Mark a rested piece Placed at its physical rest pose — TASK-305 (freeze removal, variant A): UNIFORM across
+        /// every mode. The body stays DYNAMIC (nothing is ever locked kinematic), so it keeps living in the physics:
+        /// a later drop can still shove it, MirrorPose tracks its live pose every tick, and the verdict is judged only
+        /// at GLOBAL rest of the whole field (Tick). A piece must reach the silhouette by real physics (falling,
+        /// hitting, rotating, launching); posTol/angTol + the rigidity spread in PoseMatchEvaluator only JUDGE the
+        /// settled result. On a seesaw a single load honestly tips the free beam (Lost) while a synchronous symmetric
+        /// pair keeps it level; on a catapult the free arm rests on a LOW fulcrum limited by the natural ground-stop.
+        /// Determinism now holds ONLY for self-supporting figures — a cantilever/overhang/top-heavy figure is
+        /// metastable and surfaces as a sweep victim (ADR-0005).
         /// </summary>
         private void Place(PieceInstance piece, int bodyId)
         {
             var pose = _simulation.GetPose(bodyId);
-
-            if (_balanceMode)
-            {
-                // Free-beam (TASK-023, extended to catapults TASK-027): BOTH the pivot beam/arm and the loads land as
-                // free Dynamic bodies judged from their rest pose — nothing is world-pinned. On a seesaw a single load
-                // honestly tips the free beam (Lost) while a synchronous symmetric pair keeps it level; on a catapult
-                // the free arm rests on a LOW fulcrum with its tilt limited by the natural ground-stop, and the boulder
-                // slam flips it around the ridge to launch the pebble. The Pivot flag marks "judged from the free rest
-                // pose, never frozen onto a slot".
-                PlaceDynamic(piece, pose);
-                return;
-            }
-
-            FreezePlaced(piece, pose.Position, pose.Rotation);
-            _simulation.FreezeAt(bodyId, pose.Position, pose.Rotation);
+            MarkPlaced(piece, pose.Position, pose.Rotation);
         }
 
-        /// <summary>
-        /// Balance-mode landing for a free-beam body (TASK-023): the beam OR a load piece (pan / weight / cap).
-        /// Mark it Placed so it counts toward the verdict, but DO NOT freeze it — it stays Dynamic and rides the
-        /// physics as the beam swings, so the figure is only complete once the whole field settles (the global
-        /// rest gate in Tick). MirrorPose keeps its model/view pose tracking the live body every tick. Every piece
-        /// (beam and loads) is judged from its free rest pose; the loads are frozen in place at global rest by
-        /// <see cref="FreezeLoadsAtRest"/>.
-        /// </summary>
-        private void PlaceDynamic(PieceInstance piece, BodyPose pose)
-        {
-            FreezePlaced(piece, pose.Position, pose.Rotation);
-        }
-
-        /// <summary>
-        /// Pure-physics freeze-at-rest for a balance/catapult level (TASK-031d / variant B, TASK-030), simplified in
-        /// TASK-043 to drop the removed slot-claim. Called ONLY at the FINAL global rest (no piece Idle, no release
-        /// pending — the caller bails on any intermediate rest), so every piece has stayed Dynamic the whole level and
-        /// this runs exactly once, on the settled field. For every settled non-pivot piece: FREEZE it EXACTLY at its
-        /// physical rest pose — no glide, no position or angle correction. The piece must have reached the silhouette
-        /// by real physics (falling, hitting, rotating, launching); posTol/angTol + the rigidity spread only JUDGE the
-        /// result. The pivot beam, if any, is left judged from its free rest pose.
-        ///
-        /// Determinism: freezing only at global rest (never mid-swing) with no physics step between the reads keeps
-        /// the pose assignment reproducible, so poseHash stays stable.
-        /// </summary>
-        private void FreezeLoadsAtRest()
-        {
-            foreach (var piece in _model.Pieces)
-            {
-                if (piece.State != PieceLifecycle.Placed)
-                    continue;
-                if (_typeByInstance[piece.InstanceId].Pivot)
-                    continue; // a marked pivot beam is judged from its free rest pose, never frozen onto a slot
-                if (!_bodyByInstance.TryGetValue(piece.InstanceId, out var bodyId))
-                    continue;
-
-                var pose = _simulation.GetPose(bodyId);
-                _simulation.FreezeAt(bodyId, pose.Position, pose.Rotation);
-                FreezePlaced(piece, pose.Position, pose.Rotation);
-            }
-        }
-
-        /// <summary>Freeze a piece Placed at an exact pose and mirror it into the model + view.</summary>
-        private void FreezePlaced(PieceInstance piece, Vec2 pos, float rot)
+        /// <summary>Mark a piece Placed at an exact pose and mirror it into the model + view. Does NOT touch the
+        /// simulation body — the body stays Dynamic (TASK-305); this is a model/view state change only.</summary>
+        private void MarkPlaced(PieceInstance piece, Vec2 pos, float rot)
         {
             piece.State = PieceLifecycle.Placed;
             piece.Position = pos;
@@ -510,20 +465,10 @@ namespace Gameplay.Core.Mechanic
                 else if (piece.State == PieceLifecycle.Idle) anyIdle = true;
             }
 
-            // Balance-mode final freeze (TASK-043): every piece stayed Dynamic the whole level. While any piece is
-            // still Idle (the player has taps left) OR a coalescence group is arming, the field is not final — bail
-            // out without touching poses so a still-launchable load is never frozen mid-turn. Only once nothing is
-            // Idle and no release is pending is the field truly final: freeze every non-pivot load EXACTLY where
-            // physics parked it, then greedy-match the live poses. This replaces the removed snap/glide crisp — the
-            // silhouette must be reached by real physics, so grand_seesaw's slots are authored to the observed rest
-            // poses of a level beam (§M).
-            if (_balanceMode)
-            {
-                if (anyIdle || _pendingRelease.Count > 0 || _coalesceWindowStepsLeft > 0)
-                    return;
-                FreezeLoadsAtRest();
-            }
-
+            // TASK-305 (freeze removal): nothing is frozen here anymore. Reached only at GLOBAL rest (the Tick gate),
+            // so every Dynamic piece has settled; greedy-match the live rest poses directly. If pieces are still Idle
+            // the player has taps left — the win check below still runs (a partial field simply won't fill every
+            // slot), and the `anyIdle` guard after it waits for the next tap rather than declaring Lost.
             var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
 
             if (result.AllSlotsFilled && !anyEssentialLost)
@@ -592,8 +537,8 @@ namespace Gameplay.Core.Mechanic
         /// is RELEASED immediately so it drops into the physics at t=0 (Falling), NOT hung Idle. It is therefore
         /// never picked by <see cref="PickIdlePieceAt"/> (Idle-only), never awaited as a tap, and — unlike
         /// <see cref="ReleasePiece"/> — does NOT count a player attempt (it is level furniture, not a move). From
-        /// here it follows the ordinary fall→rest→Place path; in balance/catapult it lands as a free Dynamic body
-        /// (PlaceDynamic) so a later drop can pivot it.
+        /// here it follows the ordinary fall→rest→Place path; since TASK-305 it lands as a free Dynamic body in every
+        /// mode (never frozen) so a later drop can still pivot it.
         /// </summary>
         private void SpawnPreplaced(PieceInstance piece)
         {
