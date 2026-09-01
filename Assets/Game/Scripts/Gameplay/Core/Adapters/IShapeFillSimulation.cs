@@ -17,11 +17,9 @@ namespace Gameplay.Core.Adapters
         /// <summary>Materialise a floating piece: enable its collider AND gravity → it starts falling.</summary>
         void Release(int bodyId);
 
-        /// <summary>
-        /// Lock a settled body at an exact pose: kinematic, zero velocity — stops post-rest drift and turns it
-        /// into a stable support. Called at Falling→Placed (RFC 07 §2.1).
-        /// </summary>
-        void FreezeAt(int bodyId, Vec2 position, float rotation);
+        // TASK-305 (freeze removal, owner variant A): the FreezeAt seam is GONE. No path ever locks a body kinematic
+        // anymore — a rested piece is marked Placed but stays a live Dynamic body, and the verdict is judged at
+        // global rest of the whole field. Deleting the seam is the proof that zero pieces become kinematic.
 
         BodyPose GetPose(int bodyId);
 

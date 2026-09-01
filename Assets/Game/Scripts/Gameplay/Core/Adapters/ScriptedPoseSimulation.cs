@@ -38,14 +38,8 @@ namespace Gameplay.Core.Adapters
                 b.Released = true;
         }
 
-        public void FreezeAt(int bodyId, Vec2 position, float rotation)
-        {
-            if (_bodies.TryGetValue(bodyId, out var b))
-            {
-                b.Pose = new BodyPose(position, rotation);
-                b.Speed = 0f;
-            }
-        }
+        // TASK-305: FreezeAt removed from the seam (no body is ever locked kinematic; the pose canvas has nothing
+        // to lock either). A rested piece stays Dynamic and is judged at global rest.
 
         public BodyPose GetPose(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Pose : default;
         public float GetSpeed(int bodyId) => _bodies.TryGetValue(bodyId, out var b) ? b.Speed : 0f;

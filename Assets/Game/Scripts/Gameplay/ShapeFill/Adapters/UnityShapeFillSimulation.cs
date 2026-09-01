@@ -25,8 +25,8 @@ namespace Gameplay.Adapters
             // TASK-097 released-only gate: air flow acts ONLY on bodies that have been released (tapped, or
             // preplaced-as-released). An Idle floating piece is a full Dynamic body (gravity off, collider off) that
             // AddForce WOULD otherwise blow off its authored hang pose — see the owner's live-code refutation in the
-            // stage-1 gate. Set true in Release(); never reset (a frozen Placed body is Kinematic, which ApplyFlow's
-            // bodyType guard skips anyway).
+            // stage-1 gate. Set true in Release(); never reset. TASK-305: a Placed body now stays Dynamic (freeze
+            // removed), so flow continues to act on it after it rests — intended live physics (see ApplyFlow).
             public bool Released;
 #if GPIE_DEVELOPMENT
             // Retained only so the [SHAPELOG] diagnostic can name the piece at Release time (TASK-072); the
@@ -201,23 +201,8 @@ namespace Gameplay.Adapters
 #endif
         }
 
-        public void FreezeAt(int bodyId, Vec2 position, float rotation)
-        {
-            if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)
-                return;
-            var rb = body.Rigidbody;
-            // Lock at rest: zero velocity, kinematic, exact pose → no post-rest drift, and the body becomes a
-            // rigid support the next piece cannot shove (RFC 07 §2.1).
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-            rb.bodyType = RigidbodyType2D.Kinematic;
-            var deg = rotation * Mathf.Rad2Deg;
-            rb.position = new Vector2(position.X, position.Y);
-            rb.rotation = deg;
-            var t = rb.transform;
-            t.position = new Vector3(position.X, position.Y, t.position.z);
-            t.rotation = Quaternion.Euler(0f, 0f, deg);
-        }
+        // TASK-305: FreezeAt removed — no body is ever transitioned to Kinematic. A rested piece stays Dynamic; the
+        // verdict is judged at global rest (see ShapeFillMechanicController). Nothing here locks a pose anymore.
 
         public BodyPose GetPose(int bodyId)
         {
@@ -261,8 +246,9 @@ namespace Gameplay.Adapters
                 var other = _supportHits[i].collider;
                 if (other == null || other.attachedRigidbody == body.Rigidbody)
                     continue; // skip our own colliders (belt-and-braces; Rigidbody.Cast already excludes them)
-                // Support = the floor (a static collider, no rigidbody) or an already-settled piece (kinematic,
-                // locked by FreezeAt). Another still-falling dynamic body is not yet a support.
+                // Support = the floor (a static collider, no rigidbody) or a kinematic body. NB (TASK-305): no piece
+                // is ever kinematic anymore (freeze removed), so the kinematic branch is now dead — this whole seam
+                // has had no production callers since TASK-043 (assist snap removed) and is a deprecation follow-up.
                 var otherRb = other.attachedRigidbody;
                 if (otherRb == null || otherRb.bodyType == RigidbodyType2D.Kinematic)
                     return true;
@@ -314,7 +300,11 @@ namespace Gameplay.Adapters
                 if (!body.Released) // idle-hanging pieces (not yet tapped) keep their authored pose — owner stage-1 gate
                     continue;
                 var rb = body.Rigidbody;
-                if (rb == null || rb.bodyType != RigidbodyType2D.Dynamic) // frozen Placed = Kinematic → immune
+                // TASK-305: a Placed piece now stays Dynamic (freeze removed), so — unlike before — flow keeps acting
+                // on a released piece after it rests. That is intended (live physics): a piece pressed into its saddle
+                // stays at rest against the saddle normal, so global rest is still reached. The guard now only skips a
+                // body with no live Rigidbody or a non-Dynamic one (none is ever Kinematic anymore).
+                if (rb == null || rb.bodyType != RigidbodyType2D.Dynamic)
                     continue;
 
                 var p = rb.position;
