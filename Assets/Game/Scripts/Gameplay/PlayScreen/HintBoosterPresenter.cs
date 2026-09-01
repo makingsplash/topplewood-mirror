@@ -27,9 +27,10 @@ namespace Gameplay.PlayScreen
     /// At 0 charges on a usable level the button follows the f2p convention (owner TASK-263): it does NOT alpha-fade,
     /// it stays fully visible with a muted, desaturated tint and a "+" badge, and a tap buys one charge for coins
     /// (<see cref="HintBoosterService.TryPurchaseCharges"/>, TASK-240) — a short shake, never a modal, on a short balance.
-    /// The art is the C-02 die-cut sticker language (owner 2026-09-01, TASK-263): a blue lamp button + a round orange
-    /// charge badge, non-wood — the complementary colour carries the separation from the walnut wall on its own, so the
-    /// old wood-era drop-shadow crutch is gone.
+    /// The art is the C-02 die-cut sticker language (owner 2026-09-01, TASK-263): an EMERALD lamp button (variant B
+    /// recolour — warm off-white border + lamp glyph over a navy contour) + a round orange charge badge, non-wood —
+    /// the complementary colour carries the separation from the walnut wall on its own, so the old wood-era
+    /// drop-shadow crutch is gone.
     ///
     /// The EventSystem is raised with the SAME idempotent guard as <see cref="RestartButtonPresenter"/> (create only
     /// if none, destroy only our own) so ownership is order-independent whichever HUD presenter starts first. The
@@ -69,14 +70,18 @@ namespace Gameplay.PlayScreen
         // enough that an ignored hint eventually tidies itself up (was a hard 2.5s timer pre-TASK-263).
         private const float HighlightFallbackSec = 6f;
 
-        // Empty-state (0 charges) icon tint — a cool, muted grey MULTIPLY held at FULL alpha, so the button stays
-        // clearly visible and tappable instead of fading toward invisible (owner 19:10, genre convention: at 0 boosters
-        // the button changes tone, it does not disappear). In the C-02 die-cut language this drains the vivid blue cel
-        // toward a greyed-blue "off" look — read as "inactive, buy me" against the ready state's full-colour icon +
-        // numeric badge. NOTE (unchanged, honest): Image.color is a per-channel multiply — it darkens/mutes but cannot
-        // truly hue-desaturate; the art-director confirmed the new sticker reads muted natively (TASK-263 §6d), so the
-        // wood-era grayscale-material debt TASK-281 is OBSOLETE and NOT re-raised. The exact tone is owner-gate-tunable.
-        private static readonly Color EmptyTint = new(0.62f, 0.64f, 0.68f, 1f);
+        // Empty-state (0 charges) icon tint — a near-neutral, muted grey MULTIPLY held at FULL alpha, so the button
+        // stays clearly visible and tappable instead of fading toward invisible (owner 19:10, genre convention: at 0
+        // boosters the button changes tone, it does not disappear). RETUNED for the emerald body (owner 2026-09-01
+        // 20:12): the old value (0.62,0.64,0.68) had a deliberate BLUE lean tuned to reinforce the previous blue cel's
+        // "cool off-blue"; multiplied onto the emerald green that same blue-heavy factor drags the hue toward teal —
+        // a deliberate-looking colour, not "off". The near-neutral cool-grey below darkens/mutes the emerald almost
+        // uniformly (~x0.61) so it reads "same button, dimmed = inactive, buy me" WITHOUT a hue shift, against the
+        // ready state's full-colour icon + numeric badge. NOTE (unchanged, honest): Image.color is a per-channel
+        // multiply — it darkens/mutes but cannot truly hue-desaturate; the art-director confirmed the die-cut sticker
+        // reads muted natively (TASK-263 §6d), so the wood-era grayscale-material debt TASK-281 stays OBSOLETE and is
+        // NOT re-raised. Exact tone is owner-gate-tunable on the live frame (owner reserved the visual verdict).
+        private static readonly Color EmptyTint = new(0.60f, 0.61f, 0.63f, 1f);
 
         private bool _onCooldown;
         private bool _proactiveSuppressed;
@@ -176,7 +181,7 @@ namespace Gameplay.PlayScreen
             {
                 Debug.unityLogger.Log(LogType.Warning,
                     "[booster] спрайт 'Booster/hint_button' не найден — кнопка рисуется плоским токеном");
-                _icon.color = new Color(0.24f, 0.55f, 0.86f, 0.95f); // flat blue token echoing the C-02 die-cut button.
+                _icon.color = new Color(0.18f, 0.72f, 0.55f, 0.95f); // flat emerald token echoing the recoloured die-cut button.
             }
             _iconBaseColor = _icon.color;
 
