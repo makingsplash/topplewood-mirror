@@ -9,6 +9,15 @@ namespace Gameplay.Core
     /// </summary>
     public sealed class LevelDataValidator
     {
+        /// <summary>TASK-304: the maximum start-pose overlap between a piece and a static-geometry block still treated
+        /// as "resting flush" on the surface (legal). A piece authored to sit EXACTLY on a surface computes a hair of
+        /// penetration from vertex quantization (<see cref="Shape"/> quantizes arcs to 1e-4) and the circle-polygon
+        /// closest-point, so the threshold must clear that float noise while staying far below any visible embed. 1 mm
+        /// is 10× the quantization floor yet ~40× below the shallowest real embed the owner measured on petal_gully
+        /// (0.04). Below this ⇒ flush, no error; above ⇒ the piece begins EMBEDDED ⇒ ERROR. Tightening (down) is always
+        /// safe; widening it toward a visible overlap is exactly the "loosen the criterion for green" the canon forbids.</summary>
+        public const float MinStaticPenetration = 0.001f;
+
         private readonly TapZoneConfig _tapZone;
 
         /// <summary>TASK-085: takes the tap-zone config so the tap-spacing check can predict the per-level zone. The
@@ -73,6 +82,12 @@ namespace Gameplay.Core
             //    in range, reference a NON-preplaced piece, and be free of duplicates — a bad order is authoring-brak
             //    (the hint would point at a preplaced/absent piece), exactly like an unknown physicsMode.
             ValidateWinningOrder(level, errors);
+
+            // 10. Start-inside-static (TASK-304): a piece must not BEGIN embedded in static geometry. It is invisible
+            //     to every check above and to the sim gate (an Idle piece is not in physics, so penetration is only
+            //     ever measured on RELEASED bodies) — the exact "green gate, visually broken" the owner hit on
+            //     petal_gully (a disk half-sunk into the ramp). ERROR with the piece name and the depth as a number.
+            ValidateStaticStartOverlap(level, errors);
 
             return new ValidationResult(errors, warnings);
         }
@@ -280,6 +295,67 @@ namespace Gameplay.Core
                     errors.Add($"WinningOrder index {index} references a preplaced piece — the hint can only point " +
                                "at a tapable piece.");
             }
+        }
+
+        /// <summary>
+        /// TASK-304: for every piece, its START collider (the shape at the authored start pose) must not overlap any
+        /// <see cref="LevelData.StaticGeometry"/> block by more than <see cref="MinStaticPenetration"/>. The measure is
+        /// the CANONICAL <see cref="Geometry.Penetration"/> over <see cref="ConvexShape.Of"/> — the SAME collider
+        /// dispatch the physics adapter and the sim honesty detector use (native disc for a circle, compound for a
+        /// concave polyomino, world-vertex polygon for every other primitive) — so this rule can never disagree with
+        /// the sim on how a piece is shaped, and it covers ALL primitives (circle/box/plank/trapezoid/triangle/…) for
+        /// free. A piece resting FLUSH on a surface is legal (penetration ≈ 0); only a real embed is an ERROR, named
+        /// with the piece and the depth. Static blocks are assumed convex (the documented contract of
+        /// <see cref="Geometry"/>; every authored floor/cradle/ramp is a convex block) but of EITHER winding, so each
+        /// outline is normalised to CCW before measuring — <see cref="Geometry"/>'s circle-in-polygon inside-test is
+        /// CCW-only and the ramp on petal_gully is authored clockwise.
+        /// </summary>
+        private static void ValidateStaticStartOverlap(LevelData level, List<string> errors)
+        {
+            if (level.Pieces == null || level.StaticGeometry == null)
+                return;
+
+            for (var g = 0; g < level.StaticGeometry.Length; g++)
+            {
+                var block = level.StaticGeometry[g];
+                if (block?.Outline == null || block.Outline.Length < 3)
+                    continue; // no collider to embed in (degenerate blocks are the view's problem, not this rule's)
+
+                var staticShape = ConvexShape.Polygon(EnsureCcw(block.Outline));
+                for (var i = 0; i < level.Pieces.Count; i++)
+                {
+                    var type = level.Pieces[i].Type;
+                    if (type?.Shape == null)
+                        continue; // a null type/shape is already reported by ValidatePieces — do not NRE here
+
+                    var pieceShape = ConvexShape.Of(
+                        type.Shape, level.Pieces[i].StartPosition, level.Pieces[i].StartRotation);
+                    var pen = Geometry.Penetration(pieceShape, staticShape);
+                    if (pen > MinStaticPenetration)
+                        errors.Add(
+                            $"Pieces[{i}] '{type.Kind}' starts embedded in StaticGeometry[{g}] — penetration " +
+                            $"{pen:F3} world units at start pose {level.Pieces[i].StartPosition}. A piece may rest " +
+                            $"flush on a surface (≤{MinStaticPenetration:0.###}) but must not begin inside it.");
+                }
+            }
+        }
+
+        /// <summary>Return <paramref name="outline"/> wound counter-clockwise (positive signed area): reverses a CW
+        /// ring, leaves a CCW one untouched. Static outlines are authored either winding, but the circle-in-polygon
+        /// inside-test in <see cref="Geometry"/> is documented for CONVEX CCW polygons — feeding a CW ring would let a
+        /// circle centre deep inside a block read as separated. Piece colliders are already CCW (the shape factory).</summary>
+        private static Vec2[] EnsureCcw(Vec2[] outline)
+        {
+            var twiceArea = 0f;
+            for (int i = 0, j = outline.Length - 1; i < outline.Length; j = i++)
+                twiceArea += outline[j].X * outline[i].Y - outline[i].X * outline[j].Y;
+            if (twiceArea >= 0f)
+                return outline; // already CCW
+
+            var reversed = new Vec2[outline.Length];
+            for (var i = 0; i < outline.Length; i++)
+                reversed[i] = outline[outline.Length - 1 - i];
+            return reversed;
         }
 
         private static void ValidateTarget(LevelData level, List<string> errors)
