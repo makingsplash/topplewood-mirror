@@ -193,6 +193,7 @@ namespace Gameplay.Core
         [JsonProperty("topWidth")] public float TopWidth { get; set; }   // trapezoid: top-edge width
         [JsonProperty("skew")] public float Skew { get; set; }           // parallelogram: top-edge +X shift
         [JsonProperty("apexHeight")] public float ApexHeight { get; set; } // gable: roof height above the rectangular base
+        [JsonProperty("cell")] public float Cell { get; set; }            // tetrominoes: world size of one grid cell (width/height do not describe a fixed-grid polyomino)
 
         public Shape ToDomain()
         {
@@ -248,9 +249,23 @@ namespace Gameplay.Core
                             $"gable needs positive width/height/apexHeight; got {Width}/{Height}/{ApexHeight}.");
                     return Shape.Gable(Width, Height, ApexHeight);
                 }
+                // TASK-178: concave tetrominoes — a fixed integer grid scaled by `cell`; width/height/radius do not apply.
+                case "l_tetromino": return Shape.LTetromino(RequireCell());
+                case "j_tetromino": return Shape.JTetromino(RequireCell());
+                case "s_tetromino": return Shape.STetromino(RequireCell());
+                case "z_tetromino": return Shape.ZTetromino(RequireCell());
+                case "t_tetromino": return Shape.TTetromino(RequireCell());
                 default:
                     throw new InvalidOperationException($"Unknown shape primitive '{Primitive}'.");
             }
+        }
+
+        // TASK-178: a tetromino's geometry is fixed by its grid; `cell` (world units per cell) is its only dimension.
+        private float RequireCell()
+        {
+            if (Cell <= 0f)
+                throw new InvalidOperationException($"{Primitive} needs positive cell; got {Cell}.");
+            return Cell;
         }
     }
 

@@ -17,7 +17,10 @@ namespace Gameplay.Adapters
         private sealed class Body
         {
             public Rigidbody2D Rigidbody;
-            public Collider2D Collider;
+            // TASK-178: one collider for the convex primitives (circle/polygon), N for a concave polyomino (a compound
+            // body — one PolygonCollider2D per authored convex part on the SAME Rigidbody2D). All toggled/materialised
+            // together, so [0] is representative for the enabled-state guard.
+            public Collider2D[] Colliders;
             public float Radius;
             // TASK-097 released-only gate: air flow acts ONLY on bodies that have been released (tapped, or
             // preplaced-as-released). An Idle floating piece is a full Dynamic body (gravity off, collider off) that
@@ -102,24 +105,43 @@ namespace Gameplay.Adapters
             // manifold editor↔device by double-digit percent. A native circle has one exact manifold and no
             // vertices, removing both. Every other primitive keeps a PolygonCollider2D (its vertices are exact, or
             // — for the trig-based half/quarter discs — quantized in Shape to a platform-invariant grid).
-            Collider2D collider;
+            // TASK-072/178: a circle → NATIVE CircleCollider2D (see note above); a concave polyomino → a COMPOUND of
+            // one PolygonCollider2D per authored convex part (Shape.ConvexParts, exact & platform-invariant, so Box2D
+            // never re-splits a concave contour by a coordinate-dependent split); every other primitive → one
+            // PolygonCollider2D from its exact/quantized vertices.
+            Collider2D[] colliders;
             if (type.Shape.Primitive == ShapePrimitive.Circle)
             {
                 var circle = go.AddComponent<CircleCollider2D>();
                 circle.radius = type.Shape.Radius; // authored radius, NOT derived from vertices (would change mass)
-                collider = circle;
+                colliders = new Collider2D[] { circle };
+            }
+            else if (type.Shape.ConvexParts != null)
+            {
+                var parts = type.Shape.ConvexParts;
+                colliders = new Collider2D[parts.Length];
+                for (var i = 0; i < parts.Length; i++)
+                {
+                    var poly = go.AddComponent<PolygonCollider2D>();
+                    poly.points = ToPoints(parts[i]);
+                    colliders[i] = poly;
+                }
             }
             else
             {
                 var polygon = go.AddComponent<PolygonCollider2D>();
                 polygon.points = ToPoints(type.Shape.Vertices);
-                collider = polygon;
+                colliders = new Collider2D[] { polygon };
             }
-            collider.sharedMaterial = new PhysicsMaterial2D($"mat_{type.Kind}")
+
+            // One shared material across all parts (friction/restitution is per-piece, not per-part).
+            var material = new PhysicsMaterial2D($"mat_{type.Kind}")
             {
                 friction = type.Material.Friction,
                 bounciness = type.Material.Restitution,
             };
+            foreach (var c in colliders)
+                c.sharedMaterial = material;
 
             var rb = go.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic;
@@ -134,16 +156,22 @@ namespace Gameplay.Adapters
             // the balance multi-load levels and aborted their sim runs (TASK-021 round-3, SpawnFloating). The value
             // is unchanged and every campaign density is 1.0 (the collider default), so the mass auto-computed when
             // Release() enables the collider is byte-for-byte identical to before — the assembly path is untouched.
-            collider.density = Mathf.Max(0.0001f, type.Material.Density);
-            // Idle piece is physically absent: no collision so hanging pieces never block another's drop
-            // column (RFC §5.3). Release() re-enables the collider + gravity.
-            collider.enabled = false;
+            // TASK-178: the SAME density on every part ⇒ auto-mass sums the exact part areas ⇒ the compound mass and
+            // inertia are the deterministic sum of rectangles (no trig), platform-invariant by construction.
+            var density = Mathf.Max(0.0001f, type.Material.Density);
+            foreach (var c in colliders)
+            {
+                c.density = density;
+                // Idle piece is physically absent: no collision so hanging pieces never block another's drop
+                // column (RFC §5.3). Release() re-enables the colliders + gravity.
+                c.enabled = false;
+            }
 
             var id = _nextId++;
             _bodies[id] = new Body
             {
                 Rigidbody = rb,
-                Collider = collider,
+                Colliders = colliders,
                 // Collider is disabled while Idle, so its bounds are unreliable — derive the rest-speed radius
                 // from the shape vertices instead (used only for the angular-speed term in GetSpeed).
                 Radius = VertexRadius(type.Shape.Vertices),
@@ -159,8 +187,10 @@ namespace Gameplay.Adapters
         {
             if (!_bodies.TryGetValue(bodyId, out var body) || body.Rigidbody == null)
                 return;
-            if (body.Collider != null)
-                body.Collider.enabled = true; // materialise: Idle piece becomes physical (RFC §5.3)
+            if (body.Colliders != null)
+                foreach (var c in body.Colliders)
+                    if (c != null)
+                        c.enabled = true; // materialise: Idle piece becomes physical (RFC §5.3)
             body.Released = true; // TASK-097: from now on air-flow zones may push this body (released-only gate)
             body.Rigidbody.gravityScale = 1f;
             // Damping settles the fall (angular in particular tames rolling half-discs) — RFC 07 §2.3.
@@ -216,18 +246,21 @@ namespace Gameplay.Adapters
 
         public bool HasSupportBelow(int bodyId, float maxGap)
         {
-            if (!_bodies.TryGetValue(bodyId, out var body) || body.Collider == null || !body.Collider.enabled)
+            if (!_bodies.TryGetValue(bodyId, out var body) || body.Colliders == null ||
+                body.Colliders.Length == 0 || body.Colliders[0] == null || !body.Colliders[0].enabled)
                 return false;
 
-            // Sweep the piece's own collider straight down by the small probe gap: this reports whatever it
-            // would first touch below its actual lower edge (any shape/rotation), initial overlaps included.
-            // ignoreSiblingColliders excludes the piece itself.
-            var count = body.Collider.Cast(Vector2.down, _supportHits, maxGap);
+            // TASK-178: sweep ALL of the body's colliders straight down by the small probe gap. Rigidbody2D.Cast casts
+            // every attached collider at once and EXCLUDES the body's own colliders, so a compound polyomino is probed
+            // by whichever part sits lowest — casting a single part would be blind to the part that actually rests
+            // first. For a single-collider body this is byte-equivalent to the old Collider.Cast. Reports whatever it
+            // would first touch below the actual lower edge (any shape/rotation), initial overlaps included.
+            var count = body.Rigidbody.Cast(Vector2.down, _supportHits, maxGap);
             for (var i = 0; i < count; i++)
             {
                 var other = _supportHits[i].collider;
-                if (other == null || other == body.Collider)
-                    continue;
+                if (other == null || other.attachedRigidbody == body.Rigidbody)
+                    continue; // skip our own colliders (belt-and-braces; Rigidbody.Cast already excludes them)
                 // Support = the floor (a static collider, no rigidbody) or an already-settled piece (kinematic,
                 // locked by FreezeAt). Another still-falling dynamic body is not yet a support.
                 var otherRb = other.attachedRigidbody;
@@ -370,17 +403,24 @@ namespace Gameplay.Adapters
                 .Append(" kind=").Append(body.Kind)
                 .Append(" primitive=").Append(body.Primitive.ToString());
 
-            if (body.Collider is CircleCollider2D circle)
+            // TASK-178: a compound polyomino logs every part (part index + its vertices) so the editor↔device parity
+            // diff covers the summed mass/inertia of the whole compound, not just one part.
+            var colliders = body.Colliders ?? System.Array.Empty<Collider2D>();
+            sb.Append(" parts=").Append(colliders.Length.ToString(ic));
+            for (var p = 0; p < colliders.Length; p++)
             {
-                sb.Append(" collider=circle radius=").Append(F5(circle.radius)).Append(" verts=0");
-            }
-            else if (body.Collider is PolygonCollider2D polygon)
-            {
-                var pts = polygon.points;
-                sb.Append(" collider=polygon verts=").Append(pts.Length.ToString(ic));
-                for (var i = 0; i < pts.Length; i++)
-                    sb.Append(" v").Append(i.ToString(ic))
-                        .Append("=(").Append(F5(pts[i].x)).Append(',').Append(F5(pts[i].y)).Append(')');
+                if (colliders[p] is CircleCollider2D circle)
+                {
+                    sb.Append(" p").Append(p.ToString(ic)).Append("=circle radius=").Append(F5(circle.radius));
+                }
+                else if (colliders[p] is PolygonCollider2D polygon)
+                {
+                    var pts = polygon.points;
+                    sb.Append(" p").Append(p.ToString(ic)).Append("=polygon verts=").Append(pts.Length.ToString(ic));
+                    for (var i = 0; i < pts.Length; i++)
+                        sb.Append(" v").Append(i.ToString(ic))
+                            .Append("=(").Append(F5(pts[i].x)).Append(',').Append(F5(pts[i].y)).Append(')');
+                }
             }
 
             sb.Append(" mass=").Append(F5(rb.mass)).Append(" inertia=").Append(F5(rb.inertia));

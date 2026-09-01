@@ -36,7 +36,15 @@ namespace Gameplay.View
         // shape.Vertices — that would re-facet the wheels. Straight-edged shapes pass through unchanged.
         // Ключ считается по ДОМЕННОЙ форме, а не по визуальному контуру: у круга и купола контур
         // тесселируется гуще, и ключ поехал бы от числа сегментов (см. WoodPieceKey).
-        public static Mesh Build(Shape shape) => Build(ShapeVisualOutline.Build(shape), WoodPieceKey.Of(shape));
+        // TASK-178: a CONCAVE polyomino cannot be a single centroid-fan (its centroid can fall in the notch, outside
+        // the body, inverting triangles). It is rendered as its authored convex parts — each part is fanned separately
+        // into ONE combined mesh, so the silhouette fills solid with correct per-edge wood normals. Corner rounding is
+        // skipped for polyominoes (rounding each rectangular part would notch the internal seams); rounded silhouette
+        // corners for tetrominoes are art-director's call (tech-debt in the artifact). Convex primitives are unchanged.
+        public static Mesh Build(Shape shape)
+            => shape.ConvexParts != null
+                ? BuildCompound(shape.ConvexParts, WoodPieceKey.Of(shape))
+                : Build(ShapeVisualOutline.Build(shape), WoodPieceKey.Of(shape));
 
         /// <summary>
         /// Радиус скругления углов для детали ОПОРНОГО размера (<see cref="WoodTuning.DetailRefSize"/>);
@@ -73,13 +81,15 @@ namespace Gameplay.View
         private readonly struct LiveMesh
         {
             public readonly WeakReference<Mesh> Mesh;
-            public readonly Vec2[] Outline;
+            public readonly Vec2[] Outline;    // single convex outline (null for a compound)
+            public readonly Vec2[][] Parts;    // TASK-178: convex parts (null for a single outline)
             public readonly string Key;
 
-            public LiveMesh(Mesh mesh, Vec2[] outline, string key)
+            public LiveMesh(Mesh mesh, Vec2[] outline, Vec2[][] parts, string key)
             {
                 Mesh = new WeakReference<Mesh>(mesh);
                 Outline = outline;
+                Parts = parts;
                 Key = key;
             }
         }
@@ -88,7 +98,10 @@ namespace Gameplay.View
         private static readonly List<LiveMesh> Live = new List<LiveMesh>(128);
 
         private static void Register(Mesh mesh, Vec2[] outline, string key)
-            => Live.Add(new LiveMesh(mesh, outline, key));
+            => Live.Add(new LiveMesh(mesh, outline, null, key));
+
+        private static void RegisterCompound(Mesh mesh, Vec2[][] parts, string key)
+            => Live.Add(new LiveMesh(mesh, null, parts, key));
 
         /// <summary>
         /// Переложить форму во все живые меши — их читают и деталь, и её тень (тот же объект Mesh),
@@ -104,7 +117,10 @@ namespace Gameplay.View
                     Live.RemoveAt(i);
                     continue;
                 }
-                Fill(mesh, Live[i].Outline, Live[i].Key);
+                if (Live[i].Parts != null)
+                    FillCompound(mesh, Live[i].Parts, Live[i].Key);
+                else
+                    Fill(mesh, Live[i].Outline, Live[i].Key);
             }
         }
 
@@ -200,6 +216,105 @@ namespace Gameplay.View
 
             // Clear перед записью: у пересобираемого меша число вершин меняется вместе с радиусом
             // скругления, и без очистки Unity ругается на несогласованные каналы.
+            mesh.Clear();
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uv);
+            mesh.SetUVs(1, uv2);
+            mesh.SetUVs(2, uv3);
+            mesh.SetUVs(3, uv4);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+        }
+
+        // ------------------------------------------------------- TASK-178: составной меш полимино
+
+        /// <summary>Меш вогнутого полимино: каждый выпуклый кусок — свой веер, всё в один меш. Скругление углов
+        /// пропущено (скруглять внутренние стыки нельзя), силуэт заливается сплошняком. Каналы шейдера считаются
+        /// как у <see cref="Fill"/>, но габарит (uv0/uv3) берётся по ВСЕЙ детали.</summary>
+        private static Mesh BuildCompound(Vec2[][] parts, string key)
+        {
+            var mesh = new Mesh { name = "PieceMesh" };
+            FillCompound(mesh, parts, key);
+            RegisterCompound(mesh, parts, key);
+            return mesh;
+        }
+
+        private static void FillCompound(Mesh mesh, Vec2[][] parts, string key)
+        {
+            // Габарит по всем кускам — общий масштаб волокна/фаски на всю деталь (как у одиночного контура).
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            var triCount = 0;
+            foreach (var part in parts)
+            {
+                if (part == null || part.Length < 3)
+                    continue;
+                triCount += part.Length;
+                foreach (var v in part)
+                {
+                    if (v.X < minX) minX = v.X;
+                    if (v.X > maxX) maxX = v.X;
+                    if (v.Y < minY) minY = v.Y;
+                    if (v.Y > maxY) maxY = v.Y;
+                }
+            }
+            if (triCount < 3)
+            {
+                mesh.Clear();
+                return;
+            }
+
+            var sizeX = Mathf.Max(maxX - minX, 1e-4f);
+            var sizeY = Mathf.Max(maxY - minY, 1e-4f);
+            var size = new Vector2(sizeX, sizeY);
+
+            var count = triCount * 3;
+            var vertices = new Vector3[count];
+            var uv = new Vector2[count];
+            var uv2 = new Vector2[count];
+            var uv3 = new Vector2[count];
+            var uv4 = new Vector2[count];
+            var triangles = new int[count];
+
+            var t = 0;
+            foreach (var part in parts)
+            {
+                if (part == null || part.Length < 3)
+                    continue;
+                var np = part.Length;
+
+                float cx = 0f, cy = 0f;
+                for (var i = 0; i < np; i++) { cx += part[i].X; cy += part[i].Y; }
+                var center = new Vector2(cx / np, cy / np);
+
+                for (var i = 0; i < np; i++)
+                {
+                    var b = new Vector2(part[i].X, part[i].Y);
+                    var c = new Vector2(part[(i + 1) % np].X, part[(i + 1) % np].Y);
+                    var edge = c - b;
+                    var len = edge.magnitude;
+                    var normal = len > 1e-6f ? new Vector2(edge.y, -edge.x) / len : Vector2.up;
+                    var height = Mathf.Abs(Vector2.Dot(center - b, normal));
+
+                    Vertex(t + 0, center, height, normal);
+                    Vertex(t + 1, b, 0f, normal);
+                    Vertex(t + 2, c, 0f, normal);
+                    triangles[t + 0] = t + 0;
+                    triangles[t + 1] = t + 1;
+                    triangles[t + 2] = t + 2;
+                    t += 3;
+                }
+            }
+
+            void Vertex(int index, Vector2 p, float distanceToEdge, Vector2 normal)
+            {
+                vertices[index] = new Vector3(p.x, p.y, 0f);
+                uv[index] = new Vector2((p.x - minX) / sizeX, (p.y - minY) / sizeY);
+                uv2[index] = new Vector2(distanceToEdge, 1f);
+                uv3[index] = size;
+                uv4[index] = normal;
+            }
+
             mesh.Clear();
             mesh.SetVertices(vertices);
             mesh.SetUVs(0, uv);

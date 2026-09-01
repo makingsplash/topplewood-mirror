@@ -330,15 +330,92 @@ namespace Gameplay.Core
                 // vertices, so the rule keys on the RESULT (vertex count), not the primitive — it also catches a
                 // future QuarterDisc or concave polyomino authored past 8 verts. Fix bad data (coarser arc / native
                 // primitive), never widen this cap.
-                else if (type.Shape.Primitive != ShapePrimitive.Circle && type.Shape.Vertices.Length > 8)
+                else if (type.Shape.ConvexParts == null && type.Shape.Primitive != ShapePrimitive.Circle
+                                                        && type.Shape.Vertices.Length > 8)
                     errors.Add($"Pieces[{i}] '{type.Kind}' has a {type.Shape.Vertices.Length}-vertex polygon collider; " +
                                "Box2D splits any >8-vertex polygon by a coordinate-dependent split (platform-dependent " +
                                "physics, TASK-072/074) — use a native primitive or ≤8 vertices.");
+                // TASK-178: a concave polyomino is a COMPOUND — its collider is the authored ConvexParts, not the
+                // concave contour, so it never reaches Box2D's coordinate-dependent split. Validate the decomposition
+                // instead: every part must be a small convex polygon (≤8 verts, so Box2D takes it whole) and the parts
+                // must cover the silhouette (area sum ≈ contour area). A bad decomposition is authoring garbage and is
+                // flagged LOUD here rather than silently mis-simulating.
+                if (type.Shape?.ConvexParts != null)
+                    ValidateConvexParts(i, type, errors);
                 if (type.Material.Density < 0f || type.Material.Friction < 0f || type.Material.Restitution < 0f)
                     errors.Add($"Pieces[{i}] '{type.Kind}' has a negative material field.");
                 if (!level.Bounds.Contains(level.Pieces[i].StartPosition))
                     errors.Add($"Pieces[{i}] '{type.Kind}' start position is outside Bounds.");
             }
+        }
+
+        /// <summary>TASK-178: structural check of a concave polyomino's authored convex decomposition — each part is a
+        /// small convex polygon (Box2D takes ≤8-vertex convex whole), and the parts' total area matches the silhouette
+        /// (so the compound collider covers the drawn shape). Not a geometry-exact union proof — enough to catch a
+        /// mis-authored decomposition (missing/duplicated/spilled part), the way an unknown primitive is caught.</summary>
+        private static void ValidateConvexParts(int index, PieceType type, List<string> errors)
+        {
+            var parts = type.Shape.ConvexParts;
+            var partsArea = 0f;
+            for (var p = 0; p < parts.Length; p++)
+            {
+                var part = parts[p];
+                if (part == null || part.Length < 3)
+                {
+                    errors.Add($"Pieces[{index}] '{type.Kind}' ConvexParts[{p}] has <3 vertices.");
+                    continue;
+                }
+                if (part.Length > 8)
+                    errors.Add($"Pieces[{index}] '{type.Kind}' ConvexParts[{p}] has {part.Length} vertices; a compound " +
+                               "part must be ≤8 (Box2D splits a larger convex polygon coordinate-dependently, TASK-072).");
+                if (!IsConvex(part))
+                    errors.Add($"Pieces[{index}] '{type.Kind}' ConvexParts[{p}] is not convex; each part must be convex " +
+                               "so Box2D takes it whole (a concave part is exactly the coordinate-dependent split TASK-072 removes).");
+                partsArea += PolygonArea(part);
+            }
+
+            var silhouetteArea = PolygonArea(type.Shape.Vertices);
+            // ε relative to the silhouette: parts that overlap or leave gaps change the total area; exact tiling matches.
+            if (System.MathF.Abs(partsArea - silhouetteArea) > 1e-3f * System.MathF.Max(silhouetteArea, 1e-4f))
+                errors.Add($"Pieces[{index}] '{type.Kind}' ConvexParts cover area {partsArea:0.####} but the silhouette " +
+                           $"is {silhouetteArea:0.####} — the decomposition has gaps or overlaps (must tile the contour).");
+        }
+
+        /// <summary>Absolute shoelace area of a simple polygon.</summary>
+        private static float PolygonArea(Vec2[] v)
+        {
+            var sum = 0f;
+            for (int i = 0, j = v.Length - 1; i < v.Length; j = i++)
+                sum += v[j].X * v[i].Y - v[i].X * v[j].Y;
+            return System.MathF.Abs(sum) * 0.5f;
+        }
+
+        /// <summary>Whether a simple polygon is convex: all cross products of consecutive edges share one sign
+        /// (collinear/zero allowed). Tolerant so an authored axis-aligned rectangle (exact) passes cleanly.</summary>
+        private static bool IsConvex(Vec2[] v)
+        {
+            var n = v.Length;
+            if (n < 3)
+                return false;
+            var sign = 0;
+            for (var i = 0; i < n; i++)
+            {
+                var a = v[i];
+                var b = v[(i + 1) % n];
+                var c = v[(i + 2) % n];
+                var cross = (b.X - a.X) * (c.Y - b.Y) - (b.Y - a.Y) * (c.X - b.X);
+                if (cross > 1e-6f)
+                {
+                    if (sign < 0) return false;
+                    sign = 1;
+                }
+                else if (cross < -1e-6f)
+                {
+                    if (sign > 0) return false;
+                    sign = -1;
+                }
+            }
+            return true;
         }
 
         private static void ValidateKindCoverage(LevelData level, List<string> errors)

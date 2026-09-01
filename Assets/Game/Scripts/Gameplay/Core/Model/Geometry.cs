@@ -17,6 +17,12 @@ namespace Gameplay.Core
         /// </summary>
         public static float Penetration(in ConvexShape a, in ConvexShape b)
         {
+            // TASK-178: a concave polyomino is a COMPOUND of convex parts — measure the deepest overlap over every
+            // cross pair of parts (the convex SAT kernel is exact per part; the concave contour never reaches it).
+            // Non-compound sub-shapes fall straight through to the circle/polygon arms below (the recursion is one
+            // level deep — a part is always a plain polygon, a circle is never compound).
+            if (a.IsCompound || b.IsCompound)
+                return CompoundPenetration(a, b);
             if (a.IsCircle && b.IsCircle)
                 return CircleCircle(a.Center, a.Radius, b.Center, b.Radius);
             if (a.IsCircle)
@@ -24,6 +30,36 @@ namespace Gameplay.Core
             if (b.IsCircle)
                 return CirclePolygon(b.Center, b.Radius, a.Vertices);
             return ConvexPenetration(a.Vertices, b.Vertices); // existing SAT kernel — UNCHANGED
+        }
+
+        /// <summary>TASK-178: deepest penetration over every cross pair of convex parts (either operand may be a single
+        /// non-compound shape, treated as one part). Max, not sum — the honesty metric is the WORST overlap, and two
+        /// parts of the SAME body abutting a neighbour must not double-count.</summary>
+        private static float CompoundPenetration(in ConvexShape a, in ConvexShape b)
+        {
+            var pa = a.Parts;
+            var pb = b.Parts;
+            var max = 0f;
+            if (pa != null && pb != null)
+            {
+                foreach (var partA in pa)
+                    foreach (var partB in pb)
+                        Widen(ref max, Penetration(Polygon(partA), Polygon(partB)));
+            }
+            else if (pa != null)
+            {
+                foreach (var partA in pa)
+                    Widen(ref max, Penetration(Polygon(partA), b));
+            }
+            else
+            {
+                foreach (var partB in pb)
+                    Widen(ref max, Penetration(a, Polygon(partB)));
+            }
+            return max;
+
+            static void Widen(ref float m, float v) { if (v > m) m = v; }
+            static ConvexShape Polygon(Vec2[] v) => ConvexShape.Polygon(v);
         }
 
         /// <summary>Analytic penetration of two discs: overlap of the radii minus the centre distance, floored at 0.</summary>
@@ -58,6 +94,14 @@ namespace Gameplay.Core
         /// </summary>
         public static float Separation(in ConvexShape a, in ConvexShape b)
         {
+            // TASK-178: a compound (concave polyomino) is never a circle, so it follows the deferred poly-poly arm —
+            // overlap → −penetration, apart → the "not touching" sentinel. It is thus never SELECTED as a touching
+            // pair (the classifier gates touching on ≥1 circle), exactly as a plain polygon pair.
+            if (a.IsCompound || b.IsCompound)
+            {
+                var penC = CompoundPenetration(a, b);
+                return penC > 0f ? -penC : float.MaxValue;
+            }
             if (a.IsCircle && b.IsCircle)
                 return (a.Center - b.Center).Length - (a.Radius + b.Radius);
             if (a.IsCircle)

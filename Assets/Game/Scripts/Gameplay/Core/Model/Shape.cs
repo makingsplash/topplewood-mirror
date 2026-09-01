@@ -15,6 +15,15 @@ namespace Gameplay.Core
         RightTriangle,
         QuarterDisc,
         Gable,
+        // TASK-178: concave tetrominoes. Unlike every primitive above (convex, one PolygonCollider2D) these carry a
+        // <see cref="Shape.ConvexParts"/> authored decomposition — the collider is compound and the honesty detector
+        // measures per part, so Box2D never re-splits a concave contour by a coordinate-dependent split (TASK-072).
+        // J is the mirror of L and Z the mirror of S — DISTINCT primitives (physics has no reflection, cf. RightTriangle).
+        LTetromino,
+        JTetromino,
+        STetromino,
+        ZTetromino,
+        TTetromino,
     }
 
     /// <summary>
@@ -28,6 +37,17 @@ namespace Gameplay.Core
     public sealed class Shape
     {
         public Vec2[] Vertices { get; }
+
+        /// <summary>TASK-178: authored convex decomposition of a CONCAVE primitive (the tetrominoes) — a set of
+        /// axis-aligned convex parts (each ≤4 vertices, CCW) whose union is exactly <see cref="Vertices"/>. <c>null</c>
+        /// for every convex primitive (all the ones above the tetrominoes), so their code paths are byte-for-byte
+        /// unchanged. It is the SINGLE source both the physics collider (a compound body of one PolygonCollider2D per
+        /// part, <c>UnityShapeFillSimulation.SpawnFloating</c>) and the honesty detector (per-part SAT, <c>SimRun</c>)
+        /// read — so collider and detector can never diverge (the single-source lesson of TASK-074/075). The parts are
+        /// exact products of the authored cell size (no trig), so a compound body's auto-summed mass/inertia is
+        /// platform-invariant BY CONSTRUCTION — stricter than the native circle (TASK-072), and the reason a concave
+        /// contour never reaches Box2D's coordinate-dependent convex split.</summary>
+        public Vec2[][] ConvexParts { get; }
 
         /// <summary>The primitive this shape was authored as. Lets consumers dispatch on shape family without
         /// re-inferring it from the vertex soup (TASK-072).</summary>
@@ -47,11 +67,12 @@ namespace Gameplay.Core
         // quantization — their vertices are exact products of the authored dimensions.
         private const float VertexQuantum = 1e-4f;
 
-        public Shape(Vec2[] vertices, ShapePrimitive primitive, float radius = 0f)
+        public Shape(Vec2[] vertices, ShapePrimitive primitive, float radius = 0f, Vec2[][] convexParts = null)
         {
             Vertices = vertices;
             Primitive = primitive;
             Radius = radius;
+            ConvexParts = convexParts;
         }
 
         private static Vec2 Quantize(float x, float y)
@@ -226,6 +247,93 @@ namespace Gameplay.Core
                 new Vec2(0f, half),     // apex (point-up)
                 new Vec2(-hw, eaveY),   // eave left
             }, ShapePrimitive.Gable);
+        }
+
+        // ---------------------------------------------------------------- TASK-178: concave tetrominoes
+        //
+        // Each tetromino is authored on an INTEGER 1-cell grid (four unit cells). From that grid we build, in one
+        // pure-integer pass (no trig, no runtime decomposition):
+        //   • Vertices    — the full concave silhouette contour (CCW), for the mesh / silhouette / point-in-shape;
+        //   • ConvexParts — one axis-aligned unit-square part per cell (each ≤4 verts, convex), union == the contour.
+        // Both are then centred on the shape's bbox and scaled by <paramref name="cell"/> (world units per grid cell),
+        // so the local frame matches the convex primitives (bbox centred on origin). Author-time integers ⇒ every
+        // vertex is an exact product of <paramref name="cell"/> ⇒ the compound body's mass/inertia are platform-
+        // invariant by construction (TASK-072 §1). Grid layouts (col,row), y-up:
+        //   L: (0,0)(0,1)(0,2)(1,0)   J: (1,0)(1,1)(1,2)(0,0)   S: (0,0)(1,0)(1,1)(2,1)
+        //   Z: (1,0)(2,0)(0,1)(1,1)   T: (0,0)(1,0)(2,0)(1,1)
+
+        /// <summary>L-tetromino (vertical bar of 3 + a foot at the bottom-right). Chiral — J is its mirror, a DISTINCT
+        /// primitive (physics has no reflection). <paramref name="cell"/> = world size of one grid cell. Symmetry order 1.</summary>
+        public static Shape LTetromino(float cell)
+            => Polyomino(ShapePrimitive.LTetromino, cell,
+                new[] { (0, 0), (0, 1), (0, 2), (1, 0) },
+                new[] { (0, 0), (2, 0), (2, 1), (1, 1), (1, 3), (0, 3) });
+
+        /// <summary>J-tetromino (vertical bar of 3 + a foot at the bottom-left) — the mirror of <see cref="LTetromino"/>.
+        /// Symmetry order 1.</summary>
+        public static Shape JTetromino(float cell)
+            => Polyomino(ShapePrimitive.JTetromino, cell,
+                new[] { (1, 0), (1, 1), (1, 2), (0, 0) },
+                new[] { (0, 0), (2, 0), (2, 3), (1, 3), (1, 1), (0, 1) });
+
+        /// <summary>S-tetromino (bottom pair shifted left of the top pair). Chiral — Z is its mirror. Symmetry order 2
+        /// (self-coincides at 180°). Symmetry order authored in the level data, not inferred here.</summary>
+        public static Shape STetromino(float cell)
+            => Polyomino(ShapePrimitive.STetromino, cell,
+                new[] { (0, 0), (1, 0), (1, 1), (2, 1) },
+                new[] { (0, 0), (2, 0), (2, 1), (3, 1), (3, 2), (1, 2), (1, 1), (0, 1) });
+
+        /// <summary>Z-tetromino — the mirror of <see cref="STetromino"/>. Symmetry order 2.</summary>
+        public static Shape ZTetromino(float cell)
+            => Polyomino(ShapePrimitive.ZTetromino, cell,
+                new[] { (1, 0), (2, 0), (0, 1), (1, 1) },
+                new[] { (1, 0), (3, 0), (3, 1), (2, 1), (2, 2), (0, 2), (0, 1), (1, 1) });
+
+        /// <summary>T-tetromino (a 3-cell base with one cell centred on top). Symmetry order 1. Symmetry order authored
+        /// in the level data.</summary>
+        public static Shape TTetromino(float cell)
+            => Polyomino(ShapePrimitive.TTetromino, cell,
+                new[] { (0, 0), (1, 0), (2, 0), (1, 1) },
+                new[] { (0, 0), (3, 0), (3, 1), (2, 1), (2, 2), (1, 2), (1, 1), (0, 1) });
+
+        /// <summary>Build a concave polyomino from its integer <paramref name="cells"/> (one unit-square part each) and
+        /// its integer <paramref name="contour"/> (CCW silhouette). Both are centred on the cells' bbox and scaled by
+        /// <paramref name="cell"/>. Pure integer arithmetic → exact, platform-invariant vertices (TASK-072).</summary>
+        private static Shape Polyomino(ShapePrimitive primitive, float cell,
+            (int X, int Y)[] cells, (int X, int Y)[] contour)
+        {
+            // bbox over the cells' corners: [minCol, maxCol+1] × [minRow, maxRow+1].
+            int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+            foreach (var c in cells)
+            {
+                if (c.X < minX) minX = c.X;
+                if (c.Y < minY) minY = c.Y;
+                if (c.X + 1 > maxX) maxX = c.X + 1;
+                if (c.Y + 1 > maxY) maxY = c.Y + 1;
+            }
+            var centreX = (minX + maxX) * 0.5f;
+            var centreY = (minY + maxY) * 0.5f;
+
+            Vec2 World(float gx, float gy) => new Vec2((gx - centreX) * cell, (gy - centreY) * cell);
+
+            var verts = new Vec2[contour.Length];
+            for (var i = 0; i < contour.Length; i++)
+                verts[i] = World(contour[i].X, contour[i].Y);
+
+            var parts = new Vec2[cells.Length][];
+            for (var i = 0; i < cells.Length; i++)
+            {
+                var c = cells[i];
+                parts[i] = new[]
+                {
+                    World(c.X, c.Y),
+                    World(c.X + 1, c.Y),
+                    World(c.X + 1, c.Y + 1),
+                    World(c.X, c.Y + 1),
+                };
+            }
+
+            return new Shape(verts, primitive, 0f, parts);
         }
     }
 }
