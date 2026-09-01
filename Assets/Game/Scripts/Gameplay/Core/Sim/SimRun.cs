@@ -264,7 +264,11 @@ namespace Gameplay.Core.Sim
         /// All pieces + the rectangular floor/cradle statics are convex, so penetration is exact. TASK-075: a Circle
         /// piece is measured as the NATIVE disc the physics simulates (analytic, rotation-invariant) rather than
         /// Shape.Circle's inscribed 24-gon; every other primitive stays a polygon (its collider IS a polygon), so
-        /// levels without circles are byte-unchanged. Sim-only; the production path never runs this.
+        /// levels without circles are byte-unchanged. TASK-178: a concave polyomino is measured as the COMPOUND of its
+        /// authored convex parts (the same collider the physics simulates) — <see cref="Geometry.Penetration"/> takes
+        /// the deepest overlap over the cross pairs of parts, so the concave contour never reaches the convex SAT
+        /// kernel; levels without polyominoes are byte-unchanged (ConvexParts == null ⇒ the old single-shape path).
+        /// Sim-only; the production path never runs this.
         /// </summary>
         private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration,
             out int unsupportedPlaced, out WorstOverlapPair worst, out List<TouchingPen> touchingPens)
