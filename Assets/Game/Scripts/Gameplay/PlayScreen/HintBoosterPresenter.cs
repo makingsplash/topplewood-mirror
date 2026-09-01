@@ -25,8 +25,11 @@ namespace Gameplay.PlayScreen
     /// (architect §9). Charges are meta-state (<see cref="HintBoosterService"/>); a no-op (nothing to reveal, level
     /// ineligible, or an armed balance coalescence window) shows neutral feedback WITHOUT spending (balancer §1.2).
     /// At 0 charges on a usable level the button follows the f2p convention (owner TASK-263): it does NOT alpha-fade,
-    /// it stays fully visible with a muted grey tint and a "+" badge, and a tap buys one charge for coins
+    /// it stays fully visible with a muted, desaturated tint and a "+" badge, and a tap buys one charge for coins
     /// (<see cref="HintBoosterService.TryPurchaseCharges"/>, TASK-240) — a short shake, never a modal, on a short balance.
+    /// The art is the C-02 die-cut sticker language (owner 2026-09-01, TASK-263): a blue lamp button + a round orange
+    /// charge badge, non-wood — the complementary colour carries the separation from the walnut wall on its own, so the
+    /// old wood-era drop-shadow crutch is gone.
     ///
     /// The EventSystem is raised with the SAME idempotent guard as <see cref="RestartButtonPresenter"/> (create only
     /// if none, destroy only our own) so ownership is order-independent whichever HUD presenter starts first. The
@@ -54,8 +57,8 @@ namespace Gameplay.PlayScreen
         private Tween _shake;
         private CompositeDisposable _subs;
         private CancellationTokenSource _highlightCts;
-        // Icon tone in the READY state (white with a sprite, the warm fallback token without one), captured at build
-        // so RefreshState can restore it after the empty-charge grey tint.
+        // Icon tone in the READY state (white with a sprite, the flat fallback token without one), captured at build
+        // so RefreshState can restore it after the empty-charge muted tint.
         private Color _iconBaseColor = Color.white;
         // InstanceId of the piece currently outlined by a hint (-1 = none). Lets the tap-driven clear (TASK-263 §2b)
         // fire the moment the PLAYER releases THAT piece, instead of waiting out the fallback timer.
@@ -66,13 +69,14 @@ namespace Gameplay.PlayScreen
         // enough that an ignored hint eventually tidies itself up (was a hard 2.5s timer pre-TASK-263).
         private const float HighlightFallbackSec = 6f;
 
-        // Empty-state (0 charges) icon tint — a muted grey MULTIPLY held at FULL alpha, so the button stays clearly
-        // visible and tappable instead of fading toward invisible (owner 19:10, genre convention: at 0 boosters the
-        // button changes tone, it does not disappear). NOTE: an Image color is a per-channel multiply, so this
-        // darkens/mutes the wood but cannot truly hue-desaturate; a literal grey would need a grayscale UI material
-        // (follow-up lever if the live verdict wants more grey). At full alpha it still reads plainly "inactive, buy
-        // me" against the ready state's full-colour icon + numeric badge.
-        private static readonly Color EmptyTint = new(0.58f, 0.56f, 0.53f, 1f);
+        // Empty-state (0 charges) icon tint — a cool, muted grey MULTIPLY held at FULL alpha, so the button stays
+        // clearly visible and tappable instead of fading toward invisible (owner 19:10, genre convention: at 0 boosters
+        // the button changes tone, it does not disappear). In the C-02 die-cut language this drains the vivid blue cel
+        // toward a greyed-blue "off" look — read as "inactive, buy me" against the ready state's full-colour icon +
+        // numeric badge. NOTE (unchanged, honest): Image.color is a per-channel multiply — it darkens/mutes but cannot
+        // truly hue-desaturate; the art-director confirmed the new sticker reads muted natively (TASK-263 §6d), so the
+        // wood-era grayscale-material debt TASK-281 is OBSOLETE and NOT re-raised. The exact tone is owner-gate-tunable.
+        private static readonly Color EmptyTint = new(0.62f, 0.64f, 0.68f, 1f);
 
         private bool _onCooldown;
         private bool _proactiveSuppressed;
@@ -172,45 +176,19 @@ namespace Gameplay.PlayScreen
             {
                 Debug.unityLogger.Log(LogType.Warning,
                     "[booster] спрайт 'Booster/hint_button' не найден — кнопка рисуется плоским токеном");
-                _icon.color = new Color(0.72f, 0.52f, 0.22f, 0.95f); // warm low-chroma wood accent (not success-green).
+                _icon.color = new Color(0.24f, 0.55f, 0.86f, 0.95f); // flat blue token echoing the C-02 die-cut button.
             }
             _iconBaseColor = _icon.color;
 
             _button = buttonGo.GetComponent<Button>();
             _button.onClick.AddListener(OnHintClicked);
 
-            BuildShadow(buttonRect, sprite);
+            // No runtime drop-shadow: the C-02 die-cut language (owner 2026-09-01) carries the separation from the
+            // walnut wall with complementary colour (art-director 07/08 — "отрыв несёт цвет, не дроп-шэдоу-костыль").
+            // The wood-era shadow was a silhouette copy that would only muddy the clean white die-cut border here.
             BuildGlow(buttonGo.transform);
             BuildBadge(buttonGo.transform);
             BuildTooltip();
-        }
-
-        // Drop-shadow node (TASK-263 §2, art-director §shadow): the SECOND half of the contrast fix — the sprite
-        // carries the emboss (bevel+rim), this node lifts the whole button off the wall like a real piece casting a
-        // shadow. NOT baked into the sprite. It reuses the button silhouette tinted dark + low-chroma (never a
-        // saturated accent), sits as the FIRST canvas sibling so it renders BEHIND the button (a child of the button
-        // would draw in FRONT of the icon in uGUI), and is offset down. Skipped when the sprite is missing — a
-        // square shadow under a placeholder token would read as a bug, not a shadow.
-        private void BuildShadow(RectTransform buttonRect, Sprite sprite)
-        {
-            if (sprite == null)
-                return;
-
-            var shadowGo = new GameObject("ButtonShadow", typeof(Image));
-            shadowGo.transform.SetParent(_canvas.transform, false);
-            shadowGo.transform.SetAsFirstSibling(); // behind the button (and everything else on the canvas)
-
-            var rect = shadowGo.GetComponent<RectTransform>();
-            rect.anchorMin = buttonRect.anchorMin;
-            rect.anchorMax = buttonRect.anchorMax;
-            rect.pivot = buttonRect.pivot;
-            rect.sizeDelta = buttonRect.sizeDelta + new Vector2(8f, 8f);       // slight spread for a soft edge
-            rect.anchoredPosition = buttonRect.anchoredPosition + new Vector2(0f, -14f); // cast downward
-
-            var shadow = shadowGo.GetComponent<Image>();
-            shadow.sprite = sprite;                       // same silhouette → shadow matches the lamp shape
-            shadow.color = new Color(0.06f, 0.05f, 0.03f, 0.4f); // dark, low-chroma, translucent (not an accent)
-            shadow.raycastTarget = false;
         }
 
         // Proactive glow — behind the button (first sibling), wider, non-raycasting. Placeholder = warm low-chroma
@@ -231,9 +209,10 @@ namespace Gameplay.PlayScreen
             glowGo.SetActive(false);
         }
 
-        // Charge badge — a ROUND semi-embossed wooden backing sprite (charge_badge, TASK-263 §3, closes TASK-248)
-        // under a dynamic count node (the number is NEVER baked into the art, ui-composer §2). Legacy uGUI Text, the
-        // RestartButton idiom for a code-built label. Falls back to the flat dark token if the sprite is missing.
+        // Charge badge — a ROUND die-cut orange backing sprite (charge_badge, C-02 language, TASK-263 §3, closes
+        // TASK-248) under a dynamic count node (the number is NEVER baked into the art — the sprite face is empty,
+        // ui-composer §2). Legacy uGUI Text, the RestartButton idiom for a code-built label. Falls back to a flat
+        // orange token if the sprite is missing.
         private void BuildBadge(Transform parent)
         {
             var badgeGo = new GameObject("ChargeBadge", typeof(Image));
@@ -248,13 +227,13 @@ namespace Gameplay.PlayScreen
             if (badgeSprite != null)
             {
                 badge.sprite = badgeSprite;
-                badge.color = Color.white; // wooden token carries its own tone; white keeps it un-tinted
+                badge.color = Color.white; // the die-cut sprite carries its own orange; white keeps it un-tinted
             }
             else
             {
                 Debug.unityLogger.Log(LogType.Warning,
                     "[booster] спрайт 'Booster/charge_badge' не найден — бейдж рисуется плоским токеном");
-                badge.color = new Color(0.15f, 0.12f, 0.09f, 0.92f);
+                badge.color = new Color(0.93f, 0.55f, 0.15f, 0.95f); // flat orange token echoing the C-02 die-cut badge.
             }
             badge.raycastTarget = false;
 
