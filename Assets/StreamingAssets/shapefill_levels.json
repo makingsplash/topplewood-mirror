@@ -5207,53 +5207,6 @@
       ]
     },
     {
-      "levelId": "tetris_crest",
-      "winningOrder": [0, 1, 2, 3, 4, 5, 6],
-      "seed": 509,
-      "difficultyTier": 7,
-      "physicsMode": "assembly",
-      "matchTolerance": { "posTol": 0.30, "angTol": 0.34906585 },
-      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
-      "gravity": { "x": 0, "y": -9.81 },
-      "pieceTypes": [
-        { "kind": "stem", "color": "#2E7CD6", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.50, "height": 1.20 } },
-        { "kind": "hub", "color": "#F2801D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.00, "height": 0.70 } },
-        { "kind": "arm_l", "color": "#B24BD1", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.20, "height": 0.50 } },
-        { "kind": "arm_r", "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 1.20, "height": 0.50 } },
-        { "kind": "cap", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.60, "height": 0.80 } },
-        { "kind": "wedge_l", "color": "#E23B3B", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.70, "topWidth": 0.40, "height": 0.50 } },
-        { "kind": "wedge_r", "color": "#12A5A5", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.70, "topWidth": 0.40, "height": 0.50 } }
-      ],
-      "target": {
-        "outline": [ { "x": -0.25, "y": -1.70 }, { "x": 0.25, "y": -1.70 }, { "x": 0.25, "y": -0.50 }, { "x": 1.65, "y": -0.50 }, { "x": 1.65, "y": 0.50 }, { "x": 0.30, "y": 0.50 }, { "x": 0.30, "y": 1.00 }, { "x": -0.30, "y": 1.00 }, { "x": -0.30, "y": 0.50 }, { "x": -1.65, "y": 0.50 }, { "x": -1.65, "y": -0.50 }, { "x": -0.25, "y": -0.50 } ],
-        "slots": [
-          { "kind": "stem", "position": { "x": 0.0, "y": -1.10 }, "rotation": 0 },
-          { "kind": "hub", "position": { "x": 0.0, "y": -0.15 }, "rotation": 0 },
-          { "kind": "arm_l", "position": { "x": -1.05, "y": 0.25 }, "rotation": 0 },
-          { "kind": "arm_r", "position": { "x": 1.05, "y": 0.25 }, "rotation": 0 },
-          { "kind": "cap", "position": { "x": 0.0, "y": 0.60 }, "rotation": 0 },
-          { "kind": "wedge_l", "position": { "x": -0.90, "y": 0.75 }, "rotation": 0 },
-          { "kind": "wedge_r", "position": { "x": 0.90, "y": 0.75 }, "rotation": 0 }
-        ]
-      },
-      "pieces": [
-        { "kind": "stem", "startPosition": { "x": 0.0, "y": 4.6 }, "startRotation": 0 },
-        { "kind": "hub", "startPosition": { "x": 0.0, "y": 6.6 }, "startRotation": 0 },
-        { "kind": "arm_l", "startPosition": { "x": -1.05, "y": 3.6 }, "startRotation": 0 },
-        { "kind": "arm_r", "startPosition": { "x": 1.05, "y": 5.6 }, "startRotation": 0 },
-        { "kind": "cap", "startPosition": { "x": 0.0, "y": 4.0 }, "startRotation": 0 },
-        { "kind": "wedge_l", "startPosition": { "x": -0.9, "y": 6.0 }, "startRotation": 0 },
-        { "kind": "wedge_r", "startPosition": { "x": 0.9, "y": 3.2 }, "startRotation": 0 }
-      ],
-      "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -6.0, "y": -0.6 }, { "x": -0.55, "y": -0.6 }, { "x": -0.55, "y": 0.0 }, { "x": -6.0, "y": 0.0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.55, "y": -0.6 }, { "x": 6.0, "y": -0.6 }, { "x": 6.0, "y": 0.0 }, { "x": 0.55, "y": 0.0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.70, "y": -1.80 }, { "x": -0.55, "y": -1.80 }, { "x": -0.55, "y": 0.0 }, { "x": -0.70, "y": 0.0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.55, "y": -1.80 }, { "x": 0.70, "y": -1.80 }, { "x": 0.70, "y": 0.0 }, { "x": 0.55, "y": 0.0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -0.70, "y": -1.95 }, { "x": 0.70, "y": -1.95 }, { "x": 0.70, "y": -1.80 }, { "x": -0.70, "y": -1.80 } ] }
-      ]
-    },
-    {
       "levelId": "petal_gully",
       "winningOrder": [0, 1, 2, 3],
       "seed": 508,
