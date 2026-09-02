@@ -24,6 +24,18 @@ namespace Gameplay.Core
         STetromino,
         ZTetromino,
         TTetromino,
+        // TASK-314: concave PENTOMINOES (5 cells). Same generic ConvexParts path as the tetrominoes above — the
+        // heavy machinery (compound collider, per-part SAT, per-fragment mesh fan) is cell-count-agnostic, so these
+        // cost only an enum value + a one-line factory + a DTO case each. Appended at the END so existing ordinals
+        // do not shift (though nothing hashes the ordinal — poseHash never reads Primitive). Chirality, like L↔J /
+        // S↔Z: N, P and Z(=`ZPentomino`) are chiral — their mirrors (N′, P′, S-pentomino) are DISTINCT future
+        // primitives, NOT added here (physics has no reflection). T, V, plus are achiral.
+        TPentomino,
+        NPentomino,
+        ZPentomino,
+        VPentomino,
+        PPentomino,
+        PlusPentomino,
     }
 
     /// <summary>
@@ -31,8 +43,9 @@ namespace Gameplay.Core
     /// polygons / primitives (RFC R4) so a single <c>PolygonCollider2D</c> maps cleanly and the
     /// point-in-shape test used by coverage stays a cheap convex check.
     /// Catalogue: box, triangle, halfdisc, plank, trapezoid, parallelogram, righttriangle, quarterdisc,
-    /// gable, circle — all convex; concave polyominoes (L/T/S/Z/J) are a future increment (multi-path collider +
-    /// ear-clipping mesh).
+    /// gable, circle — all convex, one <c>PolygonCollider2D</c> each. Concave polyominoes — tetrominoes (L/J/S/Z/T,
+    /// TASK-178) and pentominoes (T/N/Z/V/P/plus, TASK-314) — are implemented via an authored integer
+    /// <see cref="ConvexParts"/> decomposition (compound collider), NOT a runtime concave split.
     /// </summary>
     public sealed class Shape
     {
@@ -261,6 +274,12 @@ namespace Gameplay.Core
         // invariant by construction (TASK-072 §1). Grid layouts (col,row), y-up:
         //   L: (0,0)(0,1)(0,2)(1,0)   J: (1,0)(1,1)(1,2)(0,0)   S: (0,0)(1,0)(1,1)(2,1)
         //   Z: (1,0)(2,0)(0,1)(1,1)   T: (0,0)(1,0)(2,0)(1,1)
+        //
+        // TASK-314: concave PENTOMINOES (5 cells) — same integer construction, same generic path. Grids (col,row), y-up:
+        //   T5:   (2,0)(0,1)(1,1)(2,1)(2,2)      N5: (1,0)(2,0)(3,0)(0,1)(1,1)   Z5: (1,0)(2,0)(1,1)(0,2)(1,2)
+        //   V5:   (0,0)(1,0)(2,0)(2,1)(2,2)      P5: (0,0)(1,0)(0,1)(1,1)(0,2)   +5: (1,0)(0,1)(1,1)(2,1)(1,2)
+        //   Chirality (as L↔J / S↔Z): N, P, Z5 are chiral — mirrors N′/P′/S-pentomino are DISTINCT future primitives,
+        //   not derivable by rotation, NOT added here. T5, V5, +5 are achiral.
 
         /// <summary>L-tetromino (vertical bar of 3 + a foot at the bottom-right). Chiral — J is its mirror, a DISTINCT
         /// primitive (physics has no reflection). <paramref name="cell"/> = world size of one grid cell. Symmetry order 1.</summary>
@@ -295,6 +314,50 @@ namespace Gameplay.Core
             => Polyomino(ShapePrimitive.TTetromino, cell,
                 new[] { (0, 0), (1, 0), (2, 0), (1, 1) },
                 new[] { (0, 0), (3, 0), (3, 1), (2, 1), (2, 2), (1, 2), (1, 1), (0, 1) });
+
+        // ---------------------------------------------------------------- TASK-314: concave pentominoes (5 cells)
+
+        /// <summary>T-pentomino (a 3-cell column with a 3-cell foot spanning off its bottom). Achiral. Symmetry order 1
+        /// (authored in the level data).</summary>
+        public static Shape TPentomino(float cell)
+            => Polyomino(ShapePrimitive.TPentomino, cell,
+                new[] { (2, 0), (0, 1), (1, 1), (2, 1), (2, 2) },
+                new[] { (2, 0), (3, 0), (3, 3), (2, 3), (2, 2), (0, 2), (0, 1), (2, 1) });
+
+        /// <summary>N-pentomino (offset 3+2 zig). Chiral — its mirror N′ is a DISTINCT future primitive (physics has no
+        /// reflection). Symmetry order 1.</summary>
+        public static Shape NPentomino(float cell)
+            => Polyomino(ShapePrimitive.NPentomino, cell,
+                new[] { (1, 0), (2, 0), (3, 0), (0, 1), (1, 1) },
+                new[] { (1, 0), (4, 0), (4, 1), (2, 1), (2, 2), (0, 2), (0, 1), (1, 1) });
+
+        /// <summary>Z-pentomino (full central column + two cells at opposite corners — a zig-zag). Chiral — its mirror is
+        /// the S-pentomino, a DISTINCT future primitive. Symmetry order 2 (self-coincides at 180°); MUST be authored
+        /// with <c>symmetryOrder: 2</c> or the pose judge rejects a valid 180°-rotated landing (cf. s/z_tetromino).</summary>
+        public static Shape ZPentomino(float cell)
+            => Polyomino(ShapePrimitive.ZPentomino, cell,
+                new[] { (1, 0), (2, 0), (1, 1), (0, 2), (1, 2) },
+                new[] { (1, 0), (3, 0), (3, 1), (2, 1), (2, 3), (0, 3), (0, 2), (1, 2) });
+
+        /// <summary>V-pentomino (two 3-cell legs meeting in an L at the bottom-right corner). Achiral. Symmetry order 1.</summary>
+        public static Shape VPentomino(float cell)
+            => Polyomino(ShapePrimitive.VPentomino, cell,
+                new[] { (0, 0), (1, 0), (2, 0), (2, 1), (2, 2) },
+                new[] { (0, 0), (3, 0), (3, 3), (2, 3), (2, 1), (0, 1) });
+
+        /// <summary>P-pentomino (a 2×2 block with one extra cell atop its left column). Chiral — its mirror P′ is a
+        /// DISTINCT future primitive. Symmetry order 1.</summary>
+        public static Shape PPentomino(float cell)
+            => Polyomino(ShapePrimitive.PPentomino, cell,
+                new[] { (0, 0), (1, 0), (0, 1), (1, 1), (0, 2) },
+                new[] { (0, 0), (2, 0), (2, 2), (1, 2), (1, 3), (0, 3) });
+
+        /// <summary>Plus/X-pentomino (a centre cell with one cell on each of its four sides). Achiral, 4-fold rotational
+        /// symmetry — author <c>symmetryOrder: 4</c>. </summary>
+        public static Shape PlusPentomino(float cell)
+            => Polyomino(ShapePrimitive.PlusPentomino, cell,
+                new[] { (1, 0), (0, 1), (1, 1), (2, 1), (1, 2) },
+                new[] { (1, 0), (2, 0), (2, 1), (3, 1), (3, 2), (2, 2), (2, 3), (1, 3), (1, 2), (0, 2), (0, 1), (1, 1) });
 
         /// <summary>Build a concave polyomino from its integer <paramref name="cells"/> (one unit-square part each) and
         /// its integer <paramref name="contour"/> (CCW silhouette). Both are centred on the cells' bbox and scaled by
