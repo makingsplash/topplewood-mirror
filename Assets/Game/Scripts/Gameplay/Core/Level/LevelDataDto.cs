@@ -321,18 +321,26 @@ namespace Gameplay.Core
         }
     }
 
+    /// <summary>Static-geometry block. <c>outline</c> is a closed solid contour by default; <c>surface:true</c>
+    /// (TASK-325) reinterprets it as an OPEN polyline surface (chute/ramp) traced by an edge-chain collider, with an
+    /// optional <c>thickness</c> for the rendered ribbon. Both fields absent → the pre-TASK-325 filled solid, byte
+    /// for byte (the same additive-back-compat contract as <c>airZones</c>/<c>winningOrder</c>).</summary>
     public sealed class PolygonDto
     {
         [JsonProperty("outline")] public List<Vec2Dto> Outline { get; set; } = new();
         [JsonProperty("visible")] public bool Visible { get; set; }        // absent → false (TASK-031c)
         [JsonProperty("color")] public string Color { get; set; }          // absent → null → view default
+        [JsonProperty("surface")] public bool Surface { get; set; }        // absent → false → filled solid (TASK-325)
+        [JsonProperty("thickness")] public float Thickness { get; set; }   // surface only; absent/0 → StaticSurface.DefaultThickness
 
         public Polygon ToDomain()
         {
             var verts = new Vec2[Outline.Count];
             for (var i = 0; i < Outline.Count; i++)
                 verts[i] = Outline[i].ToDomain();
-            return new Polygon(verts);
+            // absent surface flag ⇒ null ⇒ filled solid (unchanged); thickness normalised inside StaticSurface.
+            var surface = Surface ? new StaticSurface(Thickness) : null;
+            return new Polygon(verts, surface: surface);
         }
     }
 

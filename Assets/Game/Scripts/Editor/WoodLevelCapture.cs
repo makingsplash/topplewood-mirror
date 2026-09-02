@@ -561,7 +561,7 @@ namespace Game.Editor
 
                 new GameObject($"Static_{i}")
                     .AddComponent<StaticGeometryView>()
-                    .Initialize(poly.Outline, visuals[i].Color);
+                    .Initialize(poly, visuals[i].Color); // TASK-325: Polygon overload — a surface captures as a ribbon
             }
         }
 

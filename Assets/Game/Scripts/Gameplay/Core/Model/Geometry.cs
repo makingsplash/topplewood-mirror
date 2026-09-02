@@ -240,6 +240,37 @@ namespace Gameplay.Core
             return inside;
         }
 
+        /// <summary>
+        /// TASK-325 (S2): the convex quads of a static SURFACE ribbon — one per polyline segment, offset ±half the
+        /// ribbon width along the segment normal. The SINGLE source of truth for "what the ribbon covers", shared by
+        /// the view (<c>StaticGeometryView</c> renders these quads) and the validator (<c>ValidateStaticStartOverlap</c>
+        /// measures piece embedding against them), so the drawn ribbon and the embed check can never disagree. Each
+        /// quad is convex and wound CCW, so a piece resting flush on the surface reads ~0 penetration and a real embed
+        /// reads its depth — exactly the semantics of the solid-block SAT, but honest on a CONCAVE curve (each segment
+        /// quad is convex; the concave polyline never reaches the convex kernel). Degenerate (&lt;2 points) ⇒ empty.
+        /// </summary>
+        public static Vec2[][] SurfaceRibbonQuads(Vec2[] polyline, float thickness)
+        {
+            if (polyline == null || polyline.Length < 2)
+                return Array.Empty<Vec2[]>();
+
+            var half = MathF.Max(thickness, 1e-4f) * 0.5f;
+            var quads = new Vec2[polyline.Length - 1][];
+            for (var i = 0; i < polyline.Length - 1; i++)
+            {
+                var a = polyline[i];
+                var b = polyline[i + 1];
+                var d = b - a;
+                var len = d.Length;
+                // Left-hand normal of a→b: (−dy, dx)/len. Degenerate segment (dup point) falls back to +Y so the quad
+                // never collapses to a line (the degeneracy itself is flagged by the validator).
+                var n = len > 1e-6f ? new Vec2(-d.Y, d.X) * (1f / len) : new Vec2(0f, 1f);
+                var off = n * half;
+                quads[i] = new[] { a - off, b - off, b + off, a + off }; // CCW
+            }
+            return quads;
+        }
+
         /// <summary>A shape's local vertices transformed to world by a pose (rotate then translate).</summary>
         public static Vec2[] WorldVertices(Shape shape, Vec2 position, float rotation)
             => WorldVertices(shape.Vertices, position, rotation);

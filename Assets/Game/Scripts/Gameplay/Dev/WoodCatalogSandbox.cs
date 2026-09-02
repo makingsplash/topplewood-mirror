@@ -272,7 +272,7 @@ namespace Gameplay.Dev
 
                     var go = new GameObject($"Static_{i}");
                     var view = go.AddComponent<StaticGeometryView>();
-                    view.Initialize(poly.Outline, visuals[i].Color);
+                    view.Initialize(poly, visuals[i].Color); // TASK-325: Polygon overload — a surface renders as a ribbon
                     _spawned.Add(go);
 
                     // Статику тоже надо уметь выбрать и настроить: пол, стена и колонна — такое же

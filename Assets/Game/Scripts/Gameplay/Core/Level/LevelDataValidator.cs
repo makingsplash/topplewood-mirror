@@ -18,6 +18,13 @@ namespace Gameplay.Core
         /// safe; widening it toward a visible overlap is exactly the "loosen the criterion for green" the canon forbids.</summary>
         public const float MinStaticPenetration = 0.001f;
 
+        /// <summary>TASK-325: how short a static-geometry edge may be before it is a DEGENERACY (a duplicated point or a
+        /// zero-length segment), not a real edge — 10× the arc-quantization floor (<see cref="Shape"/> quantizes to
+        /// 1e-4) so any authored segment always clears it. This is a DEGENERACY guard, NOT the anti-tunnel lower bound
+        /// on segment length for a thin surface (that is a balancer number proven by the sim gate, tracked as
+        /// tech-debt) — do not conflate the two or widen this toward a gameplay threshold.</summary>
+        public const float MinStaticSegment = 1e-4f;
+
         /// <summary>TASK-318: when the target mosaic is engaged, how far a box/plank dimension may stray from an exact
         /// integer number of grid cells and still be accepted as that many cells. It is a FRACTION OF A CELL (0.02 =
         /// 2% of the pitch). The corpus boxes are exact multiples (mosaic_bloom's 1.38/0.69 = 2.000, 2.07/0.69 = 3.000),
@@ -112,13 +119,18 @@ namespace Gameplay.Core
             //    (the hint would point at a preplaced/absent piece), exactly like an unknown physicsMode.
             ValidateWinningOrder(level, errors);
 
-            // 10. Start-inside-static (TASK-304): a piece must not BEGIN embedded in static geometry. It is invisible
+            // 10. Static geometry well-formedness (TASK-325 / TASK-307): every StaticGeometry block must be a simple
+            //     contour before its collider is built — enough vertices, no degenerate edges, no self-intersection,
+            //     and (the TASK-307 gate) no CONCAVE filled solid (which Box2D would split coordinate-dependently).
+            ValidateStaticGeometry(level, errors);
+
+            // 11. Start-inside-static (TASK-304): a piece must not BEGIN embedded in static geometry. It is invisible
             //     to every check above and to the sim gate (an Idle piece is not in physics, so penetration is only
             //     ever measured on RELEASED bodies) — the exact "green gate, visually broken" the owner hit on
             //     petal_gully (a disk half-sunk into the ramp). ERROR with the piece name and the depth as a number.
             ValidateStaticStartOverlap(level, errors);
 
-            // 11. Target mosaic (TASK-318): when the target is a grid-cell mosaic — a polyomino piece declares the cell
+            // 12. Target mosaic (TASK-318): when the target is a grid-cell mosaic — a polyomino piece declares the cell
             //     pitch and EVERY slot is a grid-family piece (polyomino/box/plank) — the union of the pieces IN THEIR
             //     TARGET POSES must be an honest tiling: no overlaps, no interior holes, cells summing to distinct. A
             //     physically un-buildable target (mosaic_bloom stacked pieces 4-deep with holes) passes every other
@@ -342,10 +354,13 @@ namespace Gameplay.Core
         /// concave polyomino, world-vertex polygon for every other primitive) — so this rule can never disagree with
         /// the sim on how a piece is shaped, and it covers ALL primitives (circle/box/plank/trapezoid/triangle/…) for
         /// free. A piece resting FLUSH on a surface is legal (penetration ≈ 0); only a real embed is an ERROR, named
-        /// with the piece and the depth. Static blocks are assumed convex (the documented contract of
-        /// <see cref="Geometry"/>; every authored floor/cradle/ramp is a convex block) but of EITHER winding, so each
-        /// outline is normalised to CCW before measuring — <see cref="Geometry"/>'s circle-in-polygon inside-test is
-        /// CCW-only and the ramp on petal_gully is authored clockwise.
+        /// with the piece and the depth. A FILLED SOLID block is convex (now ENFORCED, not merely assumed, by
+        /// <see cref="ValidateStaticGeometry"/>'s TASK-307 gate) but of EITHER winding, so each outline is normalised
+        /// to CCW before measuring — <see cref="Geometry"/>'s circle-in-polygon inside-test is CCW-only and the ramp on
+        /// petal_gully is authored clockwise. A SURFACE block (TASK-325, an open edge-chain chute/ramp) has no filled
+        /// interior, so it is measured against its rendered RIBBON — the same <see cref="Geometry.SurfaceRibbonQuads"/>
+        /// the view draws (a compound of convex segment quads) — so the embed check and the drawn wood can never
+        /// disagree on a CONCAVE surface, where a convex-hull measure would lie.
         /// </summary>
         private static void ValidateStaticStartOverlap(LevelData level, List<string> errors)
         {
@@ -355,10 +370,26 @@ namespace Gameplay.Core
             for (var g = 0; g < level.StaticGeometry.Length; g++)
             {
                 var block = level.StaticGeometry[g];
-                if (block?.Outline == null || block.Outline.Length < 3)
-                    continue; // no collider to embed in (degenerate blocks are the view's problem, not this rule's)
+                if (block?.Outline == null)
+                    continue;
 
-                var staticShape = ConvexShape.Polygon(EnsureCcw(block.Outline));
+                ConvexShape staticShape;
+                if (block.IsSurface)
+                {
+                    if (block.Outline.Length < 2)
+                        continue; // a chain needs ≥2 points (ValidateStaticGeometry already reports the degenerate case)
+                    var quads = Geometry.SurfaceRibbonQuads(block.Outline, block.Surface.Thickness);
+                    if (quads.Length == 0)
+                        continue;
+                    staticShape = ConvexShape.Compound(quads); // concave-honest: max embed over the convex ribbon quads
+                }
+                else
+                {
+                    if (block.Outline.Length < 3)
+                        continue; // no collider to embed in (degenerate blocks are the view's problem, not this rule's)
+                    staticShape = ConvexShape.Polygon(EnsureCcw(block.Outline));
+                }
+
                 for (var i = 0; i < level.Pieces.Count; i++)
                 {
                     var type = level.Pieces[i].Type;
@@ -376,6 +407,111 @@ namespace Gameplay.Core
                 }
             }
         }
+
+        /// <summary>
+        /// TASK-325 / TASK-307: structural validation of every <see cref="LevelData.StaticGeometry"/> block BEFORE its
+        /// collider is built. Static geometry is a ONE-PATH collider (a <c>PolygonCollider2D</c> for a filled solid, an
+        /// <c>EdgeCollider2D</c> chain for a surface), and the sim, the view and the start-embed check all assume it is
+        /// a simple contour, so a malformed block must fail LOUD at load, not mis-simulate silently. Per block:
+        ///  • VERTEX COUNT — a filled solid needs ≥3, an open surface ≥2 (below that there is no shape to build);
+        ///  • DEGENERATE EDGES — a segment shorter than <see cref="MinStaticSegment"/> is a duplicated/zero-length point;
+        ///  • SELF-INTERSECTION — a solid ring or a surface polyline that crosses itself is not a simple contour (the
+        ///    precondition of Box2D's convex decomposition, of a clean edge chain, and of the ribbon triangulation);
+        ///  • TASK-307 CONCAVITY GATE — a CONCAVE FILLED SOLID is rejected outright: Box2D splits its non-convex contour
+        ///    by a COORDINATE-DEPENDENT split (the arm64↔editor divergence mechanism #2 of TASK-072), so a concave
+        ///    static must be authored as an open SURFACE (edge chain — no decomposition, no split) or, later, as
+        ///    authored convexParts (S3). A SURFACE is EXEMPT — an edge chain never reaches the split — which is exactly
+        ///    why the S2 surface path closes TASK-307 by construction.
+        /// Every current corpus static is a small convex filled block, so this rejects nothing today; it gates the new
+        /// concave/curved static authoring the task enables.
+        /// </summary>
+        private static void ValidateStaticGeometry(LevelData level, List<string> errors)
+        {
+            if (level.StaticGeometry == null)
+                return;
+
+            for (var g = 0; g < level.StaticGeometry.Length; g++)
+            {
+                var block = level.StaticGeometry[g];
+                if (block?.Outline == null)
+                    continue;
+
+                var outline = block.Outline;
+                var isSurface = block.IsSurface;
+                var minVerts = isSurface ? 2 : 3;
+                if (outline.Length < minVerts)
+                {
+                    errors.Add($"StaticGeometry[{g}] has {outline.Length} vertices; a " +
+                               $"{(isSurface ? "surface polyline needs ≥2" : "filled block needs ≥3")}.");
+                    continue;
+                }
+
+                // Degenerate edges: a duplicated point / zero-length segment. A surface is an OPEN polyline
+                // (outline.Length−1 segments); a filled solid is a CLOSED ring (the last vertex wraps to the first).
+                var segCount = isSurface ? outline.Length - 1 : outline.Length;
+                for (var i = 0; i < segCount; i++)
+                {
+                    var next = (i + 1) % outline.Length;
+                    if ((outline[next] - outline[i]).Length < MinStaticSegment)
+                        errors.Add($"StaticGeometry[{g}] edge {i}→{next} is degenerate (length < " +
+                                   $"{MinStaticSegment:0.####}) — a duplicated or zero-length point.");
+                }
+
+                // Self-intersection: a simple contour is the precondition of every downstream consumer.
+                if (SelfIntersects(outline, closed: !isSurface))
+                    errors.Add($"StaticGeometry[{g}] self-intersects — a static " +
+                               $"{(isSurface ? "surface polyline" : "block ring")} must be simple (no crossing edges).");
+
+                // TASK-307: a concave FILLED solid would be split coordinate-dependently by Box2D (platform-dependent
+                // physics). Surfaces are exempt (edge chain — no split).
+                if (!isSurface && outline.Length >= 3 && !IsConvex(outline))
+                    errors.Add($"StaticGeometry[{g}] is a CONCAVE filled solid; Box2D would split it by a " +
+                               "coordinate-dependent split (platform-dependent physics, TASK-072/307). Author a concave " +
+                               "ramp/chute as a surface (surface:true — an EdgeCollider2D chain, no split) or as " +
+                               "authored convexParts.");
+            }
+        }
+
+        /// <summary>TASK-325: does a static contour cross itself? Tests every pair of NON-ADJACENT segments for a proper
+        /// crossing (interiors intersect). <paramref name="closed"/> ⇒ a filled ring (wraps the last→first edge and
+        /// treats first/last edges as adjacent); false ⇒ an open surface polyline. O(n²), fine for the handful of
+        /// vertices a static carries. Only PROPER crossings are flagged — collinear touches at shared endpoints are
+        /// legal (adjacent segments always share a vertex) and are excluded, so a straight polyline never false-trips.</summary>
+        private static bool SelfIntersects(Vec2[] pts, bool closed)
+        {
+            var n = pts.Length;
+            var segCount = closed ? n : n - 1;
+            for (var i = 0; i < segCount; i++)
+            {
+                var a1 = pts[i];
+                var a2 = pts[(i + 1) % n];
+                for (var j = i + 2; j < segCount; j++)
+                {
+                    if (closed && i == 0 && j == segCount - 1)
+                        continue; // first and last ring edges share vertex 0 — adjacent, not a crossing
+                    if (SegmentsProperlyIntersect(a1, a2, pts[j], pts[(j + 1) % n]))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Proper segment intersection: the two segments' interiors cross (each straddles the other's line).
+        /// Shared endpoints and collinear overlaps return false — <see cref="SelfIntersects"/> already excludes adjacent
+        /// segments, so only a genuine self-crossing survives.</summary>
+        private static bool SegmentsProperlyIntersect(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4)
+        {
+            var d1 = Orient(p3, p4, p1);
+            var d2 = Orient(p3, p4, p2);
+            var d3 = Orient(p1, p2, p3);
+            var d4 = Orient(p1, p2, p4);
+            return ((d1 > 0f && d2 < 0f) || (d1 < 0f && d2 > 0f))
+                && ((d3 > 0f && d4 < 0f) || (d3 < 0f && d4 > 0f));
+        }
+
+        /// <summary>2D cross product (a→b) × (a→c): &gt;0 c is left of a→b, &lt;0 right, 0 collinear.</summary>
+        private static float Orient(Vec2 a, Vec2 b, Vec2 c)
+            => (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
 
         /// <summary>Return <paramref name="outline"/> wound counter-clockwise (positive signed area): reverses a CW
         /// ring, leaves a CCW one untouched. Static outlines are authored either winding, but the circle-in-polygon
