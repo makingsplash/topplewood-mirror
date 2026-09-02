@@ -272,10 +272,36 @@ namespace Gameplay.Tutorial
                     _loggedFirstDraw = true;
                     var onScreen = screenOrigin.x >= 0f && screenOrigin.x <= Screen.width
                                    && screenOrigin.y >= 0f && screenOrigin.y <= Screen.height;
+
+                    // TASK-309 refine (owner-requested DECISIVE number): the px-bbox of the PROJECTED contour vertices
+                    // in overlay-local px. `_screenLocal` holds this frame's outline offsets relative to the origin,
+                    // so bboxW/bboxH is the contour's actual on-screen SIZE. This is what the coord log couldn't show:
+                    //   bboxW/bboxH ~0 px  → geometry collapsed to a point (24 verts stacked) → invisible speck; fix
+                    //                        lives in the projection (ShapeVisualOutline/WorldVertices scale).
+                    //   bboxW/bboxH ~50-80 px (a piece of world-radius ~0.4 at 1080 width) BUT nothing on screen →
+                    //                        geometry is fine; invisibility is in the RENDER — check the alpha/width
+                    //                        printed alongside (a=0 → blink tween started at 0; WidthPx tiny → hairline).
+                    var count = _screenLocal?.Length ?? 0;
+                    float minX = 0f, maxX = 0f, minY = 0f, maxY = 0f;
+                    if (count > 0)
+                    {
+                        minX = maxX = _screenLocal[0].x;
+                        minY = maxY = _screenLocal[0].y;
+                        for (var i = 1; i < count; i++)
+                        {
+                            var p = _screenLocal[i];
+                            if (p.x < minX) minX = p.x; else if (p.x > maxX) maxX = p.x;
+                            if (p.y < minY) minY = p.y; else if (p.y > maxY) maxY = p.y;
+                        }
+                    }
+                    var rect = _outline.rectTransform.rect;
                     Debug.unityLogger.Log(LogType.Log,
                         $"[{LogCategory.Tutorial}] Highlight first-draw screen=({screenOrigin.x:0},{screenOrigin.y:0}) " +
                         $"onScreen={onScreen} verts={(_worldOutline?.Length ?? 0)} cam='{_camera.name}' " +
-                        $"screenWH=({Screen.width}x{Screen.height}) sort={SortingOrder}");
+                        $"screenWH=({Screen.width}x{Screen.height}) sort={SortingOrder} " +
+                        $"bboxPx=({minX:0.#}..{maxX:0.#} x {minY:0.#}..{maxY:0.#}) sizePx=({maxX - minX:0.#}x{maxY - minY:0.#}) " +
+                        $"colorA={_outline.color.a:0.###} widthPx={_outline.WidthPx:0.#} " +
+                        $"contourRect=({rect.width:0.#}x{rect.height:0.#})");
                 }
             }
 
