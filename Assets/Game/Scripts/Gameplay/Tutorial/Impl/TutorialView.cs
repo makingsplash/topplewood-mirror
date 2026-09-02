@@ -142,6 +142,11 @@ namespace Gameplay.Tutorial
                 // vertices are the projected silhouette in px RELATIVE to the target, so localScale pulses the
                 // contour around the piece rather than around the canvas centre.
                 var outlineRt = NewChild("Contour", _anchor, Vector2.zero);
+                // The CanvasRenderer is added by OutlineContour's own [RequireComponent] (TASK-309): without it the
+                // MaskableGraphic has nothing to render through and the contour draws zero pixels. Add it explicitly
+                // FIRST too so correctness never rides solely on RequireComponent — the mechanism that failed here
+                // because it is not inherited from Graphic. AddComponent is idempotent for a required component.
+                outlineRt.gameObject.AddComponent<CanvasRenderer>();
                 _outline = outlineRt.gameObject.AddComponent<OutlineContour>();
                 _outline.color = OutlineColor;
                 _outline.WidthPx = OutlineWidthPx;
@@ -343,6 +348,12 @@ namespace Gameplay.Tutorial
                         }
                     }
                     var rect = _outline.rectTransform.rect;
+                    // TASK-309: read cull through a null-checked GetComponent, NEVER _outline.canvasRenderer.cull.
+                    // The latter threw MissingComponentException when the CanvasRenderer was absent (the very bug this
+                    // fix closes) and that exception aborted Reposition BEFORE this log printed — so the diagnostic
+                    // silenced its own decisive line. A guarded read degrades to "no-CanvasRenderer" instead.
+                    var cr = _outline.GetComponent<CanvasRenderer>();
+                    var cullStr = cr != null ? cr.cull.ToString() : "no-CanvasRenderer";
                     // TASK-309 refine (owner-requested activeInHierarchy of canvas/contour): the render frame's
                     // live-state snapshot. Geometry (sizePx), alpha (colorA) and width proved healthy last session,
                     // yet the frame diff showed ZERO pixels — the remaining way to draw nothing with correct numbers
@@ -358,7 +369,7 @@ namespace Gameplay.Tutorial
                         $"contourRect=({rect.width:0.#}x{rect.height:0.#}) " +
                         $"canvasActive={gameObject.activeInHierarchy} canvasEnabled={(_canvas != null && _canvas.enabled)} " +
                         $"contourActive={_outline.gameObject.activeInHierarchy} contourEnabled={_outline.enabled} " +
-                        $"cull={_outline.canvasRenderer.cull}");
+                        $"cull={cullStr}");
                 }
             }
 
@@ -386,7 +397,16 @@ namespace Gameplay.Tutorial
 
         /// <summary>A closed constant-width stroke tracing a set of screen-local points. UI-mesh only (vertex-color
         /// tinted default shader, no material) — the piece material <c>BlockMaterial</c> is not involved. Corners
-        /// use per-edge quads that may overlap slightly; acceptable for a highlight (TASK-083 §3.2).</summary>
+        /// use per-edge quads that may overlap slightly; acceptable for a highlight (TASK-083 §3.2).
+        ///
+        /// <c>[RequireComponent(typeof(CanvasRenderer))]</c> is MANDATORY here even though the base <c>Graphic</c>
+        /// already declares it (TASK-309 root cause): <c>RequireComponent</c> is resolved on the CONCRETE type given
+        /// to <c>AddComponent&lt;T&gt;()</c> and is NOT inherited, so <c>Graphic</c>'s copy never fires for a subclass.
+        /// Without it, <c>AddComponent&lt;OutlineContour&gt;()</c> left the GameObject with no <c>CanvasRenderer</c>,
+        /// so the mesh had nothing to draw through — every projection number was correct yet zero pixels reached the
+        /// frame. This is why every built-in UI graphic (<c>Image</c>, <c>Text</c>, <c>RawImage</c>) RE-declares the
+        /// same attribute on its own class rather than relying on <c>Graphic</c>'s.</summary>
+        [RequireComponent(typeof(CanvasRenderer))]
         private sealed class OutlineContour : MaskableGraphic
         {
             private Vector2[] _points;
