@@ -5209,55 +5209,6 @@
       ]
     },
     {
-      "levelId": "mosaic_bloom",
-      "seed": 514,
-      "difficultyTier": 8,
-      "physicsMode": "assembly",
-      "matchTolerance": { "posTol": 0.30, "angTol": 0.43633 },
-      "bounds": { "min": { "x": -7, "y": -2.5 }, "max": { "x": 7, "y": 12 } },
-      "gravity": { "x": 0, "y": -9.81 },
-      "pieceTypes": [
-        { "kind": "m_yellow",  "color": "#F4C20D", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "t_pentomino", "cell": 0.69 } },
-        { "kind": "m_orange",  "color": "#F2801D", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "n_pentomino", "cell": 0.69 } },
-        { "kind": "m_green",   "color": "#4CAF50", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "z_pentomino", "cell": 0.69 } },
-        { "kind": "m_lav",     "color": "#9B8FE0", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "v_pentomino", "cell": 0.69 } },
-        { "kind": "m_magenta", "color": "#D14BB0", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "p_pentomino", "cell": 0.69 } },
-        { "kind": "m_purple",  "color": "#7E57C2", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "j_tetromino", "cell": 0.69 } },
-        { "kind": "m_dgreen",  "color": "#2E7D32", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "l_tetromino", "cell": 0.69 } },
-        { "kind": "m_pink",    "color": "#E84B8A", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.38, "height": 1.38 } },
-        { "kind": "m_cyan",    "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.07, "height": 0.69 } }
-      ],
-      "target": {
-        "outline": [ { "x": -0.7, "y": -2.1 }, { "x": 0.7, "y": -2.1 }, { "x": 0.7, "y": -0.7 }, { "x": 2.1, "y": -0.7 }, { "x": 2.1, "y": 0.7 }, { "x": 0.7, "y": 0.7 }, { "x": 0.7, "y": 2.1 }, { "x": -0.7, "y": 2.1 }, { "x": -0.7, "y": 0.7 }, { "x": -2.1, "y": 0.7 }, { "x": -2.1, "y": -0.7 }, { "x": -0.7, "y": -0.7 } ],
-        "slots": [
-          { "kind": "m_lav",     "position": { "x": -0.7, "y": 0.7 },  "rotation": 0 },
-          { "kind": "m_pink",    "position": { "x": 0.7,  "y": 0.7 },  "rotation": 0 },
-          { "kind": "m_cyan",    "position": { "x": 0.0,  "y": 0.0 },  "rotation": 0 },
-          { "kind": "m_orange",  "position": { "x": -1.4, "y": 0.0 },  "rotation": 0 },
-          { "kind": "m_magenta", "position": { "x": 1.4,  "y": 0.0 },  "rotation": 0 },
-          { "kind": "m_yellow",  "position": { "x": 0.7,  "y": -0.7 }, "rotation": 0 },
-          { "kind": "m_purple",  "position": { "x": -0.7, "y": -0.7 }, "rotation": 0 },
-          { "kind": "m_green",   "position": { "x": 0.0,  "y": -1.4 }, "rotation": 0 },
-          { "kind": "m_dgreen",  "position": { "x": 0.0,  "y": 0.7 },  "rotation": 0 }
-        ]
-      },
-      "pieces": [
-        { "kind": "m_yellow",  "startPosition": { "x": 2.06,  "y": 3.47 }, "startRotation": 0 },
-        { "kind": "m_orange",  "startPosition": { "x": -0.94, "y": 3.98 }, "startRotation": 0 },
-        { "kind": "m_green",   "startPosition": { "x": -0.12, "y": 1.59 }, "startRotation": 0 },
-        { "kind": "m_lav",     "startPosition": { "x": -0.02, "y": 8.92 }, "startRotation": 0 },
-        { "kind": "m_magenta", "startPosition": { "x": -2.53, "y": 3.39 }, "startRotation": 0 },
-        { "kind": "m_purple",  "startPosition": { "x": -0.12, "y": 2.84 }, "startRotation": 1.5708 },
-        { "kind": "m_dgreen",  "startPosition": { "x": 1.45,  "y": 1.18 }, "startRotation": -1.5708 },
-        { "kind": "m_pink",    "startPosition": { "x": -0.24, "y": 6.63 }, "startRotation": 0 },
-        { "kind": "m_cyan",    "startPosition": { "x": 0.08,  "y": 5.41 }, "startRotation": 0 }
-      ],
-      "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -6.0, "y": -2.0 }, { "x": -1.08, "y": -2.0 }, { "x": -1.08, "y": 0.0 }, { "x": -6.0, "y": 0.0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.08, "y": -2.0 }, { "x": 6.0, "y": -2.0 }, { "x": 6.0, "y": 0.0 }, { "x": 1.08, "y": 0.0 } ] }
-      ]
-    },
-    {
       "levelId": "fan_quilt",
       "seed": 510,
       "difficultyTier": 8,
