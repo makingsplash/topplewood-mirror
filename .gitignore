@@ -148,4 +148,7 @@ Assets/Plugins/Demigiant/DOTween/Editor/DOTweenUpgradeManager.XML
 # Секреты дашборда (CLAUDE_CODE_OAUTH_TOKEN и пр.) — только локально, в git НИКОГДА.
 .env.local
 .env.*.local
+# Любой производный файл секрета (.bak/.old/копия редактора) — тоже секрет:
+# правила выше НЕ матчат .env.local.bak, и он тихо уезжал в коммит.
+.env.local*
 .studio/.orchestrator-hold

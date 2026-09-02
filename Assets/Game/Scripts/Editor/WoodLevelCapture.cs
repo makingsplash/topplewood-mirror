@@ -33,6 +33,13 @@ namespace Game.Editor
     /// Батчем (только при закрытом Unity, без -nographics — иначе рендерить нечем):
     /// Unity.exe -batchmode -projectPath . -executeMethod Game.Editor.WoodLevelCapture.CaptureBeforeAfter -quit
     /// </para>
+    ///
+    /// <para>
+    /// TASK-319 — «глаза роли из слота»: <see cref="CaptureForRole"/> снимает запрошенные уровни в ДВА PNG
+    /// каждый (стартовый кадр + детали в ЦЕЛЕВЫХ позах) в <c>Artifacts/role-preview/</c>. Кодовая роль в
+    /// worktree-слоте моста не имеет и авторит уровень вслепую; этот энтрипоинт (обёрнут
+    /// <c>.studio/tools/render-level.sh</c>) переносит проверку сходства с карточкой референса ВНУТРЬ её цикла.
+    /// </para>
     /// </summary>
     public static class WoodLevelCapture
     {
@@ -208,6 +215,81 @@ namespace Game.Editor
         }
 
         /// <summary>
+        /// ГЛАЗА РОЛИ ИЗ СЛОТА (TASK-319): на каждый запрошенный уровень пишет ДВА PNG в
+        /// <c>Artifacts/role-preview/</c> — <c>&lt;id&gt;-start.png</c> (стартовый кадр, переиспользует
+        /// <see cref="Capture(LevelData,string)"/>) и <c>&lt;id&gt;-target.png</c> (детали в ЦЕЛЕВЫХ позах —
+        /// собранная фигура, та картинка, которую владелец сверяет с карточкой референса). Вызывается
+        /// обёрткой <c>.studio/tools/render-level.sh</c> батч-Unity в дереве слота (без <c>-quit</c>: метод
+        /// сам зовёт <see cref="EditorApplication.Exit"/>, как все методы этого класса).
+        ///
+        /// <para>
+        /// Портируемость: levelId читается ТОЛЬКО из env <c>WOOD_CAPTURE_ONLY</c> (project data), проектного
+        /// дефолта НЕТ — пусто ⇒ <c>Exit(2)</c>. Именно поэтому env читается напрямую, а НЕ через
+        /// <see cref="CaptureIds"/>: та на пустом env подставляет <see cref="Wanted"/> (ярлык воздуха этой
+        /// игры) — здесь это была бы молчаливая подстановка проектных уровней, запрещённая директивой
+        /// переносимости (CLAUDE.md).
+        /// </para>
+        /// </summary>
+        public static void CaptureForRole()
+        {
+            WoodArtImport.Apply();
+            WindFxImport.Apply();
+            WoodArt.ResetCache();
+
+            if (Shader.Find("Game/Wood Block") == null)
+            {
+                Debug.LogError("[render] шейдер Game/Wood Block не найден — кадры не сняты");
+                EditorApplication.Exit(2);
+                return;
+            }
+
+            // levelId — ТОЛЬКО из env, без проектного дефолта (в отличие от CaptureIds, что падает на Wanted).
+            var raw = System.Environment.GetEnvironmentVariable("WOOD_CAPTURE_ONLY");
+            var ids = (raw ?? string.Empty).Split(',')
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .ToArray();
+            if (ids.Length == 0)
+            {
+                Debug.LogError("[render] WOOD_CAPTURE_ONLY не задан — нечего рендерить " +
+                               "(levelId — project data, дефолта у движка рендера нет)");
+                EditorApplication.Exit(2);
+                return;
+            }
+
+            // Числа стиля — в материал и меши ДО сборки сцены (как в Run): PieceMeshBuilder читает радиус
+            // скругления в момент постройки, а материал деталей кешируется статически.
+            WoodTuning.Current.Apply();
+
+            var levels = LoadLevels();
+            if (levels == null)
+            {
+                // LoadLevels уже залогировала причину (нет файла / кампания пуста) — класс «конфиг отвергнут».
+                EditorApplication.Exit(2);
+                return;
+            }
+
+            var captured = 0;
+            foreach (var id in ids)
+            {
+                var level = levels.Find(l => l.LevelId == id);
+                if (level == null)
+                {
+                    Debug.LogWarning($"[render] уровень '{id}' не найден в кампании — пропущен");
+                    continue;
+                }
+
+                Capture(level, $"Artifacts/role-preview/{id}-start.png", targetPose: false);
+                Capture(level, $"Artifacts/role-preview/{id}-target.png", targetPose: true);
+                captured++;
+            }
+
+            Debug.Log($"[render] снято {captured} уровень(ей) ({captured * 2} файлов) в Artifacts/role-preview");
+            if (Application.isBatchMode)
+                EditorApplication.Exit(captured == 0 ? 1 : 0);
+        }
+
+        /// <summary>
         /// Кадр песочницы в СВОЙ файл. <c>WoodStyleCapture.CaptureSandbox</c> всегда пишет в один и
         /// тот же путь, а развёртке нужен кадр на каждый масштаб.
         /// </summary>
@@ -291,7 +373,16 @@ namespace Game.Editor
 
         // ------------------------------------------------------------------- сцена
 
-        private static void Capture(LevelData level, string path)
+        private static void Capture(LevelData level, string path) => Capture(level, path, targetPose: false);
+
+        /// <summary>
+        /// Один кадр уровня в PNG. <paramref name="targetPose"/> — единственное отличие двух кадров роли
+        /// (TASK-319): <c>false</c> ставит детали на СТАРТОВЫЕ позиции (<see cref="BuildPieces"/>, кадр «уровень
+        /// до первого тапа»), <c>true</c> — в ЦЕЛЕВЫЕ позы (<see cref="BuildTargetPosePieces"/>, собранная фигура).
+        /// Всё остальное — камера, бэкдроп, статика, силуэт, карточка-превью, листва, воздух, партиклы — одинаково,
+        /// чтобы два PNG были прямо сопоставимы глазами.
+        /// </summary>
+        private static void Capture(LevelData level, string path, bool targetPose)
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -303,7 +394,10 @@ namespace Game.Editor
             var cam = BuildCamera(level, out var shortest);
             Backdrop(cam);
             BuildStatics(level);
-            BuildPieces(level);
+            if (targetPose)
+                BuildTargetPosePieces(level);
+            else
+                BuildPieces(level);
             BuildSilhouette(level);
             BuildPreviewCard(level, cam);
 
@@ -496,6 +590,44 @@ namespace Game.Editor
                 // расхождение, которого в игре нет (там вид передаёт PieceViewFactory).
                 view.Initialize(type.Shape, type.Color, type.Kind);
                 view.Sync(placement.StartPosition, placement.StartRotation);
+            }
+        }
+
+        /// <summary>
+        /// Детали в ЦЕЛЕВЫХ позах (TASK-319): та же <see cref="PieceView"/>, что рисует поле, но поставленная не
+        /// на стартовую позицию, а в позу слота целевой фигуры — так получается собранная фигура во весь кадр.
+        /// Форму слота (он несёт только имя вида) восстанавливаем по деталям уровня — тот же приём, что в
+        /// <see cref="BuildPreviewCard"/> и <c>TargetPreviewView</c>. Зеркалит slot-loop карточки-превью, но в
+        /// МИРОВЫХ координатах (не под карточку на стене).
+        /// </summary>
+        private static void BuildTargetPosePieces(LevelData level)
+        {
+            if (level.Target?.Slots == null || level.Pieces == null)
+                return;
+
+            // Вид → тип (форма/цвет), как в BuildPreviewCard (531–537): слот несёт только имя вида.
+            var kinds = new Dictionary<string, PieceType>();
+            foreach (var placement in level.Pieces)
+            {
+                var type = placement.Type;
+                if (type?.Shape != null && !kinds.ContainsKey(type.Kind))
+                    kinds[type.Kind] = type;
+            }
+
+            var root = new GameObject("TargetPosePieces").transform;
+            foreach (var slot in level.Target.Slots)
+            {
+                if (!kinds.TryGetValue(slot.Kind, out var type) || type?.Shape == null)
+                    continue;
+
+                var go = new GameObject($"PieceView_{slot.Kind}");
+                go.transform.SetParent(root, false);
+                var view = go.AddComponent<PieceView>();
+                // ВИД обязателен: палитра уровня раздаёт оттенки по видам (как в BuildPieces 494–497).
+                view.Initialize(type.Shape, type.Color, slot.Kind);
+                // ЦЕЛЕВАЯ поза вместо старта. slot.Rotation — РАДИАНЫ (как в TargetPreviewView: slot.Rotation·Rad2Deg);
+                // PieceView.Sync принимает ту же единицу, что StartRotation в BuildPieces (внутри умножает на Rad2Deg).
+                view.Sync(slot.Position, slot.Rotation);
             }
         }
 

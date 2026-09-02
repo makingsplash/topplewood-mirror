@@ -98,6 +98,7 @@ namespace Gameplay.Tutorial
             private Vector2[] _screenLocal;  // scratch: outline vertices in overlay-local px, rebuilt each frame
             private bool _active;
             private bool _loggedFirstDraw;   // TASK-309: one-shot diagnostic — logs the first on-screen projection per Show
+            private bool _loggedReposEntry;  // TASK-309: one-shot diagnostic — logs the first Reposition BEFORE its early returns
 
             public static Overlay Create()
             {
@@ -141,6 +142,11 @@ namespace Gameplay.Tutorial
                 // vertices are the projected silhouette in px RELATIVE to the target, so localScale pulses the
                 // contour around the piece rather than around the canvas centre.
                 var outlineRt = NewChild("Contour", _anchor, Vector2.zero);
+                // The CanvasRenderer is added by OutlineContour's own [RequireComponent] (TASK-309): without it the
+                // MaskableGraphic has nothing to render through and the contour draws zero pixels. Add it explicitly
+                // FIRST too so correctness never rides solely on RequireComponent — the mechanism that failed here
+                // because it is not inherited from Graphic. AddComponent is idempotent for a required component.
+                outlineRt.gameObject.AddComponent<CanvasRenderer>();
                 _outline = outlineRt.gameObject.AddComponent<OutlineContour>();
                 _outline.color = OutlineColor;
                 _outline.WidthPx = OutlineWidthPx;
@@ -208,6 +214,7 @@ namespace Gameplay.Tutorial
                 _screenLocal = new Vector2[_worldOutline.Length];
                 _active = true;
                 _loggedFirstDraw = false; // TASK-309: log where THIS highlight lands on screen
+                _loggedReposEntry = false; // TASK-309: log which early return (if any) stalls THIS highlight's projection
                 gameObject.SetActive(true);
                 ApplyStyle(style); // finger visibility + contour pulse/blink for this consumer
                 Reposition(); // place correctly on the first frame too, before LateUpdate runs
@@ -252,9 +259,37 @@ namespace Gameplay.Tutorial
                 if (_camera == null)
                     _camera = UnityEngine.Camera.main; // same seam CameraFramingPresenter uses; re-fetch until one exists
                 if (_camera == null)
+                {
+                    // TASK-309 refine (owner-requested pre-return diagnostic): first-draw never printed this session while
+                    // it DID in the owner's — the two early returns below are the only spots the projection can stall
+                    // before first-draw. If it stalls HERE, Camera.main is null despite Highlight ENTER seeing one.
+                    if (!_loggedReposEntry)
+                    {
+                        _loggedReposEntry = true;
+                        Debug.unityLogger.Log(LogType.Log,
+                            $"[{LogCategory.Tutorial}] Reposition BLOCKED cam=null (Camera.main==null) " +
+                            $"screenWH=({Screen.width}x{Screen.height})");
+                    }
                     return;
+                }
 
                 var screenOrigin = _camera.WorldToScreenPoint(_worldOrigin);
+
+                // TASK-309 refine (owner-requested pre-return diagnostic): names the camera the projection ACTUALLY used
+                // (name + instanceID) and the full screenOrigin INCLUDING z. If camId is not the Main Camera but the
+                // overlay's UiCamera(Clone) (it sits on Main Camera in the stack and, if tagged MainCamera, Camera.main
+                // can return IT), its WorldToScreenPoint yields a different z — and z<0 stalls at the return just below,
+                // which is why first-draw never fires. Printed once per Show, BEFORE the z-cull, so it fires even when
+                // that return does.
+                if (!_loggedReposEntry)
+                {
+                    _loggedReposEntry = true;
+                    Debug.unityLogger.Log(LogType.Log,
+                        $"[{LogCategory.Tutorial}] Reposition entry cam='{_camera.name}' camId={_camera.GetInstanceID()} " +
+                        $"screenOrigin=({screenOrigin.x:0.#},{screenOrigin.y:0.#},{screenOrigin.z:0.###}) " +
+                        $"willCull={(screenOrigin.z < 0f)} screenWH=({Screen.width}x{Screen.height})");
+                }
+
                 if (screenOrigin.z < 0f)
                     return; // behind the camera — leave the highlight where it was rather than flip it
 
@@ -313,6 +348,12 @@ namespace Gameplay.Tutorial
                         }
                     }
                     var rect = _outline.rectTransform.rect;
+                    // TASK-309: read cull through a null-checked GetComponent, NEVER _outline.canvasRenderer.cull.
+                    // The latter threw MissingComponentException when the CanvasRenderer was absent (the very bug this
+                    // fix closes) and that exception aborted Reposition BEFORE this log printed — so the diagnostic
+                    // silenced its own decisive line. A guarded read degrades to "no-CanvasRenderer" instead.
+                    var cr = _outline.GetComponent<CanvasRenderer>();
+                    var cullStr = cr != null ? cr.cull.ToString() : "no-CanvasRenderer";
                     // TASK-309 refine (owner-requested activeInHierarchy of canvas/contour): the render frame's
                     // live-state snapshot. Geometry (sizePx), alpha (colorA) and width proved healthy last session,
                     // yet the frame diff showed ZERO pixels — the remaining way to draw nothing with correct numbers
@@ -328,7 +369,7 @@ namespace Gameplay.Tutorial
                         $"contourRect=({rect.width:0.#}x{rect.height:0.#}) " +
                         $"canvasActive={gameObject.activeInHierarchy} canvasEnabled={(_canvas != null && _canvas.enabled)} " +
                         $"contourActive={_outline.gameObject.activeInHierarchy} contourEnabled={_outline.enabled} " +
-                        $"cull={_outline.canvasRenderer.cull}");
+                        $"cull={cullStr}");
                 }
             }
 
@@ -356,7 +397,16 @@ namespace Gameplay.Tutorial
 
         /// <summary>A closed constant-width stroke tracing a set of screen-local points. UI-mesh only (vertex-color
         /// tinted default shader, no material) — the piece material <c>BlockMaterial</c> is not involved. Corners
-        /// use per-edge quads that may overlap slightly; acceptable for a highlight (TASK-083 §3.2).</summary>
+        /// use per-edge quads that may overlap slightly; acceptable for a highlight (TASK-083 §3.2).
+        ///
+        /// <c>[RequireComponent(typeof(CanvasRenderer))]</c> is MANDATORY here even though the base <c>Graphic</c>
+        /// already declares it (TASK-309 root cause): <c>RequireComponent</c> is resolved on the CONCRETE type given
+        /// to <c>AddComponent&lt;T&gt;()</c> and is NOT inherited, so <c>Graphic</c>'s copy never fires for a subclass.
+        /// Without it, <c>AddComponent&lt;OutlineContour&gt;()</c> left the GameObject with no <c>CanvasRenderer</c>,
+        /// so the mesh had nothing to draw through — every projection number was correct yet zero pixels reached the
+        /// frame. This is why every built-in UI graphic (<c>Image</c>, <c>Text</c>, <c>RawImage</c>) RE-declares the
+        /// same attribute on its own class rather than relying on <c>Graphic</c>'s.</summary>
+        [RequireComponent(typeof(CanvasRenderer))]
         private sealed class OutlineContour : MaskableGraphic
         {
             private Vector2[] _points;
