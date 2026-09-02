@@ -18,6 +18,35 @@ namespace Gameplay.Core
         /// safe; widening it toward a visible overlap is exactly the "loosen the criterion for green" the canon forbids.</summary>
         public const float MinStaticPenetration = 0.001f;
 
+        /// <summary>TASK-318: when the target mosaic is engaged, how far a box/plank dimension may stray from an exact
+        /// integer number of grid cells and still be accepted as that many cells. It is a FRACTION OF A CELL (0.02 =
+        /// 2% of the pitch). The corpus boxes are exact multiples (mosaic_bloom's 1.38/0.69 = 2.000, 2.07/0.69 = 3.000),
+        /// so this only clears authoring/float noise; a piece whose size is a genuinely non-integer number of cells
+        /// cannot tile the grid and is rejected (it does not fit). Tightening toward 0 is always safe; widening it
+        /// toward 0.5 would begin ALIASING a piece onto the wrong cell count — the "loosen the criterion for green" the
+        /// canon forbids.</summary>
+        public const float GridMultipleEpsilon = 0.02f;
+
+        /// <summary>TASK-318: how far a target slot's rotation may stray from a multiple of 90° and still be treated as
+        /// axis-aligned (radians). A grid mosaic tiles only at right angles; the corpus slots are authored at exactly
+        /// 0/±π-2 so this only absorbs the float noise of an authored quarter-turn. A slot rotated off the right-angle
+        /// lattice cannot land on the cell grid, so it is an authoring error, not something to widen this past a hair.</summary>
+        public const float GridRotationEpsilon = 0.01f;
+
+        /// <summary>TASK-318: how far a mosaic cell may sit from its nearest grid node (as a FRACTION OF A CELL) before
+        /// it is reported off-grid. The grid ORIGIN is inferred from the data (median cell phase, robust to a stray
+        /// violator), not pinned to world-zero, so this measures real misalignment, not a chosen offset. 0.25 = a
+        /// quarter cell: it absorbs the author's layout drift (mosaic_bloom lays slots on a 0.70 step while the piece
+        /// cell is 0.69 → ≤0.08 cell of drift across the figure) while staying well below 0.5, where a cell would alias
+        /// onto its NEIGHBOUR and a real off-grid piece would read as on-grid. Widening toward 0.5 is exactly the
+        /// forbidden "loosen the criterion"; tightening is safe.</summary>
+        public const float GridSnapEpsilon = 0.25f;
+
+        /// <summary>TASK-318: cap on how many offending cells of each kind (overlaps / holes) a single load error
+        /// enumerates — enough to draw the author the map (the owner's improvised dump listed ~12) without an unbounded
+        /// message. The COUNT is always reported; only the per-cell enumeration is capped.</summary>
+        private const int MaxReportedMosaicCells = 12;
+
         private readonly TapZoneConfig _tapZone;
 
         /// <summary>TASK-085: takes the tap-zone config so the tap-spacing check can predict the per-level zone. The
@@ -88,6 +117,14 @@ namespace Gameplay.Core
             //     ever measured on RELEASED bodies) — the exact "green gate, visually broken" the owner hit on
             //     petal_gully (a disk half-sunk into the ramp). ERROR with the piece name and the depth as a number.
             ValidateStaticStartOverlap(level, errors);
+
+            // 11. Target mosaic (TASK-318): when the target is a grid-cell mosaic — a polyomino piece declares the cell
+            //     pitch and EVERY slot is a grid-family piece (polyomino/box/plank) — the union of the pieces IN THEIR
+            //     TARGET POSES must be an honest tiling: no overlaps, no interior holes, cells summing to distinct. A
+            //     physically un-buildable target (mosaic_bloom stacked pieces 4-deep with holes) passes every other
+            //     gate AND the sim (which measures only START poses, never target.slots) — the owner caught it by eye,
+            //     last in the chain, five runs running. ERROR with the offending cells, exactly like a duplicate levelId.
+            ValidateTargetMosaic(level, errors);
 
             return new ValidationResult(errors, warnings);
         }
@@ -523,6 +560,269 @@ namespace Gameplay.Core
                 if (have < kv.Value)
                     errors.Add($"Kind '{kv.Key}': {kv.Value} slot(s) but only {have} ESSENTIAL piece(s) — unwinnable.");
             }
+        }
+
+        /// <summary>
+        /// TASK-318: the target-mosaic tiling gate. It engages ONLY on a level that is unambiguously a grid-cell
+        /// mosaic and, when it does, requires the union of the target pieces in their AUTHORED POSES to be an honest
+        /// tiling — no overlaps, no interior holes, cells summing to distinct.
+        ///
+        /// Applicability (all three ⇒ engage; otherwise SKIP silently — the rule is meaningless off a grid): the level
+        /// is <see cref="PhysicsMode.Assembly"/>; at least one target slot is a POLYOMINO (a tetromino/pentomino, i.e.
+        /// <see cref="Shape.ConvexParts"/> ≠ null) — which both declares "this is a cell grid" and fixes the cell
+        /// pitch; and EVERY target slot is a grid-family piece (polyomino / box / plank). A single circle/triangle/…
+        /// slot (chute_cross's ball) or the absence of any polyomino (a box-only figure or gapped pyramid like
+        /// toy_pyramid/fan_quilt/robot/mailbox) means the level is not a grid mosaic and is skipped. This is the SAME
+        /// applicability the owner's shipped reference tool (.studio/tools/level-tiling.py) uses — it only engages a
+        /// level whose target carries a polyomino to fix the cell — so the two agree on all 27 corpus levels: only
+        /// mosaic_bloom engages (and fails), every other level skips. See §3 of the RFC and the handoff note on the
+        /// toy_pyramid deviation (the RFC's dims-only stage-B would have false-failed toy_pyramid's half-cell rows).
+        ///
+        /// The grid ORIGIN is inferred from the data (median cell phase, robust to a stray violator), never pinned to
+        /// world-zero, so a piece with even width centred on a cell boundary is not mistaken for off-grid. Overlaps,
+        /// interior holes (flood-fill from the padded frame, so external concavity — a cross/letter/flower — is legal),
+        /// off-grid cells, and a piece-count-vs-distinct mismatch each become a load ERROR naming the offending cells.
+        /// </summary>
+        private static void ValidateTargetMosaic(LevelData level, List<string> errors)
+        {
+            if (level.PhysicsMode != PhysicsMode.Assembly)
+                return;
+            var slots = level.Target?.Slots;
+            if (slots == null || slots.Count == 0)
+                return;
+
+            // kind → shape (first piece of each kind; missing coverage is ValidateKindCoverage's error, not ours).
+            var kindShape = new Dictionary<string, Shape>();
+            if (level.Pieces != null)
+                foreach (var placement in level.Pieces)
+                {
+                    var t = placement.Type;
+                    if (t?.Kind == null || t.Shape == null || kindShape.ContainsKey(t.Kind))
+                        continue;
+                    kindShape[t.Kind] = t.Shape;
+                }
+
+            // Applicability: a polyomino must fix the pitch AND every slot must be grid-family, else this is not a
+            // grid mosaic and the rule does not apply.
+            var anyPolyomino = false;
+            var pitch = 0f;
+            foreach (var slot in slots)
+            {
+                if (!kindShape.TryGetValue(slot.Kind, out var shape))
+                    return; // a slot with no piece — the level is already broken (coverage); do not mosaic-check it.
+                if (shape.ConvexParts != null)
+                {
+                    if (!anyPolyomino)
+                    {
+                        pitch = PolyominoCellSide(shape);
+                        anyPolyomino = true;
+                    }
+                }
+                else if (shape.Primitive != ShapePrimitive.Box && shape.Primitive != ShapePrimitive.Plank)
+                {
+                    return; // a non-grid primitive (circle/triangle/…) in the target — not a grid mosaic (chute_cross).
+                }
+            }
+            if (!anyPolyomino || pitch <= 0f)
+                return; // no polyomino declared the grid (box-only figure / gapped pyramid) — rule N/A.
+
+            // Build the occupancy of the union in world cell coordinates. Fractional cell coords first (wx/pitch − 0.5
+            // puts a cell CENTRE on an integer), so the grid phase can be recovered as the median fractional part.
+            var raw = new List<(string Kind, float Fx, float Fy)>();
+            var totalCells = 0;
+            foreach (var slot in slots)
+            {
+                var shape = kindShape[slot.Kind];
+
+                // A grid mosaic tiles only at right angles: the rotation must be a multiple of 90°.
+                var quarters = System.MathF.Round(slot.Rotation / (System.MathF.PI * 0.5f));
+                var snappedRot = quarters * (System.MathF.PI * 0.5f);
+                if (System.MathF.Abs(slot.Rotation - snappedRot) > GridRotationEpsilon)
+                {
+                    errors.Add($"Target mosaic '{level.LevelId}': slot '{slot.Kind}' rotation {slot.Rotation:F3} rad " +
+                               "is not a multiple of 90° — a grid mosaic tiles only at right angles.");
+                    continue;
+                }
+
+                if (!TryLocalCells(shape, pitch, out var localCells))
+                {
+                    errors.Add($"Target mosaic '{level.LevelId}': piece '{slot.Kind}' does not fit the {pitch:F3} grid " +
+                               "pitch — its size is not an integer number of cells, so it cannot tile the target.");
+                    continue;
+                }
+
+                var cos = System.MathF.Cos(snappedRot);
+                var sin = System.MathF.Sin(snappedRot);
+                foreach (var c in localCells)
+                {
+                    var wx = slot.Position.X + (c.X * cos - c.Y * sin);
+                    var wy = slot.Position.Y + (c.X * sin + c.Y * cos);
+                    raw.Add((slot.Kind, wx / pitch - 0.5f, wy / pitch - 0.5f));
+                    totalCells++;
+                }
+            }
+            if (raw.Count == 0)
+                return;
+
+            var originX = MedianFraction(raw, axisX: true);
+            var originY = MedianFraction(raw, axisX: false);
+
+            var occupancy = new Dictionary<(int Col, int Row), List<string>>();
+            foreach (var (kind, fx, fy) in raw)
+            {
+                var col = (int)System.MathF.Round(fx - originX);
+                var row = (int)System.MathF.Round(fy - originY);
+                if (System.MathF.Abs(fx - originX - col) > GridSnapEpsilon ||
+                    System.MathF.Abs(fy - originY - row) > GridSnapEpsilon)
+                    errors.Add($"Target mosaic '{level.LevelId}': piece '{kind}' has a cell off the grid at " +
+                               $"({fx - originX:F2},{fy - originY:F2}) cells — not aligned to the {pitch:F3} pitch.");
+                if (!occupancy.TryGetValue((col, row), out var claimants))
+                {
+                    claimants = new List<string>();
+                    occupancy[(col, row)] = claimants;
+                }
+                claimants.Add(kind);
+            }
+
+            // 1. Overlaps: a cell claimed by more than one piece.
+            var overlaps = 0;
+            foreach (var kv in occupancy)
+            {
+                if (kv.Value.Count <= 1)
+                    continue;
+                overlaps++;
+                if (overlaps <= MaxReportedMosaicCells)
+                    errors.Add($"Target mosaic '{level.LevelId}': cell ({kv.Key.Col},{kv.Key.Row}) is claimed by " +
+                               $"{kv.Value.Count} pieces [{string.Join(", ", kv.Value)}] — pieces overlap.");
+            }
+            if (overlaps > MaxReportedMosaicCells)
+                errors.Add($"Target mosaic '{level.LevelId}': …and {overlaps - MaxReportedMosaicCells} more overlapped " +
+                           $"cell(s) ({overlaps} total).");
+
+            // 2. Interior holes: an empty cell enclosed by the silhouette (external concavity is legal).
+            var holes = FindInteriorHoles(occupancy.Keys);
+            for (var i = 0; i < holes.Count && i < MaxReportedMosaicCells; i++)
+                errors.Add($"Target mosaic '{level.LevelId}': cell ({holes[i].Col},{holes[i].Row}) is an interior hole " +
+                           "— enclosed by filled cells, no piece covers it.");
+            if (holes.Count > MaxReportedMosaicCells)
+                errors.Add($"Target mosaic '{level.LevelId}': …and {holes.Count - MaxReportedMosaicCells} more interior " +
+                           $"hole(s) ({holes.Count} total).");
+
+            // 3. Sum: distinct occupied cells must equal the total cells contributed by all pieces.
+            if (occupancy.Count != totalCells)
+                errors.Add($"Target mosaic '{level.LevelId}': pieces cover {totalCells} cells but only {occupancy.Count} " +
+                           "are distinct — the union is not a gap-free tiling (see the overlaps above).");
+        }
+
+        /// <summary>TASK-318: the world size of one grid cell for a polyomino, read as the edge length of its first
+        /// authored convex part (each part is a unit square scaled by the authored <c>cell</c>, <see cref="Shape"/>).</summary>
+        private static float PolyominoCellSide(Shape shape)
+        {
+            var part = shape.ConvexParts[0];
+            var dx = part[1].X - part[0].X;
+            var dy = part[1].Y - part[0].Y;
+            return System.MathF.Sqrt(dx * dx + dy * dy);
+        }
+
+        /// <summary>TASK-318: the LOCAL-space cell centres of a grid-family piece (before its slot pose). A polyomino
+        /// yields one centre per authored convex part (exact). A box/plank is split into <c>round(w/pitch)×round(h/pitch)</c>
+        /// cells centred on the piece origin; returns false if the piece is smaller than a cell or its size is not an
+        /// integer number of cells (<see cref="GridMultipleEpsilon"/>) — it cannot tile the grid.</summary>
+        private static bool TryLocalCells(Shape shape, float pitch, out List<Vec2> cells)
+        {
+            cells = new List<Vec2>();
+            if (shape.ConvexParts != null)
+            {
+                foreach (var part in shape.ConvexParts)
+                {
+                    float cx = 0f, cy = 0f;
+                    for (var i = 0; i < part.Length; i++)
+                    {
+                        cx += part[i].X;
+                        cy += part[i].Y;
+                    }
+                    cells.Add(new Vec2(cx / part.Length, cy / part.Length));
+                }
+                return true;
+            }
+
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            foreach (var v in shape.Vertices)
+            {
+                if (v.X < minX) minX = v.X;
+                if (v.X > maxX) maxX = v.X;
+                if (v.Y < minY) minY = v.Y;
+                if (v.Y > maxY) maxY = v.Y;
+            }
+            var nxF = (maxX - minX) / pitch;
+            var nyF = (maxY - minY) / pitch;
+            var nx = (int)System.MathF.Round(nxF);
+            var ny = (int)System.MathF.Round(nyF);
+            if (nx < 1 || ny < 1)
+                return false;
+            if (System.MathF.Abs(nxF - nx) > GridMultipleEpsilon || System.MathF.Abs(nyF - ny) > GridMultipleEpsilon)
+                return false;
+            for (var i = 0; i < nx; i++)
+                for (var j = 0; j < ny; j++)
+                    cells.Add(new Vec2((i - (nx - 1) * 0.5f) * pitch, (j - (ny - 1) * 0.5f) * pitch));
+            return true;
+        }
+
+        /// <summary>TASK-318: the median fractional part of the raw cell coordinates on one axis — the grid phase. The
+        /// median is robust to a stray off-grid violator (a single misplaced piece cannot drag the whole grid), unlike
+        /// anchoring on the first cell.</summary>
+        private static float MedianFraction(List<(string Kind, float Fx, float Fy)> raw, bool axisX)
+        {
+            var fracs = new List<float>(raw.Count);
+            foreach (var r in raw)
+            {
+                var v = axisX ? r.Fx : r.Fy;
+                fracs.Add(v - System.MathF.Floor(v));
+            }
+            fracs.Sort();
+            return fracs[fracs.Count / 2];
+        }
+
+        /// <summary>TASK-318: empty cells enclosed by the silhouette — a flood-fill of the padded bounding box from a
+        /// corner (guaranteed outside the figure) over empty cells; any empty cell the fill cannot reach is walled in
+        /// by filled cells and is a real hole. External concavity (a cross's notches, a letter's bays) is reachable
+        /// from the frame and is legal, exactly as the owner's reference tool defines it.</summary>
+        private static List<(int Col, int Row)> FindInteriorHoles(ICollection<(int Col, int Row)> occupied)
+        {
+            var filled = new HashSet<(int, int)>(occupied);
+            int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+            foreach (var (c, r) in filled)
+            {
+                if (c < minX) minX = c;
+                if (c > maxX) maxX = c;
+                if (r < minY) minY = r;
+                if (r > maxY) maxY = r;
+            }
+            int x0 = minX - 1, x1 = maxX + 1, y0 = minY - 1, y1 = maxY + 1;
+
+            var reached = new HashSet<(int, int)> { (x0, y0) };
+            var queue = new Queue<(int, int)>();
+            queue.Enqueue((x0, y0));
+            while (queue.Count > 0)
+            {
+                var (x, y) = queue.Dequeue();
+                foreach (var (nx, ny) in new[] { (x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1) })
+                {
+                    if (nx < x0 || nx > x1 || ny < y0 || ny > y1)
+                        continue;
+                    if (reached.Contains((nx, ny)) || filled.Contains((nx, ny)))
+                        continue;
+                    reached.Add((nx, ny));
+                    queue.Enqueue((nx, ny));
+                }
+            }
+
+            var holes = new List<(int Col, int Row)>();
+            for (var x = x0; x <= x1; x++)
+                for (var y = y0; y <= y1; y++)
+                    if (!filled.Contains((x, y)) && !reached.Contains((x, y)))
+                        holes.Add((x, y));
+            return holes;
         }
     }
 }
