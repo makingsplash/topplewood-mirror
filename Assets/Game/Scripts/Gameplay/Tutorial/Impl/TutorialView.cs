@@ -39,6 +39,13 @@ namespace Gameplay.Tutorial
 
         public void Highlight(Vec2 origin, float rotation, Shape shape, HighlightStyle style)
         {
+            // TASK-309 diagnostic marker (owner-requested "лог-маркер на входе в Highlight"): proves the call
+            // reaches the REAL view and reports the two facts that decide "draws-but-invisible" — the target pose
+            // and whether Camera.main (the seam Reposition projects through) exists. A null camera means Reposition
+            // early-returns forever and the contour never receives points (see Overlay.Reposition first-draw log).
+            Debug.unityLogger.Log(LogType.Log,
+                $"[{LogCategory.Tutorial}] Highlight ENTER origin=({origin.X:0.##},{origin.Y:0.##}) " +
+                $"rot={rotation:0.##} style={style} camMain={(UnityEngine.Camera.main != null)}");
             (_overlay ??= Overlay.Create()).Show(origin, rotation, shape, style);
         }
 
@@ -89,6 +96,7 @@ namespace Gameplay.Tutorial
             private Vec2[] _worldOutline;    // the piece silhouette in WORLD space at its pose (constant while Idle)
             private Vector2[] _screenLocal;  // scratch: outline vertices in overlay-local px, rebuilt each frame
             private bool _active;
+            private bool _loggedFirstDraw;   // TASK-309: one-shot diagnostic — logs the first on-screen projection per Show
 
             public static Overlay Create()
             {
@@ -190,6 +198,7 @@ namespace Gameplay.Tutorial
                 _worldOutline = Geometry.WorldVertices(local, origin, rotation);
                 _screenLocal = new Vector2[_worldOutline.Length];
                 _active = true;
+                _loggedFirstDraw = false; // TASK-309: log where THIS highlight lands on screen
                 gameObject.SetActive(true);
                 ApplyStyle(style); // finger visibility + contour pulse/blink for this consumer
                 Reposition(); // place correctly on the first frame too, before LateUpdate runs
@@ -251,6 +260,22 @@ namespace Gameplay.Tutorial
                         _screenLocal[i] = new Vector2(s.x - screenOrigin.x, s.y - screenOrigin.y);
                     }
                     _outline.SetPoints(_screenLocal);
+                }
+
+                // TASK-309 one-shot diagnostic: report the actual on-screen pixel the contour was projected to and
+                // the vertex count. If this NEVER prints after a "Highlight ENTER" log, projection is stuck (camera
+                // null / behind); if it prints coords OUTSIDE [0..Screen.width]×[0..Screen.height], the contour IS
+                // built but off-screen (a "draws-but-invisible" cause). If it prints in-bounds coords yet nothing is
+                // visible, the invisibility is in the OutlineContour render itself, not the pipeline before it.
+                if (!_loggedFirstDraw)
+                {
+                    _loggedFirstDraw = true;
+                    var onScreen = screenOrigin.x >= 0f && screenOrigin.x <= Screen.width
+                                   && screenOrigin.y >= 0f && screenOrigin.y <= Screen.height;
+                    Debug.unityLogger.Log(LogType.Log,
+                        $"[{LogCategory.Tutorial}] Highlight first-draw screen=({screenOrigin.x:0},{screenOrigin.y:0}) " +
+                        $"onScreen={onScreen} verts={(_worldOutline?.Length ?? 0)} cam='{_camera.name}' " +
+                        $"screenWH=({Screen.width}x{Screen.height}) sort={SortingOrder}");
                 }
             }
 

@@ -129,6 +129,13 @@ namespace Gameplay.PlayScreen
             }).AddTo(_subs);
 
             RefreshState();
+
+#if UNITY_EDITOR
+            // TASK-309 render-isolation seam: let an editor menu (or the bridge, which screenshots but cannot inject
+            // a tap) fire the PulseOutline highlight WITHOUT a tap, bypassing every charge/cooldown/eligibility gate,
+            // so a live frame of the contour can be captured to decide class-1 (gate) vs class-2 (render).
+            HintHighlightProbe.Force = ForceHighlightProbe;
+#endif
         }
 
         // Idempotent EventSystem guard (mirrors RestartButtonPresenter): whoever starts first owns it.
@@ -396,16 +403,26 @@ namespace Gameplay.PlayScreen
                 _tooltip.SetActive(false);
         }
 
+        // TASK-309 diagnostic: one line per tap naming EXACTLY which branch of OnHintClicked ran, so a single live
+        // tap (owner via adb, or the orchestrator) distinguishes "a gate silently swallowed the call" (class 1) from
+        // "the call reached Highlight but nothing shows" (class 2 — pair with TutorialView's Highlight ENTER log).
+        private static void LogHint(string msg) =>
+            Debug.unityLogger.Log(LogType.Log, $"[booster] tap → {msg}");
+
         private void OnHintClicked()
         {
             // Defensive re-check (a click queued the same frame IsBusy flips), mirrors RestartButton.
             if (_interaction.IsBusy.Value || _onCooldown)
+            {
+                LogHint($"swallowed: busy={_interaction.IsBusy.Value} cooldown={_onCooldown}");
                 return;
+            }
 
             // Empty-state tap = buy a charge for coins (owner 19:10, TASK-240). The button is only interactable at 0
             // charges on an eligible level, so a coin spent here is always usable on this level.
             if (_hint.Charges.CurrentValue <= 0)
             {
+                LogHint("buy-charge path (0 charges) — no highlight expected");
                 TryBuyCharge();
                 return;
             }
@@ -413,15 +430,27 @@ namespace Gameplay.PlayScreen
             // Balance coalescence window open → the tapped-but-unflushed piece is still Idle; revealing it again
             // would spend on an already-armed piece. Treat as a neutral no-op (architect §13 flag 2).
             if (_mechanic.HasPendingRelease)
+            {
+                LogHint("swallowed: HasPendingRelease (balance coalescence window open)");
                 return;
+            }
 
             var instanceId = NextHintResolver.NextIdleInstanceId(_model, _model.CurrentLevel?.WinningOrder);
             if (instanceId < 0 || !LevelEligible())
+            {
+                LogHint($"swallowed: nothing to reveal id={instanceId} eligible={LevelEligible()} " +
+                        $"winningOrder={(_model.CurrentLevel?.WinningOrder != null ? "set" : "null")} " +
+                        $"charges={_hint.Charges.CurrentValue}");
                 return; // nothing to reveal / ineligible → neutral feedback, NO spend (balancer §1.2).
+            }
 
             if (!_hint.TrySpendActivation())
+            {
+                LogHint("swallowed: TrySpendActivation=false");
                 return;
+            }
 
+            LogHint($"REVEAL id={instanceId} — calling highlight seam (class-2 territory if nothing appears)");
             RevealPiece(instanceId);
             CooldownAsync().Forget();
         }
@@ -473,6 +502,33 @@ namespace Gameplay.PlayScreen
             HideProactive(); // accepted: drop the affordance for this level.
             AutoClearHighlightAsync().Forget();
         }
+
+#if UNITY_EDITOR
+        // TASK-309 render probe (editor-only): force the PulseOutline highlight past all gates. Targets the next
+        // idle piece in the winning order; if the order yields nothing (level without a baked order, or all placed),
+        // falls back to the first piece so a frame is ALWAYS produced. This isolates the RENDER path from the tap
+        // path — if this shows a contour but a real tap does not, the defect is in a gate; if this shows nothing
+        // either, the defect is in the contour render itself.
+        private void ForceHighlightProbe()
+        {
+            var instanceId = NextHintResolver.NextIdleInstanceId(_model, _model.CurrentLevel?.WinningOrder);
+            if (instanceId < 0)
+            {
+                foreach (var p in _model.Pieces)
+                {
+                    instanceId = p.InstanceId;
+                    break;
+                }
+            }
+            if (instanceId < 0)
+            {
+                Debug.unityLogger.Log(LogType.Warning, "[booster] probe: no piece on the field to highlight");
+                return;
+            }
+            Debug.unityLogger.Log(LogType.Log, $"[booster] probe: forcing highlight id={instanceId} (gates bypassed)");
+            RevealPiece(instanceId);
+        }
+#endif
 
         // TASK-263 §2b: the player released a piece. If it is the one the hint is pointing at, clear immediately —
         // event-driven, no timer wait. Releases of any OTHER piece leave the hint alone (it still points at its own).
@@ -527,6 +583,11 @@ namespace Gameplay.PlayScreen
 
         public void Dispose()
         {
+#if UNITY_EDITOR
+            if (HintHighlightProbe.Force == ForceHighlightProbe)
+                HintHighlightProbe.Force = null;
+#endif
+
             _subs?.Dispose();
             _subs = null;
 
@@ -548,5 +609,15 @@ namespace Gameplay.PlayScreen
                 UnityEngine.Object.Destroy(_eventSystem);
             _eventSystem = null;
         }
+    }
+
+    /// <summary>Editor-only render-isolation seam for the Hint booster (TASK-309). The live <see cref="HintBoosterPresenter"/>
+    /// registers a force-highlight delegate here (in-editor only), so an editor menu item or the Unity bridge — which
+    /// can screenshot a play-mode frame but cannot inject a tap — can trigger the PulseOutline highlight WITHOUT a tap
+    /// and capture the contour. Player builds never populate the delegate (registration is <c>#if UNITY_EDITOR</c>);
+    /// the field slot is a harmless no-cost static, kept unconditional only so the Editor assembly can reference it.</summary>
+    public static class HintHighlightProbe
+    {
+        public static System.Action Force;
     }
 }
