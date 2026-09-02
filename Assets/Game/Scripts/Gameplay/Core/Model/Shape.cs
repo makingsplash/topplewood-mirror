@@ -36,6 +36,12 @@ namespace Gameplay.Core
         VPentomino,
         PPentomino,
         PlusPentomino,
+        // TASK-330: L-pentomino (a 4-cell vertical bar + a foot). Same generic ConvexParts path as the pentominoes
+        // above — cell-count-agnostic machinery, so it costs an enum value + a one-line factory + a DTO case. Appended
+        // at the END so existing ordinals do not shift (nothing hashes the ordinal — poseHash never reads Primitive).
+        // Chiral (as L↔J tetromino): its mirror is the J-pentomino, a DISTINCT future primitive, NOT added here
+        // (physics has no reflection). Symmetry order 1.
+        LPentomino,
     }
 
     /// <summary>
@@ -44,7 +50,7 @@ namespace Gameplay.Core
     /// point-in-shape test used by coverage stays a cheap convex check.
     /// Catalogue: box, triangle, halfdisc, plank, trapezoid, parallelogram, righttriangle, quarterdisc,
     /// gable, circle — all convex, one <c>PolygonCollider2D</c> each. Concave polyominoes — tetrominoes (L/J/S/Z/T,
-    /// TASK-178) and pentominoes (T/N/Z/V/P/plus, TASK-314) — are implemented via an authored integer
+    /// TASK-178) and pentominoes (T/N/Z/V/P/plus, TASK-314; L, TASK-330) — are implemented via an authored integer
     /// <see cref="ConvexParts"/> decomposition (compound collider), NOT a runtime concave split.
     /// </summary>
     public sealed class Shape
@@ -358,6 +364,14 @@ namespace Gameplay.Core
             => Polyomino(ShapePrimitive.PlusPentomino, cell,
                 new[] { (1, 0), (0, 1), (1, 1), (2, 1), (1, 2) },
                 new[] { (1, 0), (2, 0), (2, 1), (3, 1), (3, 2), (2, 2), (2, 3), (1, 3), (1, 2), (0, 2), (0, 1), (1, 1) });
+
+        /// <summary>L-pentomino (a 4-cell vertical bar with a foot at the bottom-right — the pentomino extension of
+        /// <see cref="LTetromino"/>). Grid (col,row), y-up: (0,0)(0,1)(0,2)(0,3)(1,0). Chiral — its mirror is the
+        /// J-pentomino, a DISTINCT future primitive (physics has no reflection). Symmetry order 1.</summary>
+        public static Shape LPentomino(float cell)
+            => Polyomino(ShapePrimitive.LPentomino, cell,
+                new[] { (0, 0), (0, 1), (0, 2), (0, 3), (1, 0) },
+                new[] { (0, 0), (2, 0), (2, 1), (1, 1), (1, 4), (0, 4) });
 
         /// <summary>Build a concave polyomino from its integer <paramref name="cells"/> (one unit-square part each) and
         /// its integer <paramref name="contour"/> (CCW silhouette). Both are centred on the cells' bbox and scaled by
