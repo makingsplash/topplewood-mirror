@@ -255,6 +255,13 @@ namespace Gameplay.Core
                 case "s_tetromino": return Shape.STetromino(RequireCell());
                 case "z_tetromino": return Shape.ZTetromino(RequireCell());
                 case "t_tetromino": return Shape.TTetromino(RequireCell());
+                // TASK-314: concave pentominoes — same fixed-grid `cell` contract; width/height/radius do not apply.
+                case "t_pentomino":    return Shape.TPentomino(RequireCell());
+                case "n_pentomino":    return Shape.NPentomino(RequireCell());
+                case "z_pentomino":    return Shape.ZPentomino(RequireCell());
+                case "v_pentomino":    return Shape.VPentomino(RequireCell());
+                case "p_pentomino":    return Shape.PPentomino(RequireCell());
+                case "plus_pentomino": return Shape.PlusPentomino(RequireCell());
                 default:
                     throw new InvalidOperationException($"Unknown shape primitive '{Primitive}'.");
             }
