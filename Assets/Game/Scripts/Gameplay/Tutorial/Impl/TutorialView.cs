@@ -87,6 +87,7 @@ namespace Gameplay.Tutorial
 
             private RectTransform _anchor;   // repositioned each frame to the target's screen point
             private RectTransform _canvasRect; // overlay canvas rect — reference space for the screen→UI conversion
+            private Canvas _canvas;          // TASK-309: overlay Canvas component — its .enabled decides if it renders at all
             private UnityEngine.Camera _camera; // fully-qualified: Gameplay.Camera namespace shadows the bare name
             private OutlineContour _outline;
             private Image _finger;           // only shown in FingerPoint style
@@ -121,6 +122,7 @@ namespace Gameplay.Tutorial
             private void Build(GameObject root)
             {
                 _canvasRect = (RectTransform)root.transform;
+                _canvas = root.GetComponent<Canvas>(); // TASK-309: kept so the first-draw log can report canvas.enabled
 
                 _anchor = NewChild("Anchor", root.transform, Vector2.zero);
                 // Anchor to the canvas CENTRE: Reposition() maps the target's screen point into this canvas's own
@@ -191,6 +193,13 @@ namespace Gameplay.Tutorial
 
             public void Show(Vec2 origin, float rotation, Shape shape, HighlightStyle style)
             {
+                // TASK-309 refine (owner-requested Show/Hide trace): prove Show is actually reached and that the
+                // GameObject enters the active state here. Paired with the Hide trace below, this tells "drawn but
+                // torn down" (a Hide lands right after) from "drawn and left up" — the first-draw log alone can't,
+                // since it fires from Reposition while active and a later Hide leaves the numbers already logged.
+                Debug.unityLogger.Log(LogType.Log,
+                    $"[{LogCategory.Tutorial}] Show ENTER style={style} wasActive={gameObject.activeInHierarchy}");
+
                 _worldOrigin = new Vector3(origin.X, origin.Y, 0f);
                 // ONE source of contour geometry: the same view tessellation the piece mesh uses (arcs smooth,
                 // rotation baked in), transformed to world at the piece's pose. NO second tessellation (TASK-074/075).
@@ -206,6 +215,15 @@ namespace Gameplay.Tutorial
 
             public void Hide()
             {
+                // TASK-309 refine (owner-requested Show/Hide trace): if a Hide lands right after Show, the overlay
+                // is deactivated with the first-draw numbers already printed — exactly the "correct numbers, zero
+                // pixels" picture. The stack trace names WHO called it (Clear()/Dispose()/a coalescence path), so
+                // one probe session decides it. Note Create() calls Hide() once at build time before any Show — a
+                // Hide with wasActive=False and no preceding "Show ENTER" is that harmless startup call, not the bug.
+                Debug.unityLogger.Log(LogType.Log,
+                    $"[{LogCategory.Tutorial}] Hide called active={_active} wasActive={gameObject.activeInHierarchy}\n" +
+                    UnityEngine.StackTraceUtility.ExtractStackTrace());
+
                 _contourTween?.Kill();
                 _fingerTween?.Kill();
                 _contourTween = null;
@@ -295,13 +313,22 @@ namespace Gameplay.Tutorial
                         }
                     }
                     var rect = _outline.rectTransform.rect;
+                    // TASK-309 refine (owner-requested activeInHierarchy of canvas/contour): the render frame's
+                    // live-state snapshot. Geometry (sizePx), alpha (colorA) and width proved healthy last session,
+                    // yet the frame diff showed ZERO pixels — the remaining way to draw nothing with correct numbers
+                    // is the object/canvas not actually rendering. canvasActive/contourActive=False → the overlay is
+                    // deactivated at draw time (pair with the Show/Hide trace to see who); canvasEnabled=False → the
+                    // Canvas component is off; cull=True → the CanvasRenderer is culling the mesh despite valid verts.
                     Debug.unityLogger.Log(LogType.Log,
                         $"[{LogCategory.Tutorial}] Highlight first-draw screen=({screenOrigin.x:0},{screenOrigin.y:0}) " +
                         $"onScreen={onScreen} verts={(_worldOutline?.Length ?? 0)} cam='{_camera.name}' " +
                         $"screenWH=({Screen.width}x{Screen.height}) sort={SortingOrder} " +
                         $"bboxPx=({minX:0.#}..{maxX:0.#} x {minY:0.#}..{maxY:0.#}) sizePx=({maxX - minX:0.#}x{maxY - minY:0.#}) " +
                         $"colorA={_outline.color.a:0.###} widthPx={_outline.WidthPx:0.#} " +
-                        $"contourRect=({rect.width:0.#}x{rect.height:0.#})");
+                        $"contourRect=({rect.width:0.#}x{rect.height:0.#}) " +
+                        $"canvasActive={gameObject.activeInHierarchy} canvasEnabled={(_canvas != null && _canvas.enabled)} " +
+                        $"contourActive={_outline.gameObject.activeInHierarchy} contourEnabled={_outline.enabled} " +
+                        $"cull={_outline.canvasRenderer.cull}");
                 }
             }
 
