@@ -5242,15 +5242,15 @@
         ]
       },
       "pieces": [
-        { "kind": "m_yellow",  "startPosition": { "x": 2.06,  "y": 3.47 }, "startRotation": 0 },
-        { "kind": "m_orange",  "startPosition": { "x": -0.94, "y": 3.98 }, "startRotation": 0 },
-        { "kind": "m_green",   "startPosition": { "x": -0.12, "y": 1.59 }, "startRotation": 0 },
-        { "kind": "m_lav",     "startPosition": { "x": -0.02, "y": 8.92 }, "startRotation": 0 },
-        { "kind": "m_magenta", "startPosition": { "x": -2.53, "y": 3.39 }, "startRotation": 0 },
-        { "kind": "m_purple",  "startPosition": { "x": -0.12, "y": 2.84 }, "startRotation": 1.5708 },
-        { "kind": "m_dgreen",  "startPosition": { "x": 1.45,  "y": 1.18 }, "startRotation": -1.5708 },
-        { "kind": "m_pink",    "startPosition": { "x": -0.24, "y": 6.63 }, "startRotation": 0 },
-        { "kind": "m_cyan",    "startPosition": { "x": 0.08,  "y": 5.41 }, "startRotation": 0 }
+        { "kind": "m_yellow",  "startPosition": { "x": 2.06,  "y": 3.78 }, "startRotation": 0 },
+        { "kind": "m_orange",  "startPosition": { "x": -0.94, "y": 4.29 }, "startRotation": 0 },
+        { "kind": "m_green",   "startPosition": { "x": -0.71, "y": 1.90 }, "startRotation": 0 },
+        { "kind": "m_lav",     "startPosition": { "x": -0.02, "y": 9.23 }, "startRotation": 0 },
+        { "kind": "m_magenta", "startPosition": { "x": -2.53, "y": 3.70 }, "startRotation": 0 },
+        { "kind": "m_purple",  "startPosition": { "x": -0.12, "y": 3.15 }, "startRotation": 1.5708 },
+        { "kind": "m_dgreen",  "startPosition": { "x": 1.45,  "y": 1.49 }, "startRotation": -1.5708 },
+        { "kind": "m_pink",    "startPosition": { "x": -0.24, "y": 6.94 }, "startRotation": 0 },
+        { "kind": "m_cyan",    "startPosition": { "x": 0.08,  "y": 5.72 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -6.0, "y": -2.0 }, { "x": -1.08, "y": -2.0 }, { "x": -1.08, "y": 0.0 }, { "x": -6.0, "y": 0.0 } ] },
@@ -5304,7 +5304,7 @@
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "kind": "cross",    "color": "#2E7CD6", "symmetryOrder": 4,  "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plus_pentomino", "cell": 0.735 } },
-        { "kind": "red_ball", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.65, "segments": 24 } }
+        { "kind": "red_ball", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.57, "segments": 24 } }
       ],
       "target": {
         "outline": [ { "x": -0.5, "y": -1.1 }, { "x": 0.5, "y": -1.1 }, { "x": 0.5, "y": -0.5 }, { "x": 1.1, "y": -0.5 }, { "x": 1.1, "y": 0.5 }, { "x": 0.5, "y": 0.5 }, { "x": 0.5, "y": 1.1 }, { "x": -0.5, "y": 1.1 }, { "x": -0.5, "y": 0.5 }, { "x": -1.1, "y": 0.5 }, { "x": -1.1, "y": -0.5 }, { "x": -0.5, "y": -0.5 } ],
