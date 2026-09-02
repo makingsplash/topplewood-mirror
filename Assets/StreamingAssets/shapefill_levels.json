@@ -5027,7 +5027,7 @@
     },
     {
       "levelId": "stag",
-      "winningOrder": [7, 8, 9, 10],
+      "winningOrder": [4, 5, 6, 7, 10, 8, 9],
       "seed": 408,
       "difficultyTier": 11,
       "physicsMode": "assembly",
@@ -5064,13 +5064,13 @@
         { "kind": "leg", "startPosition": { "x": -0.45, "y": 0.05 }, "startRotation": 0, "preplaced": true },
         { "kind": "leg", "startPosition": { "x": 0.45, "y": 0.05 }, "startRotation": 0, "preplaced": true },
         { "kind": "leg", "startPosition": { "x": 1.0, "y": 0.05 }, "startRotation": 0, "preplaced": true },
-        { "kind": "body", "startPosition": { "x": 0, "y": 1.1 }, "startRotation": 0, "preplaced": true },
-        { "kind": "neck", "startPosition": { "x": -0.9, "y": 2.05 }, "startRotation": 0, "preplaced": true },
-        { "kind": "head", "startPosition": { "x": -0.9, "y": 2.8 }, "startRotation": 0, "preplaced": true },
-        { "kind": "brow", "startPosition": { "x": -0.85, "y": 4.5 }, "startRotation": 0 },
-        { "kind": "antler", "startPosition": { "x": -1.35, "y": 5.4 }, "startRotation": 0 },
-        { "kind": "antler", "startPosition": { "x": -0.35, "y": 5.9 }, "startRotation": 0 },
-        { "kind": "tine", "startPosition": { "x": -0.85, "y": 6.4 }, "startRotation": 0 }
+        { "kind": "body", "startPosition": { "x": 0, "y": 4.6 }, "startRotation": 0 },
+        { "kind": "neck", "startPosition": { "x": -0.9, "y": 5.3 }, "startRotation": 0 },
+        { "kind": "head", "startPosition": { "x": -0.9, "y": 4.5 }, "startRotation": 0 },
+        { "kind": "brow", "startPosition": { "x": -0.85, "y": 6.9 }, "startRotation": 0 },
+        { "kind": "antler", "startPosition": { "x": -1.35, "y": 6.5 }, "startRotation": 0 },
+        { "kind": "antler", "startPosition": { "x": -0.35, "y": 5.7 }, "startRotation": 0 },
+        { "kind": "tine", "startPosition": { "x": -0.85, "y": 6.1 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.35, "y": -0.8 }, { "x": 1.35, "y": -0.8 }, { "x": 1.35, "y": -0.5 }, { "x": -1.35, "y": -0.5 } ] }
