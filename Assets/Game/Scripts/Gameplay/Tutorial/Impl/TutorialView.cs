@@ -98,6 +98,7 @@ namespace Gameplay.Tutorial
             private Vector2[] _screenLocal;  // scratch: outline vertices in overlay-local px, rebuilt each frame
             private bool _active;
             private bool _loggedFirstDraw;   // TASK-309: one-shot diagnostic — logs the first on-screen projection per Show
+            private bool _loggedReposEntry;  // TASK-309: one-shot diagnostic — logs the first Reposition BEFORE its early returns
 
             public static Overlay Create()
             {
@@ -208,6 +209,7 @@ namespace Gameplay.Tutorial
                 _screenLocal = new Vector2[_worldOutline.Length];
                 _active = true;
                 _loggedFirstDraw = false; // TASK-309: log where THIS highlight lands on screen
+                _loggedReposEntry = false; // TASK-309: log which early return (if any) stalls THIS highlight's projection
                 gameObject.SetActive(true);
                 ApplyStyle(style); // finger visibility + contour pulse/blink for this consumer
                 Reposition(); // place correctly on the first frame too, before LateUpdate runs
@@ -252,9 +254,37 @@ namespace Gameplay.Tutorial
                 if (_camera == null)
                     _camera = UnityEngine.Camera.main; // same seam CameraFramingPresenter uses; re-fetch until one exists
                 if (_camera == null)
+                {
+                    // TASK-309 refine (owner-requested pre-return diagnostic): first-draw never printed this session while
+                    // it DID in the owner's — the two early returns below are the only spots the projection can stall
+                    // before first-draw. If it stalls HERE, Camera.main is null despite Highlight ENTER seeing one.
+                    if (!_loggedReposEntry)
+                    {
+                        _loggedReposEntry = true;
+                        Debug.unityLogger.Log(LogType.Log,
+                            $"[{LogCategory.Tutorial}] Reposition BLOCKED cam=null (Camera.main==null) " +
+                            $"screenWH=({Screen.width}x{Screen.height})");
+                    }
                     return;
+                }
 
                 var screenOrigin = _camera.WorldToScreenPoint(_worldOrigin);
+
+                // TASK-309 refine (owner-requested pre-return diagnostic): names the camera the projection ACTUALLY used
+                // (name + instanceID) and the full screenOrigin INCLUDING z. If camId is not the Main Camera but the
+                // overlay's UiCamera(Clone) (it sits on Main Camera in the stack and, if tagged MainCamera, Camera.main
+                // can return IT), its WorldToScreenPoint yields a different z — and z<0 stalls at the return just below,
+                // which is why first-draw never fires. Printed once per Show, BEFORE the z-cull, so it fires even when
+                // that return does.
+                if (!_loggedReposEntry)
+                {
+                    _loggedReposEntry = true;
+                    Debug.unityLogger.Log(LogType.Log,
+                        $"[{LogCategory.Tutorial}] Reposition entry cam='{_camera.name}' camId={_camera.GetInstanceID()} " +
+                        $"screenOrigin=({screenOrigin.x:0.#},{screenOrigin.y:0.#},{screenOrigin.z:0.###}) " +
+                        $"willCull={(screenOrigin.z < 0f)} screenWH=({Screen.width}x{Screen.height})");
+                }
+
                 if (screenOrigin.z < 0f)
                     return; // behind the camera — leave the highlight where it was rather than flip it
 
