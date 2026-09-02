@@ -73,7 +73,7 @@ namespace Gameplay.View
         /// the ribbon of a static SURFACE (each polyline segment offset to a convex quad, <see cref="Geometry.SurfaceRibbonQuads"/>).
         /// Reuses the polyomino compound fan verbatim (same four wood-shader channels, same live-rebuild registration),
         /// so a wooden chute shades and rebuilds exactly like a compound piece — no new triangulation code.</summary>
-        public static Mesh BuildParts(Vec2[][] parts, string key) => BuildCompound(parts, null, key);
+        public static Mesh BuildParts(Vec2[][] parts, string key) => BuildCompound(parts, key);
 
         /// <summary><paramref name="key"/> — под каким именем эта форма ищет свою настройку
         /// (<see cref="WoodTuning.PieceOverrides"/>). Хранится вместе с контуром, чтобы
