@@ -262,6 +262,8 @@ namespace Gameplay.Core
                 case "v_pentomino":    return Shape.VPentomino(RequireCell());
                 case "p_pentomino":    return Shape.PPentomino(RequireCell());
                 case "plus_pentomino": return Shape.PlusPentomino(RequireCell());
+                // TASK-330: L-pentomino — same fixed-grid `cell` contract; width/height/radius do not apply.
+                case "l_pentomino":    return Shape.LPentomino(RequireCell());
                 default:
                     throw new InvalidOperationException($"Unknown shape primitive '{Primitive}'.");
             }
