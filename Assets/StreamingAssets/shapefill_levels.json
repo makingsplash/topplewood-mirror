@@ -5247,6 +5247,7 @@
       "seed": 511,
       "difficultyTier": 9,
       "physicsMode": "assembly",
+      "winningOrder": [1],
       "matchTolerance": { "posTol": 0.34, "angTol": 0.43633 },
       "bounds": { "min": { "x": -7, "y": -1 }, "max": { "x": 7, "y": 11 } },
       "gravity": { "x": 0, "y": -9.81 },
@@ -5255,22 +5256,27 @@
         { "kind": "red_ball", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.65, "segments": 24 } }
       ],
       "target": {
-        "outline": [ { "x": -0.5, "y": 0.0 }, { "x": 0.5, "y": 0.0 }, { "x": 0.5, "y": 0.6 }, { "x": 1.1, "y": 0.6 }, { "x": 1.1, "y": 1.6 }, { "x": 0.5, "y": 1.6 }, { "x": 0.5, "y": 2.2 }, { "x": -0.5, "y": 2.2 }, { "x": -0.5, "y": 1.6 }, { "x": -1.1, "y": 1.6 }, { "x": -1.1, "y": 0.6 }, { "x": -0.5, "y": 0.6 } ],
+        "outline": [ { "x": 3.8, "y": 0.0 }, { "x": 4.8, "y": 0.0 }, { "x": 4.8, "y": 0.6 }, { "x": 5.4, "y": 0.6 }, { "x": 5.4, "y": 1.6 }, { "x": 4.8, "y": 1.6 }, { "x": 4.8, "y": 2.2 }, { "x": 3.8, "y": 2.2 }, { "x": 3.8, "y": 1.6 }, { "x": 3.2, "y": 1.6 }, { "x": 3.2, "y": 0.6 }, { "x": 3.8, "y": 0.6 } ],
         "slots": [
-          { "kind": "cross",    "position": { "x": 0.0, "y": 1.118 }, "rotation": 0 },
-          { "kind": "red_ball", "position": { "x": 0.0, "y": 2.875 }, "rotation": 0 }
+          { "kind": "cross",    "position": { "x": 4.300, "y": 1.118 }, "rotation": 0 },
+          { "kind": "red_ball", "position": { "x": 1.500, "y": 0.650 }, "rotation": 0 }
         ]
       },
       "pieces": [
-        { "kind": "cross",    "startPosition": { "x": 0.0, "y": 3.40 }, "startRotation": 0, "preplaced": true },
-        { "kind": "red_ball", "startPosition": { "x": 0.0, "y": 5.20 }, "startRotation": 0 }
+        { "kind": "cross",    "startPosition": { "x": 4.300, "y": 3.40 }, "startRotation": 0, "preplaced": true },
+        { "kind": "red_ball", "startPosition": { "x": -4.826, "y": 2.907 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -6.0, "y": -0.6 }, { "x": 6.0, "y": -0.6 }, { "x": 6.0, "y": 0.0 }, { "x": -6.0, "y": 0.0 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.35, "y": 0.0 }, { "x": -1.15, "y": 0.0 }, { "x": -1.15, "y": 5.80 }, { "x": -1.35, "y": 5.80 } ] },
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": 1.15, "y": 0.0 }, { "x": 1.35, "y": 0.0 }, { "x": 1.35, "y": 5.80 }, { "x": 1.15, "y": 5.80 } ] }
+        { "visible": true, "color": "#B8926B", "surface": true, "thickness": 0.20, "outline": [ { "x": -5.600, "y": 3.200 }, { "x": -5.574, "y": 2.808 }, { "x": -5.498, "y": 2.424 }, { "x": -5.372, "y": 2.052 }, { "x": -5.198, "y": 1.700 }, { "x": -4.980, "y": 1.374 }, { "x": -4.721, "y": 1.079 }, { "x": -4.426, "y": 0.820 }, { "x": -4.100, "y": 0.602 }, { "x": -3.748, "y": 0.428 }, { "x": -3.376, "y": 0.302 }, { "x": -2.992, "y": 0.226 }, { "x": -2.600, "y": 0.200 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 0.30, "y": 0.0 }, { "x": 0.50, "y": 0.0 }, { "x": 0.50, "y": 2.00 }, { "x": 0.30, "y": 2.00 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 2.50, "y": 0.0 }, { "x": 2.70, "y": 0.0 }, { "x": 2.70, "y": 2.00 }, { "x": 2.50, "y": 2.00 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 2.95, "y": 0.0 }, { "x": 3.1475, "y": 0.0 }, { "x": 3.1475, "y": 3.50 }, { "x": 2.95, "y": 3.50 } ] },
+        { "visible": true, "color": "#B8926B", "outline": [ { "x": 5.4525, "y": 0.0 }, { "x": 5.65, "y": 0.0 }, { "x": 5.65, "y": 3.50 }, { "x": 5.4525, "y": 3.50 } ] }
       ],
-      "airZones": []
+      "airZones": [
+        { "region": { "min": { "x": -3.20, "y": 0.05 }, "max": { "x": -0.60, "y": 8.00 } }, "direction": { "x": 0.15, "y": 1.0 }, "acceleration": 15.0, "bypassHoverGuard": true, "color": "#CFE8F5" }
+      ]
     }
   ]
 }
