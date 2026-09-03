@@ -152,3 +152,5 @@ Assets/Plugins/Demigiant/DOTween/Editor/DOTweenUpgradeManager.XML
 # правила выше НЕ матчат .env.local.bak, и он тихо уезжал в коммит.
 .env.local*
 .studio/.orchestrator-hold
+# Дайджест задачи для прогона роли — генерируется дашбордом перед каждым запуском, в git не нужен.
+.studio/tasks/*/CONTEXT.md
