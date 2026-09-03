@@ -5252,11 +5252,11 @@
       "bounds": { "min": { "x": -7, "y": -1 }, "max": { "x": 7, "y": 23 } },
       "gravity": { "x": 0, "y": -43.0 },
       "pieceTypes": [
-        { "kind": "cross",    "color": "#3FC8E0", "symmetryOrder": 4,  "material": { "density": 1.0, "friction": 0.15, "restitution": 0.05 }, "shape": { "primitive": "plus_pentomino", "cell": 0.80 } },
-        { "kind": "red_ball", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 5.0, "friction": 0.75, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.67, "segments": 24 } }
+        { "kind": "cross",    "color": "#3FC8E0", "symmetryOrder": 4,  "material": { "density": 1.47, "friction": 0.15, "restitution": 0.05 }, "shape": { "primitive": "plus_pentomino", "cell": 0.89 } },
+        { "kind": "red_ball", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0,  "friction": 0.75, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.75, "segments": 24 } }
       ],
       "target": {
-        "outline": [ { "x": 3.934, "y": 8.731 }, { "x": 4.500, "y": 8.166 }, { "x": 5.066, "y": 8.731 }, { "x": 5.631, "y": 8.166 }, { "x": 5.066, "y": 7.600 }, { "x": 5.631, "y": 7.034 }, { "x": 5.066, "y": 6.469 }, { "x": 4.500, "y": 7.034 }, { "x": 3.934, "y": 6.469 }, { "x": 3.369, "y": 7.034 }, { "x": 3.934, "y": 7.600 }, { "x": 3.369, "y": 8.166 } ],
+        "outline": [ { "x": 3.870, "y": 8.858 }, { "x": 4.500, "y": 8.230 }, { "x": 5.130, "y": 8.858 }, { "x": 5.758, "y": 8.230 }, { "x": 5.130, "y": 7.600 }, { "x": 5.758, "y": 6.970 }, { "x": 5.130, "y": 6.342 }, { "x": 4.500, "y": 6.970 }, { "x": 3.870, "y": 6.342 }, { "x": 3.242, "y": 6.970 }, { "x": 3.870, "y": 7.600 }, { "x": 3.242, "y": 8.230 } ],
         "slots": [
           { "kind": "cross",    "position": { "x": 4.500, "y": 7.600 }, "rotation": 0.7854 },
           { "kind": "red_ball", "position": { "x": 4.480, "y": 9.320 }, "rotation": 0 }
@@ -5287,8 +5287,8 @@
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 5.85, "y": 6.3 }, { "x": 7.0, "y": 6.3 }, { "x": 7.0, "y": 22.0 }, { "x": 5.85, "y": 22.0 } ] }
       ],
       "airZones": [
-        { "region": { "min": { "x": -0.5, "y": 0.05 }, "max": { "x": 2.2, "y": 2.6 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 519.0, "color": "#CFE8F5" },
-        { "region": { "min": { "x": -5.0, "y": 0.05 }, "max": { "x": -0.3, "y": 4.9 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 519.0, "color": "#CFE8F5" }
+        { "region": { "min": { "x": -0.5, "y": 0.05 }, "max": { "x": 2.2, "y": 2.6 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 600.0, "color": "#CFE8F5" },
+        { "region": { "min": { "x": -5.0, "y": 0.05 }, "max": { "x": -0.3, "y": 4.9 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 600.0, "color": "#CFE8F5" }
       ]
     }
   ]
