@@ -29,6 +29,48 @@ namespace Gameplay.View
 
         public string StyleKey => _styleKey;
 
+        /// <summary>TASK-325: render a static block from its domain <see cref="Polygon"/>. A SURFACE (open edge-chain
+        /// chute/ramp) draws as a wooden ribbon along its polyline; any other block falls through to the raw-outline
+        /// filled path below, byte-for-byte unchanged. The shelf/sandbox sites keep calling the raw-outline overload
+        /// (they are always axis-aligned rectangles), so this overload only adds the surface branch.</summary>
+        public void Initialize(Polygon polygon, string colorHex)
+        {
+            if (polygon != null && polygon.IsSurface)
+            {
+                InitializeSurface(polygon, colorHex);
+                return;
+            }
+            Initialize(polygon?.Outline, colorHex);
+        }
+
+        /// <summary>TASK-325: a curved static SURFACE is a thin wooden RIBBON traced along the authored polyline — the
+        /// same <see cref="Geometry.SurfaceRibbonQuads"/> the validator measures piece embeds against, drawn through the
+        /// compound wood path (<see cref="PieceMeshBuilder.BuildParts"/>) so a chute shades, casts a shadow and rebuilds
+        /// exactly like a piece. No shelf sprite (that is only for an axis-aligned rectangle) and no convex fan (which
+        /// cannot triangulate the concave curve).</summary>
+        private void InitializeSurface(Polygon polygon, string colorHex)
+        {
+            _colorHex = colorHex;
+            _styleKey = WoodPieceKey.OfStatic(polygon.Outline);
+
+            var quads = Geometry.SurfaceRibbonQuads(polygon.Outline, polygon.Surface.Thickness);
+            var meshFilter = gameObject.AddComponent<MeshFilter>();
+            var mesh = PieceMeshBuilder.BuildParts(quads, _styleKey);
+            meshFilter.mesh = mesh;
+
+            _renderer = gameObject.AddComponent<MeshRenderer>();
+            _renderer.sharedMaterial = BlockMaterial.Shared;
+            _renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _renderer.receiveShadows = false;
+
+            transform.position = new Vector3(0f, 0f, ZBehindPieces);
+            PieceShadow.Attach(transform, mesh);
+
+            _mpb = new MaterialPropertyBlock();
+            RefreshColor();
+            WoodTuning.Changed += RefreshColor;
+        }
+
         public void Initialize(Vec2[] worldOutline, string colorHex)
         {
             _colorHex = colorHex;

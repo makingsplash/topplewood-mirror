@@ -52,12 +52,15 @@ namespace Gameplay.View
                 if (!visuals[i].Visible)
                     continue;
 
-                var outline = statics[i]?.Outline;
-                if (outline == null || outline.Length < 3)
+                // TASK-325: a SURFACE (open edge-chain chute) is a valid 2-point polyline; a filled block needs ≥3.
+                var poly = statics[i];
+                var outline = poly?.Outline;
+                var minVerts = poly != null && poly.IsSurface ? 2 : 3;
+                if (outline == null || outline.Length < minVerts)
                     continue;
 
                 var go = new GameObject($"StaticGeometry_{i}");
-                go.AddComponent<StaticGeometryView>().Initialize(outline, visuals[i].Color);
+                go.AddComponent<StaticGeometryView>().Initialize(poly, visuals[i].Color);
                 _views.Add(go);
             }
         }

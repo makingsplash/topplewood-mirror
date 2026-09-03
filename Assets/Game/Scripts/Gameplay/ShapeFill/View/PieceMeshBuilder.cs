@@ -61,9 +61,19 @@ namespace Gameplay.View
         }
 
         /// <summary>Build a flat convex fan mesh from a raw CCW outline (TASK-031: visible static geometry reuses
-        /// the same triangulation as pieces). The outline must be convex — v0's fan cannot triangulate a concave
-        /// polygon (author concave statics as several convex rectangles).</summary>
+        /// the same triangulation as pieces). The outline must be CONVEX — v0's fan cannot triangulate a concave
+        /// polygon. This is the SOLID-block path only; a CONCAVE static is not authored as this single outline but as
+        /// one of two other shapes: a curved SURFACE renders through <see cref="BuildParts"/> (a ribbon of convex
+        /// segment quads, TASK-325), and a filled concave solid through <c>Build(Shape)</c>'s compound path
+        /// (authored <c>ConvexParts</c>). So "static may be any shape" and "this fan needs a convex outline" do not
+        /// contradict — a non-convex static simply does not take THIS path (dev-architect RFC 03 §1).</summary>
         public static Mesh Build(Vec2[] rawVerts) => Build(rawVerts, WoodPieceKey.Of(rawVerts));
+
+        /// <summary>TASK-325 (S2): build ONE mesh from a set of convex world-space parts with NO corner rounding —
+        /// the ribbon of a static SURFACE (each polyline segment offset to a convex quad, <see cref="Geometry.SurfaceRibbonQuads"/>).
+        /// Reuses the polyomino compound fan verbatim (same four wood-shader channels, same live-rebuild registration),
+        /// so a wooden chute shades and rebuilds exactly like a compound piece — no new triangulation code.</summary>
+        public static Mesh BuildParts(Vec2[][] parts, string key) => BuildCompound(parts, key);
 
         /// <summary><paramref name="key"/> — под каким именем эта форма ищет свою настройку
         /// (<see cref="WoodTuning.PieceOverrides"/>). Хранится вместе с контуром, чтобы

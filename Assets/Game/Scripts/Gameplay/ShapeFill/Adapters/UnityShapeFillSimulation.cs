@@ -48,6 +48,12 @@ namespace Gameplay.Adapters
         private Transform _root;
         private Rect _bounds;
         private int _nextId = 1;
+        // TASK-325 (S2): true once this level loaded at least one SURFACE static (an EdgeCollider2D chain). A thin edge
+        // chain is a zero-width film a fast piece can tunnel THROUGH in one Discrete step, so pieces in such a level use
+        // continuous collision (see SpawnFloating). Set in LoadStatics, read in SpawnFloating, cleared in Reset. A level
+        // with no surface leaves it false ⇒ pieces stay Discrete (Unity's default) ⇒ every pre-TASK-325 level is
+        // byte-for-byte unchanged in its contact manifolds and rest poses.
+        private bool _hasSurfaceStatic;
 
         public UnityShapeFillSimulation(ShapeFillTuning tuning)
         {
@@ -70,6 +76,7 @@ namespace Gameplay.Adapters
         public void LoadStatics(Polygon[] staticGeometry, Rect bounds, Vec2 gravity)
         {
             _bounds = bounds;
+            _hasSurfaceStatic = false;
             Physics2D.simulationMode = SimulationMode2D.Script;
             Physics2D.gravity = new Vector2(gravity.X, gravity.Y);
 
@@ -78,14 +85,34 @@ namespace Gameplay.Adapters
 
             foreach (var polygon in staticGeometry)
             {
-                if (polygon?.Outline == null || polygon.Outline.Length < 3)
+                if (polygon?.Outline == null)
                     continue;
 
-                var go = new GameObject("Static");
-                go.transform.SetParent(Root, false);
-                var collider = go.AddComponent<PolygonCollider2D>();
-                collider.points = ToPoints(polygon.Outline);
-                _statics.Add(go);
+                // TASK-325 (S2): a SURFACE traces the authored polyline EXACTLY with an EdgeCollider2D chain (an open
+                // chain of segments, no coordinate-dependent convex split — device-deterministic by construction). A
+                // FILLED SOLID keeps the single PolygonCollider2D built from the whole contour (unchanged). A chain
+                // needs ≥2 points; a solid ≥3 (the validator flags too-few loudly — this guard only skips a degenerate).
+                if (polygon.IsSurface)
+                {
+                    if (polygon.Outline.Length < 2)
+                        continue;
+                    var go = new GameObject("StaticSurface");
+                    go.transform.SetParent(Root, false);
+                    var edge = go.AddComponent<EdgeCollider2D>();
+                    edge.points = ToPoints(polygon.Outline);
+                    _statics.Add(go);
+                    _hasSurfaceStatic = true;
+                }
+                else
+                {
+                    if (polygon.Outline.Length < 3)
+                        continue;
+                    var go = new GameObject("Static");
+                    go.transform.SetParent(Root, false);
+                    var collider = go.AddComponent<PolygonCollider2D>();
+                    collider.points = ToPoints(polygon.Outline);
+                    _statics.Add(go);
+                }
             }
         }
 
@@ -149,6 +176,14 @@ namespace Gameplay.Adapters
             rb.gravityScale = 0f; // floating: at rest until released
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
+            // TASK-325 (S2 named cost): if this level carries a thin EdgeCollider2D SURFACE, a fast piece can tunnel
+            // straight through the zero-width film in one Discrete step (dev-architect RFC 03, Q3). Continuous collision
+            // sub-steps the sweep so it cannot. Applied ONLY when a surface exists ⇒ the whole pre-TASK-325 corpus (no
+            // surface) stays Discrete and byte-for-byte unchanged; the anti-tunnel LOWER BOUND on segment length is the
+            // balancer's sim-gate number, tracked as tech-debt, not hardcoded here.
+            rb.collisionDetectionMode = _hasSurfaceStatic
+                ? CollisionDetectionMode2D.Continuous
+                : CollisionDetectionMode2D.Discrete;
 
             // Density MUST be assigned after the auto-mass Dynamic body exists — Unity rejects Collider2D.density
             // on a collider that has no attached dynamic auto-mass body ("Density cannot be set on the collider
@@ -335,6 +370,7 @@ namespace Gameplay.Adapters
             }
             _statics.Clear();
             _flowZones = null; // TASK-097: drop the level's flow zones on teardown (OnLevelLoaded reinstalls them)
+            _hasSurfaceStatic = false; // TASK-325: LoadStatics re-derives it for the next level
             _nextId = 1;
         }
 
