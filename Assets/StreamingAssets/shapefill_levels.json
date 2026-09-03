@@ -5247,7 +5247,7 @@
       "seed": 511,
       "difficultyTier": 9,
       "physicsMode": "assembly",
-      "winningOrder": [0, 1],
+      "winningOrder": [1, 0],
       "matchTolerance": { "posTol": 0.34, "angTol": 0.43633 },
       "bounds": { "min": { "x": -7, "y": -1 }, "max": { "x": 7, "y": 23 } },
       "gravity": { "x": 0, "y": -43.0 },
@@ -5287,8 +5287,8 @@
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 5.85, "y": 6.3 }, { "x": 7.0, "y": 6.3 }, { "x": 7.0, "y": 22.0 }, { "x": 5.85, "y": 22.0 } ] }
       ],
       "airZones": [
-        { "region": { "min": { "x": -0.5, "y": 0.05 }, "max": { "x": 2.2, "y": 2.6 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 522.0, "color": "#CFE8F5" },
-        { "region": { "min": { "x": -5.0, "y": 0.05 }, "max": { "x": -0.3, "y": 4.9 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 522.0, "color": "#CFE8F5" }
+        { "region": { "min": { "x": -0.5, "y": 0.05 }, "max": { "x": 2.2, "y": 2.6 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 600.0, "color": "#CFE8F5" },
+        { "region": { "min": { "x": -5.0, "y": 0.05 }, "max": { "x": -0.3, "y": 4.9 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 600.0, "color": "#CFE8F5" }
       ]
     }
   ]
