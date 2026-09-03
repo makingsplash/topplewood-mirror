@@ -5252,8 +5252,8 @@
       "bounds": { "min": { "x": -7, "y": -1 }, "max": { "x": 7, "y": 23 } },
       "gravity": { "x": 0, "y": -43.0 },
       "pieceTypes": [
-        { "kind": "cross",    "color": "#3FC8E0", "symmetryOrder": 4,  "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plus_pentomino", "cell": 0.80 } },
-        { "kind": "red_ball", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.08, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.67, "segments": 24 } }
+        { "kind": "cross",    "color": "#3FC8E0", "symmetryOrder": 4,  "material": { "density": 1.0, "friction": 0.15, "restitution": 0.05 }, "shape": { "primitive": "plus_pentomino", "cell": 0.80 } },
+        { "kind": "red_ball", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 5.0, "friction": 0.75, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.67, "segments": 24 } }
       ],
       "target": {
         "outline": [ { "x": 3.934, "y": 8.731 }, { "x": 4.500, "y": 8.166 }, { "x": 5.066, "y": 8.731 }, { "x": 5.631, "y": 8.166 }, { "x": 5.066, "y": 7.600 }, { "x": 5.631, "y": 7.034 }, { "x": 5.066, "y": 6.469 }, { "x": 4.500, "y": 7.034 }, { "x": 3.934, "y": 6.469 }, { "x": 3.369, "y": 7.034 }, { "x": 3.934, "y": 7.600 }, { "x": 3.369, "y": 8.166 } ],
