@@ -14,6 +14,14 @@ namespace Gameplay.View
     {
         private const float ZBehindPieces = 0.5f; // pieces live at z=0; larger z = further from the +Z-facing camera
 
+        // TASK-349: a concave VISUAL MASS folds a would-be-separate wall in and tucks under the floor, so it must sit
+        // STRICTLY behind the plain statics it overlaps (floor, ribbon) — otherwise same-z opaque statics z-fight and
+        // "behind" becomes a draw-order coin-flip. 0.05 further from the orthographic camera is invisible in the frame
+        // but makes the depth test deterministic (RFC §3.4). Applied on the concave-fill path only; if the frame ever
+        // shows the mass IN FRONT of the ribbon at the tuck-under, the camera sign is flipped — the invariant is "mass
+        // furthest from camera among the left-chute statics", not the exact value.
+        private const float ZMassBehind = 0.55f;
+
         private static readonly Color DefaultColor = new Color(0.72f, 0.57f, 0.42f); // neutral block brown
 
         private MeshRenderer _renderer;
@@ -61,7 +69,7 @@ namespace Gameplay.View
             _styleKey = WoodPieceKey.OfStatic(worldOutline);
 
             var meshFilter = gameObject.AddComponent<MeshFilter>();
-            var mesh = PieceMeshBuilder.BuildConcaveFill(worldOutline);
+            var mesh = PieceMeshBuilder.BuildConcaveFill(worldOutline, _styleKey);
             meshFilter.mesh = mesh;
 
             _renderer = gameObject.AddComponent<MeshRenderer>();
@@ -69,7 +77,9 @@ namespace Gameplay.View
             _renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _renderer.receiveShadows = false;
 
-            transform.position = new Vector3(0f, 0f, ZBehindPieces);
+            // TASK-349: the mass overlaps the floor (tucks under it) and sits behind the ribbon — put it strictly
+            // furthest from the camera so those overlaps resolve deterministically (§3.4).
+            transform.position = new Vector3(0f, 0f, ZMassBehind);
             PieceShadow.Attach(transform, mesh);
 
             _mpb = new MaterialPropertyBlock();
@@ -77,19 +87,22 @@ namespace Gameplay.View
             WoodTuning.Changed += RefreshColor;
         }
 
-        /// <summary>TASK-325: a curved static SURFACE is a thin wooden RIBBON traced along the authored polyline — the
-        /// same <see cref="Geometry.SurfaceRibbonQuads"/> the validator measures piece embeds against, drawn through the
-        /// compound wood path (<see cref="PieceMeshBuilder.BuildParts"/>) so a chute shades, casts a shadow and rebuilds
-        /// exactly like a piece. No shelf sprite (that is only for an axis-aligned rectangle) and no convex fan (which
-        /// cannot triangulate the concave curve).</summary>
+        /// <summary>TASK-325/349: a curved static SURFACE is a thin wooden RIBBON traced along the authored polyline. The
+        /// validator still measures piece embeds against <see cref="Geometry.SurfaceRibbonQuads"/> (frozen), but the VIEW
+        /// now draws ONE joined strip (<see cref="Geometry.SurfaceRibbonStrip"/> → <see cref="PieceMeshBuilder.BuildRibbonStrip"/>)
+        /// so the segment joins carry no link outlines (TASK-349 defect #3) and the grain runs continuously down the chute.
+        /// No shelf sprite (that is only for an axis-aligned rectangle) and no convex fan (which cannot triangulate the
+        /// concave curve).</summary>
         private void InitializeSurface(Polygon polygon, string colorHex)
         {
             _colorHex = colorHex;
             _styleKey = WoodPieceKey.OfStatic(polygon.Outline);
 
-            var quads = Geometry.SurfaceRibbonQuads(polygon.Outline, polygon.Surface.Thickness);
+            // TASK-349: draw the ribbon as ONE joined strip (no per-segment link outlines). SurfaceRibbonQuads stays the
+            // validator's frozen embed source; this strip is a VIEW-only re-render of the same polyline + thickness.
+            var strip = Geometry.SurfaceRibbonStrip(polygon.Outline, polygon.Surface.Thickness);
             var meshFilter = gameObject.AddComponent<MeshFilter>();
-            var mesh = PieceMeshBuilder.BuildParts(quads, _styleKey);
+            var mesh = PieceMeshBuilder.BuildRibbonStrip(strip, _styleKey);
             meshFilter.mesh = mesh;
 
             _renderer = gameObject.AddComponent<MeshRenderer>();

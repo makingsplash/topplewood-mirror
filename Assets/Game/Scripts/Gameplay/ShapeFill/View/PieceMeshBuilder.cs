@@ -63,8 +63,8 @@ namespace Gameplay.View
         /// <summary>Build a flat convex fan mesh from a raw CCW outline (TASK-031: visible static geometry reuses
         /// the same triangulation as pieces). The outline must be CONVEX — v0's fan cannot triangulate a concave
         /// polygon. This is the SOLID-block path only; a CONCAVE static is not authored as this single outline but as
-        /// one of three other shapes: a curved SURFACE renders through <see cref="BuildParts"/> (a ribbon of convex
-        /// segment quads, TASK-325), a filled concave POLYOMINO through <c>Build(Shape)</c>'s compound path (authored
+        /// one of three other shapes: a curved SURFACE renders through <see cref="BuildRibbonStrip"/> (ONE joined ribbon
+        /// strip, TASK-349; TASK-325 drew per-segment quads), a filled concave POLYOMINO through <c>Build(Shape)</c>'s compound path (authored
         /// <c>ConvexParts</c>), and a concave VISUAL-ONLY static through <see cref="BuildConcaveFill"/> (ear-clipped,
         /// TASK-346). So "static may be any shape" and "this fan needs a convex outline" do not contradict — a
         /// non-convex static simply does not take THIS path (dev-architect RFC 03 §1, TASK-346 §2).</summary>
@@ -88,33 +88,44 @@ namespace Gameplay.View
         }
 
         /// <summary>
-        /// TASK-346: build ONE flat mesh that fills a CONCAVE simple outline — a VISUAL-ONLY static (the mirror of
-        /// "static is invisible by default"). The centroid fan of <see cref="Build(Vec2[])"/> cannot triangulate a
-        /// concave polygon (its centroid can fall in a notch and invert triangles), so this ear-clips the outline
-        /// (<see cref="Geometry.TriangulateConcave"/>) into ONE indexed mesh — no per-plate seams, one continuous grain
-        /// (the defect the task removes: the region was authored as a staircase of convex plates, each drawing its own
-        /// edge bands on the shared internal edges).
+        /// TASK-346/349: build ONE flat mesh that fills a CONCAVE simple outline — a VISUAL-ONLY static (the mirror of
+        /// "static is invisible by default"), the "visual mass" primitive. The centroid fan of <see cref="Build(Vec2[])"/>
+        /// cannot triangulate a concave polygon (its centroid can fall in a notch and invert triangles), so this ear-clips
+        /// the outline (<see cref="Geometry.TriangulateConcave"/>) into ONE indexed mesh — no per-plate seams, one
+        /// continuous grain.
         /// <para>
-        /// The mesh is marked FOREIGN (uv2.y = 0, like an air-zone quad): the wood shader then estimates edge distance
-        /// from the BOUNDING BOX, not from a per-vertex silhouette band, so it draws NO seam on the ear-clip chords.
-        /// A native (uv2.y = 1) mesh would need every interior diagonal carrying a true interior distance or the shader
-        /// paints an outline along it (dev-architect RFC §2.1) — the foreign path sidesteps that failure mode wholesale.
-        /// The concave CONTACT edge itself is drawn by the surface RIBBON that sits on the same curve (TASK-325, its own
-        /// beveled wood), so this fill only has to be the seamless solid mass BEHIND the ribbon; on its straight edges
-        /// (wall/floor) the bbox distance equals the true distance, so they bevel like the neighbouring convex statics.
+        /// TASK-349 replaces TASK-346's bbox-FOREIGN fallback with a true per-vertex SDF. TASK-346 marked the mesh FOREIGN
+        /// (uv2.y = 0) and let the shader estimate edge distance from the BOUNDING BOX — that worked for a small blob, but
+        /// a tall L-shaped mass shades UNLIKE its convex neighbours (bbox distance is wrong far from the bbox sides), so
+        /// the fill could not absorb the wall without a tonal step (the task's defect #1). Instead we now feed the shader
+        /// what it is built to consume: a NATIVE mesh (uv2.y = 1) carrying, per vertex, the true distance to the outline
+        /// silhouette (<see cref="Geometry.NearestBoundaryEdge"/>) and that nearest edge's outward normal. The interior is
+        /// refined (<see cref="RefineForSdf"/>) so every ear-clip CHORD carries interior vertices with distance &gt; 0 —
+        /// which is what stops the shader painting an outline band along the chords (dev-architect RFC §2.1/§3.1). The mass
+        /// then bevels IDENTICALLY to the convex wall/floor it folds in, so there is no seam and no tonal step.
         /// </para>
         /// No corner rounding (would notch the silhouette and fight the ribbon on the same curve) and no
-        /// <see cref="RebuildAll"/> registration (the layout carries no corners, so it is radius-independent — colour and
-        /// style still refresh through the renderer's <c>MaterialPropertyBlock</c>).
+        /// <see cref="RebuildAll"/> registration (radius-independent; colour/style refresh through the renderer's
+        /// <c>MaterialPropertyBlock</c>). <paramref name="key"/> keeps style parity with the convex statics for the
+        /// non-simple-contour fallback only.
         /// </summary>
-        public static Mesh BuildConcaveFill(Vec2[] outline)
+        public static Mesh BuildConcaveFill(Vec2[] outline, string key)
         {
             var mesh = new Mesh { name = "StaticFillMesh" };
-            FillConcave(mesh, outline);
+            FillTriangulated(mesh, outline, key);
             return mesh;
         }
 
-        private static void FillConcave(Mesh mesh, Vec2[] outline)
+        // TASK-349 SDF-refine tuning: edges are split fine within the silhouette band (where the shader's edge bands
+        // live) and left coarse in the deep interior (flat wood, far from any silhouette) — so the fill is a few
+        // thousand triangles, not a uniform subdivision explosion. Verify visually at the render gate; if a faint chord
+        // ghost survives, LOWER SdfRefineNear (finer band) — never fall back to the bbox path.
+        private const float SdfRefineNear = 0.22f; // max edge length for a triangle touching the silhouette band
+        private const float SdfRefineFar = 2.0f;   // max edge length in the deep interior (coarse; no bands there)
+        private const float SdfBandDepth = 0.9f;   // "near the silhouette" = a vertex within this distance of the outline
+        private const int SdfMaxVerts = 60000;     // runaway guard — one static mass; far above any real need
+
+        private static void FillTriangulated(Mesh mesh, Vec2[] outline, string key)
         {
             if (outline == null || outline.Length < 3)
             {
@@ -122,15 +133,21 @@ namespace Gameplay.View
                 return;
             }
 
-            if (!Geometry.TriangulateConcave(outline, out var verts, out var triangles))
+            if (!Geometry.TriangulateConcave(outline, out var boundary, out var baseTris))
             {
                 // A non-simple contour slipped past the validator: never hang or emit a silently-wrong mesh — draw the
                 // bounding box as an honest, obviously-wrong fallback and shout, so the bad data is found loud.
                 Debug.LogError("PieceMeshBuilder.BuildConcaveFill: ear clipping stalled on a non-simple outline — " +
                                "rendering its bounding box as a fallback. Fix the authored static.");
-                Fill(mesh, BoundingBoxQuad(outline), WoodPieceKey.Of(outline));
+                Fill(mesh, BoundingBoxQuad(outline), key);
                 return;
             }
+
+            Geometry.RefineForSdf(boundary, baseTris, SdfRefineNear, SdfRefineFar, SdfBandDepth, SdfMaxVerts,
+                out var verts, out var triangles, out var hitCeiling);
+            if (hitCeiling)
+                Debug.LogWarning("PieceMeshBuilder.FillTriangulated: SDF refinement hit its ceiling — a faint chord " +
+                                 "ghost may survive; lower SdfRefineNear or raise SdfMaxVerts for this outline.");
 
             float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
             foreach (var v in verts)
@@ -144,20 +161,29 @@ namespace Gameplay.View
             var sizeY = Mathf.Max(maxY - minY, 1e-4f);
             var size = new Vector2(sizeX, sizeY);
 
+            var bn = boundary.Length;
             var n = verts.Length;
             var vertices = new Vector3[n];
-            var uv = new Vector2[n];     // bbox-normalized — the FOREIGN-mesh edge-distance/normal fallback reads this
-            var uv2 = new Vector2[n];    // (0,0): FOREIGN marker → shader estimates the edge band from the bbox, no seam
+            var uv = new Vector2[n];     // bbox-normalized — the FOREIGN fallback path reads this (unused when native)
+            var uv2 = new Vector2[n];    // (dist, 1): NATIVE marker → shader draws the band from the true edge distance
             var uv3 = new Vector2[n];    // bbox size (world units)
-            var uv4 = new Vector2[n];    // unused when foreign (shader takes the bbox normal)
+            var uv4 = new Vector2[n];    // outward normal of the nearest outline edge (drives the directional bevel)
             for (var i = 0; i < n; i++)
             {
                 var p = verts[i];
+                var dist = Geometry.NearestBoundaryEdge(boundary, p, out var e);
+                // boundary is CCW-normalised by TriangulateConcave, so the outward normal of edge e (a→b) is (dy, −dx).
+                var a = boundary[e];
+                var b = boundary[(e + 1) % bn];
+                var edge = b - a;
+                var len = edge.Length;
+                var normal = len > 1e-6f ? new Vector2(edge.Y, -edge.X) / len : Vector2.up;
+
                 vertices[i] = new Vector3(p.X, p.Y, 0f);
                 uv[i] = new Vector2((p.X - minX) / sizeX, (p.Y - minY) / sizeY);
-                uv2[i] = Vector2.zero;
+                uv2[i] = new Vector2(dist, 1f);
                 uv3[i] = size;
-                uv4[i] = Vector2.zero;
+                uv4[i] = normal;
             }
 
             mesh.Clear();
@@ -167,6 +193,75 @@ namespace Gameplay.View
             mesh.SetUVs(2, uv3);
             mesh.SetUVs(3, uv4);
             mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+        }
+
+        /// <summary>
+        /// TASK-349: build ONE continuous wood mesh for a static SURFACE ribbon from the joined strip
+        /// (<see cref="Geometry.SurfaceRibbonStrip"/>). Unlike the TASK-325 per-segment quads (each drew its own
+        /// perimeter, so the cut edges between segments outlined as a chain of "links" — the task's defect #3), the
+        /// strip is one connected mesh whose edge band is driven by the CROSS distance to the two rails: the long sides
+        /// bevel (<c>edge → 0</c>), the internal join cuts do not (<c>edge ≈ half</c>). The grain runs continuously down
+        /// the whole chute (one world-space mesh) instead of resetting per segment. VIEW-ONLY — the ribbon polyline and
+        /// <see cref="Geometry.SurfaceRibbonQuads"/> (the validator's embed source) are untouched, so poseHash is
+        /// unchanged. No <see cref="RebuildAll"/> registration (thickness-driven, radius-independent).
+        /// </summary>
+        public static Mesh BuildRibbonStrip(Geometry.RibbonStrip strip, string key)
+        {
+            var mesh = new Mesh { name = "StaticRibbonMesh" };
+            FillRibbonStrip(mesh, strip, key);
+            return mesh;
+        }
+
+        private static void FillRibbonStrip(Mesh mesh, Geometry.RibbonStrip strip, string key)
+        {
+            if (strip.IsEmpty)
+            {
+                mesh.Clear();
+                return;
+            }
+
+            var sv = strip.Vertices;
+            var n = sv.Length;
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            foreach (var v in sv)
+            {
+                if (v.X < minX) minX = v.X;
+                if (v.X > maxX) maxX = v.X;
+                if (v.Y < minY) minY = v.Y;
+                if (v.Y > maxY) maxY = v.Y;
+            }
+            var sizeX = Mathf.Max(maxX - minX, 1e-4f);
+            var sizeY = Mathf.Max(maxY - minY, 1e-4f);
+            var size = new Vector2(sizeX, sizeY);
+
+            var vertices = new Vector3[n];
+            var uv = new Vector2[n];
+            var uv2 = new Vector2[n];
+            var uv3 = new Vector2[n];
+            var uv4 = new Vector2[n];
+            for (var i = 0; i < n; i++)
+            {
+                var p = sv[i];
+                // Distance to the NEAREST rail: 0 on the two long sides (band), half on the centreline (no band) —
+                // so only the rails bevel/outline and the segment-join cuts (mid-ribbon in cross) stay clean.
+                var edge = strip.Half - Mathf.Abs(strip.Cross[i]);
+                var nrm = strip.Normal[i];
+                vertices[i] = new Vector3(p.X, p.Y, 0f);
+                uv[i] = new Vector2((p.X - minX) / sizeX, (p.Y - minY) / sizeY);
+                uv2[i] = new Vector2(edge, 1f);
+                uv3[i] = size;
+                uv4[i] = new Vector2(nrm.X, nrm.Y);
+            }
+
+            mesh.Clear();
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uv);
+            mesh.SetUVs(1, uv2);
+            mesh.SetUVs(2, uv3);
+            mesh.SetUVs(3, uv4);
+            mesh.SetTriangles(strip.Triangles, 0);
             mesh.RecalculateBounds();
             mesh.RecalculateNormals();
         }

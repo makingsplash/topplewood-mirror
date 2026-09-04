@@ -222,6 +222,36 @@ namespace Gameplay.Core
             return MathF.Sqrt(bestDistSq);
         }
 
+        /// <summary>
+        /// TASK-349: distance (world units) from a point to a polygon's BOUNDARY AND the index of the boundary edge that
+        /// carries that distance (edge <c>i</c> is <c>verts[i]→verts[i+1]</c>). ONE closest-point pass, so the distance
+        /// and the edge can never disagree — the SDF concave fill (<c>PieceMeshBuilder</c>) needs BOTH a per-vertex
+        /// distance-to-silhouette and the outward normal of the SAME nearest edge, and computing them separately let the
+        /// two drift on a corner. Segment-clamped (corners exact), any simple polygon (no CCW/convex requirement); the
+        /// returned distance equals <see cref="DistanceToPolygonBoundary"/> for the same input.
+        /// </summary>
+        public static float NearestBoundaryEdge(Vec2[] verts, Vec2 p, out int edgeIndex)
+        {
+            var bestDistSq = float.MaxValue;
+            edgeIndex = 0;
+            for (int i = 0, n = verts.Length; i < n; i++)
+            {
+                var a = verts[i];
+                var e = verts[(i + 1) % n] - a;
+                var ee = Vec2.Dot(e, e);
+                var t = ee < 1e-12f ? 0f : Vec2.Dot(p - a, e) / ee;
+                t = t < 0f ? 0f : (t > 1f ? 1f : t); // clamp to segment (correct at corners)
+                var q = a + e * t;
+                var dsq = (p - q).SqrLength;
+                if (dsq < bestDistSq)
+                {
+                    bestDistSq = dsq;
+                    edgeIndex = i;
+                }
+            }
+            return MathF.Sqrt(bestDistSq);
+        }
+
         /// <summary>Even-odd point-in-polygon over a vertex ring (world/local — caller's frame).</summary>
         public static bool PointInPolygon(Vec2[] verts, Vec2 p)
         {
@@ -270,6 +300,233 @@ namespace Gameplay.Core
                 quads[i] = new[] { a - off, b - off, b + off, a + off }; // CCW
             }
             return quads;
+        }
+
+        /// <summary>
+        /// TASK-349: a static SURFACE ribbon as ONE continuous joined strip (the ImGui/NVIDIA polyline-stroking single-
+        /// strip: consecutive segments SHARE their join vertices so the ribbon is unbroken — no per-segment quad cut
+        /// edges). VIEW-ONLY: the validator's embed check and the poseHash still measure <see cref="SurfaceRibbonQuads"/>
+        /// (frozen); this only changes how the ribbon is DRAWN, so the notch defect (each segment quad drew its own
+        /// perimeter ⇒ a chain of outlined links) is removed without moving a single surface vertex.
+        /// <para>
+        /// Three vertex rows per polyline point — LEFT rail (cross <c>+half</c>), CENTRE (<c>0</c>), RIGHT rail
+        /// (<c>−half</c>) — so the wood shader's edge band, fed <c>edge = half − |cross|</c>, appears ONLY on the two long
+        /// rails (<c>|cross| → half ⇒ edge → 0</c>) and never on the mid-ribbon join cuts (<c>edge ≈ half</c>, large).
+        /// Rails are offset along the MITER normal (average of the two incident segment normals), clamped to a miter
+        /// limit so a sharp corner falls back to a flat clip instead of a spike; a smooth chute is all miters. This is
+        /// the SDF idea specialised to a strip: distance to the ribbon's two rails.
+        /// </para>
+        /// </summary>
+        public static RibbonStrip SurfaceRibbonStrip(Vec2[] polyline, float thickness)
+        {
+            if (polyline == null || polyline.Length < 2)
+                return RibbonStrip.Empty;
+
+            const float miterLimit = 4f; // sharper than this ⇒ clamp the miter to a flat clip (no spike)
+            var half = MathF.Max(thickness, 1e-4f) * 0.5f;
+            var m = polyline.Length;
+
+            // Per-segment left-hand unit normal (−dy, dx)/len — the same normal SurfaceRibbonQuads offsets by.
+            var segN = new Vec2[m - 1];
+            for (var i = 0; i < m - 1; i++)
+            {
+                var d = polyline[i + 1] - polyline[i];
+                var len = d.Length;
+                segN[i] = len > 1e-6f ? new Vec2(-d.Y, d.X) * (1f / len) : new Vec2(0f, 1f);
+            }
+
+            var verts = new Vec2[3 * m];
+            var cross = new float[3 * m];
+            var normal = new Vec2[3 * m];
+            for (var i = 0; i < m; i++)
+            {
+                // Miter normal at this point: at the ends it is the single incident segment normal; inside it is the
+                // averaged normal, and the miter LENGTH stretches by 1/cos(halfAngle) so the rail stays a constant
+                // half-width from the centreline — clamped so a near-reversed corner cannot shoot a spike.
+                Vec2 n;
+                float miterLen;
+                if (i == 0) { n = segN[0]; miterLen = half; }
+                else if (i == m - 1) { n = segN[m - 2]; miterLen = half; }
+                else
+                {
+                    var sum = segN[i - 1] + segN[i];
+                    var slen = sum.Length;
+                    n = slen > 1e-6f ? sum * (1f / slen) : segN[i];
+                    var denom = Vec2.Dot(n, segN[i]);              // cos(halfAngle) ∈ (0,1]
+                    denom = denom < 1f / miterLimit ? 1f / miterLimit : denom;
+                    miterLen = half / denom;
+                }
+
+                var p = polyline[i];
+                var off = n * miterLen;
+                var b = 3 * i;
+                verts[b + 0] = p + off; cross[b + 0] = +half; normal[b + 0] = n;   // left rail
+                verts[b + 1] = p;       cross[b + 1] = 0f;    normal[b + 1] = n;    // centreline
+                verts[b + 2] = p - off; cross[b + 2] = -half; normal[b + 2] = new Vec2(-n.X, -n.Y); // right rail
+            }
+
+            // Two quad columns (left rail↔centre, centre↔right rail) welded across every join → one connected strip.
+            var tris = new int[(m - 1) * 12];
+            var t = 0;
+            for (var i = 0; i < m - 1; i++)
+            {
+                var a = 3 * i;
+                var c = 3 * (i + 1);
+                // left column: aL,aC,cC,cL
+                Quad(tris, ref t, a + 0, a + 1, c + 1, c + 0);
+                // right column: aC,aR,cR,cC
+                Quad(tris, ref t, a + 1, a + 2, c + 2, c + 1);
+            }
+
+            return new RibbonStrip(verts, tris, cross, normal, half);
+
+            static void Quad(int[] buf, ref int t, int v0, int v1, int v2, int v3)
+            {
+                buf[t++] = v0; buf[t++] = v1; buf[t++] = v2;
+                buf[t++] = v0; buf[t++] = v2; buf[t++] = v3;
+            }
+        }
+
+        /// <summary>TASK-349: one continuous ribbon strip — vertices, triangles, a per-vertex signed CROSS offset from the
+        /// centreline (<c>±half</c> on the rails, <c>0</c> on the centre) and the per-vertex outward rail NORMAL. The view
+        /// turns <c>Cross</c> into the shader's edge distance (<c>Half − |Cross|</c>); the validator never sees it.</summary>
+        public readonly struct RibbonStrip
+        {
+            public readonly Vec2[] Vertices;
+            public readonly int[] Triangles;
+            public readonly float[] Cross;
+            public readonly Vec2[] Normal;
+            public readonly float Half;
+
+            public RibbonStrip(Vec2[] vertices, int[] triangles, float[] cross, Vec2[] normal, float half)
+            {
+                Vertices = vertices;
+                Triangles = triangles;
+                Cross = cross;
+                Normal = normal;
+                Half = half;
+            }
+
+            public bool IsEmpty => Vertices == null || Vertices.Length == 0;
+
+            public static RibbonStrip Empty =>
+                new RibbonStrip(Array.Empty<Vec2>(), Array.Empty<int>(), Array.Empty<float>(), Array.Empty<Vec2>(), 0f);
+        }
+
+        /// <summary>
+        /// TASK-349: CONFORMING (T-junction-free) refinement of a triangulation so a per-vertex SDF can resolve the
+        /// silhouette bands and every internal chord carries an interior vertex with distance &gt; 0 (which is what stops
+        /// the wood shader painting an outline along the ear-clip chords). Red-green refinement: a triangle whose longest
+        /// edge exceeds its target has all three edges split (RED, 1→4); a triangle that merely inherited a neighbour's
+        /// split point is closed to conform (GREEN, 1→2 or 2→3). Edge midpoints are SHARED through a map keyed by the
+        /// unordered vertex pair, so the two triangles across any edge use the SAME midpoint — no hanging node, hence no
+        /// distance-field discontinuity (which would itself read as a new seam). The target is <paramref name="nearLen"/>
+        /// for a triangle within <paramref name="bandDepth"/> of the boundary (fine, where the bands live) and
+        /// <paramref name="farLen"/> in the deep interior (coarse, flat wood). Deterministic; bounded by
+        /// <paramref name="maxVerts"/> and a pass guard (<paramref name="hitCeiling"/> ⇒ a faint chord ghost may survive).
+        /// Unity-free; <paramref name="baseTris"/> indexes into <paramref name="boundary"/> (a simple polygon, its own ring).
+        /// </summary>
+        public static void RefineForSdf(Vec2[] boundary, int[] baseTris, float nearLen, float farLen, float bandDepth,
+            int maxVerts, out Vec2[] outVerts, out int[] outTris, out bool hitCeiling)
+        {
+            var verts = new List<Vec2>(boundary.Length * 8);
+            var dist = new List<float>(boundary.Length * 8);
+            foreach (var v in boundary)
+            {
+                verts.Add(v);
+                dist.Add(DistanceToPolygonBoundary(boundary, v)); // outline vertices ≈ 0
+            }
+
+            var tris = new List<int>(baseTris);
+            var mid = new Dictionary<long, int>();
+
+            int Midpoint(int i, int j)
+            {
+                var mkey = EdgeKey(i, j);
+                if (mid.TryGetValue(mkey, out var m))
+                    return m;
+                m = verts.Count;
+                var mp = (verts[i] + verts[j]) * 0.5f;
+                verts.Add(mp);
+                dist.Add(DistanceToPolygonBoundary(boundary, mp));
+                mid[mkey] = m;
+                return m;
+            }
+
+            bool HasMid(int i, int j, out int m) => mid.TryGetValue(EdgeKey(i, j), out m);
+
+            var guard = 40;
+            var changed = true;
+            while (changed && guard-- > 0 && verts.Count < maxVerts)
+            {
+                changed = false;
+                var next = new List<int>(tris.Count);
+                for (var ti = 0; ti < tris.Count; ti += 3)
+                {
+                    int a = tris[ti], b = tris[ti + 1], c = tris[ti + 2];
+
+                    // Size predicate: too big FOR ITS BAND ⇒ force all three edges to split (red).
+                    var longest = MathF.Max((verts[b] - verts[a]).Length,
+                                  MathF.Max((verts[c] - verts[b]).Length, (verts[a] - verts[c]).Length));
+                    var dmin = MathF.Min(dist[a], MathF.Min(dist[b], dist[c]));
+                    var target = dmin < bandDepth ? nearLen : farLen;
+                    if (longest > target)
+                    {
+                        Midpoint(a, b);
+                        Midpoint(b, c);
+                        Midpoint(c, a);
+                    }
+
+                    var hAB = HasMid(a, b, out var pab);
+                    var hBC = HasMid(b, c, out var pbc);
+                    var hCA = HasMid(c, a, out var pca);
+                    var k = (hAB ? 1 : 0) + (hBC ? 1 : 0) + (hCA ? 1 : 0);
+
+                    if (k == 0)
+                    {
+                        next.Add(a); next.Add(b); next.Add(c);
+                        continue;
+                    }
+                    changed = true;
+
+                    if (k == 3)
+                    {
+                        Emit(next, a, pab, pca);
+                        Emit(next, pab, b, pbc);
+                        Emit(next, pca, pbc, c);
+                        Emit(next, pab, pbc, pca);
+                    }
+                    else if (k == 1)
+                    {
+                        if (hAB) { Emit(next, a, pab, c); Emit(next, pab, b, c); }
+                        else if (hBC) { Emit(next, b, pbc, a); Emit(next, pbc, c, a); }
+                        else { Emit(next, c, pca, b); Emit(next, pca, a, b); }
+                    }
+                    else // k == 2 — two split edges, one plain corner between them
+                    {
+                        if (!hCA) { Emit(next, pab, b, pbc); Emit(next, a, pab, pbc); Emit(next, a, pbc, c); }
+                        else if (!hAB) { Emit(next, pbc, c, pca); Emit(next, b, pbc, pca); Emit(next, b, pca, a); }
+                        else { Emit(next, pca, a, pab); Emit(next, c, pca, pab); Emit(next, c, pab, b); }
+                    }
+                }
+                tris = next;
+            }
+
+            hitCeiling = guard <= 0 || verts.Count >= maxVerts;
+            outVerts = verts.ToArray();
+            outTris = tris.ToArray();
+
+            static long EdgeKey(int i, int j)
+            {
+                var lo = i < j ? i : j;
+                var hi = i < j ? j : i;
+                return ((long)lo << 32) | (uint)hi;
+            }
+
+            static void Emit(List<int> t, int a, int b, int c)
+            {
+                t.Add(a); t.Add(b); t.Add(c);
+            }
         }
 
         /// <summary>Whether a simple polygon is convex: every cross product of consecutive edges shares one sign

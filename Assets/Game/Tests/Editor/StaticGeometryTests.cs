@@ -214,6 +214,131 @@ namespace Gameplay.Tests
             Assert.That(tris, Is.Null);
         }
 
+        // ---------------------------------------------------------------- TASK-349: NearestBoundaryEdge
+
+        [Test]
+        public void NearestBoundaryEdge_ReturnsSameDistanceAsBoundaryHelper_AndAValidEdge()
+        {
+            var poly = new[] { new Vec2(0f, 0f), new Vec2(4f, 0f), new Vec2(4f, 3f), new Vec2(0f, 3f) };
+            foreach (var p in new[] { new Vec2(1f, 0.4f), new Vec2(3.7f, 1.5f), new Vec2(2f, 1.5f), new Vec2(0.2f, 2.9f) })
+            {
+                var d = Geometry.NearestBoundaryEdge(poly, p, out var e);
+                Assert.That(e, Is.InRange(0, poly.Length - 1), "edge index is a real edge");
+                Assert.That(d, Is.EqualTo(Geometry.DistanceToPolygonBoundary(poly, p)).Within(1e-4f),
+                    "distance agrees with the boundary-distance helper (same closest-point pass)");
+            }
+
+            // A point just inside the bottom edge picks edge 0 (v0→v1, the bottom) with distance ≈ its height.
+            var dist = Geometry.NearestBoundaryEdge(poly, new Vec2(2f, 0.25f), out var edge);
+            Assert.That(edge, Is.EqualTo(0));
+            Assert.That(dist, Is.EqualTo(0.25f).Within(1e-4f));
+        }
+
+        // ---------------------------------------------------------------- TASK-349: SurfaceRibbonStrip
+
+        [Test]
+        public void SurfaceRibbonStrip_FewerThanTwoPoints_IsEmpty()
+        {
+            Assert.That(Geometry.SurfaceRibbonStrip(null, 0.2f).IsEmpty, Is.True);
+            Assert.That(Geometry.SurfaceRibbonStrip(new[] { new Vec2(0f, 0f) }, 0.2f).IsEmpty, Is.True);
+        }
+
+        [Test]
+        public void SurfaceRibbonStrip_ThreeRowsPerPoint_CrossSpansPlusMinusHalfWithCentre()
+        {
+            var polyline = new[] { new Vec2(0f, 0f), new Vec2(1f, 0.2f), new Vec2(2f, 0f) };
+            var strip = Geometry.SurfaceRibbonStrip(polyline, 0.2f);
+
+            Assert.That(strip.Half, Is.EqualTo(0.1f).Within(1e-6f));
+            Assert.That(strip.Vertices.Length, Is.EqualTo(3 * polyline.Length), "left rail / centre / right rail per point");
+            Assert.That(strip.Triangles.Length, Is.EqualTo((polyline.Length - 1) * 12), "two quad columns per segment");
+            for (var i = 0; i < polyline.Length; i++)
+            {
+                Assert.That(strip.Cross[3 * i + 0], Is.EqualTo(+strip.Half).Within(1e-6f), "left rail = +half");
+                Assert.That(strip.Cross[3 * i + 1], Is.EqualTo(0f).Within(1e-6f), "centreline = 0");
+                Assert.That(strip.Cross[3 * i + 2], Is.EqualTo(-strip.Half).Within(1e-6f), "right rail = −half");
+            }
+            foreach (var t in strip.Triangles)
+                Assert.That(t, Is.InRange(0, strip.Vertices.Length - 1), "every index references a real vertex");
+        }
+
+        [Test]
+        public void SurfaceRibbonStrip_StraightLine_RailsMatchSurfaceRibbonQuadsOffset()
+        {
+            // On a straight polyline the miter normal equals the segment normal, so the strip rails coincide with the
+            // per-quad outer edges: left rail at +half, centreline at 0, right rail at −half (the drawn≈measured invariant).
+            var polyline = new[] { new Vec2(0f, 0f), new Vec2(2f, 0f), new Vec2(4f, 0f) };
+            var strip = Geometry.SurfaceRibbonStrip(polyline, 0.2f);
+            for (var i = 0; i < polyline.Length; i++)
+            {
+                Assert.That(strip.Vertices[3 * i + 0].Y, Is.EqualTo(+0.1f).Within(1e-5f));
+                Assert.That(strip.Vertices[3 * i + 1].Y, Is.EqualTo(0f).Within(1e-5f));
+                Assert.That(strip.Vertices[3 * i + 2].Y, Is.EqualTo(-0.1f).Within(1e-5f));
+                Assert.That(strip.Vertices[3 * i + 1].X, Is.EqualTo(polyline[i].X).Within(1e-5f));
+            }
+        }
+
+        // ---------------------------------------------------------------- TASK-349: RefineForSdf (conforming)
+
+        [Test]
+        public void RefineForSdf_ConformingNoHangingNodes_PreservesAreaAndRefinesToTarget()
+        {
+            // The arrow-notch (concave) again: ear-clip it, then refine to edge ≤ 0.5 everywhere. The refined mesh must
+            // (a) tile the SAME area, (b) contain NO T-junction (no vertex sitting on another triangle's open edge —
+            // that is what would re-introduce an SDF seam), and (c) actually reach the target edge length.
+            var outline = new[]
+            {
+                new Vec2(0f, 0f), new Vec2(2f, 0f), new Vec2(1f, 1f), new Vec2(2f, 2f), new Vec2(0f, 2f)
+            };
+            Assert.That(Geometry.TriangulateConcave(outline, out var boundary, out var baseTris), Is.True);
+
+            const float target = 0.5f;
+            Geometry.RefineForSdf(boundary, baseTris, target, target, bandDepth: 100f, maxVerts: 100000,
+                out var verts, out var tris, out var hitCeiling);
+
+            Assert.That(hitCeiling, Is.False, "the arrow refines well within the ceiling");
+            Assert.That(tris.Length % 3, Is.EqualTo(0));
+
+            // (a) area preserved
+            var area = 0f;
+            for (var i = 0; i < tris.Length; i += 3)
+                area += TriangleArea(verts[tris[i]], verts[tris[i + 1]], verts[tris[i + 2]]);
+            Assert.That(area, Is.EqualTo(System.Math.Abs(Shoelace(outline))).Within(1e-3f), "refined mesh tiles the polygon");
+
+            // (c) every edge reached the target
+            for (var i = 0; i < tris.Length; i += 3)
+            {
+                var a = verts[tris[i]]; var b = verts[tris[i + 1]]; var c = verts[tris[i + 2]];
+                Assert.That((b - a).Length, Is.LessThanOrEqualTo(target + 1e-3f));
+                Assert.That((c - b).Length, Is.LessThanOrEqualTo(target + 1e-3f));
+                Assert.That((a - c).Length, Is.LessThanOrEqualTo(target + 1e-3f));
+            }
+
+            // (b) conformity — no vertex strictly interior to a triangle edge it does not belong to
+            for (var ti = 0; ti < tris.Length; ti += 3)
+            {
+                int x = tris[ti], y = tris[ti + 1], z = tris[ti + 2];
+                for (var vi = 0; vi < verts.Length; vi++)
+                {
+                    if (vi == x || vi == y || vi == z)
+                        continue;
+                    Assert.That(OnOpenSegment(verts[vi], verts[x], verts[y]), Is.False, "T-junction on edge xy");
+                    Assert.That(OnOpenSegment(verts[vi], verts[y], verts[z]), Is.False, "T-junction on edge yz");
+                    Assert.That(OnOpenSegment(verts[vi], verts[z], verts[x]), Is.False, "T-junction on edge zx");
+                }
+            }
+        }
+
+        private static bool OnOpenSegment(Vec2 p, Vec2 a, Vec2 b)
+        {
+            var cross = (b.X - a.X) * (p.Y - a.Y) - (b.Y - a.Y) * (p.X - a.X);
+            if (System.Math.Abs(cross) > 1e-4f)
+                return false; // not collinear
+            var dot = (p.X - a.X) * (b.X - a.X) + (p.Y - a.Y) * (b.Y - a.Y);
+            var len2 = (b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y);
+            return dot > 1e-5f && dot < len2 - 1e-5f; // strictly between the endpoints
+        }
+
         // ---------------------------------------------------------------- helpers
 
         private static Polygon Filled(params Vec2[] outline) => new Polygon(outline);
