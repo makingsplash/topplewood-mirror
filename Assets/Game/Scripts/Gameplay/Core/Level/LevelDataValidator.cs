@@ -54,6 +54,25 @@ namespace Gameplay.Core
         /// message. The COUNT is always reported; only the per-cell enumeration is capped.</summary>
         private const int MaxReportedMosaicCells = 12;
 
+        /// <summary>TASK-340: how far a box/plank's width may stray from its height (RELATIVE, fraction of the larger
+        /// side) and still be judged a true SQUARE — a square has 4-fold rotational symmetry, a rectangle only 2-fold,
+        /// and that distinction is what makes <see cref="PieceType.SymmetryOrder"/> 4 sound or a silent judging lie. It
+        /// is DELIBERATELY tight (1e-3): authored true squares are exact (0.6×0.6, 2.72×2.72) so any hair of ε passes
+        /// them, while TASK-339's 2.70×2.75 (1.8% off) MUST fail — that mismatch was the bug. Do NOT reuse the 2%
+        /// <see cref="GridMultipleEpsilon"/> here: it would wave the exact defect through. Tightening toward 0 is always
+        /// safe; widening it toward accepting a visibly non-square box is the "loosen the criterion for green" the canon
+        /// forbids.</summary>
+        public const float SquareTolerance = 1e-3f;
+
+        /// <summary>TASK-340 phase gate. <c>false</c> ⇒ a symmetryOrder/shape mismatch loads as a WARNING (phase 1: the
+        /// corpus carries ~24 non-square boxes authored order 4, so a hard ERROR would brick ~11 levels at load). Flip
+        /// to <c>true</c> (phase 2) once the corpus-cleanup task has re-authored every violator — see the TASK-340
+        /// tech-debt trigger. Flipping is a one-line change tracked by the same unit test (it asserts routing against
+        /// THIS flag). Widening the RULE (accepting a non-dividing order) is never correct; this flag only moves an
+        /// already-detected mismatch between WARNING and ERROR. Mirrors the canon-blessed TASK-085 tap-spacing rollout
+        /// (<see cref="TapZoneConfig.EnforceMinDistanceAsError"/>), which phased in for the same reason.</summary>
+        public const bool SymmetryOrderMismatchIsError = false;
+
         private readonly TapZoneConfig _tapZone;
 
         /// <summary>TASK-085: takes the tap-zone config so the tap-spacing check can predict the per-level zone. The
@@ -138,6 +157,14 @@ namespace Gameplay.Core
             //     last in the chain, five runs running. ERROR with the offending cells, exactly like a duplicate levelId.
             ValidateTargetMosaic(level, errors);
 
+            // 13. symmetryOrder ↔ shape (TASK-340): a piece's symmetryOrder claims the judge may fold its pose angle by
+            //     2π/order (PoseMatchEvaluator.SymmetryReduce); that is sound only if the shape actually HAS that
+            //     rotational symmetry. An over-claim (a non-square box authored order 4) makes the judge silently accept
+            //     a 90°-rotated (physically transposed) landing as a match — "тихая порча судейства", invisible to every
+            //     check above and to the sim (which never inspects symmetryOrder). Phase 1 = non-blocking WARNING; the
+            //     sim sweep surfaces it under [LEVEL-WARN] so it is no longer silent (LevelSimRunner.AuditTapSpacing).
+            ValidateSymmetryOrder(level, errors, warnings);
+
             return new ValidationResult(errors, warnings);
         }
 
@@ -210,6 +237,135 @@ namespace Gameplay.Core
                 else
                     warnings.Add(msg);
             }
+        }
+
+        /// <summary>
+        /// TASK-340: every piece's authored <see cref="PieceType.SymmetryOrder"/> must DIVIDE the shape's true
+        /// rotational-symmetry order. The judge (<see cref="PoseMatchEvaluator"/>'s <c>SymmetryReduce</c>) folds the pose
+        /// angle by <c>2π/order</c>; that fold is a real symmetry ONLY when rotating the piece by <c>2π/order</c> maps
+        /// its silhouette onto itself, i.e. when <c>2π/order</c> is a whole multiple of <c>2π/trueMax</c>, i.e. when
+        /// <c>order</c> divides <c>trueMax</c>. Divisibility, NOT <c>≤</c>: a proper divisor (order 1 on a square) is
+        /// merely a stricter judge — it can only reject, never falsely accept — so it is legal and must not be flagged;
+        /// an over-claim or a non-dividing order (3 on a square, 4 on a rectangle) is the defect and is reported with a
+        /// NAMED cause. Routes to <paramref name="warnings"/> in phase 1, <paramref name="errors"/> in phase 2, per
+        /// <see cref="SymmetryOrderMismatchIsError"/> (mirrors <see cref="ValidateTapSpacing"/>). Circle is EXEMPT — a
+        /// round piece has no meaningful angle, so the corpus authors a high order deliberately to make the judge
+        /// rotation-agnostic; requiring <c>order | segments</c> would add a fragile constraint with zero gameplay value.
+        /// A null type/shape is already reported by <see cref="ValidatePieces"/>, so it is skipped here (no NRE).
+        /// </summary>
+        private static void ValidateSymmetryOrder(LevelData level, List<string> errors, List<string> warnings)
+        {
+            if (level.Pieces == null)
+                return;
+
+            // The phase flag is a compile-time const; copy it to a local so the (phase-2) ERROR branch below does not
+            // read as unreachable dead code while the const is false. Flipping the const is then the only phase-2 change.
+            var mismatchIsError = SymmetryOrderMismatchIsError;
+
+            for (var i = 0; i < level.Pieces.Count; i++)
+            {
+                var type = level.Pieces[i].Type;
+                if (type?.Shape == null)
+                    continue; // already reported by ValidatePieces — do not NRE here
+                var shape = type.Shape;
+
+                if (shape.Primitive == ShapePrimitive.Circle)
+                    continue; // exempt: a round piece has no meaningful angle (see summary)
+
+                var order = type.SymmetryOrder; // clamped ≥1 in the PieceType ctor, so this is never 0
+                var trueMax = TrueMaxSymmetryOrder(shape);
+                if (trueMax % order == 0)
+                    continue; // order divides trueMax ⇒ the fold is a real symmetry ⇒ legal
+
+                var msg =
+                    $"Pieces[{i}] '{type.Kind}' ({DescribeShape(shape)}) authors symmetryOrder {order}, but that shape " +
+                    $"has {trueMax}-fold rotational symmetry — the legal orders are {DivisorsText(trueMax)} " +
+                    "(symmetryOrder must DIVIDE the shape's true symmetry). PoseMatchEvaluator folds the pose angle by " +
+                    $"2π/{order}, so order {order} silently accepts a rotated, physically-different landing as a match.";
+                if (mismatchIsError)
+                    errors.Add(msg);
+                else
+                    warnings.Add(msg);
+            }
+        }
+
+        /// <summary>TASK-340: the true rotational-symmetry order of a shape's silhouette, keyed on its primitive (the
+        /// source of truth is each <see cref="Shape"/> factory's docstring — transcribed here, not re-derived by a
+        /// geometric self-map test, because several primitives are symmetric about their CENTROID, not their transform
+        /// origin, e.g. a parallelogram; an origin-based vertex test would falsely reject its documented order 2). A
+        /// box/plank is 4-fold iff it is a true square, else 2-fold (a rectangle always self-coincides at 180°). Circle
+        /// is handled by the caller (exempt) and never reaches this. Every primitive not listed has only the trivial
+        /// symmetry (order 1): triangle, half-disc, trapezoid, right-triangle, quarter-disc, gable, and the L/J/T
+        /// tetrominoes and T/N/V/P/L pentominoes.</summary>
+        private static int TrueMaxSymmetryOrder(Shape shape)
+        {
+            switch (shape.Primitive)
+            {
+                case ShapePrimitive.Box:
+                case ShapePrimitive.Plank:
+                    return IsSquareBox(shape) ? 4 : 2;
+                case ShapePrimitive.Parallelogram:
+                case ShapePrimitive.STetromino:
+                case ShapePrimitive.ZTetromino:
+                case ShapePrimitive.ZPentomino:
+                    return 2;
+                case ShapePrimitive.PlusPentomino:
+                    return 4;
+                default:
+                    return 1;
+            }
+        }
+
+        /// <summary>TASK-340: is a box/plank a true square? Its collider bbox equals the authored width×height exactly
+        /// (axis-aligned, centred on origin — <see cref="Shape.Box"/>/<see cref="Shape.Plank"/>), so the square test is
+        /// on the bbox sides within <see cref="SquareTolerance"/> (relative). Reads <see cref="Shape.Vertices"/>, not an
+        /// authored width/height (the domain <see cref="Shape"/> does not retain them).</summary>
+        private static bool IsSquareBox(Shape shape)
+        {
+            BoxBounds(shape, out var w, out var h);
+            return System.MathF.Abs(w - h) <= SquareTolerance * System.MathF.Max(w, h);
+        }
+
+        /// <summary>Axis-aligned bounding-box extent of a shape's vertices. For a box/plank this equals the authored
+        /// width×height; used for the square test and the author-facing message dims.</summary>
+        private static void BoxBounds(Shape shape, out float width, out float height)
+        {
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            var verts = shape.Vertices;
+            for (var i = 0; i < verts.Length; i++)
+            {
+                var v = verts[i];
+                if (v.X < minX) minX = v.X;
+                if (v.X > maxX) maxX = v.X;
+                if (v.Y < minY) minY = v.Y;
+                if (v.Y > maxY) maxY = v.Y;
+            }
+            width = maxX - minX;
+            height = maxY - minY;
+        }
+
+        /// <summary>TASK-340: a short shape description for the mismatch message — the primitive name, plus the
+        /// bbox dims for a box/plank (the only primitive whose square-ness is the whole point of the rule).</summary>
+        private static string DescribeShape(Shape shape)
+        {
+            var name = shape.Primitive.ToString().ToLowerInvariant();
+            if (shape.Primitive != ShapePrimitive.Box && shape.Primitive != ShapePrimitive.Plank)
+                return name;
+            BoxBounds(shape, out var w, out var h);
+            return $"{name} {w:F3}×{h:F3}";
+        }
+
+        /// <summary>TASK-340: the divisors of <paramref name="trueMax"/> as an author-facing list ("1", "1 or 2",
+        /// "1, 2 or 4") — the set of legal symmetry orders for a shape with that true symmetry.</summary>
+        private static string DivisorsText(int trueMax)
+        {
+            var divs = new List<int>();
+            for (var d = 1; d <= trueMax; d++)
+                if (trueMax % d == 0)
+                    divs.Add(d);
+            if (divs.Count == 1)
+                return divs[0].ToString();
+            return string.Join(", ", divs.GetRange(0, divs.Count - 1)) + " or " + divs[divs.Count - 1];
         }
 
         /// <summary>

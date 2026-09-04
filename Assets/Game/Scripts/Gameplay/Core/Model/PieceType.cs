@@ -4,7 +4,11 @@ namespace Gameplay.Core
     /// Authoring type of a target piece (GAME_RULES §1). Slots of the same <see cref="Kind"/> are
     /// interchangeable (identity-agnostic match). <see cref="Color"/> is v0 cosmetic (win rule is
     /// colour-agnostic; "colour as match" is an A/B). <see cref="SymmetryOrder"/> is the rotational
-    /// symmetry period used by pose-match angle comparison (box=4, triangle/half-disc=1).
+    /// symmetry period used by pose-match angle comparison: the judge folds the pose angle by 2π/order, so the
+    /// authored order must DIVIDE the shape's TRUE rotational symmetry, else the judge silently accepts a rotated,
+    /// physically-different landing (TASK-340). Box/plank = 4 only when SQUARE, else 2; round = any (angle is
+    /// meaningless); every other primitive = 1 except parallelogram / S,Z-tetromino / Z-pentomino = 2 and plus-pentomino
+    /// = 4. This is load-validated against the shape by <see cref="LevelDataValidator"/> (check #13).
     /// Replaces the removed pool-model BlockDef (no Count — pieces are pre-placed 1:1, not pooled).
     /// </summary>
     public sealed class PieceType
