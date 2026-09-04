@@ -5290,6 +5290,38 @@
         { "region": { "min": { "x": -0.5, "y": 0.05 }, "max": { "x": 2.2, "y": 2.6 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 600.0, "color": "#CFE8F5" },
         { "region": { "min": { "x": -5.0, "y": 0.05 }, "max": { "x": -0.3, "y": 4.9 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 600.0, "color": "#CFE8F5" }
       ]
+    },
+    {
+      "levelId": "pencil_lift",
+      "seed": 353,
+      "difficultyTier": 6,
+      "physicsMode": "assembly",
+      "freezeLoadsAtRest": true,
+      "winningOrder": [0, 1],
+      "matchTolerance": { "posTol": 0.30, "angTol": 0.34906585 },
+      "bounds": { "min": { "x": -7, "y": -6 }, "max": { "x": 7, "y": 17 } },
+      "gravity": { "x": 0, "y": -9.81 },
+      "pieceTypes": [
+        { "kind": "body", "color": "#F3F3F2", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.72, "height": 2.72 } },
+        { "kind": "tip",  "color": "#F25300", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1.80, "height": 1.80 } }
+      ],
+      "target": {
+        "outline": [ { "x": 0.22, "y": 9.01 }, { "x": 1.12, "y": 10.83 }, { "x": 1.56, "y": 10.83 }, { "x": 1.56, "y": 13.55 }, { "x": -1.16, "y": 13.55 }, { "x": -1.16, "y": 10.83 }, { "x": -0.68, "y": 10.83 } ],
+        "slots": [
+          { "kind": "body", "position": { "x": 0.20, "y": 12.19 }, "rotation": 0 },
+          { "kind": "tip",  "position": { "x": 0.22, "y": 9.91 },  "rotation": 3.14159 }
+        ]
+      },
+      "pieces": [
+        { "kind": "body", "startPosition": { "x": 0.20, "y": 4.90 }, "startRotation": 0 },
+        { "kind": "tip",  "startPosition": { "x": 0.02, "y": 7.10 }, "startRotation": 3.14159 }
+      ],
+      "staticGeometry": [
+        { "visible": true, "color": "#EAD4B1", "outline": [ { "x": -7.0, "y": 13.56 }, { "x": 7.0, "y": 13.56 }, { "x": 7.0, "y": 15.96 }, { "x": -7.0, "y": 15.96 } ] }
+      ],
+      "airZones": [
+        { "region": { "min": { "x": -2.2, "y": 1.0 }, "max": { "x": 2.2, "y": 13.56 } }, "direction": { "x": 0, "y": 1 }, "acceleration": 15.0, "color": "#CFE8F5", "bypassHoverGuard": true }
+      ]
     }
   ]
 }
