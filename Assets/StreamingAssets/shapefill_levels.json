@@ -377,7 +377,7 @@
         {
           "color": "#E84B8A",
           "kind": "boiler",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -392,7 +392,7 @@
         {
           "color": "#8D6E4A",
           "kind": "cab",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -407,7 +407,7 @@
         {
           "color": "#E23B3B",
           "kind": "chimney",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -726,7 +726,7 @@
         {
           "color": "#F2801D",
           "kind": "body",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -756,7 +756,7 @@
         {
           "color": "#4CAF50",
           "kind": "head",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -1268,7 +1268,7 @@
         {
           "color": "#4CAF50",
           "kind": "wall",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -1944,7 +1944,7 @@
         {
           "color": "#12A5A5",
           "kind": "tier1",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -1975,7 +1975,7 @@
         {
           "color": "#5B4FE0",
           "kind": "tier2",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -2515,7 +2515,7 @@
         {
           "color": "#E84B8A",
           "kind": "base",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -3305,7 +3305,7 @@
         {
           "color": "#F4C20D",
           "kind": "base",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -3320,7 +3320,7 @@
         {
           "color": "#4CAF50",
           "kind": "column",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -3573,7 +3573,7 @@
         {
           "color": "#F4C20D",
           "kind": "foot",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -3588,7 +3588,7 @@
         {
           "color": "#4CAF50",
           "kind": "plinth",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -3603,7 +3603,7 @@
         {
           "color": "#12A5A5",
           "kind": "case",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -3633,7 +3633,7 @@
         {
           "color": "#5B4FE0",
           "kind": "hood",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -3648,7 +3648,7 @@
         {
           "color": "#B24BD1",
           "kind": "dial",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -3925,7 +3925,7 @@
         {
           "kind": "flag",
           "color": "#E23B3B",
-          "symmetryOrder": 4,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
@@ -4959,7 +4959,7 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "base", "color": "#12A5A5", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 3.0, "height": 0.35 } },
+        { "kind": "base", "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 3.0, "height": 0.35 } },
         { "kind": "divider", "color": "#2E7CD6", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.30, "height": 0.75 } },
         { "kind": "apple", "color": "#F4C20D", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.15, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.34, "segments": 24 } }
       ],
@@ -5036,10 +5036,10 @@
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "kind": "leg", "color": "#E84B8A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 0.3, "height": 1.1 } },
-        { "kind": "body", "color": "#8D6E4A", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.4, "height": 1.0 } },
-        { "kind": "neck", "color": "#E23B3B", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.9 } },
-        { "kind": "head", "color": "#F2801D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.6 } },
-        { "kind": "brow", "color": "#F4C20D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.6, "height": 0.25 } },
+        { "kind": "body", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.4, "height": 1.0 } },
+        { "kind": "neck", "color": "#E23B3B", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.7, "height": 0.9 } },
+        { "kind": "head", "color": "#F2801D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.0, "height": 0.6 } },
+        { "kind": "brow", "color": "#F4C20D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.6, "height": 0.25 } },
         { "kind": "antler", "color": "#4CAF50", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.5, "height": 0.95 } },
         { "kind": "tine", "color": "#12A5A5", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 0.3, "height": 0.55 } }
       ],
@@ -5090,8 +5090,8 @@
         { "kind": "lookout", "color": "#7D4B2A", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.5, "segments": 24 } },
         { "kind": "hammer", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 2.6, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.8, "segments": 24 } },
         { "kind": "beam", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 4.0, "height": 0.4 } },
-        { "kind": "hull", "color": "#6B4226", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.8 } },
-        { "kind": "mast", "color": "#A0522D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 2.6 } },
+        { "kind": "hull", "color": "#6B4226", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.8 } },
+        { "kind": "mast", "color": "#A0522D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 2.6 } },
         { "kind": "nest", "color": "#C9A227", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.8, "topWidth": 1.4, "height": 0.6 } }
       ],
       "target": {
