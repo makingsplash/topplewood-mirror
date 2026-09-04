@@ -26,7 +26,7 @@ namespace Gameplay.Core.Sim
         private readonly LevelData _level;
         // Passed to the mechanic and used here for FixedStep. TASK-043: it no longer carries the honesty-detector
         // tolerances — the assist layer (and its shared gate constants) were removed, so the detector below owns its
-        // own sim-local constants (DetectorEpsilon / DetectorSupportProbe).
+        // own sim-local constant (DetectorEpsilon).
         private readonly ShapeFillTuning _tuning;
         private readonly IDisposable _outcomeSub;
 
@@ -42,13 +42,13 @@ namespace Gameplay.Core.Sim
         // (that is ≈0 for circles authored in contact, which physics cannot hold → a false red); its raw resting
         // penetration is emitted for the harness's cross-run reference-rest floor instead. Null until baked.
         private bool[,] _touchingPair;
-        // TASK-043: the detector's own tolerances, now sim-local constants (they used to live on ShapeFillTuning and
-        // be shared with the controller gate, both removed with the assist layer). Values carried over verbatim:
-        // DetectorEpsilon is the interpenetration overshoot above baseline that counts as dishonest; DetectorSupportProbe
-        // is the drop distance a Placed piece must touch static/placed support within to count as grounded. TASK-075:
+        // TASK-043: the detector's own tolerance, now a sim-local constant (it used to live on ShapeFillTuning and
+        // be shared with the controller gate, both removed with the assist layer). Value carried over verbatim:
+        // DetectorEpsilon is the interpenetration overshoot above baseline that counts as dishonest. TASK-075:
         // DetectorEpsilon is public so the harness applies the SAME intersect threshold to the floored touching pairs.
+        // TASK-343: the freeze-in-air/grounding probe (DetectorSupportProbe) was removed with CountUngrounded — a
+        // directional rudiment after FreezeAt's removal (TASK-305); only the interpenetration tolerance remains.
         public const float DetectorEpsilon = 0.05f;
-        private const float DetectorSupportProbe = 0.1f;
         // Reused per Step so the driver allocates nothing while pushing a release group (TASK-023 §5.4).
         private readonly List<Vec2> _tapScratch = new();
 
@@ -231,14 +231,14 @@ namespace Gameplay.Core.Sim
             var solved = _outcome == GameOutcome.Won;
             var outcome = _outcome == GameOutcome.None ? "Timeout" : _outcome.ToString();
 
-            ComputeHonestyMetrics(out var intersectingPairs, out var maxPenetration, out var unsupportedPlaced,
+            ComputeHonestyMetrics(out var intersectingPairs, out var maxPenetration,
                 out var worst, out var touchingPens);
 
             return new SimRunResult(_level.LevelId, _level.Seed, policyId, orderKey, repeatIndex,
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
                 _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses,
-                intersectingPairs, maxPenetration, unsupportedPlaced, worst, touchingPens);
+                intersectingPairs, maxPenetration, worst, touchingPens);
         }
 
         /// <summary>
@@ -254,13 +254,15 @@ namespace Gameplay.Core.Sim
         ///     physical resting-slop is a nonzero honest contact) is NOT judged here — its raw penetration goes to
         ///     <paramref name="touchingPens"/> and the harness measures overshoot above the cross-run reference-rest
         ///     FLOOR instead of above 0. So this run's intersect/overshoot cover only the static-baseline pairs.
-        /// (b) FREEZE-IN-AIR — Placed pieces not TRANSITIVELY grounded: a piece is grounded if, dropped by
-        ///     <c>SupportProbe</c>, it touches a static OR an already-grounded piece (iterated to a fixed point). This
-        ///     credits a load resting on a free beam that rests on a fulcrum-static (grand_seesaw), and lateral /
-        ///     tilted contact (church) — the v1 "centroid strictly below" rule wrongly flagged both. A mutually-
-        ///     touching pair with no path to a static never grounds, so a real float is still caught. Pieces that have
-        ///     fallen OUT of <see cref="_level"/>.Bounds are excluded (TASK-043): they are escapees in free fall (a
-        ///     pathological Timeout, e.g. grand_seesaw with the fulcrum never released), not dishonest mid-air freezes.
+        /// TASK-343: the freeze-in-air / grounding check was REMOVED. It was a DIRECTIONAL proxy (dropped each Placed
+        /// piece DOWN by a probe and looked for a static/lower-piece contact), which after FreezeAt's removal (TASK-305)
+        /// became a rudiment: a production Won verdict is now issued ONLY at global rest (every Dynamic body GetSpeed&lt;ε
+        /// held for T — see ShapeFillMechanicController.GlobalRestReached), and a body at rest under gravity is already
+        /// supported by construction (static, another piece, OR a flow-zone thrust). The directional drop therefore
+        /// credited "supported" too narrowly and false-flagged a piece a flow holds against a ceiling/wall (pencil_lift),
+        /// while catching nothing real on any win in corpus history. Removing it leaves the honesty logic direction-free
+        /// (owner directive §3): "not moving" is proven by the rest-gated verdict itself, "in silhouette" by the pose
+        /// match/rigidity — see docs/decisions/0001-physics-determinism.md and docs/architecture/sim-harness-metrics.md.
         /// All pieces + the rectangular floor/cradle statics are convex, so penetration is exact. TASK-075: a Circle
         /// piece is measured as the NATIVE disc the physics simulates (analytic, rotation-invariant) rather than
         /// Shape.Circle's inscribed 24-gon; every other primitive stays a polygon (its collider IS a polygon), so
@@ -271,19 +273,17 @@ namespace Gameplay.Core.Sim
         /// Sim-only; the production path never runs this.
         /// </summary>
         private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration,
-            out int unsupportedPlaced, out WorstOverlapPair worst, out List<TouchingPen> touchingPens)
+            out WorstOverlapPair worst, out List<TouchingPen> touchingPens)
         {
-            // TASK-043: both tolerances are now sim-local constants (the shared ShapeFillTuning knobs were removed
-            // with the assist layer). epsilon = the interpenetration overshoot above the authored baseline that
-            // counts as dishonest; supportProbe = the drop gap a Placed piece must touch static/placed support within.
+            // TASK-043: the interpenetration tolerance is now a sim-local constant (the shared ShapeFillTuning knob was
+            // removed with the assist layer). epsilon = the interpenetration overshoot above the authored baseline that
+            // counts as dishonest. TASK-343: the grounding support-probe was removed with CountUngrounded.
             const float epsilon = DetectorEpsilon;
-            const float supportProbe = DetectorSupportProbe;
 
             EnsureSlotBaseline();
 
             intersectingPairs = 0;
             maxPenetration = 0f;
-            unsupportedPlaced = 0;
             worst = WorstOverlapPair.None;
             // TASK-075: raw resting penetrations of authored-TOUCHING pairs, handed to the harness for the cross-run
             // reference-rest floor (see field docs). Stays empty on levels with no authored-touching circle pair.
@@ -298,11 +298,6 @@ namespace Gameplay.Core.Sim
             // Each Placed piece's nearest same-Kind slot (the sim-local equivalent of the controller's removed
             // ClaimedSlot) — used to look up the authored baseline overlap and to report the worst pair.
             var slotOf = new List<int>();
-            // TASK-043 detector-fidelity fix: which Placed pieces are still inside the world Bounds. A piece that has
-            // fallen OUT of Bounds (grand_seesaw fulcrum-not-released Timeout: the beam+loads free-fall to y≈-600) is
-            // an escapee in free fall, NOT a dishonest mid-air freeze — it must not be counted as unsupported. Uses
-            // the SAME _level.Bounds the falling-state gate uses (IShapeFillSimulation.IsWithinBounds), so the two agree.
-            var inBounds = new List<bool>();
             foreach (var piece in _model.Pieces)
             {
                 if (piece.State != PieceLifecycle.Placed)
@@ -310,7 +305,6 @@ namespace Gameplay.Core.Sim
                 shapes.Add(ConvexShapeOf(_model.TypeFor(piece).Shape, piece.Position, piece.Rotation));
                 kinds.Add(piece.Kind);
                 slotOf.Add(NearestSameKindSlot(piece.Kind, piece.Position));
-                inBounds.Add(_level.Bounds.Contains(piece.Position));
             }
 
             for (var i = 0; i < shapes.Count; i++)
@@ -343,8 +337,6 @@ namespace Gameplay.Core.Sim
                         intersectingPairs++;
                 }
             }
-
-            unsupportedPlaced = CountUngrounded(shapes, supportProbe, inBounds);
         }
 
         /// <summary>The convex collider the PHYSICS simulates for a piece/slot at a pose (TASK-075): delegates to the
@@ -455,72 +447,6 @@ namespace Gameplay.Core.Sim
                 }
             }
             return best;
-        }
-
-        /// <summary>Count Placed pieces that are NOT transitively grounded (TASK-042). Seeds groundedness from the
-        /// statics, then propagates: any not-yet-grounded piece that, dropped by <paramref name="supportProbe"/>,
-        /// touches an already-grounded piece becomes grounded — iterated until the set stops growing. Direction-
-        /// agnostic (credits lateral / tilted contact), yet a cluster with no path to a static stays ungrounded.</summary>
-        private int CountUngrounded(List<ConvexShape> shapes, float supportProbe, List<bool> inBounds)
-        {
-            var statics = _level.StaticGeometry;
-            var grounded = new bool[shapes.Count];
-            var lowered = new ConvexShape[shapes.Count];
-            var remaining = 0;
-            for (var i = 0; i < shapes.Count; i++)
-            {
-                // TASK-043: a Placed piece that has escaped the world Bounds is in free fall (pathological Timeout,
-                // not an air-freeze) — drop it from the grounding graph entirely: neither required to be supported
-                // (never added to remaining) nor allowed to serve as support for another piece (never grounded, so
-                // never picked as an anchor k below). lowered[i] stays default and is only read for in-Bounds pieces.
-                if (!inBounds[i])
-                    continue;
-                lowered[i] = shapes[i].ShiftedDown(supportProbe);
-                if (SupportedByStatic(lowered[i], statics))
-                    grounded[i] = true;
-                else
-                    remaining++;
-            }
-
-            var changed = true;
-            while (changed && remaining > 0)
-            {
-                changed = false;
-                for (var i = 0; i < shapes.Count; i++)
-                {
-                    if (grounded[i] || !inBounds[i])
-                        continue;
-                    for (var k = 0; k < shapes.Count; k++)
-                    {
-                        if (k == i || !grounded[k])
-                            continue;
-                        if (Geometry.Penetration(lowered[i], shapes[k]) > 0f)
-                        {
-                            grounded[i] = true;
-                            remaining--;
-                            changed = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return remaining;
-        }
-
-        private static bool SupportedByStatic(ConvexShape lowered, Polygon[] statics)
-        {
-            if (statics == null)
-                return false;
-            foreach (var s in statics)
-            {
-                if (s?.Outline == null || s.Outline.Length < 3)
-                    continue;
-                // Statics (floor/cradle) are always polygons; a circle piece drops against them via circle-poly.
-                if (Geometry.Penetration(lowered, ConvexShape.Polygon(s.Outline)) > 0f)
-                    return true;
-            }
-            return false;
         }
 
         public void Dispose()

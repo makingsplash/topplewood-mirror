@@ -52,36 +52,12 @@ namespace Gameplay.Core
                 : Polygon(Geometry.WorldVertices(shape, position, rotation));
         }
 
-        /// <summary>Copy shifted down by <paramref name="d"/> (the grounding support-probe drop): a polygon's
-        /// vertices move, a circle's centre moves, a compound's every part moves. Radius is unchanged.</summary>
-        public ConvexShape ShiftedDown(float d)
-        {
-            if (IsCompound)
-            {
-                var shifted = new Vec2[Parts.Length][];
-                for (var i = 0; i < Parts.Length; i++)
-                    shifted[i] = ShiftDownVerts(Parts[i], d);
-                return Compound(shifted);
-            }
-            return IsCircle
-                ? Circle(new Vec2(Center.X, Center.Y - d), Radius)
-                : Polygon(ShiftDownVerts(Vertices, d));
-        }
-
         private static Vec2[][] WorldParts(Vec2[][] localParts, Vec2 position, float rotation)
         {
             var world = new Vec2[localParts.Length][];
             for (var i = 0; i < localParts.Length; i++)
                 world[i] = Geometry.WorldVertices(localParts[i], position, rotation);
             return world;
-        }
-
-        private static Vec2[] ShiftDownVerts(Vec2[] v, float d)
-        {
-            var r = new Vec2[v.Length];
-            for (var i = 0; i < v.Length; i++)
-                r[i] = new Vec2(v[i].X, v[i].Y - d);
-            return r;
         }
     }
 }

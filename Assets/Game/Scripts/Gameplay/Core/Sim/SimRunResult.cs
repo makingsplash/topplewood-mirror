@@ -42,17 +42,16 @@ namespace Gameplay.Core.Sim
         // omitted from the CSV row like FinalPoses). Empty on runs with no physical-settle pieces. Sim-only.
         public readonly IReadOnlyList<SimPiecePose> PreGlidePoses;
         // TASK-042 honesty detector (semantics rewritten by TASK-043; docstring corrected TASK-056): physical-fidelity
-        // checks over the FINAL settled poses, the proof the owner's bug (interpenetration + freeze-in-air) is gone in
-        // EVERY release order. IntersectingPairs = count of Placed piece pairs whose SAT penetration OVERSHOOTS their
-        // AUTHORED baseline overlap by more than DetectorEpsilon (= 0.05 world units; see SimRun.cs:44,211-215) — the
-        // overshoot, NOT the raw depth, so authored micro-overlaps (owl's ear in the head) are not false-flagged.
-        // MaxPenetration = the worst such overshoot (max(penetration − baseline), clamped ≥0; baseline already subtracted
-        // in the harness — 0 ⇒ every contact within design + slop). UnsupportedPlaced = count of Placed pieces with
-        // nothing (floor or a lower Placed piece) within a small gap beneath them — i.e. frozen on an "invisible
-        // support". Pass criterion (any order): all three are 0. Sim-only measurement; the sim-gate is what enforces it.
+        // checks over the FINAL settled poses, the proof the owner's interpenetration bug is gone in EVERY release
+        // order. IntersectingPairs = count of Placed piece pairs whose SAT penetration OVERSHOOTS their AUTHORED
+        // baseline overlap by more than DetectorEpsilon (= 0.05 world units; see SimRun.cs) — the overshoot, NOT the raw
+        // depth, so authored micro-overlaps (owl's ear in the head) are not false-flagged. MaxPenetration = the worst
+        // such overshoot (max(penetration − baseline), clamped ≥0; baseline already subtracted in the harness — 0 ⇒
+        // every contact within design + slop). Pass criterion (any order): both are 0. TASK-343: the freeze-in-air
+        // UnsupportedPlaced field was REMOVED — a directional rudiment after FreezeAt's removal (TASK-305); "not moving"
+        // is proven by the rest-gated Won verdict itself. Sim-only measurement; the sim-gate is what enforces it.
         public readonly int IntersectingPairs;
         public readonly float MaxPenetration;
-        public readonly int UnsupportedPlaced;
         // TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.2 — "НЕ ГАДАЙ: добавь per-run детали худшей пары"): the pair of
         // Placed pieces driving MaxPenetration this run — kinds, raw SAT penetration, the authored baseline applied to
         // them, and both claimed slot indices. On a CANON run flagged by the detector this row answers WHY without a
@@ -74,7 +73,7 @@ namespace Gameplay.Core.Sim
             int slotsFilled, int slotsTotal, int lostPieces, long poseHash,
             float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses,
             IReadOnlyList<SimPiecePose> preGlidePoses,
-            int intersectingPairs, float maxPenetration, int unsupportedPlaced,
+            int intersectingPairs, float maxPenetration,
             WorstOverlapPair worstPair, IReadOnlyList<TouchingPen> touchingPens = null)
         {
             LevelId = levelId;
@@ -97,7 +96,6 @@ namespace Gameplay.Core.Sim
             PreGlidePoses = preGlidePoses;
             IntersectingPairs = intersectingPairs;
             MaxPenetration = maxPenetration;
-            UnsupportedPlaced = unsupportedPlaced;
             WorstPair = worstPair;
             TouchingPens = touchingPens ?? System.Array.Empty<TouchingPen>();
         }
@@ -108,7 +106,7 @@ namespace Gameplay.Core.Sim
         public SimRunResult WithCorrectedHonesty(int intersectingPairs, float maxPenetration, WorstOverlapPair worstPair)
             => new(LevelId, Seed, PolicyId, OrderKey, RepeatIndex, Solved, Outcome, AttemptsUsed, StepsToResolve,
                 MatchError, SlotsFilled, SlotsTotal, LostPieces, PoseHash, PreGlideAngResidual, PreGlidePosErr,
-                FinalPoses, PreGlidePoses, intersectingPairs, maxPenetration, unsupportedPlaced: UnsupportedPlaced,
+                FinalPoses, PreGlidePoses, intersectingPairs, maxPenetration,
                 worstPair: worstPair, touchingPens: TouchingPens);
     }
 

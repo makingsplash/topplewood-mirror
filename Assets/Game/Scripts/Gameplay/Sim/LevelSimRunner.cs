@@ -625,19 +625,18 @@ namespace Gameplay.Sim
             // reference for the gated sweep and vice-versa). Still FYI-only: the timing report is never gated.
             ApplyTouchingRestFloor(timingRuns);
 
-            // Honesty of the fast game is DATA, not a gate: report int/unsup/pen counts so a finding is visible.
+            // Honesty of the fast game is DATA, not a gate: report int/pen counts so a finding is visible. TASK-343:
+            // the unsup-won count was removed with the UnsupportedPlaced metric (a directional rudiment post-TASK-305).
             var timingInt = 0;
-            var timingUnsupWon = 0;
             var timingPenWon = 0;
             foreach (var r in timingRuns)
             {
                 if (r.IntersectingPairs > 0) timingInt++;
-                if (r.Solved && r.UnsupportedPlaced > 0) timingUnsupWon++;
                 if (r.Solved && r.MaxPenetration > 1e-4f) timingPenWon++;
             }
             Debug.Log($"[level-sim] TIMING SUMMARY gap={gap} runs={timingRuns.Count} " +
                       $"divergent-levels={divergentLevels.Count} {string.Join(",", divergentLevels)} " +
-                      $"| fast-honesty(FYI, NOT gated): int={timingInt} unsup-won={timingUnsupWon} pen-won={timingPenWon}");
+                      $"| fast-honesty(FYI, NOT gated): int={timingInt} pen-won={timingPenWon}");
 
             WriteTimingReport(timingRuns);
         }
@@ -672,8 +671,9 @@ namespace Gameplay.Sim
         // TASK-075 reference-rest baseline: fold the cross-run honest floor of every authored-TOUCHING pair into each
         // run's honesty scalars. PURE post-processing of runs already produced — ZERO extra simulation (the answer to
         // QA's "does it double the sweep?": no). Per level: floor[(lo,hi)] = MIN, over the level's HONEST WINS
-        // (Solved ∧ IntersectingPairs==0 ∧ UnsupportedPlaced==0 — none of which depends on the touching-pen verdict,
-        // so there is no circularity), of that pair's raw resting penetration. Then EVERY run's scalars are rebuilt by
+        // (Solved ∧ IntersectingPairs==0 — neither of which depends on the touching-pen verdict, so there is no
+        // circularity; TASK-343 dropped the UnsupportedPlaced==0 term with the metric), of that pair's raw resting
+        // penetration. Then EVERY run's scalars are rebuilt by
         // folding max(raw − floor, 0) over its touching pairs back into MaxPenetration / IntersectingPairs / WorstPair.
         // A pair that never appears in a reference win (no honest run mapped pieces into both its slots), or a level
         // with NO honest win, floors at 0 → judged raw (strictest). Runs with no touching pair are left untouched, so
@@ -687,7 +687,7 @@ namespace Gameplay.Sim
             var floorByLevel = new Dictionary<string, Dictionary<long, float>>();
             foreach (var run in runs)
             {
-                if (!(run.Solved && run.IntersectingPairs == 0 && run.UnsupportedPlaced == 0))
+                if (!(run.Solved && run.IntersectingPairs == 0))
                     continue; // reference set = honest wins only (the safe MIN, RFC §2.2)
                 if (run.TouchingPens == null || run.TouchingPens.Count == 0)
                     continue;
