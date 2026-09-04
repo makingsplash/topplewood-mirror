@@ -529,6 +529,12 @@ namespace Gameplay.Core
                 if (block?.Outline == null)
                     continue;
 
+                // TASK-346: a collider:false block is a VISUAL-ONLY static — it has no collider for a piece to embed
+                // in, and feeding its (legally CONCAVE) outline to the convex ConvexShape.Polygon would compute a bogus
+                // penetration and false-flag. Skip it; there is nothing to embed in.
+                if (!block.HasCollider)
+                    continue;
+
                 ConvexShape staticShape;
                 if (block.IsSurface)
                 {
@@ -619,8 +625,11 @@ namespace Gameplay.Core
                                $"{(isSurface ? "surface polyline" : "block ring")} must be simple (no crossing edges).");
 
                 // TASK-307: a concave FILLED solid would be split coordinate-dependently by Box2D (platform-dependent
-                // physics). Surfaces are exempt (edge chain — no split).
-                if (!isSurface && outline.Length >= 3 && !IsConvex(outline))
+                // physics). Surfaces are exempt (edge chain — no split). TASK-346: a collider:false block is exempt too —
+                // it builds NO collider (a VISUAL-ONLY static, rendered by the concave triangulator), so there is no
+                // Box2D split to diverge; concavity is legal for it. The degenerate-edge and self-intersection checks
+                // above still run on it (the triangulator needs a simple polygon).
+                if (!isSurface && block.HasCollider && outline.Length >= 3 && !Geometry.IsConvex(outline))
                     errors.Add($"StaticGeometry[{g}] is a CONCAVE filled solid; Box2D would split it by a " +
                                "coordinate-dependent split (platform-dependent physics, TASK-072/307). Author a concave " +
                                "ramp/chute as a surface (surface:true — an EdgeCollider2D chain, no split) or as " +
@@ -773,7 +782,7 @@ namespace Gameplay.Core
                 if (part.Length > 8)
                     errors.Add($"Pieces[{index}] '{type.Kind}' ConvexParts[{p}] has {part.Length} vertices; a compound " +
                                "part must be ≤8 (Box2D splits a larger convex polygon coordinate-dependently, TASK-072).");
-                if (!IsConvex(part))
+                if (!Geometry.IsConvex(part))
                     errors.Add($"Pieces[{index}] '{type.Kind}' ConvexParts[{p}] is not convex; each part must be convex " +
                                "so Box2D takes it whole (a concave part is exactly the coordinate-dependent split TASK-072 removes).");
                 partsArea += PolygonArea(part);
@@ -793,34 +802,6 @@ namespace Gameplay.Core
             for (int i = 0, j = v.Length - 1; i < v.Length; j = i++)
                 sum += v[j].X * v[i].Y - v[i].X * v[j].Y;
             return System.MathF.Abs(sum) * 0.5f;
-        }
-
-        /// <summary>Whether a simple polygon is convex: all cross products of consecutive edges share one sign
-        /// (collinear/zero allowed). Tolerant so an authored axis-aligned rectangle (exact) passes cleanly.</summary>
-        private static bool IsConvex(Vec2[] v)
-        {
-            var n = v.Length;
-            if (n < 3)
-                return false;
-            var sign = 0;
-            for (var i = 0; i < n; i++)
-            {
-                var a = v[i];
-                var b = v[(i + 1) % n];
-                var c = v[(i + 2) % n];
-                var cross = (b.X - a.X) * (c.Y - b.Y) - (b.Y - a.Y) * (c.X - b.X);
-                if (cross > 1e-6f)
-                {
-                    if (sign < 0) return false;
-                    sign = 1;
-                }
-                else if (cross < -1e-6f)
-                {
-                    if (sign > 0) return false;
-                    sign = -1;
-                }
-            }
-            return true;
         }
 
         private static void ValidateKindCoverage(LevelData level, List<string> errors)

@@ -19,11 +19,20 @@ namespace Gameplay.Core
         /// <summary>TASK-325: true when this block is an open edge-chain surface rather than a filled solid.</summary>
         public bool IsSurface => Surface != null;
 
-        public Polygon(Vec2[] outline, Vec2[][] holes = null, StaticSurface surface = null)
+        /// <summary>TASK-346: whether this static builds a physics collider. Default true (every pre-TASK-346 static —
+        /// the collider IS the point of an invisible static). A <c>collider:false</c> block is the mirror idiom: a
+        /// VISUAL-ONLY static, DRAWN but not collided, so a level can show a solid CONCAVE wood mass (rendered by the
+        /// ear-clip triangulator) whose physics stays the authored convex decomposition — a concave FILLED collider is
+        /// forbidden (Box2D's coordinate-dependent split, TASK-307). Only meaningful for
+        /// <see cref="LevelData.StaticGeometry"/>; the target silhouette leaves the default.</summary>
+        public bool HasCollider { get; }
+
+        public Polygon(Vec2[] outline, Vec2[][] holes = null, StaticSurface surface = null, bool hasCollider = true)
         {
             Outline = outline;
             Holes = holes;
             Surface = surface;
+            HasCollider = hasCollider;
         }
     }
 }

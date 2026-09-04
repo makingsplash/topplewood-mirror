@@ -323,8 +323,11 @@ namespace Gameplay.Core
 
     /// <summary>Static-geometry block. <c>outline</c> is a closed solid contour by default; <c>surface:true</c>
     /// (TASK-325) reinterprets it as an OPEN polyline surface (chute/ramp) traced by an edge-chain collider, with an
-    /// optional <c>thickness</c> for the rendered ribbon. Both fields absent → the pre-TASK-325 filled solid, byte
-    /// for byte (the same additive-back-compat contract as <c>airZones</c>/<c>winningOrder</c>).</summary>
+    /// optional <c>thickness</c> for the rendered ribbon. <c>collider:false</c> (TASK-346) makes the block VISUAL-ONLY
+    /// — it is drawn (a concave mass through the ear-clip triangulator) but builds NO collider, so a concave silhouette
+    /// can be shown without the forbidden concave FILLED collider (Box2D's platform-dependent split, TASK-307). All
+    /// three fields absent → the pre-TASK-325 filled solid WITH a collider, byte for byte (the same additive-back-compat
+    /// contract as <c>airZones</c>/<c>winningOrder</c>).</summary>
     public sealed class PolygonDto
     {
         [JsonProperty("outline")] public List<Vec2Dto> Outline { get; set; } = new();
@@ -332,6 +335,7 @@ namespace Gameplay.Core
         [JsonProperty("color")] public string Color { get; set; }          // absent → null → view default
         [JsonProperty("surface")] public bool Surface { get; set; }        // absent → false → filled solid (TASK-325)
         [JsonProperty("thickness")] public float Thickness { get; set; }   // surface only; absent/0 → StaticSurface.DefaultThickness
+        [JsonProperty("collider")] public bool Collider { get; set; } = true; // absent → true → builds a collider (TASK-346)
 
         public Polygon ToDomain()
         {
@@ -340,7 +344,7 @@ namespace Gameplay.Core
                 verts[i] = Outline[i].ToDomain();
             // absent surface flag ⇒ null ⇒ filled solid (unchanged); thickness normalised inside StaticSurface.
             var surface = Surface ? new StaticSurface(Thickness) : null;
-            return new Polygon(verts, surface: surface);
+            return new Polygon(verts, surface: surface, hasCollider: Collider);
         }
     }
 

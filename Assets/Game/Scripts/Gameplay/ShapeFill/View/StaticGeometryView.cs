@@ -40,7 +40,41 @@ namespace Gameplay.View
                 InitializeSurface(polygon, colorHex);
                 return;
             }
+            // TASK-346: a CONCAVE filled outline can't be a centroid fan (nor a concave collider — the validator forbids
+            // that, so a concave outline reaching here is guaranteed collider:false). Render it as one ear-clipped mass.
+            // Dispatch on the GEOMETRY (Geometry.IsConvex — the same test the validator's concavity gate uses), not on a
+            // flag, so the two never disagree on which static takes which path.
+            if (polygon?.Outline != null && !Geometry.IsConvex(polygon.Outline))
+            {
+                InitializeConcaveFill(polygon.Outline, colorHex);
+                return;
+            }
             Initialize(polygon?.Outline, colorHex);
+        }
+
+        /// <summary>TASK-346: a concave VISUAL-ONLY static is ONE ear-clipped wood mass (<see cref="PieceMeshBuilder.BuildConcaveFill"/>)
+        /// — no shelf sprite (not an axis-aligned rect) and no convex fan (which cannot triangulate a concave outline).
+        /// Shades, shadows and recolours exactly like the surface ribbon / convex statics; only the triangulation differs.</summary>
+        private void InitializeConcaveFill(Vec2[] worldOutline, string colorHex)
+        {
+            _colorHex = colorHex;
+            _styleKey = WoodPieceKey.OfStatic(worldOutline);
+
+            var meshFilter = gameObject.AddComponent<MeshFilter>();
+            var mesh = PieceMeshBuilder.BuildConcaveFill(worldOutline);
+            meshFilter.mesh = mesh;
+
+            _renderer = gameObject.AddComponent<MeshRenderer>();
+            _renderer.sharedMaterial = BlockMaterial.Shared;
+            _renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _renderer.receiveShadows = false;
+
+            transform.position = new Vector3(0f, 0f, ZBehindPieces);
+            PieceShadow.Attach(transform, mesh);
+
+            _mpb = new MaterialPropertyBlock();
+            RefreshColor();
+            WoodTuning.Changed += RefreshColor;
         }
 
         /// <summary>TASK-325: a curved static SURFACE is a thin wooden RIBBON traced along the authored polyline — the

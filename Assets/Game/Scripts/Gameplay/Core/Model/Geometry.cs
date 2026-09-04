@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Gameplay.Core
 {
@@ -269,6 +270,142 @@ namespace Gameplay.Core
                 quads[i] = new[] { a - off, b - off, b + off, a + off }; // CCW
             }
             return quads;
+        }
+
+        /// <summary>Whether a simple polygon is convex: every cross product of consecutive edges shares one sign
+        /// (collinear/zero allowed). Tolerant so an authored axis-aligned rectangle (exact) passes cleanly. TASK-346:
+        /// promoted here (was <c>LevelDataValidator</c>'s private copy) so the validator's TASK-307 concavity gate and
+        /// the view's convex-fan-vs-triangulator render dispatch decide "concave?" by the SAME test — they can never
+        /// disagree on which static takes which path.</summary>
+        public static bool IsConvex(Vec2[] v)
+        {
+            var n = v.Length;
+            if (n < 3)
+                return false;
+            var sign = 0;
+            for (var i = 0; i < n; i++)
+            {
+                var a = v[i];
+                var b = v[(i + 1) % n];
+                var c = v[(i + 2) % n];
+                var cross = (b.X - a.X) * (c.Y - b.Y) - (b.Y - a.Y) * (c.X - b.X);
+                if (cross > 1e-6f)
+                {
+                    if (sign < 0) return false;
+                    sign = 1;
+                }
+                else if (cross < -1e-6f)
+                {
+                    if (sign > 0) return false;
+                    sign = -1;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// TASK-346: ear-clipping triangulation of a SIMPLE polygon — fills a CONCAVE outline that the centroid fan of
+        /// <c>PieceMeshBuilder.Build</c> cannot (its centroid can fall in a notch and invert triangles). The outline
+        /// must be simple (no self-intersection, no degenerate edges) — the static-geometry validator enforces exactly
+        /// that before a concave visual-only static reaches here. Winding is normalised to CCW internally, so
+        /// <paramref name="triangles"/> is emitted CCW regardless of authored winding and indexes into
+        /// <paramref name="verts"/> (the CCW-normalised outline). Returns false — with <paramref name="triangles"/> null
+        /// — if no ear is found in a full pass (a non-simple contour slipped through): the caller draws a safe fallback
+        /// and logs, so a malformed contour never hangs the clip loop nor yields a silently-wrong mesh. O(n²), Unity-free,
+        /// deterministic (no float-order-dependent branch — the same outline always clips to the same triangles).
+        /// </summary>
+        public static bool TriangulateConcave(Vec2[] outline, out Vec2[] verts, out int[] triangles)
+        {
+            triangles = null;
+            verts = null;
+            if (outline == null || outline.Length < 3)
+                return false;
+
+            var n = outline.Length;
+            verts = new Vec2[n];
+            // Normalise to CCW so the ear test (convex tip + empty triangle) has a consistent interior side.
+            if (PolygonSignedArea(outline) >= 0f)
+                Array.Copy(outline, verts, n);
+            else
+                for (var i = 0; i < n; i++)
+                    verts[i] = outline[n - 1 - i];
+
+            var indices = new List<int>(n);
+            for (var i = 0; i < n; i++)
+                indices.Add(i);
+
+            var tris = new List<int>((n - 2) * 3);
+            var guard = n * n; // O(n²) ceiling: a simple polygon always clips within this; a bad one bails, never hangs
+            while (indices.Count > 3 && guard-- > 0)
+            {
+                var earFound = false;
+                var m = indices.Count;
+                for (var i = 0; i < m; i++)
+                {
+                    var i0 = indices[(i - 1 + m) % m];
+                    var i1 = indices[i];
+                    var i2 = indices[(i + 1) % m];
+                    var a = verts[i0];
+                    var b = verts[i1];
+                    var c = verts[i2];
+
+                    if (TriArea2(a, b, c) <= 0f)
+                        continue; // reflex or collinear tip — never an ear on a CCW ring
+
+                    var empty = true;
+                    for (var j = 0; j < m; j++)
+                    {
+                        var ij = indices[j];
+                        if (ij == i0 || ij == i1 || ij == i2)
+                            continue;
+                        if (PointInTriangle(verts[ij], a, b, c))
+                        {
+                            empty = false;
+                            break;
+                        }
+                    }
+                    if (!empty)
+                        continue;
+
+                    tris.Add(i0); tris.Add(i1); tris.Add(i2);
+                    indices.RemoveAt(i);
+                    earFound = true;
+                    break;
+                }
+                if (!earFound)
+                    return false; // no ear in a full pass ⇒ not a simple polygon
+            }
+
+            if (indices.Count != 3)
+                return false;
+            tris.Add(indices[0]); tris.Add(indices[1]); tris.Add(indices[2]);
+            triangles = tris.ToArray();
+            return true;
+        }
+
+        /// <summary>Signed area of a polygon ring (shoelace ×½): &gt;0 CCW, &lt;0 CW.</summary>
+        private static float PolygonSignedArea(Vec2[] v)
+        {
+            var sum = 0f;
+            for (int i = 0, j = v.Length - 1; i < v.Length; j = i++)
+                sum += v[j].X * v[i].Y - v[i].X * v[j].Y;
+            return sum * 0.5f;
+        }
+
+        /// <summary>Twice the signed area of triangle a-b-c: &gt;0 for a CCW (left) turn, &lt;0 for CW, 0 collinear.</summary>
+        private static float TriArea2(Vec2 a, Vec2 b, Vec2 c)
+            => (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
+
+        /// <summary>Point-in-triangle by edge-sign consistency; a point ON an edge counts as inside, so a vertex lying
+        /// on a candidate ear's boundary correctly BLOCKS that ear (keeps the clip from emitting an overlapping tri).</summary>
+        private static bool PointInTriangle(Vec2 p, Vec2 a, Vec2 b, Vec2 c)
+        {
+            var d1 = TriArea2(a, b, p);
+            var d2 = TriArea2(b, c, p);
+            var d3 = TriArea2(c, a, p);
+            var hasNeg = d1 < 0f || d2 < 0f || d3 < 0f;
+            var hasPos = d1 > 0f || d2 > 0f || d3 > 0f;
+            return !(hasNeg && hasPos);
         }
 
         /// <summary>A shape's local vertices transformed to world by a pose (rotate then translate).</summary>

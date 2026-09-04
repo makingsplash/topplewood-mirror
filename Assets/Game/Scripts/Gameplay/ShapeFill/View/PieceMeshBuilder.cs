@@ -63,10 +63,11 @@ namespace Gameplay.View
         /// <summary>Build a flat convex fan mesh from a raw CCW outline (TASK-031: visible static geometry reuses
         /// the same triangulation as pieces). The outline must be CONVEX — v0's fan cannot triangulate a concave
         /// polygon. This is the SOLID-block path only; a CONCAVE static is not authored as this single outline but as
-        /// one of two other shapes: a curved SURFACE renders through <see cref="BuildParts"/> (a ribbon of convex
-        /// segment quads, TASK-325), and a filled concave solid through <c>Build(Shape)</c>'s compound path
-        /// (authored <c>ConvexParts</c>). So "static may be any shape" and "this fan needs a convex outline" do not
-        /// contradict — a non-convex static simply does not take THIS path (dev-architect RFC 03 §1).</summary>
+        /// one of three other shapes: a curved SURFACE renders through <see cref="BuildParts"/> (a ribbon of convex
+        /// segment quads, TASK-325), a filled concave POLYOMINO through <c>Build(Shape)</c>'s compound path (authored
+        /// <c>ConvexParts</c>), and a concave VISUAL-ONLY static through <see cref="BuildConcaveFill"/> (ear-clipped,
+        /// TASK-346). So "static may be any shape" and "this fan needs a convex outline" do not contradict — a
+        /// non-convex static simply does not take THIS path (dev-architect RFC 03 §1, TASK-346 §2).</summary>
         public static Mesh Build(Vec2[] rawVerts) => Build(rawVerts, WoodPieceKey.Of(rawVerts));
 
         /// <summary>TASK-325 (S2): build ONE mesh from a set of convex world-space parts with NO corner rounding —
@@ -84,6 +85,104 @@ namespace Gameplay.View
             Fill(mesh, rawVerts, key);
             Register(mesh, rawVerts, key);
             return mesh;
+        }
+
+        /// <summary>
+        /// TASK-346: build ONE flat mesh that fills a CONCAVE simple outline — a VISUAL-ONLY static (the mirror of
+        /// "static is invisible by default"). The centroid fan of <see cref="Build(Vec2[])"/> cannot triangulate a
+        /// concave polygon (its centroid can fall in a notch and invert triangles), so this ear-clips the outline
+        /// (<see cref="Geometry.TriangulateConcave"/>) into ONE indexed mesh — no per-plate seams, one continuous grain
+        /// (the defect the task removes: the region was authored as a staircase of convex plates, each drawing its own
+        /// edge bands on the shared internal edges).
+        /// <para>
+        /// The mesh is marked FOREIGN (uv2.y = 0, like an air-zone quad): the wood shader then estimates edge distance
+        /// from the BOUNDING BOX, not from a per-vertex silhouette band, so it draws NO seam on the ear-clip chords.
+        /// A native (uv2.y = 1) mesh would need every interior diagonal carrying a true interior distance or the shader
+        /// paints an outline along it (dev-architect RFC §2.1) — the foreign path sidesteps that failure mode wholesale.
+        /// The concave CONTACT edge itself is drawn by the surface RIBBON that sits on the same curve (TASK-325, its own
+        /// beveled wood), so this fill only has to be the seamless solid mass BEHIND the ribbon; on its straight edges
+        /// (wall/floor) the bbox distance equals the true distance, so they bevel like the neighbouring convex statics.
+        /// </para>
+        /// No corner rounding (would notch the silhouette and fight the ribbon on the same curve) and no
+        /// <see cref="RebuildAll"/> registration (the layout carries no corners, so it is radius-independent — colour and
+        /// style still refresh through the renderer's <c>MaterialPropertyBlock</c>).
+        /// </summary>
+        public static Mesh BuildConcaveFill(Vec2[] outline)
+        {
+            var mesh = new Mesh { name = "StaticFillMesh" };
+            FillConcave(mesh, outline);
+            return mesh;
+        }
+
+        private static void FillConcave(Mesh mesh, Vec2[] outline)
+        {
+            if (outline == null || outline.Length < 3)
+            {
+                mesh.Clear();
+                return;
+            }
+
+            if (!Geometry.TriangulateConcave(outline, out var verts, out var triangles))
+            {
+                // A non-simple contour slipped past the validator: never hang or emit a silently-wrong mesh — draw the
+                // bounding box as an honest, obviously-wrong fallback and shout, so the bad data is found loud.
+                Debug.LogError("PieceMeshBuilder.BuildConcaveFill: ear clipping stalled on a non-simple outline — " +
+                               "rendering its bounding box as a fallback. Fix the authored static.");
+                Fill(mesh, BoundingBoxQuad(outline), WoodPieceKey.Of(outline));
+                return;
+            }
+
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            foreach (var v in verts)
+            {
+                if (v.X < minX) minX = v.X;
+                if (v.X > maxX) maxX = v.X;
+                if (v.Y < minY) minY = v.Y;
+                if (v.Y > maxY) maxY = v.Y;
+            }
+            var sizeX = Mathf.Max(maxX - minX, 1e-4f);
+            var sizeY = Mathf.Max(maxY - minY, 1e-4f);
+            var size = new Vector2(sizeX, sizeY);
+
+            var n = verts.Length;
+            var vertices = new Vector3[n];
+            var uv = new Vector2[n];     // bbox-normalized — the FOREIGN-mesh edge-distance/normal fallback reads this
+            var uv2 = new Vector2[n];    // (0,0): FOREIGN marker → shader estimates the edge band from the bbox, no seam
+            var uv3 = new Vector2[n];    // bbox size (world units)
+            var uv4 = new Vector2[n];    // unused when foreign (shader takes the bbox normal)
+            for (var i = 0; i < n; i++)
+            {
+                var p = verts[i];
+                vertices[i] = new Vector3(p.X, p.Y, 0f);
+                uv[i] = new Vector2((p.X - minX) / sizeX, (p.Y - minY) / sizeY);
+                uv2[i] = Vector2.zero;
+                uv3[i] = size;
+                uv4[i] = Vector2.zero;
+            }
+
+            mesh.Clear();
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uv);
+            mesh.SetUVs(1, uv2);
+            mesh.SetUVs(2, uv3);
+            mesh.SetUVs(3, uv4);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+        }
+
+        /// <summary>Axis-aligned bounding-box quad (CCW) of an outline — the ear-clip fallback shape.</summary>
+        private static Vec2[] BoundingBoxQuad(Vec2[] outline)
+        {
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            foreach (var v in outline)
+            {
+                if (v.X < minX) minX = v.X;
+                if (v.X > maxX) maxX = v.X;
+                if (v.Y < minY) minY = v.Y;
+                if (v.Y > maxY) maxY = v.Y;
+            }
+            return new[] { new Vec2(minX, minY), new Vec2(maxX, minY), new Vec2(maxX, maxY), new Vec2(minX, maxY) };
         }
 
         // ------------------------------------------------------- пересборка формы

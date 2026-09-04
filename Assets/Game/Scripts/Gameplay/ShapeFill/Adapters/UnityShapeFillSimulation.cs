@@ -88,6 +88,12 @@ namespace Gameplay.Adapters
                 if (polygon?.Outline == null)
                     continue;
 
+                // TASK-346: a VISUAL-ONLY static (collider:false) builds NO physics body — it is drawn by the presenter
+                // (a concave wood mass) but never enters the sim, so its concave outline can never reach Box2D's split.
+                // The sim world is thus byte-identical whether such a block is present or not (poseHash gate, TASK-346).
+                if (!polygon.HasCollider)
+                    continue;
+
                 // TASK-325 (S2): a SURFACE traces the authored polyline EXACTLY with an EdgeCollider2D chain (an open
                 // chain of segments, no coordinate-dependent convex split — device-deterministic by construction). A
                 // FILLED SOLID keeps the single PolygonCollider2D built from the whole contour (unchanged). A chain

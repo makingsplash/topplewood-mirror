@@ -133,12 +133,110 @@ namespace Gameplay.Tests
             Assert.That(StaticErrors(result), Has.Some.Contains("vertices"));
         }
 
+        // ---------------------------------------------------------------- TASK-346: visual-only concave fill
+
+        [Test]
+        public void Validate_ConcaveVisualOnlyFill_IsExemptFromTask307Gate()
+        {
+            // The core of TASK-346: a CONCAVE outline with collider:false builds NO collider, so there is no Box2D split
+            // to diverge — the concavity gate must NOT fire. (The same arrow-notch shape that IS rejected with a collider.)
+            var result = ValidateStatic(VisualOnly(
+                new Vec2(0f, 0f), new Vec2(2f, 0f), new Vec2(1f, 1f), new Vec2(2f, 2f), new Vec2(0f, 2f)));
+            Assert.That(StaticErrors(result), Has.None.Contains("CONCAVE filled solid"));
+        }
+
+        [Test]
+        public void Validate_ConcaveVisualOnlyFill_StillRejectsSelfIntersection()
+        {
+            // collider:false exempts ONLY the concavity gate — the triangulator still needs a simple polygon, so the
+            // self-intersection check must keep firing (a bow-tie ring cannot be ear-clipped).
+            var result = ValidateStatic(VisualOnly(
+                new Vec2(0f, 0f), new Vec2(2f, 2f), new Vec2(2f, 0f), new Vec2(0f, 2f)));
+            Assert.That(StaticErrors(result), Has.Some.Contains("self-intersects"));
+        }
+
+        [Test]
+        public void Polygon_HasCollider_DefaultsTrueAndHonoursTheFlag()
+        {
+            Assert.That(new Polygon(new[] { new Vec2(0f, 0f), new Vec2(1f, 0f), new Vec2(0f, 1f) }).HasCollider, Is.True);
+            Assert.That(VisualOnly(new Vec2(0f, 0f), new Vec2(1f, 0f), new Vec2(0f, 1f)).HasCollider, Is.False);
+        }
+
+        // ---------------------------------------------------------------- Geometry.IsConvex / TriangulateConcave
+
+        [Test]
+        public void IsConvex_TrueForConvex_FalseForConcave()
+        {
+            Assert.That(Geometry.IsConvex(new[] { new Vec2(0f, 0f), new Vec2(2f, 0f), new Vec2(2f, 2f), new Vec2(0f, 2f) }), Is.True);
+            Assert.That(Geometry.IsConvex(new[]
+            {
+                new Vec2(0f, 0f), new Vec2(2f, 0f), new Vec2(1f, 1f), new Vec2(2f, 2f), new Vec2(0f, 2f)
+            }), Is.False, "the arrow-notch is concave");
+        }
+
+        [Test]
+        public void TriangulateConcave_TilesTheConcavePolygon_NMinusTwoTrianglesCoveringItsArea()
+        {
+            // An arrow-notch (concave) ring: ear clipping must succeed, emit exactly n-2 triangles, and those triangles
+            // must tile the polygon — their total area equals the polygon's shoelace area (no gaps, no overlaps).
+            var outline = new[]
+            {
+                new Vec2(0f, 0f), new Vec2(2f, 0f), new Vec2(1f, 1f), new Vec2(2f, 2f), new Vec2(0f, 2f)
+            };
+            Assert.That(Geometry.TriangulateConcave(outline, out var verts, out var tris), Is.True);
+            Assert.That(tris.Length, Is.EqualTo((outline.Length - 2) * 3), "n-2 triangles for an n-gon");
+
+            var triArea = 0f;
+            for (var i = 0; i < tris.Length; i += 3)
+                triArea += TriangleArea(verts[tris[i]], verts[tris[i + 1]], verts[tris[i + 2]]);
+            Assert.That(triArea, Is.EqualTo(System.Math.Abs(Shoelace(outline))).Within(1e-4f));
+        }
+
+        [Test]
+        public void TriangulateConcave_NormalisesToCcw_EmittingCcwTriangles()
+        {
+            // A CLOCKWISE concave ring must still triangulate — the clip normalises winding, so every emitted triangle
+            // is CCW (positive signed area). This is why authored fill winding does not matter.
+            var cw = new[]
+            {
+                new Vec2(0f, 2f), new Vec2(2f, 2f), new Vec2(1f, 1f), new Vec2(2f, 0f), new Vec2(0f, 0f)
+            };
+            Assert.That(Geometry.TriangulateConcave(cw, out var verts, out var tris), Is.True);
+            for (var i = 0; i < tris.Length; i += 3)
+                Assert.That(TriangleSignedArea(verts[tris[i]], verts[tris[i + 1]], verts[tris[i + 2]]),
+                    Is.GreaterThan(0f), "each emitted triangle is CCW");
+        }
+
+        [Test]
+        public void TriangulateConcave_DegenerateInput_FailsCleanly()
+        {
+            Assert.That(Geometry.TriangulateConcave(new[] { new Vec2(0f, 0f), new Vec2(1f, 0f) }, out _, out var tris), Is.False);
+            Assert.That(tris, Is.Null);
+        }
+
         // ---------------------------------------------------------------- helpers
 
         private static Polygon Filled(params Vec2[] outline) => new Polygon(outline);
 
         private static Polygon Surface(float thickness, params Vec2[] outline)
             => new Polygon(outline, null, new StaticSurface(thickness));
+
+        private static Polygon VisualOnly(params Vec2[] outline)
+            => new Polygon(outline, null, null, false);
+
+        private static float Shoelace(Vec2[] poly)
+        {
+            var sum = 0f;
+            for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++)
+                sum += poly[j].X * poly[i].Y - poly[i].X * poly[j].Y;
+            return sum * 0.5f;
+        }
+
+        private static float TriangleSignedArea(Vec2 a, Vec2 b, Vec2 c)
+            => ((b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X)) * 0.5f;
+
+        private static float TriangleArea(Vec2 a, Vec2 b, Vec2 c)
+            => System.Math.Abs(TriangleSignedArea(a, b, c));
 
         private static ValidationResult ValidateStatic(Polygon block)
             => new LevelDataValidator().Validate(new LevelData { StaticGeometry = new[] { block } });
