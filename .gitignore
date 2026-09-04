@@ -154,3 +154,8 @@ Assets/Plugins/Demigiant/DOTween/Editor/DOTweenUpgradeManager.XML
 .studio/.orchestrator-hold
 # Дайджест задачи для прогона роли — генерируется дашбордом перед каждым запуском, в git не нужен.
 .studio/tasks/*/CONTEXT.md
+
+# Витрина скиллов — симлинки, производные от `skills_on` в .studio/config.yml
+# (собирает .studio/tools/skills.sh). Склад `_off/` versioned, витрина — нет.
+.claude/skills/*
+!.claude/skills/_off/
