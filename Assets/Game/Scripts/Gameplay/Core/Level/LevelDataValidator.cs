@@ -64,14 +64,15 @@ namespace Gameplay.Core
         /// forbids.</summary>
         public const float SquareTolerance = 1e-3f;
 
-        /// <summary>TASK-340 phase gate. <c>false</c> ⇒ a symmetryOrder/shape mismatch loads as a WARNING (phase 1: the
-        /// corpus carries ~24 non-square boxes authored order 4, so a hard ERROR would brick ~11 levels at load). Flip
-        /// to <c>true</c> (phase 2) once the corpus-cleanup task has re-authored every violator — see the TASK-340
-        /// tech-debt trigger. Flipping is a one-line change tracked by the same unit test (it asserts routing against
-        /// THIS flag). Widening the RULE (accepting a non-dividing order) is never correct; this flag only moves an
-        /// already-detected mismatch between WARNING and ERROR. Mirrors the canon-blessed TASK-085 tap-spacing rollout
+        /// <summary>TASK-340 phase gate, now in PHASE 2. <c>true</c> ⇒ a symmetryOrder/shape mismatch loads as an ERROR
+        /// and BLOCKS the level (phase 1 was a non-blocking WARNING while the corpus still carried ~24 non-square boxes
+        /// authored order 4). Flipped to <c>true</c> by TASK-342 after the corpus-cleanup task (TASK-345) re-authored
+        /// every violator 4→2 and the full sweep landed 0 symmetry warnings (27/27 green). Flipping was a one-line change
+        /// tracked by the same unit test (it asserts routing against THIS flag). Widening the RULE (accepting a
+        /// non-dividing order) is never correct; this flag only moves an already-detected mismatch between WARNING and
+        /// ERROR. Mirrors the canon-blessed TASK-085 tap-spacing rollout
         /// (<see cref="TapZoneConfig.EnforceMinDistanceAsError"/>), which phased in for the same reason.</summary>
-        public const bool SymmetryOrderMismatchIsError = false;
+        public const bool SymmetryOrderMismatchIsError = true;
 
         private readonly TapZoneConfig _tapZone;
 
@@ -258,8 +259,8 @@ namespace Gameplay.Core
             if (level.Pieces == null)
                 return;
 
-            // The phase flag is a compile-time const; copy it to a local so the (phase-2) ERROR branch below does not
-            // read as unreachable dead code while the const is false. Flipping the const is then the only phase-2 change.
+            // The phase flag is a compile-time const; copy it to a local so neither the ERROR nor the WARNING branch
+            // below reads as unreachable dead code for whichever value the const holds. Now true (phase 2, TASK-342).
             var mismatchIsError = SymmetryOrderMismatchIsError;
 
             for (var i = 0; i < level.Pieces.Count; i++)
