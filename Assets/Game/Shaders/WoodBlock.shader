@@ -28,6 +28,14 @@
 //
 // Unlit намеренно: камера смотрит вдоль +Z, детали кувыркаются под физикой, и «свет»
 // надёжнее нарисовать самим, чем гонять его через нормали вееров.
+//
+// ВАРИАНТ _CONCAVE_SDF (TASK-353): вогнутая ВИДИМАЯ МАССА уровня. Её меш — сырой ear-clip силуэта
+// (≈51 треуг.), он НЕ несёт распределённой по вершинам дистанции до кромки, поэтому под этим кейвордом
+// расстояние `edge` и нормаль ближнего ребра считаются per-fragment по МИРОВОЙ CCW-полилинии контура
+// (_ConcaveOutline, ≤64 узлов). Прежний путь строил тот же контур ПЛОТНЫМ SDF-мешем (100k+ треуг.) и
+// фризил загрузку уровня на 4.7 с — аналитический SDF снимает и фриз, и треугольники, и делает полосу
+// точной при любой её ширине (расцепляет меш от живого тюнинга). Кейворд включён на материале
+// BlockMaterial.ConcaveShared; без кейворда (обычные детали/статика) фрагмент байт-в-байт прежний.
 Shader "Game/Wood Block"
 {
     Properties
@@ -115,6 +123,10 @@ Shader "Game/Wood Block"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_instancing
+            // TASK-353: вариант вогнутой ВИДИМОЙ МАССЫ. Её меш — сырой ear-clip силуэта (≈51 треуг.),
+            // он НЕ несёт распределённой дистанции по вершинам, поэтому расстояние до кромки и нормаль
+            // ближнего ребра считаются per-fragment по МИРОВОЙ полилинии контура (_ConcaveOutline).
+            #pragma shader_feature_local_fragment _ _CONCAVE_SDF
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
@@ -156,6 +168,14 @@ Shader "Game/Wood Block"
             float _Ao, _AoWidth;
             float _Saturation, _Brightness;
             float _Cull;
+
+            // TASK-353: контур вогнутой массы для аналитического SDF (вариант _CONCAVE_SDF). Мировые
+            // координаты CCW-полилинии, один узел на элемент (.xy; .zw не используются). Заполняется
+            // per-renderer через MaterialPropertyBlock.SetVectorArray — поэтому вне инстанс-буфера и вне
+            // UnityPerMaterial (этот шейдер и без того несёт цвет инстанс-буфером, SRP-батчинг ему не
+            // положен). 64 — потолок; StaticGeometryView гардит >64 откатом на плотный меш.
+            float4 _ConcaveOutline[64];
+            float _ConcaveOutlineCount;
 
             // --- шум: хеш + сглаженная интерполяция, дальше три октавы ---
             float hash21(float2 p)
@@ -273,6 +293,36 @@ Shader "Game/Wood Block"
                 col = saturate(col + (grainShifted - grain) * _GrainEmboss);
 
                 // ------------------------------------------------- кромка: сколько и куда
+#ifdef _CONCAVE_SDF
+                // TASK-353: аналитический SDF вогнутой массы. Меш — сырой ear-clip силуэта, дистанции по
+                // вершинам у него нет (все ≈0), поэтому расстояние до кромки и нормаль ближнего ребра
+                // считаются здесь, per-fragment, по МИРОВОЙ CCW-полилинии контура. Точно в каждом пикселе —
+                // не интерполяцией по вершинам — и без всякой связи с числом треугольников: фриз построения
+                // плотного меша снят, а полоса шейдера остаётся точной при ЛЮБОЙ её ширине (RFC §3, напр. 3).
+                // Контур уже мировой (масса собрана в мире, трансформ — сдвиг по Z без поворота), поэтому в
+                // отличие от per-vertex пути нормаль НЕ гоним через TransformObjectToWorldDir.
+                float2 P = IN.positionWS.xy;
+                int cnt = (int)_ConcaveOutlineCount;
+                float bestSq = 1e20;
+                float2 nBest = float2(0.0, 1.0);
+                [loop] for (int i = 0; i < cnt; i++)
+                {
+                    float2 a = _ConcaveOutline[i].xy;
+                    float2 b = _ConcaveOutline[(i + 1) % cnt].xy;
+                    float2 e = b - a;
+                    float ee = max(dot(e, e), 1e-12);
+                    float t = saturate(dot(P - a, e) / ee);   // segment-clamp: точно в углах контура
+                    float2 dq = P - (a + e * t);
+                    float dsq = dot(dq, dq);
+                    if (dsq < bestSq)
+                    {
+                        bestSq = dsq;
+                        nBest = float2(e.y, -e.x);            // наружу для CCW-контура: (dy, −dx)
+                    }
+                }
+                float edge = sqrt(bestSq);
+                float2 n = (dot(nBest, nBest) < 1e-8) ? float2(0.0, 1.0) : normalize(nBest);
+#else
                 // Расстояние до кромки: у своих мешей оно посчитано в единицах прямо в вершине
                 // (высота центроида над ребром сектора), у чужих оценивается по габариту.
                 float2 duv = min(IN.uv, 1.0 - IN.uv) * sz;
@@ -290,6 +340,7 @@ Shader "Game/Wood Block"
                 float3 nW3 = TransformObjectToWorldDir(float3(nOS, 0.0), false);
                 float2 n = nW3.xy;
                 n = (dot(n, n) < 1e-8) ? float2(0.0, 1.0) : normalize(n);
+#endif
 
                 float2 L;
                 sincos(radians(_LightAngle), L.y, L.x);

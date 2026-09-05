@@ -13,7 +13,15 @@ namespace Gameplay.View
         public static readonly int LegacyColorProperty = Shader.PropertyToID("_Color");
         private static readonly int CullProperty = Shader.PropertyToID("_Cull");
 
+        // TASK-353: канал контура вогнутой массы для аналитического SDF-варианта шейдера. Заливается
+        // per-renderer через MaterialPropertyBlock (StaticGeometryView), не в материал.
+        public static readonly int ConcaveOutlineProperty = Shader.PropertyToID("_ConcaveOutline");
+        public static readonly int ConcaveOutlineCountProperty = Shader.PropertyToID("_ConcaveOutlineCount");
+
+        private const string ConcaveKeyword = "_CONCAVE_SDF";
+
         private static Material _shared;
+        private static Material _concaveShared;
 
         public static Material Shared
         {
@@ -45,6 +53,37 @@ namespace Gameplay.View
                     WoodTuning.Current.ApplyToBlock(_shared);
                 }
                 return _shared;
+            }
+        }
+
+        /// <summary>
+        /// TASK-353: материал вогнутой ВИДИМОЙ МАССЫ. Тот же <c>Game/Wood Block</c>, но с включённым
+        /// кейвордом <c>_CONCAVE_SDF</c> — фрагмент считает расстояние до кромки аналитически по полилинии
+        /// силуэта, а меш массы несёт лишь сырой ear-clip (без плотного SDF-рефайна, который фризил
+        /// загрузку на 4.7 с). Кейворд живёт на МАТЕРИАЛЕ, а не в MaterialPropertyBlock (MPB кейворды не
+        /// несёт), поэтому массе нужен свой инстанс материала; таких масс на экране ≤1, потеря батчинга
+        /// нерелевантна. Откат — как у <see cref="Shared"/>: если <c>Game/Wood Block</c> не собрался,
+        /// кейворд на fallback-шейдере — no-op, и масса деградирует в плоскую заливку, а не в пропажу.
+        /// </summary>
+        public static Material ConcaveShared
+        {
+            get
+            {
+                if (_concaveShared == null)
+                {
+                    var shader = Shader.Find("Game/Wood Block")
+                                 ?? Shader.Find("Universal Render Pipeline/Unlit")
+                                 ?? Shader.Find("Sprites/Default")
+                                 ?? Shader.Find("Unlit/Color");
+                    _concaveShared = new Material(shader) { name = "ShapeFillConcaveMaterial" };
+                    _concaveShared.EnableKeyword(ConcaveKeyword);
+
+                    if (_concaveShared.HasProperty(CullProperty))
+                        _concaveShared.SetFloat(CullProperty, (float)UnityEngine.Rendering.CullMode.Off);
+
+                    WoodTuning.Current.ApplyToBlock(_concaveShared);
+                }
+                return _concaveShared;
             }
         }
     }
