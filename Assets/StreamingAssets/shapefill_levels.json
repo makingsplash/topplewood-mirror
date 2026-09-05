@@ -5303,7 +5303,7 @@
       "bounds": { "min": { "x": -7, "y": -6 }, "max": { "x": 7, "y": 17 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "body", "color": "#F3F3F2", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.72, "height": 2.72 } },
+        { "kind": "body", "color": "#CDB27E", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 2.72, "height": 2.72 } },
         { "kind": "tip",  "color": "#F25300", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "triangle", "width": 1.80, "height": 1.80 } }
       ],
       "target": {
