@@ -824,6 +824,9 @@ namespace Gameplay.View
         public void Apply(bool rebuildMeshes = true)
         {
             ApplyToBlock(BlockMaterial.Shared);
+            // TASK-353: у вогнутой массы свой материал (кейворд _CONCAVE_SDF на нём), но числа стиля те же —
+            // живой тюнинг обязан доезжать и до неё, иначе масса разъедется с деталями при кручении ползунков.
+            ApplyToBlock(BlockMaterial.ConcaveShared);
             ApplyToShadow(PieceShadow.Shared);
             PieceShadow.RefreshLiveShadows();
             FrameShadow.RefreshLive();

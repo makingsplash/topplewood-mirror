@@ -414,6 +414,9 @@ namespace Gameplay.Core
         }
 
         /// <summary>
+        /// FALLBACK path since TASK-353 — the concave mass now renders as a raw ear-clip with an ANALYTIC SDF in the wood
+        /// shader (<c>_CONCAVE_SDF</c>); this dense refine only runs for outlines the shader's ≤64-vertex uniform cannot
+        /// hold. (On a thin wall it produced 100k+ triangles and a multi-second load freeze — the reason it was demoted.)
         /// TASK-349: CONFORMING (T-junction-free) refinement of a triangulation so a per-vertex SDF can resolve the
         /// silhouette bands and every internal chord carries an interior vertex with distance &gt; 0 (which is what stops
         /// the wood shader painting an outline along the ear-clip chords). Red-green refinement: a triangle whose longest

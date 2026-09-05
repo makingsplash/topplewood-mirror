@@ -88,26 +88,54 @@ namespace Gameplay.View
         }
 
         /// <summary>
-        /// TASK-346/349: build ONE flat mesh that fills a CONCAVE simple outline — a VISUAL-ONLY static (the mirror of
-        /// "static is invisible by default"), the "visual mass" primitive. The centroid fan of <see cref="Build(Vec2[])"/>
-        /// cannot triangulate a concave polygon (its centroid can fall in a notch and invert triangles), so this ear-clips
-        /// the outline (<see cref="Geometry.TriangulateConcave"/>) into ONE indexed mesh — no per-plate seams, one
-        /// continuous grain.
+        /// TASK-353: build the CONCAVE VISUAL MASS as a RAW ear-clip mesh — the PRIMARY path. The mesh is just the
+        /// ear-clipped silhouette (<see cref="Geometry.TriangulateConcave"/>, ≈51 triangles, ~0 ms): it carries NO
+        /// per-vertex distance. Distance-to-edge and the nearest edge's outward normal are instead computed per-fragment
+        /// by the shader's <c>_CONCAVE_SDF</c> variant from the returned <paramref name="boundary"/> polyline (the caller
+        /// loads it into the <c>_ConcaveOutline</c> uniform via a <c>MaterialPropertyBlock</c>).
         /// <para>
-        /// TASK-349 replaces TASK-346's bbox-FOREIGN fallback with a true per-vertex SDF. TASK-346 marked the mesh FOREIGN
-        /// (uv2.y = 0) and let the shader estimate edge distance from the BOUNDING BOX — that worked for a small blob, but
-        /// a tall L-shaped mass shades UNLIKE its convex neighbours (bbox distance is wrong far from the bbox sides), so
-        /// the fill could not absorb the wall without a tonal step (the task's defect #1). Instead we now feed the shader
-        /// what it is built to consume: a NATIVE mesh (uv2.y = 1) carrying, per vertex, the true distance to the outline
-        /// silhouette (<see cref="Geometry.NearestBoundaryEdge"/>) and that nearest edge's outward normal. The interior is
-        /// refined (<see cref="RefineForSdf"/>) so every ear-clip CHORD carries interior vertices with distance &gt; 0 —
-        /// which is what stops the shader painting an outline band along the chords (dev-architect RFC §2.1/§3.1). The mass
-        /// then bevels IDENTICALLY to the convex wall/floor it folds in, so there is no seam and no tonal step.
+        /// Why this replaced the dense per-vertex SDF (<see cref="BuildConcaveFill"/>) as the main path: on chute_cross the
+        /// only concave visible mass in the manifest, the SDF refine built 100 556 triangles and froze the load for 4.7 s
+        /// (TASK-353 measurement). The mass is a thin chute wall (half-width ~0.67 &lt; the SdfBandDepth 0.9), so nearly
+        /// every vertex fell inside the fine band and the "few thousand triangles" promise never held. Encoding distance in
+        /// the mesh at all also coupled the triangle budget to the owner's LIVE band-width tuning; the analytic SDF is
+        /// exact at any band width for ~51 triangles and decouples the two completely (dev-architect RFC §3, direction 3).
         /// </para>
-        /// No corner rounding (would notch the silhouette and fight the ribbon on the same curve) and no
-        /// <see cref="RebuildAll"/> registration (radius-independent; colour/style refresh through the renderer's
-        /// <c>MaterialPropertyBlock</c>). <paramref name="key"/> keeps style parity with the convex statics for the
-        /// non-simple-contour fallback only.
+        /// Returns the raw mesh and, via <paramref name="boundary"/>, the CCW-normalised outline the shader consumes.
+        /// Returns <c>null</c> (with <paramref name="boundary"/> null) when the outline is degenerate or not a simple
+        /// polygon — the caller then falls back to <see cref="BuildConcaveFill"/>, which draws an honest bbox and shouts.
+        /// No corner rounding (would notch the silhouette) and no <see cref="RebuildAll"/> registration (radius-independent).
+        /// </summary>
+        public static Mesh BuildConcaveMass(Vec2[] outline, out Vec2[] boundary)
+        {
+            boundary = null;
+            if (outline == null || outline.Length < 3)
+                return null;
+            if (!Geometry.TriangulateConcave(outline, out var ccw, out var baseTris))
+                return null;
+
+            var mesh = new Mesh { name = "StaticMassMesh" };
+            FillRawMass(mesh, ccw, baseTris);
+            boundary = ccw;
+            return mesh;
+        }
+
+        /// <summary>
+        /// TASK-346/349: fill a CONCAVE simple outline with a DENSE per-vertex SDF mesh. FALLBACK path since TASK-353 —
+        /// the main path (<see cref="BuildConcaveMass"/>) is a raw ear-clip + analytic SDF in the shader; this dense mesh
+        /// only runs when the outline exceeds the shader's <c>_ConcaveOutline</c> uniform limit (&gt;64 verts) or its
+        /// triangulation fails, so a pathological static still renders (slowly) rather than blank.
+        /// <para>
+        /// It ear-clips the outline (<see cref="Geometry.TriangulateConcave"/>) into ONE indexed mesh, then feeds the
+        /// shader what its per-vertex path consumes: a NATIVE mesh (uv2.y = 1) carrying, per vertex, the true distance to
+        /// the silhouette (<see cref="Geometry.NearestBoundaryEdge"/>) and that nearest edge's outward normal. The interior
+        /// is refined (<see cref="RefineForSdf"/>) so every ear-clip CHORD carries interior vertices with distance &gt; 0 —
+        /// which is what stops the shader painting an outline band along the chords. That is exactly why it was expensive:
+        /// the refine is the ONLY source of non-zero interior distance, so a thin wall subdivides its whole area. This path
+        /// keeps that cost as the correctness safety net for outlines the uniform cannot hold.
+        /// </para>
+        /// No corner rounding and no <see cref="RebuildAll"/> registration. <paramref name="key"/> keeps style parity with
+        /// the convex statics for the non-simple-contour fallback only.
         /// </summary>
         public static Mesh BuildConcaveFill(Vec2[] outline, string key)
         {
@@ -116,10 +144,58 @@ namespace Gameplay.View
             return mesh;
         }
 
-        // TASK-349 SDF-refine tuning: edges are split fine within the silhouette band (where the shader's edge bands
-        // live) and left coarse in the deep interior (flat wood, far from any silhouette) — so the fill is a few
-        // thousand triangles, not a uniform subdivision explosion. Verify visually at the render gate; if a faint chord
-        // ghost survives, LOWER SdfRefineNear (finer band) — never fall back to the bbox path.
+        /// <summary>TASK-353: fill the raw ear-clip mesh of a concave mass — positions + bbox-normalised uv0 + bbox size
+        /// (uv3, the shader's <c>k</c> reads it), NO per-vertex distance (uv2.x = 0) and NO edge normal (uv4 = 0): both are
+        /// computed per-fragment by the <c>_CONCAVE_SDF</c> variant from the outline uniform. uv2.y = 1 is a harmless
+        /// marker unread on that path; it matters only if the keyword is stripped from a device build (then the mesh falls
+        /// into the per-vertex branch with distance 0 = a solid edge band — the tech-debt guarded on the first device
+        /// build).</summary>
+        private static void FillRawMass(Mesh mesh, Vec2[] boundary, int[] triangles)
+        {
+            var n = boundary.Length;
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            foreach (var v in boundary)
+            {
+                if (v.X < minX) minX = v.X;
+                if (v.X > maxX) maxX = v.X;
+                if (v.Y < minY) minY = v.Y;
+                if (v.Y > maxY) maxY = v.Y;
+            }
+            var sizeX = Mathf.Max(maxX - minX, 1e-4f);
+            var sizeY = Mathf.Max(maxY - minY, 1e-4f);
+            var size = new Vector2(sizeX, sizeY);
+
+            var vertices = new Vector3[n];
+            var uv = new Vector2[n];     // bbox-normalized — read only by the FOREIGN fallback branch (keyword stripped)
+            var uv2 = new Vector2[n];    // (0, 1): distance unused on the _CONCAVE_SDF path (shader computes it); marker 1
+            var uv3 = new Vector2[n];    // bbox size (world units) — feeds the shader's per-piece k
+            var uv4 = new Vector2[n];    // zero — edge normal computed per-fragment on the _CONCAVE_SDF path
+            for (var i = 0; i < n; i++)
+            {
+                var p = boundary[i];
+                vertices[i] = new Vector3(p.X, p.Y, 0f);
+                uv[i] = new Vector2((p.X - minX) / sizeX, (p.Y - minY) / sizeY);
+                uv2[i] = new Vector2(0f, 1f);
+                uv3[i] = size;
+                uv4[i] = Vector2.zero;
+            }
+
+            mesh.Clear();
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uv);
+            mesh.SetUVs(1, uv2);
+            mesh.SetUVs(2, uv3);
+            mesh.SetUVs(3, uv4);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+        }
+
+        // TASK-349 SDF-refine tuning — FALLBACK path only since TASK-353 (the main path is the shader's analytic SDF,
+        // BuildConcaveMass). Edges split fine within the silhouette band and stay coarse in the deep interior. The
+        // "few thousand triangles" this comment once promised did NOT hold on a thin wall (chute_cross: 100 556 tris,
+        // 4.7 s freeze) because nearly every vertex fell inside the band — which is exactly why the dense path was
+        // demoted to a fallback for outlines the shader uniform (≤64 verts) cannot hold.
         private const float SdfRefineNear = 0.22f; // max edge length for a triangle touching the silhouette band
         private const float SdfRefineFar = 2.0f;   // max edge length in the deep interior (coarse; no bands there)
         private const float SdfBandDepth = 0.9f;   // "near the silhouette" = a vertex within this distance of the outline

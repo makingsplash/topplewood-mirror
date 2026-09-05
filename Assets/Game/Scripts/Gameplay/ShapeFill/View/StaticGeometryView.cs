@@ -24,8 +24,17 @@ namespace Gameplay.View
 
         private static readonly Color DefaultColor = new Color(0.72f, 0.57f, 0.42f); // neutral block brown
 
+        // TASK-353: the shader's _ConcaveOutline uniform holds at most this many vertices. A concave mass with more
+        // (none in the current manifest) falls back to the dense per-vertex SDF mesh instead of the analytic path.
+        private const int ConcaveOutlineMax = 64;
+
         private MeshRenderer _renderer;
         private MaterialPropertyBlock _mpb;
+
+        // TASK-353: packed world-space CCW outline uploaded to the shader on the analytic-SDF mass path; null on every
+        // other path. Kept as a field because RefreshColor rebuilds the MaterialPropertyBlock from scratch (it Clear()s),
+        // so the outline must be re-applied there on each live re-colour, not once at init.
+        private Vector4[] _concaveOutline;
 
         /// <summary>Полка рисуется под тенями деталей, но над фоном.</summary>
         private const int ShelfSortingOrder = -100;
@@ -69,11 +78,36 @@ namespace Gameplay.View
             _styleKey = WoodPieceKey.OfStatic(worldOutline);
 
             var meshFilter = gameObject.AddComponent<MeshFilter>();
-            var mesh = PieceMeshBuilder.BuildConcaveFill(worldOutline, _styleKey);
-            meshFilter.mesh = mesh;
-
             _renderer = gameObject.AddComponent<MeshRenderer>();
-            _renderer.sharedMaterial = BlockMaterial.Shared;
+
+            // TASK-353: primary path — a RAW ear-clip mesh (≈51 tris, ~0 ms) rendered with the analytic-SDF material,
+            // which computes edge distance per-fragment from the outline polyline. The old dense per-vertex SDF built
+            // 100k+ triangles and froze the load 4.7 s on chute_cross. Fall back to that dense mesh only when the outline
+            // will not fit the shader's _ConcaveOutline uniform (>64 verts) or ear-clipping fails, so a pathological
+            // static still renders (slowly) instead of blank.
+            Mesh mesh = null;
+            Vec2[] boundary = null;
+            if (worldOutline != null && worldOutline.Length <= ConcaveOutlineMax)
+                mesh = PieceMeshBuilder.BuildConcaveMass(worldOutline, out boundary);
+
+            if (mesh != null && boundary != null)
+            {
+                _renderer.sharedMaterial = BlockMaterial.ConcaveShared;
+                _concaveOutline = new Vector4[boundary.Length];
+                for (var i = 0; i < boundary.Length; i++)
+                    _concaveOutline[i] = new Vector4(boundary[i].X, boundary[i].Y, 0f, 0f);
+            }
+            else
+            {
+                if (worldOutline != null && worldOutline.Length > ConcaveOutlineMax)
+                    Debug.LogWarning($"StaticGeometryView: concave mass has {worldOutline.Length} verts (> " +
+                                     $"{ConcaveOutlineMax} shader-uniform limit) — falling back to the dense SDF mesh.");
+                mesh = PieceMeshBuilder.BuildConcaveFill(worldOutline, _styleKey);
+                _renderer.sharedMaterial = BlockMaterial.Shared;
+                _concaveOutline = null;
+            }
+
+            meshFilter.mesh = mesh;
             _renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _renderer.receiveShadows = false;
 
@@ -179,6 +213,16 @@ namespace Gameplay.View
             _mpb.SetColor(BlockMaterial.ColorProperty, color);
             _mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
             tuning.ApplyPieceStyle(_mpb, _styleKey);
+
+            // TASK-353: on the analytic-SDF mass path the shader reads the silhouette polyline from a per-renderer
+            // uniform. Clear() above wiped it, so re-upload here — otherwise a live re-colour (WoodTuning.Changed)
+            // would leave the mass with an empty outline and no edge band.
+            if (_concaveOutline != null)
+            {
+                _mpb.SetVectorArray(BlockMaterial.ConcaveOutlineProperty, _concaveOutline);
+                _mpb.SetFloat(BlockMaterial.ConcaveOutlineCountProperty, _concaveOutline.Length);
+            }
+
             _renderer.SetPropertyBlock(_mpb);
         }
 
