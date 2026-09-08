@@ -42,6 +42,17 @@ namespace Gameplay.Core
         // Chiral (as L↔J tetromino): its mirror is the J-pentomino, a DISTINCT future primitive, NOT added here
         // (physics has no reflection). Symmetry order 1.
         LPentomino,
+        // TASK-360: an ARBITRARY authored silhouette — a closed contour PLUS a convex decomposition, both supplied as
+        // DATA (the outline and the parts are authored / baked OFFLINE, never split at runtime). Unlike every polyomino
+        // above, the parts are arbitrary convex polygons, not axis-aligned unit cells, so it expresses concave
+        // figurative details (a burger's V-notched cheese, TASK-358) that no fixed-grid primitive can name. It rides the
+        // SAME generic ConvexParts path (compound collider, per-part SAT, mesh fan, part validator) — that machinery is
+        // primitive-agnostic — so it costs one enum value + one factory + one DTO case, with NO new runtime machinery.
+        // Parts are exact authored coordinates (no trig, no runtime decomposition) ⇒ the compound body's mass/inertia
+        // stay platform-invariant by construction (§L8/TASK-072). Its symmetry order is judged GEOMETRICALLY (contour
+        // self-map about its centroid), not from a table. Appended at the END (nothing hashes the ordinal — poseHash
+        // never reads Primitive).
+        Freeform,
     }
 
     /// <summary>
@@ -51,14 +62,18 @@ namespace Gameplay.Core
     /// Catalogue: box, triangle, halfdisc, plank, trapezoid, parallelogram, righttriangle, quarterdisc,
     /// gable, circle — all convex, one <c>PolygonCollider2D</c> each. Concave polyominoes — tetrominoes (L/J/S/Z/T,
     /// TASK-178) and pentominoes (T/N/Z/V/P/plus, TASK-314; L, TASK-330) — are implemented via an authored integer
-    /// <see cref="ConvexParts"/> decomposition (compound collider), NOT a runtime concave split.
+    /// <see cref="ConvexParts"/> decomposition (compound collider), NOT a runtime concave split. TASK-360 adds
+    /// <see cref="ShapePrimitive.Freeform"/>: an arbitrary authored contour + a baked convex <see cref="ConvexParts"/>
+    /// decomposition (the same compound path, but the parts are arbitrary convex polygons rather than unit cells).
     /// </summary>
     public sealed class Shape
     {
         public Vec2[] Vertices { get; }
 
-        /// <summary>TASK-178: authored convex decomposition of a CONCAVE primitive (the tetrominoes) — a set of
-        /// axis-aligned convex parts (each ≤4 vertices, CCW) whose union is exactly <see cref="Vertices"/>. <c>null</c>
+        /// <summary>TASK-178: authored convex decomposition of a CONCAVE primitive (the tetrominoes/pentominoes and,
+        /// TASK-360, the <see cref="ShapePrimitive.Freeform"/> silhouette) — a set of convex parts (each ≤8 vertices)
+        /// whose union is exactly <see cref="Vertices"/>. For polyominoes the parts are axis-aligned unit cells; for
+        /// freeform they are arbitrary convex polygons. <c>null</c>
         /// for every convex primitive (all the ones above the tetrominoes), so their code paths are byte-for-byte
         /// unchanged. It is the SINGLE source both the physics collider (a compound body of one PolygonCollider2D per
         /// part, <c>UnityShapeFillSimulation.SpawnFloating</c>) and the honesty detector (per-part SAT, <c>SimRun</c>)
@@ -372,6 +387,16 @@ namespace Gameplay.Core
             => Polyomino(ShapePrimitive.LPentomino, cell,
                 new[] { (0, 0), (0, 1), (0, 2), (0, 3), (1, 0) },
                 new[] { (0, 0), (2, 0), (2, 1), (1, 1), (1, 4), (0, 4) });
+
+        /// <summary>TASK-360: an arbitrary authored silhouette. <paramref name="contour"/> is the closed CCW outline;
+        /// <paramref name="parts"/> is its convex decomposition, baked OFFLINE (never split at runtime). It fills the
+        /// same slots a polyomino does (<see cref="Vertices"/> = contour, <see cref="ConvexParts"/> = parts, radius 0),
+        /// so it rides the generic compound-collider / per-part-SAT / mesh-fan path unchanged — but the parts are
+        /// arbitrary convex polygons, not unit cells, so it can express a concave figurative detail. The parts are exact
+        /// authored coordinates ⇒ the compound body's mass/inertia are platform-invariant by construction (§L8/TASK-072).
+        /// Contour simplicity / winding and part convexity+coverage are load-validated (<see cref="LevelDataValidator"/>).</summary>
+        public static Shape Freeform(Vec2[] contour, Vec2[][] parts)
+            => new Shape(contour, ShapePrimitive.Freeform, 0f, parts);
 
         /// <summary>Build a concave polyomino from its integer <paramref name="cells"/> (one unit-square part each) and
         /// its integer <paramref name="contour"/> (CCW silhouette). Both are centred on the cells' bbox and scaled by

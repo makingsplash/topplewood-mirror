@@ -321,9 +321,84 @@ namespace Gameplay.Core
                     return 2;
                 case ShapePrimitive.PlusPentomino:
                     return 4;
+                case ShapePrimitive.Freeform:
+                    // TASK-360: a freeform has no catalogue entry — judge its symmetry GEOMETRICALLY from the contour.
+                    return FreeformTrueSymmetry(shape);
                 default:
                     return 1;
             }
+        }
+
+        private static readonly int[] FreeformSymmetryCandidates = { 12, 8, 6, 4, 3, 2 };
+
+        /// <summary>TASK-360: the true rotational-symmetry order of a FREEFORM silhouette, judged GEOMETRICALLY (it has
+        /// no catalogue row): the LARGEST k ∈ {12,8,6,4,3,2} for which rotating the contour by 2π/k about its AREA
+        /// centroid carries the vertex set onto itself (within ε), else 1. About the centroid, NOT the transform origin,
+        /// so a shape symmetric about its centre is not falsely rejected — the same parallelogram trap the switch
+        /// docstring warns of. Order 1 (the chiral default of a figurative detail) always passes; a genuine 2-/4-fold
+        /// silhouette is admitted so an author may legally set that order (and the divisibility rule of TASK-340 stays
+        /// in force — a claimed order must divide this true max).</summary>
+        private static int FreeformTrueSymmetry(Shape shape)
+        {
+            var verts = shape.Vertices;
+            if (verts == null || verts.Length < 3)
+                return 1;
+            var centroid = PolygonCentroid(verts);
+            var ext = 0f;
+            foreach (var v in verts)
+                ext = System.MathF.Max(ext, (v - centroid).Length);
+            var eps = System.MathF.Max(ext, 1e-4f) * 1e-3f;
+            foreach (var k in FreeformSymmetryCandidates)
+                if (RotationMapsOntoSelf(verts, centroid, k, eps))
+                    return k;
+            return 1;
+        }
+
+        /// <summary>Does rotating every vertex of <paramref name="verts"/> by 2π/<paramref name="k"/> about
+        /// <paramref name="centroid"/> land it on some original vertex (within <paramref name="eps"/>)? Rotation is a
+        /// bijection of the plane and both sets have the same cardinality, so an onto match is a genuine self-map. O(n²),
+        /// n a handful.</summary>
+        private static bool RotationMapsOntoSelf(Vec2[] verts, Vec2 centroid, int k, float eps)
+        {
+            var angle = 2f * System.MathF.PI / k;
+            foreach (var v in verts)
+            {
+                var r = (v - centroid).Rotate(angle) + centroid;
+                var matched = false;
+                foreach (var w in verts)
+                    if ((w - r).Length <= eps)
+                    {
+                        matched = true;
+                        break;
+                    }
+                if (!matched)
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>Area (shoelace) centroid of a simple polygon — the fixed point of any rotational symmetry it has
+        /// (unlike the vertex mean, which drifts with vertex density). Falls back to the vertex mean if the polygon is
+        /// degenerate (near-zero area).</summary>
+        private static Vec2 PolygonCentroid(Vec2[] v)
+        {
+            float twiceArea = 0f, cx = 0f, cy = 0f;
+            for (int i = 0, j = v.Length - 1; i < v.Length; j = i++)
+            {
+                var cross = v[j].X * v[i].Y - v[i].X * v[j].Y;
+                twiceArea += cross;
+                cx += (v[j].X + v[i].X) * cross;
+                cy += (v[j].Y + v[i].Y) * cross;
+            }
+            if (System.MathF.Abs(twiceArea) < 1e-9f)
+            {
+                var mean = Vec2.Zero;
+                foreach (var p in v)
+                    mean += p;
+                return mean * (1f / v.Length);
+            }
+            var inv = 1f / (3f * twiceArea);
+            return new Vec2(cx * inv, cy * inv);
         }
 
         /// <summary>TASK-340: is a box/plank a true square? Its collider bbox equals the authored width×height exactly
@@ -842,6 +917,10 @@ namespace Gameplay.Core
                 // flagged LOUD here rather than silently mis-simulating.
                 if (type.Shape?.ConvexParts != null)
                     ValidateConvexParts(i, type, errors);
+                // TASK-360: a polyomino contour is a trusted integer factory output, but a freeform contour is AUTHORED
+                // data — judge its well-formedness (simple, positive area, CCW) like a static contour.
+                if (type.Shape?.Primitive == ShapePrimitive.Freeform)
+                    ValidateFreeformContour(i, type, errors);
                 if (type.Material.Density < 0f || type.Material.Friction < 0f || type.Material.Restitution < 0f)
                     errors.Add($"Pieces[{i}] '{type.Kind}' has a negative material field.");
                 if (!level.Bounds.Contains(level.Pieces[i].StartPosition))
@@ -888,6 +967,37 @@ namespace Gameplay.Core
             for (int i = 0, j = v.Length - 1; i < v.Length; j = i++)
                 sum += v[j].X * v[i].Y - v[i].X * v[j].Y;
             return System.MathF.Abs(sum) * 0.5f;
+        }
+
+        /// <summary>Signed shoelace area of a polygon: &gt;0 CCW, &lt;0 CW.</summary>
+        private static float SignedPolygonArea(Vec2[] v)
+        {
+            var twice = 0f;
+            for (int i = 0, j = v.Length - 1; i < v.Length; j = i++)
+                twice += v[j].X * v[i].Y - v[i].X * v[j].Y;
+            return twice * 0.5f;
+        }
+
+        /// <summary>TASK-360: well-formedness of a FREEFORM piece's authored contour (its silhouette outline). A
+        /// polyomino contour is a trusted integer factory output, but a freeform contour is authored data, so it is
+        /// judged like a static contour: ≥3 vertices, positive area, simple (no self-intersection), and wound CCW. The
+        /// tool emits CCW; the validator is the last line — a degenerate/self-crossing/CW contour is authoring garbage,
+        /// rejected LOUD with a named cause rather than silently normalised ("молчаливо кривой контур хуже отказа"). The
+        /// part-coverage invariant (Σ part area == contour area) and part convexity are already enforced by
+        /// <see cref="ValidateConvexParts"/> (shared with the polyominoes), so they are not repeated here.</summary>
+        private static void ValidateFreeformContour(int index, PieceType type, List<string> errors)
+        {
+            var outline = type.Shape?.Vertices;
+            if (outline == null || outline.Length < 3)
+                return; // the generic ≥3-vertex check in ValidatePieces already reported this
+            if (PolygonArea(outline) <= 1e-6f)
+                errors.Add($"Pieces[{index}] '{type.Kind}' freeform contour has non-positive area — a degenerate silhouette.");
+            if (SelfIntersects(outline, closed: true))
+                errors.Add($"Pieces[{index}] '{type.Kind}' freeform contour self-intersects — the silhouette must be a " +
+                           "simple polygon (no crossing edges).");
+            if (SignedPolygonArea(outline) < 0f)
+                errors.Add($"Pieces[{index}] '{type.Kind}' freeform contour is wound clockwise — author it " +
+                           "counter-clockwise (the decompose-shape tool emits CCW).");
         }
 
         private static void ValidateKindCoverage(LevelData level, List<string> errors)
@@ -942,6 +1052,16 @@ namespace Gameplay.Core
         /// interior holes (flood-fill from the padded frame, so external concavity — a cross/letter/flower — is legal),
         /// off-grid cells, and a piece-count-vs-distinct mismatch each become a load ERROR naming the offending cells.
         /// </summary>
+        /// <summary>TASK-360: is this shape a GRID polyomino — an axis-aligned unit-cell tetromino/pentomino whose
+        /// <see cref="Shape.ConvexParts"/> ARE the grid cells that fix the mosaic pitch? A <c>freeform</c> also carries
+        /// ConvexParts, but they are arbitrary convex fragments, NOT grid cells, so it must neither DRIVE the mosaic
+        /// pitch nor be measured against it — hence the mosaic gate keys its "grid family" test on THIS predicate, not
+        /// on the raw <c>ConvexParts != null</c> that both share. This is the single point where a freeform silhouette
+        /// is excluded from grid-mosaic tiling (a burger is not a решётчатая mosaic), exactly as a circle/triangle slot
+        /// already is.</summary>
+        private static bool IsGridPolyomino(Shape s) =>
+            s.ConvexParts != null && s.Primitive != ShapePrimitive.Freeform;
+
         private static void ValidateTargetMosaic(LevelData level, List<string> errors)
         {
             if (level.PhysicsMode != PhysicsMode.Assembly)
@@ -969,7 +1089,7 @@ namespace Gameplay.Core
             {
                 if (!kindShape.TryGetValue(slot.Kind, out var shape))
                     return; // a slot with no piece — the level is already broken (coverage); do not mosaic-check it.
-                if (shape.ConvexParts != null)
+                if (IsGridPolyomino(shape))
                 {
                     if (!anyPolyomino)
                     {
@@ -1090,7 +1210,7 @@ namespace Gameplay.Core
         private static bool TryLocalCells(Shape shape, float pitch, out List<Vec2> cells)
         {
             cells = new List<Vec2>();
-            if (shape.ConvexParts != null)
+            if (IsGridPolyomino(shape))
             {
                 foreach (var part in shape.ConvexParts)
                 {

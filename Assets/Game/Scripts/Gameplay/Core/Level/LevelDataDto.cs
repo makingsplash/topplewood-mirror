@@ -178,11 +178,13 @@ namespace Gameplay.Core
         public MaterialProfile ToDomain() => new MaterialProfile(Density, Friction, Restitution);
     }
 
-    /// <summary>A convex primitive, reconstructed via the <see cref="Shape"/> factories (no raw vertex lists
-    /// to author). Discriminated by <c>primitive</c>: box | triangle | halfdisc | plank | trapezoid |
-    /// parallelogram | righttriangle | quarterdisc | gable | circle.
+    /// <summary>A shape authored either as a named PRIMITIVE reconstructed via the <see cref="Shape"/> factories
+    /// (box | triangle | halfdisc | plank | trapezoid | parallelogram | righttriangle | quarterdisc | gable | circle |
+    /// the concave polyominoes) OR, for <c>freeform</c> (TASK-360), as a RAW closed <c>outline</c> plus its baked convex
+    /// <c>parts</c> — an arbitrary silhouette the fixed catalogue cannot name. Discriminated by <c>primitive</c>.
     /// <c>topWidth</c> feeds trapezoid (top edge), <c>skew</c> feeds parallelogram (top-edge +X shift),
-    /// <c>apexHeight</c> feeds gable (roof height above the rectangular base).</summary>
+    /// <c>apexHeight</c> feeds gable (roof height above the rectangular base), <c>cell</c> feeds the polyominoes (world
+    /// size of one grid cell), <c>outline</c>/<c>parts</c> feed freeform.</summary>
     public sealed class ShapeDto
     {
         [JsonProperty("primitive")] public string Primitive { get; set; }
@@ -194,6 +196,8 @@ namespace Gameplay.Core
         [JsonProperty("skew")] public float Skew { get; set; }           // parallelogram: top-edge +X shift
         [JsonProperty("apexHeight")] public float ApexHeight { get; set; } // gable: roof height above the rectangular base
         [JsonProperty("cell")] public float Cell { get; set; }            // tetrominoes: world size of one grid cell (width/height do not describe a fixed-grid polyomino)
+        [JsonProperty("outline")] public List<Vec2Dto> Outline { get; set; }       // freeform (TASK-360): closed CCW silhouette contour
+        [JsonProperty("parts")] public List<List<Vec2Dto>> Parts { get; set; }     // freeform (TASK-360): baked convex decomposition (one convex part per inner list)
 
         public Shape ToDomain()
         {
@@ -264,6 +268,9 @@ namespace Gameplay.Core
                 case "plus_pentomino": return Shape.PlusPentomino(RequireCell());
                 // TASK-330: L-pentomino — same fixed-grid `cell` contract; width/height/radius do not apply.
                 case "l_pentomino":    return Shape.LPentomino(RequireCell());
+                // TASK-360: freeform — an arbitrary contour + baked convex parts as DATA; width/height/radius/cell do
+                // not apply. Both `outline` and `parts` are required (no silent default — RequireOutline/RequireParts).
+                case "freeform":       return Shape.Freeform(RequireOutline(), RequireParts());
                 default:
                     throw new InvalidOperationException($"Unknown shape primitive '{Primitive}'.");
             }
@@ -275,6 +282,39 @@ namespace Gameplay.Core
             if (Cell <= 0f)
                 throw new InvalidOperationException($"{Primitive} needs positive cell; got {Cell}.");
             return Cell;
+        }
+
+        // TASK-360: freeform authoring requires BOTH the silhouette contour and its baked convex decomposition — a
+        // missing/empty either side is authoring garbage, rejected LOUD with a named cause (no silent default), exactly
+        // like RequireCell. Structural correctness (simplicity, winding, part convexity, part coverage) is judged at
+        // load by LevelDataValidator; this only refuses an outright-absent/degenerate list.
+        private Vec2[] RequireOutline()
+        {
+            if (Outline == null || Outline.Count < 3)
+                throw new InvalidOperationException(
+                    $"freeform needs an outline of ≥3 vertices; got {(Outline == null ? "none" : Outline.Count.ToString())}.");
+            var verts = new Vec2[Outline.Count];
+            for (var i = 0; i < Outline.Count; i++)
+                verts[i] = Outline[i].ToDomain();
+            return verts;
+        }
+
+        private Vec2[][] RequireParts()
+        {
+            if (Parts == null || Parts.Count == 0)
+                throw new InvalidOperationException("freeform needs a non-empty parts (convex decomposition) list.");
+            var parts = new Vec2[Parts.Count][];
+            for (var p = 0; p < Parts.Count; p++)
+            {
+                var part = Parts[p];
+                if (part == null || part.Count < 3)
+                    throw new InvalidOperationException(
+                        $"freeform parts[{p}] needs ≥3 vertices; got {(part == null ? "none" : part.Count.ToString())}.");
+                parts[p] = new Vec2[part.Count];
+                for (var i = 0; i < part.Count; i++)
+                    parts[p][i] = part[i].ToDomain();
+            }
+            return parts;
         }
     }
 
