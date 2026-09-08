@@ -159,3 +159,6 @@ Assets/Plugins/Demigiant/DOTween/Editor/DOTweenUpgradeManager.XML
 # (собирает .studio/tools/skills.sh). Склад `_off/` versioned, витрина — нет.
 .claude/skills/*
 !.claude/skills/_off/
+
+# маркеры живых вотчеров прогонов (runtime, TASK-359-инцидент): .studio/.watching/<TASK>.<pid>
+.studio/.watching/
