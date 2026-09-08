@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Gameplay.Core;
@@ -48,7 +49,30 @@ namespace Game.Editor
         // он влезал, поэтому одной пропорции для приёмки мало.
         private static int Width = 853;
         private static int Height = 1517;
+
+        /// <summary>
+        /// Путь манифеста для ИНТЕРАКТИВНЫХ энтрипоинтов (menu-item <c>Run</c>/<c>CaptureAir</c>/… — их
+        /// запускает человек из редактора, аргумента у клика нет). Это проектный ЯРЛЫК, как <see cref="Wanted"/>.
+        /// ПОРТИРУЕМАЯ тула <see cref="CaptureForRole"/> этой константой НЕ пользуется: путь ей приходит из env
+        /// <c>WOOD_MANIFEST_PATH</c> (project data), дефолта нет — пусто ⇒ <c>Exit(2)</c> (директива портируемости
+        /// CLAUDE.md; тот же контракт, что у levelId через <c>WOOD_CAPTURE_ONLY</c>).
+        /// </summary>
         private const string LevelsPath = "Assets/StreamingAssets/shapefill_levels.json";
+
+        private const int DefaultZoom = 1024;
+        private static readonly Crop[] NoCrops = System.Array.Empty<Crop>();
+
+        /// <summary>
+        /// Зона-кроп в МИРОВЫХ координатах уровня (TASK-362): прямоугольник с центром (<see cref="Cx"/>,
+        /// <see cref="Cy"/>) и полными сторонами <see cref="W"/>×<see cref="H"/> в мировых единицах. Автор
+        /// знает, где у него стык массы с полом, и задаёт зону там же, не пересчитывая в пиксели кадра.
+        /// <see cref="Name"/> уходит в имя файла — кроп нельзя перепутать.
+        /// </summary>
+        private struct Crop
+        {
+            public string Name;
+            public float Cx, Cy, W, H;
+        }
 
         /// <summary>
         /// Дефолтные уровни съёмки, когда <c>WOOD_CAPTURE_ONLY</c> не задан. Сейчас это ВСЕ три уровня с
@@ -227,7 +251,17 @@ namespace Game.Editor
         /// дефолта НЕТ — пусто ⇒ <c>Exit(2)</c>. Именно поэтому env читается напрямую, а НЕ через
         /// <see cref="CaptureIds"/>: та на пустом env подставляет <see cref="Wanted"/> (ярлык воздуха этой
         /// игры) — здесь это была бы молчаливая подстановка проектных уровней, запрещённая директивой
-        /// переносимости (CLAUDE.md).
+        /// переносимости (CLAUDE.md). Тот же контракт у ПУТИ МАНИФЕСТА: <c>WOOD_MANIFEST_PATH</c> (project
+        /// data), дефолта нет — пусто ⇒ <c>Exit(2)</c> (долг TASK-320).
+        /// </para>
+        ///
+        /// <para>
+        /// TASK-362 — ЗОНЫ-КРОПЫ: env <c>WOOD_CAPTURE_CROPS</c> (<c>name=cx,cy,w,h;…</c>, мировые координаты)
+        /// добавляет к каждому кадру увеличенные вырезки зон — правило приёмки «кадр принимается КРОПАМИ, а не
+        /// общим планом» (CLAUDE.md). Каждый кроп — своя орто-камера, наведённая на мировой прямоугольник и
+        /// снятая в <c>&lt;id&gt;-&lt;pose&gt;-&lt;name&gt;.png</c> (та же сцена, отдельный кадр — без потери
+        /// пикселей на пере-масштабе). <c>WOOD_CAPTURE_ZOOM</c> — длинная сторона кропа в px (дефолт
+        /// <see cref="DefaultZoom"/>). Нет env ⇒ поведение как раньше (только start/target во весь кадр).
         /// </para>
         /// </summary>
         public static void CaptureForRole()
@@ -257,17 +291,34 @@ namespace Game.Editor
                 return;
             }
 
+            // Путь манифеста — ТОЛЬКО из env, без проектного дефолта (долг TASK-320, зеркалит levelId выше).
+            var manifestPath = System.Environment.GetEnvironmentVariable("WOOD_MANIFEST_PATH");
+            if (string.IsNullOrWhiteSpace(manifestPath))
+            {
+                Debug.LogError("[render] WOOD_MANIFEST_PATH не задан — путь манифеста это project data, " +
+                               "дефолта у тулы нет (директива портируемости CLAUDE.md)");
+                EditorApplication.Exit(2);
+                return;
+            }
+
+            var crops = ParseCrops();
+            var zoom = ParseZoom();
+
             // Числа стиля — в материал и меши ДО сборки сцены (как в Run): PieceMeshBuilder читает радиус
             // скругления в момент постройки, а материал деталей кешируется статически.
             WoodTuning.Current.Apply();
 
-            var levels = LoadLevels();
+            var levels = LoadLevels(manifestPath);
             if (levels == null)
             {
                 // LoadLevels уже залогировала причину (нет файла / кампания пуста) — класс «конфиг отвергнут».
                 EditorApplication.Exit(2);
                 return;
             }
+
+            if (crops.Count > 0)
+                Debug.Log($"[render] зоны-кропы ({crops.Count}): " +
+                          $"{string.Join(", ", crops.Select(c => c.Name))}; zoom={zoom}px");
 
             var captured = 0;
             foreach (var id in ids)
@@ -279,12 +330,13 @@ namespace Game.Editor
                     continue;
                 }
 
-                Capture(level, $"Artifacts/role-preview/{id}-start.png", targetPose: false);
-                Capture(level, $"Artifacts/role-preview/{id}-target.png", targetPose: true);
+                Capture(level, $"Artifacts/role-preview/{id}-start.png", targetPose: false, crops, zoom);
+                Capture(level, $"Artifacts/role-preview/{id}-target.png", targetPose: true, crops, zoom);
                 captured++;
             }
 
-            Debug.Log($"[render] снято {captured} уровень(ей) ({captured * 2} файлов) в Artifacts/role-preview");
+            Debug.Log($"[render] снято {captured} уровень(ей) в Artifacts/role-preview " +
+                      $"(по 2 кадра + {crops.Count} кроп(ов) на кадр)");
             if (Application.isBatchMode)
                 EditorApplication.Exit(captured == 0 ? 1 : 0);
         }
@@ -321,7 +373,7 @@ namespace Game.Editor
                 return;
             }
 
-            var levels = LoadLevels();
+            var levels = LoadLevels(LevelsPath);
             if (levels == null)
                 return;
 
@@ -350,15 +402,15 @@ namespace Game.Editor
         /// Уровни читаются DTO напрямую, без <c>JsonLevelSource</c>: тот тянет за собой валидатор и
         /// падает на всей кампании, если ОДИН уровень не прошёл проверку, — а для кадра этого не надо.
         /// </summary>
-        private static List<LevelData> LoadLevels()
+        private static List<LevelData> LoadLevels(string levelsPath)
         {
-            if (!File.Exists(LevelsPath))
+            if (!File.Exists(levelsPath))
             {
-                Debug.LogError($"[wood] нет файла уровней: {LevelsPath}");
+                Debug.LogError($"[wood] нет файла уровней: {levelsPath}");
                 return null;
             }
 
-            var file = JsonConvert.DeserializeObject<CampaignFileDto>(File.ReadAllText(LevelsPath));
+            var file = JsonConvert.DeserializeObject<CampaignFileDto>(File.ReadAllText(levelsPath));
             if (file?.Levels == null || file.Levels.Count == 0)
             {
                 Debug.LogError("[wood] кампания не разобралась или пуста");
@@ -373,7 +425,11 @@ namespace Game.Editor
 
         // ------------------------------------------------------------------- сцена
 
-        private static void Capture(LevelData level, string path) => Capture(level, path, targetPose: false);
+        private static void Capture(LevelData level, string path)
+            => Capture(level, path, targetPose: false, NoCrops, DefaultZoom);
+
+        private static void Capture(LevelData level, string path, bool targetPose)
+            => Capture(level, path, targetPose, NoCrops, DefaultZoom);
 
         /// <summary>
         /// Один кадр уровня в PNG. <paramref name="targetPose"/> — единственное отличие двух кадров роли
@@ -381,8 +437,11 @@ namespace Game.Editor
         /// до первого тапа»), <c>true</c> — в ЦЕЛЕВЫЕ позы (<see cref="BuildTargetPosePieces"/>, собранная фигура).
         /// Всё остальное — камера, бэкдроп, статика, силуэт, карточка-превью, листва, воздух, партиклы — одинаково,
         /// чтобы два PNG были прямо сопоставимы глазами.
+        /// <paramref name="crops"/> (TASK-362) — после кадра во весь план снимаются увеличенные вырезки зон в
+        /// мировых координатах (та же собранная сцена, отдельные орто-камеры) в <c>&lt;stem&gt;-&lt;name&gt;.png</c>.
         /// </summary>
-        private static void Capture(LevelData level, string path, bool targetPose)
+        private static void Capture(LevelData level, string path, bool targetPose,
+            IReadOnlyList<Crop> crops, int zoom)
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -460,6 +519,60 @@ namespace Game.Editor
                       $"{shortest * pixelsPerUnit:0} px");
 
             Render(cam, path);
+
+            // Зоны-кропы (TASK-362): та же собранная сцена, отдельная орто-камера на каждый мировой
+            // прямоугольник. Снимаем ПОСЛЕ кадра во весь план — сцена уже построена, партиклы прогнаны.
+            if (crops != null)
+                foreach (var c in crops)
+                    RenderCrop(cam, c, zoom, CropPath(path, c.Name));
+        }
+
+        /// <summary>
+        /// Кадр одной зоны-кропа: орто-камера, наведённая на мировой прямоугольник <paramref name="c"/>, в
+        /// ту же собранную сцену. Так вырезка — НАСТОЯЩИЙ рендер зоны в высоком разрешении, а не пересжатие
+        /// пикселей общего кадра: щель в 0.1 мира и ступенька тона на стыке видны, чего на общем плане нет.
+        /// Настройки клира/клипа клонируются с основной камеры, чтобы кроп отличался от кадра только рамкой.
+        /// Длинная сторона зоны рендерится в <paramref name="zoom"/> px, короткая — пропорционально (аспект = w/h).
+        /// </summary>
+        private static void RenderCrop(Camera main, Crop c, int zoom, string path)
+        {
+            int outW, outH;
+            if (c.W >= c.H)
+            {
+                outW = zoom;
+                outH = Mathf.Max(1, Mathf.RoundToInt(zoom * (c.H / c.W)));
+            }
+            else
+            {
+                outH = zoom;
+                outW = Mathf.Max(1, Mathf.RoundToInt(zoom * (c.W / c.H)));
+            }
+
+            var go = new GameObject($"Crop_{c.Name}");
+            var cam = go.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.clearFlags = main.clearFlags;
+            cam.backgroundColor = main.backgroundColor;
+            cam.nearClipPlane = main.nearClipPlane;
+            cam.farClipPlane = main.farClipPlane;
+            cam.orthographicSize = c.H * 0.5f;      // орто-размер = ВЕРТИКАЛЬНАЯ полу-высота зоны
+            cam.aspect = c.W / c.H;
+            cam.transform.position = new Vector3(c.Cx, c.Cy, main.transform.position.z);
+
+            Debug.Log($"[render] кроп '{c.Name}': мир центр ({c.Cx:0.##},{c.Cy:0.##}) " +
+                      $"{c.W:0.##}×{c.H:0.##} ед → {outW}×{outH}px");
+            Render(cam, path, outW, outH);
+            Object.DestroyImmediate(go);
+        }
+
+        /// <summary>Путь кропа: рядом с кадром во весь план, но с именем зоны в стеме —
+        /// <c>&lt;dir&gt;/&lt;stem&gt;-&lt;name&gt;.png</c>, чтобы вырезку нельзя было спутать с кадром.</summary>
+        private static string CropPath(string basePath, string cropName)
+        {
+            var dir = Path.GetDirectoryName(basePath);
+            var stem = Path.GetFileNameWithoutExtension(basePath);
+            var file = $"{stem}-{cropName}.png";
+            return string.IsNullOrEmpty(dir) ? file : Path.Combine(dir, file);
         }
 
         /// <summary>Камера — тем же расчётом, что <c>CameraFramingPresenter</c>, иначе кадр
@@ -692,19 +805,21 @@ namespace Game.Editor
             }
         }
 
-        private static void Render(Camera cam, string path)
+        private static void Render(Camera cam, string path) => Render(cam, path, Width, Height);
+
+        private static void Render(Camera cam, string path, int width, int height)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path) ?? "Artifacts");
 
-            var rt = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            var rt = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
             cam.targetTexture = rt;
             cam.Render();
 
             var prev = RenderTexture.active;
             RenderTexture.active = rt;
-            var tex = new Texture2D(Width, Height, TextureFormat.RGB24, false);
+            var tex = new Texture2D(width, height, TextureFormat.RGB24, false);
             // Rect уточняем полностью: в домене есть свой Gameplay.Core.Rect, иначе CS0104.
-            tex.ReadPixels(new UnityEngine.Rect(0, 0, Width, Height), 0, 0);
+            tex.ReadPixels(new UnityEngine.Rect(0, 0, width, height), 0, 0);
             tex.Apply();
             RenderTexture.active = prev;
             cam.targetTexture = null;
@@ -715,6 +830,75 @@ namespace Game.Editor
             Object.DestroyImmediate(tex);
             rt.Release();
             Object.DestroyImmediate(rt);
+        }
+
+        // ------------------------------------------------------------------- зоны-кропы (TASK-362)
+
+        /// <summary>
+        /// Разбор зон-кропов из env <c>WOOD_CAPTURE_CROPS</c>: <c>name=cx,cy,w,h</c> через <c>;</c>, числа
+        /// в мировых координатах, инвариантная культура (десятичная точка независимо от локали хоста).
+        /// Кривая зона (нет имени / не 4 числа / неположительные стороны) ПРОПУСКАЕТСЯ с варнингом, а не роняет
+        /// прогон — один опечатанный кроп не должен стоить всех кадров. Нет env / пусто ⇒ пустой список (кропов нет).
+        /// </summary>
+        private static List<Crop> ParseCrops()
+        {
+            var list = new List<Crop>();
+            var raw = System.Environment.GetEnvironmentVariable("WOOD_CAPTURE_CROPS");
+            if (string.IsNullOrWhiteSpace(raw))
+                return list;
+
+            foreach (var part in raw.Split(';'))
+            {
+                var spec = part.Trim();
+                if (spec.Length == 0)
+                    continue;
+
+                var eq = spec.IndexOf('=');
+                if (eq <= 0)
+                {
+                    Debug.LogWarning($"[render] кроп без имени пропущен: '{spec}' (ждал name=cx,cy,w,h)");
+                    continue;
+                }
+
+                var name = Sanitize(spec.Substring(0, eq).Trim());
+                var nums = spec.Substring(eq + 1).Split(',');
+                if (nums.Length != 4 ||
+                    !TryFloat(nums[0], out var cx) || !TryFloat(nums[1], out var cy) ||
+                    !TryFloat(nums[2], out var w) || !TryFloat(nums[3], out var h) ||
+                    w <= 0f || h <= 0f)
+                {
+                    Debug.LogWarning($"[render] кроп '{name}' пропущен: ждал 4 числа cx,cy,w,h (w,h>0), " +
+                                     $"получил '{spec.Substring(eq + 1)}'");
+                    continue;
+                }
+
+                list.Add(new Crop { Name = name, Cx = cx, Cy = cy, W = w, H = h });
+            }
+
+            return list;
+        }
+
+        /// <summary>Длинная сторона кропа в px из env <c>WOOD_CAPTURE_ZOOM</c> (64..4096); иначе <see cref="DefaultZoom"/>.</summary>
+        private static int ParseZoom()
+        {
+            var raw = System.Environment.GetEnvironmentVariable("WOOD_CAPTURE_ZOOM");
+            if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var z) && z >= 64 && z <= 4096)
+                return z;
+            return DefaultZoom;
+        }
+
+        private static bool TryFloat(string s, out float v)
+            => float.TryParse(s?.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out v);
+
+        /// <summary>Имя зоны → безопасный кусок имени файла: буквы/цифры/<c>-</c>/<c>_</c>, остальное в <c>_</c>.</summary>
+        private static string Sanitize(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return "crop";
+            var sb = new System.Text.StringBuilder(name.Length);
+            foreach (var ch in name)
+                sb.Append(char.IsLetterOrDigit(ch) || ch == '-' || ch == '_' ? ch : '_');
+            return sb.Length == 0 ? "crop" : sb.ToString();
         }
     }
 }
