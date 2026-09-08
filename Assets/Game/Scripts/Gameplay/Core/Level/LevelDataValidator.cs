@@ -589,19 +589,26 @@ namespace Gameplay.Core
 
         /// <summary>
         /// TASK-304: for every piece, its START collider (the shape at the authored start pose) must not overlap any
-        /// <see cref="LevelData.StaticGeometry"/> block by more than <see cref="MinStaticPenetration"/>. The measure is
-        /// the CANONICAL <see cref="Geometry.Penetration"/> over <see cref="ConvexShape.Of"/> — the SAME collider
-        /// dispatch the physics adapter and the sim honesty detector use (native disc for a circle, compound for a
-        /// concave polyomino, world-vertex polygon for every other primitive) — so this rule can never disagree with
-        /// the sim on how a piece is shaped, and it covers ALL primitives (circle/box/plank/trapezoid/triangle/…) for
-        /// free. A piece resting FLUSH on a surface is legal (penetration ≈ 0); only a real embed is an ERROR, named
-        /// with the piece and the depth. A FILLED SOLID block is convex (now ENFORCED, not merely assumed, by
-        /// <see cref="ValidateStaticGeometry"/>'s TASK-307 gate) but of EITHER winding, so each outline is normalised
-        /// to CCW before measuring — <see cref="Geometry"/>'s circle-in-polygon inside-test is CCW-only and the ramp on
-        /// petal_gully is authored clockwise. A SURFACE block (TASK-325, an open edge-chain chute/ramp) has no filled
-        /// interior, so it is measured against its rendered RIBBON — the same <see cref="Geometry.SurfaceRibbonQuads"/>
-        /// the view draws (a compound of convex segment quads) — so the embed check and the drawn wood can never
-        /// disagree on a CONCAVE surface, where a convex-hull measure would lie.
+        /// <see cref="LevelData.StaticGeometry"/> block by more than <see cref="MinStaticPenetration"/>. A piece resting
+        /// FLUSH on a static is legal (depth ≈ 0); only a real embed is an ERROR, named with the piece and the depth.
+        ///
+        /// FILLED SOLID block: the CANONICAL <see cref="Geometry.Penetration"/> over <see cref="ConvexShape.Of"/> — the
+        /// SAME collider dispatch the physics adapter and the sim honesty detector use (native disc for a circle,
+        /// compound for a concave polyomino, world-vertex polygon for every other primitive) — so this rule can never
+        /// disagree with the sim on how a piece is shaped, and it covers ALL primitives for free. A filled solid is
+        /// convex (ENFORCED by <see cref="ValidateStaticGeometry"/>'s TASK-307 gate) but of EITHER winding, so each
+        /// outline is normalised to CCW before measuring (the circle-in-polygon inside-test is CCW-only).
+        ///
+        /// SURFACE block (TASK-325 open edge-chain chute/ramp) — TASK-329: measured against its ZERO-WIDTH edge-chain
+        /// centreline, which is EXACTLY the <c>EdgeCollider2D</c> the sim builds from the outline
+        /// (<c>UnityShapeFillSimulation</c>: <c>edge.points = ToPoints(polygon.Outline)</c>), NOT the ±½·thickness
+        /// rendered ribbon. The old ribbon measure over-reported a piece resting flush on the centreline by exactly half
+        /// the thickness (the piece touches the centreline yet sinks ½·thickness into the near ribbon half) — the false
+        /// "starts embedded" of TASK-329, which authors worked around by pinning pieces flush to the ribbon EDGE. The
+        /// centreline measure (<see cref="SurfaceEmbedDepth"/>) reads ~0 for a flush rest and the true half-depth for a
+        /// piece threaded onto the film, on the SAME <see cref="MinStaticPenetration"/> scale as the filled branch — so
+        /// no separate threshold is introduced (both are a world-unit embed depth) and the ribbon stays frozen (view +
+        /// poseHash only).
         /// </summary>
         private static void ValidateStaticStartOverlap(LevelData level, List<string> errors)
         {
@@ -610,7 +617,15 @@ namespace Gameplay.Core
 
             for (var g = 0; g < level.StaticGeometry.Length; g++)
             {
-                if (!TryBuildStaticCollider(level.StaticGeometry[g], out var staticShape))
+                var block = level.StaticGeometry[g];
+                if (block?.Outline == null || !block.HasCollider)
+                    continue;
+
+                // SURFACE → zero-width edge-chain (TASK-329); FILLED → convex-collider SAT. Build the filled collider
+                // once per block; the surface path measures the outline directly (no ribbon).
+                var surface = block.IsSurface && block.Outline.Length >= 2;
+                var filledShape = default(ConvexShape);
+                if (!surface && !TryBuildStaticCollider(block, out filledShape))
                     continue;
 
                 for (var i = 0; i < level.Pieces.Count; i++)
@@ -621,7 +636,9 @@ namespace Gameplay.Core
 
                     var pieceShape = ConvexShape.Of(
                         type.Shape, level.Pieces[i].StartPosition, level.Pieces[i].StartRotation);
-                    var pen = Geometry.Penetration(pieceShape, staticShape);
+                    var pen = surface
+                        ? SurfaceEmbedDepth(block.Outline, pieceShape)
+                        : Geometry.Penetration(pieceShape, filledShape);
                     if (pen > MinStaticPenetration)
                         errors.Add(
                             $"Pieces[{i}] '{type.Kind}' starts embedded in StaticGeometry[{g}] — penetration " +
@@ -629,6 +646,126 @@ namespace Gameplay.Core
                             $"flush on a surface (≤{MinStaticPenetration:0.###}) but must not begin inside it.");
                 }
             }
+        }
+
+        /// <summary>TASK-329: how deep the ZERO-WIDTH surface edge-chain reaches INSIDE a piece's convex collider at its
+        /// start pose — the honest embed depth against the <c>EdgeCollider2D</c> the sim actually simulates, not the
+        /// rendered ribbon. A piece resting FLUSH reads ~0 (the chain is tangent / lies on the boundary); a piece
+        /// threaded onto the film reads the deepest the chain sinks into it. Max over the chain's segments (and over a
+        /// concave piece's convex parts). Same world-unit scale as the filled-solid SAT, so <see cref="MinStaticPenetration"/>
+        /// gates both.</summary>
+        private static float SurfaceEmbedDepth(Vec2[] chain, in ConvexShape piece)
+        {
+            var max = 0f;
+            for (var i = 0; i + 1 < chain.Length; i++)
+            {
+                var d = SegmentPieceDepth(chain[i], chain[i + 1], piece);
+                if (d > max)
+                    max = d;
+            }
+            return max;
+        }
+
+        /// <summary>The deepest a single edge-chain segment reaches inside one piece collider. A circle is exact
+        /// (radius − distance from centre to the segment); a compound (concave polyomino) is the max over its convex
+        /// parts; a convex polygon defers to <see cref="SegmentConvexDepth"/>.</summary>
+        private static float SegmentPieceDepth(Vec2 a, Vec2 b, in ConvexShape piece)
+        {
+            if (piece.IsCircle)
+                return System.MathF.Max(0f, piece.Radius - DistancePointToSegment(piece.Center, a, b));
+            if (piece.IsCompound)
+            {
+                var max = 0f;
+                for (var p = 0; p < piece.Parts.Length; p++)
+                {
+                    var d = SegmentConvexDepth(a, b, piece.Parts[p]);
+                    if (d > max)
+                        max = d;
+                }
+                return max;
+            }
+            return SegmentConvexDepth(a, b, piece.Vertices);
+        }
+
+        /// <summary>Distance from a point to a segment (segment-clamped, so endpoints are exact).</summary>
+        private static float DistancePointToSegment(Vec2 p, Vec2 a, Vec2 b)
+        {
+            var e = b - a;
+            var ee = Vec2.Dot(e, e);
+            var t = ee < 1e-12f ? 0f : Vec2.Dot(p - a, e) / ee;
+            t = t < 0f ? 0f : (t > 1f ? 1f : t);
+            return (p - (a + e * t)).Length;
+        }
+
+        /// <summary>The deepest a straight segment reaches INSIDE a convex polygon: the maximum, over the segment's
+        /// interior, of the distance to the polygon boundary — 0 when the segment never enters the interior (a piece
+        /// resting flush, its edge lying ON the chain, reads 0 because boundary points are 0 from the boundary). A
+        /// zero-width segment cannot be measured by SAT (its own axis reports 0 overlap and falsely "separates"), so
+        /// this measures the pierce depth directly. Distance-to-boundary along the segment is a concave, piecewise-
+        /// linear function of the segment parameter, so its maximum is at an endpoint or where the two nearest edges
+        /// tie; those candidate parameters are enumerated and the max over interior candidates is returned.</summary>
+        private static float SegmentConvexDepth(Vec2 a, Vec2 b, Vec2[] verts)
+        {
+            if (verts == null || verts.Length < 3)
+                return 0f;
+            var n = verts.Length;
+            var ab = b - a;
+
+            // g_k(t) = c_k + d_k·t is the (unit) signed distance of the segment point a+t·ab to edge k's line; only |g|
+            // is used (via the boundary-distance helper), so the normal's sign convention is irrelevant.
+            var c = new float[n];
+            var d = new float[n];
+            for (var k = 0; k < n; k++)
+            {
+                var v0 = verts[k];
+                var edge = verts[(k + 1) % n] - v0;
+                var len = edge.Length;
+                if (len < 1e-6f) { c[k] = float.NaN; continue; } // degenerate edge — skip as a tie source
+                var nx = edge.Y / len;
+                var ny = -edge.X / len;
+                c[k] = (a.X - v0.X) * nx + (a.Y - v0.Y) * ny;
+                d[k] = ab.X * nx + ab.Y * ny;
+            }
+
+            var cands = new List<float> { 0f, 1f };
+            for (var i = 0; i < n; i++)
+            {
+                if (float.IsNaN(c[i]))
+                    continue;
+                for (var j = i + 1; j < n; j++)
+                {
+                    if (float.IsNaN(c[j]))
+                        continue;
+                    // |g_i| = |g_j| ⇒ g_i = g_j OR g_i = −g_j — the two possible ridge parameters.
+                    AddRootInUnit(cands, d[i] - d[j], c[j] - c[i]);
+                    AddRootInUnit(cands, d[i] + d[j], -(c[i] + c[j]));
+                }
+            }
+
+            var best = 0f;
+            for (var ci = 0; ci < cands.Count; ci++)
+            {
+                var t = cands[ci];
+                if (t < 0f || t > 1f)
+                    continue;
+                var p = a + ab * t;
+                if (!Geometry.PointInPolygon(verts, p))
+                    continue;
+                var dist = Geometry.DistanceToPolygonBoundary(verts, p);
+                if (dist > best)
+                    best = dist;
+            }
+            return best;
+        }
+
+        /// <summary>Add the root t of <c>m·t = rhs</c> to the candidate list when it lies in [0,1] and m is non-degenerate.</summary>
+        private static void AddRootInUnit(List<float> cands, float m, float rhs)
+        {
+            if (System.MathF.Abs(m) < 1e-9f)
+                return;
+            var t = rhs / m;
+            if (t >= 0f && t <= 1f)
+                cands.Add(t);
         }
 
         /// <summary>
@@ -698,33 +835,21 @@ namespace Gameplay.Core
             return block.Outline.Length >= 3 && Geometry.PointInPolygon(block.Outline, p);
         }
 
-        /// <summary>TASK-332: build the convex collider the physics simulates for one static-geometry block, or return
-        /// false when the block has none to embed in — extracted so <see cref="ValidateStaticStartOverlap"/> (piece
-        /// START poses) and <see cref="ValidateSlotReachability"/> (TARGET slot poses) build it IDENTICALLY and can
-        /// never diverge on how a static is shaped. A <c>collider:false</c> block is VISUAL-ONLY (TASK-346) — feeding
-        /// its legally CONCAVE outline to the convex <see cref="ConvexShape.Polygon"/> would compute a bogus
-        /// penetration and false-flag — so it yields no collider. A SURFACE is measured against its rendered RIBBON
-        /// (the same <see cref="Geometry.SurfaceRibbonQuads"/> the view draws) so the embed check and the drawn wood can
-        /// never disagree on a concave surface; a FILLED solid is normalised to CCW (the circle-in-polygon inside-test
-        /// is CCW-only). Degenerate blocks (&lt;2 surface / &lt;3 filled vertices) are the view's problem, reported by
-        /// <see cref="ValidateStaticGeometry"/>, so they yield no collider here.</summary>
+        /// <summary>Build the convex collider the physics simulates for one FILLED static-geometry block, or return
+        /// false when there is none to embed in. Called only by <see cref="ValidateStaticStartOverlap"/> for the filled
+        /// path — a SURFACE is now measured against its zero-width edge-chain by <see cref="SurfaceEmbedDepth"/>
+        /// (TASK-329), not a ribbon collider, so this no longer builds one for surfaces (returns false). A
+        /// <c>collider:false</c> block is VISUAL-ONLY (TASK-346) — feeding its legally CONCAVE outline to the convex
+        /// <see cref="ConvexShape.Polygon"/> would compute a bogus penetration and false-flag — so it yields no
+        /// collider. A filled solid is normalised to CCW (the circle-in-polygon inside-test is CCW-only). Degenerate
+        /// blocks (&lt;3 vertices) are the view's problem, reported by <see cref="ValidateStaticGeometry"/>, so they
+        /// yield no collider here. (Slot-reachability, TASK-332, does its own even-odd containment in
+        /// <see cref="StaticContainsPoint"/> and never calls this.)</summary>
         private static bool TryBuildStaticCollider(Polygon block, out ConvexShape staticShape)
         {
             staticShape = default;
-            if (block?.Outline == null || !block.HasCollider)
+            if (block?.Outline == null || !block.HasCollider || block.IsSurface)
                 return false;
-
-            if (block.IsSurface)
-            {
-                if (block.Outline.Length < 2)
-                    return false; // a chain needs ≥2 points (ValidateStaticGeometry already reports the degenerate case)
-                var quads = Geometry.SurfaceRibbonQuads(block.Outline, block.Surface.Thickness);
-                if (quads.Length == 0)
-                    return false;
-                staticShape = ConvexShape.Compound(quads); // concave-honest: max embed over the convex ribbon quads
-                return true;
-            }
-
             if (block.Outline.Length < 3)
                 return false; // no collider to embed in (degenerate blocks are the view's problem, not this rule's)
             staticShape = ConvexShape.Polygon(EnsureCcw(block.Outline));
