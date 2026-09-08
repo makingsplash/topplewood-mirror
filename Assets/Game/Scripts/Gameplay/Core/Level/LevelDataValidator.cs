@@ -166,6 +166,15 @@ namespace Gameplay.Core
             //     sim sweep surfaces it under [LEVEL-WARN] so it is no longer silent (LevelSimRunner.AuditTapSpacing).
             ValidateSymmetryOrder(level, errors, warnings);
 
+            // 14. Slot reachability (TASK-332): a target slot whose CENTRE is buried inside static geometry can never be
+            //     assembled — the piece would be ≥half-submerged in the floor/static. fan_quilt and chute_cross passed
+            //     the schema and coverage checks at 0% winnable because the lower half of the target sat inside the
+            //     floor; every check above AND the sim (which measures only START poses, never target.slots) were blind
+            //     to it. Keyed on the slot CENTRE, NOT collider penetration: a slot legitimately overlaps a decorative
+            //     static by a hair (locomotive/petal_gully ship winnable), which a penetration threshold cannot tell
+            //     from a deep cut-through. ERROR named with the slot and its centre.
+            ValidateSlotReachability(level, errors);
+
             return new ValidationResult(errors, warnings);
         }
 
@@ -526,32 +535,8 @@ namespace Gameplay.Core
 
             for (var g = 0; g < level.StaticGeometry.Length; g++)
             {
-                var block = level.StaticGeometry[g];
-                if (block?.Outline == null)
+                if (!TryBuildStaticCollider(level.StaticGeometry[g], out var staticShape))
                     continue;
-
-                // TASK-346: a collider:false block is a VISUAL-ONLY static — it has no collider for a piece to embed
-                // in, and feeding its (legally CONCAVE) outline to the convex ConvexShape.Polygon would compute a bogus
-                // penetration and false-flag. Skip it; there is nothing to embed in.
-                if (!block.HasCollider)
-                    continue;
-
-                ConvexShape staticShape;
-                if (block.IsSurface)
-                {
-                    if (block.Outline.Length < 2)
-                        continue; // a chain needs ≥2 points (ValidateStaticGeometry already reports the degenerate case)
-                    var quads = Geometry.SurfaceRibbonQuads(block.Outline, block.Surface.Thickness);
-                    if (quads.Length == 0)
-                        continue;
-                    staticShape = ConvexShape.Compound(quads); // concave-honest: max embed over the convex ribbon quads
-                }
-                else
-                {
-                    if (block.Outline.Length < 3)
-                        continue; // no collider to embed in (degenerate blocks are the view's problem, not this rule's)
-                    staticShape = ConvexShape.Polygon(EnsureCcw(block.Outline));
-                }
 
                 for (var i = 0; i < level.Pieces.Count; i++)
                 {
@@ -569,6 +554,106 @@ namespace Gameplay.Core
                             $"flush on a surface (≤{MinStaticPenetration:0.###}) but must not begin inside it.");
                 }
             }
+        }
+
+        /// <summary>
+        /// TASK-332: no TARGET slot's CENTRE (its authored anchor point) may lie INSIDE a static-geometry collider — a
+        /// slot whose centre is buried means the piece is ≥half-submerged in the floor/static and can never be assembled
+        /// there, the exact "green gate, 0% winnable" the owner hit on fan_quilt and chute_cross (the floor cut through
+        /// the LOWER HALF of the target — the lowest slots' centres fell inside the floor band).
+        ///
+        /// The test is on the CENTRE POINT, not on collider penetration, and that distinction is load-bearing: a target
+        /// slot legitimately OVERLAPS a decorative static by a hair when the piece rests against/on it (locomotive's
+        /// wheel embeds 0.038, petal_gully's petal 0.002 — both ship and are winnable). A penetration threshold cannot
+        /// separate that shallow, reachable overlap from the deep, unreachable cut-through without conflating the two;
+        /// the centre-in-static test does — it fires only once the anchor is buried (piece ≥50% inside), i.e. the "центр
+        /// слота ≥ полу-высоты над опорой И не внутри статика" the ticket asks for. Winnability itself stays level-sim's
+        /// job (this is the structural, deterministic half). Even-odd <see cref="Geometry.PointInPolygon"/> (winding-
+        /// agnostic) on a filled block's outline, or on the rendered ribbon quads of a surface (same
+        /// <see cref="Geometry.SurfaceRibbonQuads"/> the view and #11 use). A collider:false VISUAL-ONLY block is
+        /// skipped (nothing to be buried in). NOTE (limitation): a slot floating in free space entirely BELOW a thin
+        /// static it never overlaps is not caught — its centre is not inside anything; catching that would need a
+        /// support/above heuristic, left out deliberately (it would risk false-failing a figure legitimately drawn above
+        /// a decorative surface). The observed defect is a cut-THROUGH (centre buried), which this catches. See §D25.
+        /// </summary>
+        private static void ValidateSlotReachability(LevelData level, List<string> errors)
+        {
+            var slots = level.Target?.Slots;
+            if (slots == null || slots.Count == 0 || level.StaticGeometry == null)
+                return;
+
+            for (var g = 0; g < level.StaticGeometry.Length; g++)
+            {
+                var block = level.StaticGeometry[g];
+                // collider:false → VISUAL-ONLY (TASK-346); nothing to be buried in. Degenerate blocks are reported by
+                // ValidateStaticGeometry and have no interior to test.
+                if (block?.Outline == null || !block.HasCollider)
+                    continue;
+
+                for (var s = 0; s < slots.Count; s++)
+                {
+                    if (!StaticContainsPoint(block, slots[s].Position))
+                        continue;
+                    errors.Add(
+                        $"Target slot[{s}] '{slots[s].Kind}' is UNREACHABLE — its target-pose CENTRE {slots[s].Position} " +
+                        $"lies INSIDE StaticGeometry[{g}]; the piece would be ≥half-buried in the floor/static and can " +
+                        "never be assembled there (the static cuts through the figure). A slot may rest flush ON a " +
+                        "surface, but its centre must not lie inside static geometry.");
+                }
+            }
+        }
+
+        /// <summary>TASK-332: does a static-geometry block's INTERIOR contain a world point? A filled solid is its outline
+        /// ring; a surface has no filled interior, so its "interior" is the rendered ribbon (any of the convex segment
+        /// quads). Even-odd <see cref="Geometry.PointInPolygon"/> is winding-agnostic, so no CCW normalisation is needed.
+        /// Caller has already excluded collider:false and null-outline blocks.</summary>
+        private static bool StaticContainsPoint(Polygon block, Vec2 p)
+        {
+            if (block.IsSurface)
+            {
+                if (block.Outline.Length < 2)
+                    return false;
+                var quads = Geometry.SurfaceRibbonQuads(block.Outline, block.Surface.Thickness);
+                for (var i = 0; i < quads.Length; i++)
+                    if (Geometry.PointInPolygon(quads[i], p))
+                        return true;
+                return false;
+            }
+
+            return block.Outline.Length >= 3 && Geometry.PointInPolygon(block.Outline, p);
+        }
+
+        /// <summary>TASK-332: build the convex collider the physics simulates for one static-geometry block, or return
+        /// false when the block has none to embed in — extracted so <see cref="ValidateStaticStartOverlap"/> (piece
+        /// START poses) and <see cref="ValidateSlotReachability"/> (TARGET slot poses) build it IDENTICALLY and can
+        /// never diverge on how a static is shaped. A <c>collider:false</c> block is VISUAL-ONLY (TASK-346) — feeding
+        /// its legally CONCAVE outline to the convex <see cref="ConvexShape.Polygon"/> would compute a bogus
+        /// penetration and false-flag — so it yields no collider. A SURFACE is measured against its rendered RIBBON
+        /// (the same <see cref="Geometry.SurfaceRibbonQuads"/> the view draws) so the embed check and the drawn wood can
+        /// never disagree on a concave surface; a FILLED solid is normalised to CCW (the circle-in-polygon inside-test
+        /// is CCW-only). Degenerate blocks (&lt;2 surface / &lt;3 filled vertices) are the view's problem, reported by
+        /// <see cref="ValidateStaticGeometry"/>, so they yield no collider here.</summary>
+        private static bool TryBuildStaticCollider(Polygon block, out ConvexShape staticShape)
+        {
+            staticShape = default;
+            if (block?.Outline == null || !block.HasCollider)
+                return false;
+
+            if (block.IsSurface)
+            {
+                if (block.Outline.Length < 2)
+                    return false; // a chain needs ≥2 points (ValidateStaticGeometry already reports the degenerate case)
+                var quads = Geometry.SurfaceRibbonQuads(block.Outline, block.Surface.Thickness);
+                if (quads.Length == 0)
+                    return false;
+                staticShape = ConvexShape.Compound(quads); // concave-honest: max embed over the convex ribbon quads
+                return true;
+            }
+
+            if (block.Outline.Length < 3)
+                return false; // no collider to embed in (degenerate blocks are the view's problem, not this rule's)
+            staticShape = ConvexShape.Polygon(EnsureCcw(block.Outline));
+            return true;
         }
 
         /// <summary>

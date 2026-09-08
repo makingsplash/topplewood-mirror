@@ -575,6 +575,27 @@ namespace Gameplay.View
             return null;
         }
 
+        /// <summary>TASK-332: does the Itten scheme SILENTLY replace an authored static-block colour with
+        /// <see cref="EnvironmentColor"/>? Mirrors the guard in <see cref="ResolveStaticColor"/> EXACTLY (scheme on +
+        /// env hex parses), so a loader-side audit can report the dead colour without duplicating the condition. When
+        /// true, EVERY static block's authored colour is overridden (the override is level-independent).</summary>
+        public bool OverridesStaticColor =>
+            IttenPalettes && !string.IsNullOrEmpty(EnvironmentColor) &&
+            ColorUtility.TryParseHtmlString(EnvironmentColor, out _);
+
+        /// <summary>TASK-332: the palette hex that the Itten scheme substitutes for a piece <paramref name="kind"/> on
+        /// <paramref name="levelId"/>, or false when the authored colour survives. Mirrors the palette branch of
+        /// <see cref="ResolveLevelColor(Color,string)"/> EXACTLY (scheme on + level has a palette carrying the kind),
+        /// so a loader-side audit reports exactly the colours the resolver kills — never more, never fewer.</summary>
+        public bool OverridesPieceColor(string levelId, string kind, out string paletteHex)
+        {
+            paletteHex = null;
+            if (!IttenPalettes)
+                return false;
+            var palette = FindLevelPalette(levelId);
+            return palette != null && palette.TryGet(kind, out paletteHex);
+        }
+
         /// <summary>
         /// Цвет детали с учётом схемы Иттена текущего уровня. Не нашлось схемы или вида — падаем
         /// на прежний путь (<see cref="ResolveLevelColor(Color)"/>), поэтому непокрашенный уровень
