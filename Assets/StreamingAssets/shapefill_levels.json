@@ -5323,6 +5323,376 @@
       "airZones": [
         { "region": { "min": { "x": -2.2, "y": 1.0 }, "max": { "x": 2.2, "y": 13.56 } }, "direction": { "x": 0, "y": 1 }, "acceleration": 15.0, "color": "#CFE8F5", "bypassHoverGuard": true }
       ]
+    },
+    {
+      "levelId": "brick_shaft",
+      "seed": 359,
+      "difficultyTier": 7,
+      "physicsMode": "assembly",
+      "matchTolerance": {
+        "posTol": 0.32,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -7,
+          "y": -1
+        },
+        "max": {
+          "x": 7,
+          "y": 18
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -18.0
+      },
+      "pieceTypes": [
+        {
+          "kind": "cyan_ball",
+          "color": "#3FC8E0",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.65,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.57,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "magenta_ball",
+          "color": "#D14FA8",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.65,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.57,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -1.42,
+            "y": 0.0
+          },
+          {
+            "x": 1.42,
+            "y": 0.0
+          },
+          {
+            "x": 1.42,
+            "y": 3.42
+          },
+          {
+            "x": 0.28,
+            "y": 3.42
+          },
+          {
+            "x": 0.28,
+            "y": 0.6
+          },
+          {
+            "x": -0.28,
+            "y": 0.6
+          },
+          {
+            "x": -0.28,
+            "y": 3.42
+          },
+          {
+            "x": -1.42,
+            "y": 3.42
+          }
+        ],
+        "slots": [
+          {
+            "kind": "cyan_ball",
+            "position": {
+              "x": -0.85,
+              "y": 0.57
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cyan_ball",
+            "position": {
+              "x": -0.85,
+              "y": 1.71
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cyan_ball",
+            "position": {
+              "x": -0.85,
+              "y": 2.85
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "magenta_ball",
+            "position": {
+              "x": 0.85,
+              "y": 0.57
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "magenta_ball",
+            "position": {
+              "x": 0.85,
+              "y": 1.71
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "magenta_ball",
+            "position": {
+              "x": 0.85,
+              "y": 2.85
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "cyan_ball",
+          "startPosition": {
+            "x": -0.85,
+            "y": 13.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cyan_ball",
+          "startPosition": {
+            "x": -0.9,
+            "y": 9.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cyan_ball",
+          "startPosition": {
+            "x": -0.8,
+            "y": 5.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "magenta_ball",
+          "startPosition": {
+            "x": 0.85,
+            "y": 11.5
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "magenta_ball",
+          "startPosition": {
+            "x": 0.9,
+            "y": 8.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "magenta_ball",
+          "startPosition": {
+            "x": 0.8,
+            "y": 4.6
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -7,
+              "y": -0.6
+            },
+            {
+              "x": 7,
+              "y": -0.6
+            },
+            {
+              "x": 7,
+              "y": 0
+            },
+            {
+              "x": -7,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -7,
+              "y": 0
+            },
+            {
+              "x": -1.68,
+              "y": 0
+            },
+            {
+              "x": -1.68,
+              "y": 17
+            },
+            {
+              "x": -7,
+              "y": 17
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.68,
+              "y": 0
+            },
+            {
+              "x": 7,
+              "y": 0
+            },
+            {
+              "x": 7,
+              "y": 17
+            },
+            {
+              "x": 1.68,
+              "y": 17
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#7DB33A",
+          "outline": [
+            {
+              "x": -0.2,
+              "y": 0
+            },
+            {
+              "x": 0.2,
+              "y": 0
+            },
+            {
+              "x": 0.2,
+              "y": 1.6
+            },
+            {
+              "x": -0.2,
+              "y": 1.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.68,
+              "y": 13.0
+            },
+            {
+              "x": -1.48,
+              "y": 13.0
+            },
+            {
+              "x": -1.48,
+              "y": 13.7
+            },
+            {
+              "x": -1.68,
+              "y": 13.7
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.48,
+              "y": 10.5
+            },
+            {
+              "x": 1.68,
+              "y": 10.5
+            },
+            {
+              "x": 1.68,
+              "y": 11.2
+            },
+            {
+              "x": 1.48,
+              "y": 11.2
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.68,
+              "y": 6.8
+            },
+            {
+              "x": -1.48,
+              "y": 6.8
+            },
+            {
+              "x": -1.48,
+              "y": 7.5
+            },
+            {
+              "x": -1.68,
+              "y": 7.5
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#7DB33A",
+          "outline": [
+            {
+              "x": 1.48,
+              "y": 4.1
+            },
+            {
+              "x": 1.68,
+              "y": 4.1
+            },
+            {
+              "x": 1.68,
+              "y": 4.8
+            },
+            {
+              "x": 1.48,
+              "y": 4.8
+            }
+          ]
+        }
+      ]
     }
   ]
 }
