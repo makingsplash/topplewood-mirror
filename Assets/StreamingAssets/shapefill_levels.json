@@ -6645,6 +6645,319 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "mosaic_brick",
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "seed": 71,
+      "difficultyTier": 8,
+      "physicsMode": "assembly",
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.26179939
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -1
+        },
+        "max": {
+          "x": 6,
+          "y": 9
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "color": "#8D6E4A",
+          "kind": "lime_box",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.0
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 2.55,
+            "height": 1.7
+          }
+        },
+        {
+          "color": "#E23B3B",
+          "kind": "amber_box",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.0
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 2.55,
+            "height": 1.7
+          }
+        },
+        {
+          "color": "#F2801D",
+          "kind": "mint_bar",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.0
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 2.55,
+            "height": 0.85
+          }
+        },
+        {
+          "color": "#F4C20D",
+          "kind": "sky_bar",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.0
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 2.55,
+            "height": 0.85
+          }
+        },
+        {
+          "color": "#4CAF50",
+          "kind": "jade_bar",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.0
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 2.55,
+            "height": 0.85
+          }
+        },
+        {
+          "color": "#12A5A5",
+          "kind": "sand_bar",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.0
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 2.55,
+            "height": 0.85
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -2.55,
+            "y": 0.0
+          },
+          {
+            "x": 2.55,
+            "y": 0.0
+          },
+          {
+            "x": 2.55,
+            "y": 3.4
+          },
+          {
+            "x": -2.55,
+            "y": 3.4
+          }
+        ],
+        "slots": [
+          {
+            "kind": "lime_box",
+            "position": {
+              "x": -1.275,
+              "y": 0.85
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "amber_box",
+            "position": {
+              "x": 1.275,
+              "y": 0.85
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "mint_bar",
+            "position": {
+              "x": -1.275,
+              "y": 2.125
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "sky_bar",
+            "position": {
+              "x": 1.275,
+              "y": 2.125
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "jade_bar",
+            "position": {
+              "x": -1.275,
+              "y": 2.975
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "sand_bar",
+            "position": {
+              "x": 1.275,
+              "y": 2.975
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "lime_box",
+          "startPosition": {
+            "x": -1.275,
+            "y": 4.3
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "amber_box",
+          "startPosition": {
+            "x": 1.275,
+            "y": 4.3
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "mint_bar",
+          "startPosition": {
+            "x": -1.275,
+            "y": 4.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "sky_bar",
+          "startPosition": {
+            "x": 1.275,
+            "y": 4.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "jade_bar",
+          "startPosition": {
+            "x": -1.275,
+            "y": 5.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "sand_bar",
+          "startPosition": {
+            "x": 1.275,
+            "y": 5.9
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -6.0,
+              "y": -0.6
+            },
+            {
+              "x": 6.0,
+              "y": -0.6
+            },
+            {
+              "x": 6.0,
+              "y": 0.0
+            },
+            {
+              "x": -6.0,
+              "y": 0.0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.775,
+              "y": 0.0
+            },
+            {
+              "x": -2.6,
+              "y": 0.0
+            },
+            {
+              "x": -2.6,
+              "y": 3.4
+            },
+            {
+              "x": -2.775,
+              "y": 3.4
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 2.6,
+              "y": 0.0
+            },
+            {
+              "x": 2.775,
+              "y": 0.0
+            },
+            {
+              "x": 2.775,
+              "y": 3.4
+            },
+            {
+              "x": 2.6,
+              "y": 3.4
+            }
+          ]
+        }
+      ],
+      "airZones": []
     }
   ]
 }
