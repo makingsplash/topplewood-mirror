@@ -6654,7 +6654,8 @@
         2,
         3,
         4,
-        5
+        5,
+        6
       ],
       "seed": 71,
       "difficultyTier": 8,
@@ -6680,7 +6681,7 @@
       "pieceTypes": [
         {
           "color": "#8D6E4A",
-          "kind": "lime_box",
+          "kind": "sand_bar",
           "symmetryOrder": 2,
           "material": {
             "density": 1.0,
@@ -6688,9 +6689,9 @@
             "restitution": 0.0
           },
           "shape": {
-            "primitive": "box",
+            "primitive": "plank",
             "width": 2.55,
-            "height": 1.7
+            "height": 0.85
           }
         },
         {
@@ -6710,21 +6711,6 @@
         },
         {
           "color": "#F2801D",
-          "kind": "mint_bar",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.0
-          },
-          "shape": {
-            "primitive": "plank",
-            "width": 2.55,
-            "height": 0.85
-          }
-        },
-        {
-          "color": "#F4C20D",
           "kind": "sky_bar",
           "symmetryOrder": 2,
           "material": {
@@ -6739,8 +6725,23 @@
           }
         },
         {
+          "color": "#F4C20D",
+          "kind": "rose_bar",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.0
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 1.7,
+            "height": 0.85
+          }
+        },
+        {
           "color": "#4CAF50",
-          "kind": "jade_bar",
+          "kind": "mint_bar",
           "symmetryOrder": 2,
           "material": {
             "density": 1.0,
@@ -6755,7 +6756,7 @@
         },
         {
           "color": "#12A5A5",
-          "kind": "sand_bar",
+          "kind": "jade_bar",
           "symmetryOrder": 2,
           "material": {
             "density": 1.0,
@@ -6766,6 +6767,20 @@
             "primitive": "plank",
             "width": 2.55,
             "height": 0.85
+          }
+        },
+        {
+          "color": "#2E7CD6",
+          "kind": "lime_j",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.0
+          },
+          "shape": {
+            "primitive": "j_tetromino",
+            "cell": 0.85
           }
         }
       ],
@@ -6790,18 +6805,26 @@
         ],
         "slots": [
           {
-            "kind": "lime_box",
+            "kind": "lime_j",
             "position": {
               "x": -1.275,
               "y": 0.85
             },
-            "rotation": 0
+            "rotation": -1.5707963
           },
           {
             "kind": "amber_box",
             "position": {
               "x": 1.275,
               "y": 0.85
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "rose_bar",
+            "position": {
+              "x": -0.85,
+              "y": 1.275
             },
             "rotation": 0
           },
@@ -6841,12 +6864,12 @@
       },
       "pieces": [
         {
-          "kind": "lime_box",
+          "kind": "lime_j",
           "startPosition": {
             "x": -1.275,
             "y": 4.3
           },
-          "startRotation": 0
+          "startRotation": -1.5707963
         },
         {
           "kind": "amber_box",
@@ -6857,10 +6880,18 @@
           "startRotation": 0
         },
         {
+          "kind": "rose_bar",
+          "startPosition": {
+            "x": -0.85,
+            "y": 4.6
+          },
+          "startRotation": 0
+        },
+        {
           "kind": "mint_bar",
           "startPosition": {
             "x": -1.275,
-            "y": 4.6
+            "y": 4.9
           },
           "startRotation": 0
         },
@@ -6868,7 +6899,7 @@
           "kind": "sky_bar",
           "startPosition": {
             "x": 1.275,
-            "y": 4.6
+            "y": 4.9
           },
           "startRotation": 0
         },
@@ -6876,7 +6907,7 @@
           "kind": "jade_bar",
           "startPosition": {
             "x": -1.275,
-            "y": 5.9
+            "y": 5.6
           },
           "startRotation": 0
         },
@@ -6884,7 +6915,7 @@
           "kind": "sand_bar",
           "startPosition": {
             "x": 1.275,
-            "y": 5.9
+            "y": 5.6
           },
           "startRotation": 0
         }
