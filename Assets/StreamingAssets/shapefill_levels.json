@@ -6989,6 +6989,360 @@
         }
       ],
       "airZones": []
+    },
+    {
+      "levelId": "shaft_sort",
+      "seed": 359,
+      "difficultyTier": 8,
+      "physicsMode": "assembly",
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -7,
+          "y": -1
+        },
+        "max": {
+          "x": 7,
+          "y": 19
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -20.0
+      },
+      "pieceTypes": [
+        {
+          "kind": "cyan_ball",
+          "color": "#3FC8E0",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.45,
+            "restitution": 0.03
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.5,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "magenta_ball",
+          "color": "#D14FA8",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.45,
+            "restitution": 0.03
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.5,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -1.6,
+            "y": 0
+          },
+          {
+            "x": 1.6,
+            "y": 0
+          },
+          {
+            "x": 1.6,
+            "y": 3.2
+          },
+          {
+            "x": -1.6,
+            "y": 3.2
+          }
+        ],
+        "slots": [
+          {
+            "kind": "cyan_ball",
+            "position": {
+              "x": -1.05,
+              "y": 0.5
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cyan_ball",
+            "position": {
+              "x": -1.05,
+              "y": 1.5
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cyan_ball",
+            "position": {
+              "x": -1.05,
+              "y": 2.5
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "magenta_ball",
+            "position": {
+              "x": 1.05,
+              "y": 0.5
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "magenta_ball",
+            "position": {
+              "x": 1.05,
+              "y": 1.5
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "magenta_ball",
+            "position": {
+              "x": 1.05,
+              "y": 2.5
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "magenta_ball",
+          "startPosition": {
+            "x": -0.2,
+            "y": 10.7
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "magenta_ball",
+          "startPosition": {
+            "x": -0.2,
+            "y": 7.7
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cyan_ball",
+          "startPosition": {
+            "x": 0.2,
+            "y": 9.2
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cyan_ball",
+          "startPosition": {
+            "x": 0.2,
+            "y": 6.2
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cyan_ball",
+          "startPosition": {
+            "x": -1.05,
+            "y": 15.5
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "magenta_ball",
+          "startPosition": {
+            "x": 1.05,
+            "y": 16.0
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -7,
+              "y": -0.6
+            },
+            {
+              "x": 7,
+              "y": -0.6
+            },
+            {
+              "x": 7,
+              "y": 0
+            },
+            {
+              "x": -7,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -7,
+              "y": 0
+            },
+            {
+              "x": -1.6,
+              "y": 0
+            },
+            {
+              "x": -1.6,
+              "y": 17
+            },
+            {
+              "x": -7,
+              "y": 17
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.6,
+              "y": 0
+            },
+            {
+              "x": 7,
+              "y": 0
+            },
+            {
+              "x": 7,
+              "y": 17
+            },
+            {
+              "x": 1.6,
+              "y": 17
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.5,
+              "y": 0
+            },
+            {
+              "x": 0.5,
+              "y": 0
+            },
+            {
+              "x": 0.5,
+              "y": 2.8
+            },
+            {
+              "x": -0.5,
+              "y": 2.8
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.45,
+              "y": 9.7
+            },
+            {
+              "x": 0.05,
+              "y": 9.7
+            },
+            {
+              "x": 0.05,
+              "y": 10.0
+            },
+            {
+              "x": -0.45,
+              "y": 10.0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.45,
+              "y": 6.7
+            },
+            {
+              "x": 0.05,
+              "y": 6.7
+            },
+            {
+              "x": 0.05,
+              "y": 7.0
+            },
+            {
+              "x": -0.45,
+              "y": 7.0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.05,
+              "y": 8.2
+            },
+            {
+              "x": 0.45,
+              "y": 8.2
+            },
+            {
+              "x": 0.45,
+              "y": 8.5
+            },
+            {
+              "x": -0.05,
+              "y": 8.5
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.05,
+              "y": 5.2
+            },
+            {
+              "x": 0.45,
+              "y": 5.2
+            },
+            {
+              "x": 0.45,
+              "y": 5.5
+            },
+            {
+              "x": -0.05,
+              "y": 5.5
+            }
+          ]
+        }
+      ]
     }
   ]
 }
