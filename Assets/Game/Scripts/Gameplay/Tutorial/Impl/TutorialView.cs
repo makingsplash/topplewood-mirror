@@ -33,6 +33,14 @@ namespace Gameplay.Tutorial
     /// blinks by ALPHA (TASK-263 §2a — owner asked for a blinking outline). The finger (FingerPoint only) is a real
     /// sprite from <c>Resources/Tutorial/tutorial_finger</c>, positioned by its off-centre TIP; it falls back to a
     /// placeholder white square (logged once) if the asset is missing so the tour never breaks silently.
+    ///
+    /// When SEVERAL fingers are shown at once (multi-highlight, TASK-377), each finger that sits LEFT of the group's
+    /// centre is MIRRORED horizontally (TASK-380 — owner: two identical fingers read as copy-paste, not two hands).
+    /// The rule is a CLASS, not the level-5 case: <see cref="RefreshGroupMirroring"/> compares each member's world-X
+    /// to the group centroid, so it holds for a pair, a 3+ member group, or any future co-release group; a lone
+    /// highlight (Hint booster / assemble-in-order: key 0 only) has centroid == itself and is never mirrored, so the
+    /// single-highlight feel is unchanged. The flip reflects the finger about its own TIP, so the tip stays pinned on
+    /// the highlighted piece (see <see cref="Overlay.SetMirrored"/>).
     /// </summary>
     public sealed class TutorialView : ITutorialView, IDisposable
     {
@@ -61,6 +69,33 @@ namespace Gameplay.Tutorial
                 _overlays[key] = overlay;
             }
             overlay.Show(origin, rotation, shape, style);
+            // Re-decide finger mirroring across ALL currently-shown highlights (TASK-380). Callers add keys one at a
+            // time in a single synchronous loop (SimultaneousTapStep) BEFORE any frame renders, so recomputing after
+            // each Show converges to the correct per-member flip by the last call — no frame sees a transient state.
+            RefreshGroupMirroring();
+        }
+
+        // Mirror each finger that sits LEFT of the group's centroid (TASK-380). Class, not case: the decision is a
+        // world-X comparison against the mean of the currently-shown members, so it works for a pair, a trio, or any
+        // co-release group. A single active highlight (key 0) has centroid == itself → strictly-less is never true →
+        // it is never mirrored, keeping the Hint booster / assemble-in-order feel exactly as before.
+        private void RefreshGroupMirroring()
+        {
+            var sumX = 0f;
+            var count = 0;
+            foreach (var overlay in _overlays.Values)
+                if (overlay != null && overlay.IsActive)
+                {
+                    sumX += overlay.WorldOriginX;
+                    count++;
+                }
+            if (count == 0)
+                return;
+
+            var centreX = sumX / count;
+            foreach (var overlay in _overlays.Values)
+                if (overlay != null && overlay.IsActive)
+                    overlay.SetMirrored(overlay.WorldOriginX < centreX);
         }
 
         public void Clear()
@@ -109,6 +144,7 @@ namespace Gameplay.Tutorial
             private Canvas _canvas;          // TASK-309: overlay Canvas component — its .enabled decides if it renders at all
             private UnityEngine.Camera _camera; // fully-qualified: Gameplay.Camera namespace shadows the bare name
             private OutlineContour _outline;
+            private RectTransform _fingerFlip; // TASK-380: pivot AT the tip; carries only the horizontal flip (±1)
             private Image _finger;           // only shown in FingerPoint style
             private Tween _contourTween;     // active contour pulse/blink — recreated per Show, killed on restyle/Hide
             private Tween _fingerTween;      // active finger tap-pulse — FingerPoint only
@@ -171,7 +207,13 @@ namespace Gameplay.Tutorial
                 _outline.WidthPx = OutlineWidthPx;
                 _outline.raycastTarget = false; // never intercept the gameplay tap
 
-                _finger = NewImage("Finger", _anchor, FingerSpriteCache.Get(), FingerSizePx, FingerOffset);
+                // Finger flip pivot (TASK-380): a zero-size node sitting EXACTLY at the tip target (offset 0), with the
+                // finger sprite as its child. Scaling this node's x by −1 reflects the finger across the vertical line
+                // through the pivot = through the fingertip, so the tip stays pinned on the piece while the hand swings
+                // to the other side. The flip lives HERE, never on the finger itself, so it can't be clobbered by the
+                // finger's tap-pulse tween (which writes the finger's own localScale).
+                _fingerFlip = NewChild("FingerFlip", _anchor, Vector2.zero);
+                _finger = NewImage("Finger", _fingerFlip, FingerSpriteCache.Get(), FingerSizePx, FingerOffset);
                 // The pulse/blink tweens are style-dependent (TASK-263 §2) → created per Show in ApplyStyle, not here.
             }
 
@@ -214,6 +256,23 @@ namespace Gameplay.Tutorial
                 var c = _outline.color;
                 c.a = a;
                 _outline.color = c;
+            }
+
+            // TASK-380 group-mirroring seam: TutorialView reads these to decide, over ALL shown highlights, which
+            // fingers point from the left and must be flipped.
+            public bool IsActive => _active;
+            public float WorldOriginX => _worldOrigin.x;
+
+            // Mirror the finger horizontally about its TIP (TASK-380). Set on the FingerFlip pivot node (placed at the
+            // tip), so x = −1 reflects the hand across the vertical through the fingertip: the tip stays on the piece,
+            // only the hand swings across. No offset recompute is needed — the flip is about the pinned point itself.
+            // Idempotent and cheap; re-applied on every RefreshGroupMirroring, so a reused overlay resets to unmirrored
+            // whenever it is the lone active highlight.
+            public void SetMirrored(bool mirrored)
+            {
+                if (_fingerFlip == null)
+                    return;
+                _fingerFlip.localScale = new Vector3(mirrored ? -1f : 1f, 1f, 1f);
             }
 
             public void Show(Vec2 origin, float rotation, Shape shape, HighlightStyle style)
