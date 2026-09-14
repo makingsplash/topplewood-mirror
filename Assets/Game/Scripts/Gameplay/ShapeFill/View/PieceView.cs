@@ -18,7 +18,6 @@ namespace Gameplay.View
         private MaterialPropertyBlock _mpb;
         private Color _baseColor = DefaultColor;
         private PieceLifecycle _state = PieceLifecycle.Idle;
-        private bool _armed;
         private Mesh _mesh;
         private Transform _shadow;
 
@@ -81,24 +80,17 @@ namespace Gameplay.View
             RefreshColor();
         }
 
-        public void SetArmed(bool armed)
-        {
-            _armed = armed;
-            RefreshColor();
-        }
-
-        // Subtle feedback: dim while Idle (waiting for a tap), full colour once released/placed. When armed in the
-        // balance-mode coalescence group, brighten toward white to telegraph "waiting for its pair" (TASK-023).
+        // Subtle feedback: dim while Idle (waiting for a tap), full colour once released/placed. TASK-374 removed the
+        // balance "armed" telegraph (co-release is a condition, not a helper — a tapped-but-unreleased group member
+        // shows nothing), so a piece is only ever Idle or Active here.
         //
         // Насколько именно приглушать — теперь не цифра в коде, а настройка (WoodTuning.Tint): владелец
         // разбирает второй стейт («полетел — стал активный») и крутит разницу ползунками в Play.
         private void RefreshColor()
         {
-            var state = _armed
-                ? PieceVisualState.Armed
-                : _state == PieceLifecycle.Idle
-                    ? PieceVisualState.Idle
-                    : PieceVisualState.Active;
+            var state = _state == PieceLifecycle.Idle
+                ? PieceVisualState.Idle
+                : PieceVisualState.Active;
 
             // Ремап цвета уровня к палитре считается ЗДЕСЬ, а не в Initialize: тумблер крутят в Play,
             // и исходный цвет уровня обязан остаться нетронутым, чтобы его можно было вернуть.

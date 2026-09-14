@@ -29,14 +29,13 @@ namespace Gameplay.Core.Sim
     /// Only NON-preplaced pieces are considered: a Preplaced piece spawns Falling at t=0 (never Idle), so no
     /// policy ever taps it — mirrored here by excluding it, exactly as <c>LevelSimRunner.TappableIndices</c>.
     ///
-    /// COALESCENCE CAVEAT for <see cref="PairRelease"/> (balance §L9): a pair (2 pieces) is emitted in ONE
-    /// <see cref="ScriptedStep"/> so both taps enter the same physics step and the mechanic's coalescence
-    /// window flushes them synchronously — the pair is NEVER split. But a SINGLE-piece group (base
-    /// beam/fulcrum) holds the window open for <c>ShapeFillTuning.CoalesceWindowSteps</c> (10); if the
-    /// caller's gap is BELOW that window, the next group's first tap lands inside the still-open window and
-    /// the mechanic coalesces the two groups into one release. That is the real behaviour of a player tapping
-    /// faster than the window closes — a FINDING, not a scripting bug — but the caller must report it
-    /// (TASK-067 does, per gap).
+    /// CO-RELEASE NOTE for <see cref="PairRelease"/> (balance §L9, TASK-374): a declared co-release pair (2 pieces)
+    /// is emitted in ONE <see cref="ScriptedStep"/> so both taps enter the same physics step and the mechanic
+    /// releases the whole group synchronously — the pair is NEVER split. The old TASK-023 coalescence caveat no
+    /// longer applies: a SINGLE-piece group (base beam/fulcrum) is NOT in any co-release group, so it releases
+    /// immediately and opens NO window; and an incomplete co-release group goes SILENT when its window expires
+    /// (it never flushes a lone piece). So there is no cross-group coalescence to report regardless of the caller's
+    /// gap — the mechanic either releases a full declared group in one step or nothing.
     /// </summary>
     public static class PolicyScriptPlan
     {

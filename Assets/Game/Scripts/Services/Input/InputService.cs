@@ -64,6 +64,13 @@ namespace Game.Services.Input
         private readonly Subject<Vector2> _onClicked = new();
         public Observable<Vector2> OnClickedAsObservable() => _onClicked;
 
+        // TASK-114/TASK-374: the second finger's tap (co-release gesture). Emitted on finger-1 release under the SAME
+        // blocker/UI/deny guards as pointer 0, so a real pinch (which sets _denyFutureClick via movement) still
+        // suppresses it, while a stationary two-finger co-tap passes both fingers through.
+        private readonly Subject<Vector2> _onPointer1Clicked = new();
+        public Observable<Vector2> OnPointer1ClickedAsObservable() => _onPointer1Clicked;
+        private bool _isOverUiP1;
+
         private bool _isGameplayClickBufferingEnabled;
         private bool _hasBufferedGameplayClick;
         private Vector2 _bufferedGameplayClickPosition;
@@ -397,8 +404,13 @@ namespace Game.Services.Input
         private void OnPointer1PressStarted(InputAction.CallbackContext context)
         {
            //_logService.Log($"OnPointer1PressStarted");
+            // TASK-114/TASK-374: a second finger DOWN no longer force-denies the tap. It used to unconditionally set
+            // _denyFutureClick so any two-finger touch swallowed the gameplay tap (the pinch/zoom guard) — but that
+            // also swallowed the co-release CO-TAP, the exact gesture the game now needs. A real pinch still denies via
+            // MOVEMENT (EmitTwoFingerGesture / drag); a stationary co-tap passes. The only OnClicked consumer is the
+            // gameplay adapter, and the pinch/twist stream has no subscriber, so this only affects gameplay taps.
+            _isOverUiP1 = IsPointerOverUIObject(_pointer1Pos, _eventSystem);
             _pointer1Pressed.Value = true;
-            _denyFutureClick = true;
         }
         
         
@@ -417,8 +429,15 @@ namespace Game.Services.Input
         private void OnPointer1PressCanceled(InputAction.CallbackContext context)
         {
            //_logService.Log("OnPointer1PressCanceled");
-           _denyFutureClick = true;
+            // TASK-114/TASK-374: emit the second finger's tap under the SAME guards as pointer 0 (OnPointer0PressCanceled):
+            // not denied by a real pinch/drag, not over UI, and only when the Click action is not blocked. Position is
+            // the last known finger-1 point (a tap barely moves it), which stays valid after the touch is lifted — the
+            // live action read can return default once the finger is up.
+            if (_blockersHandler.HasNotBlockers(InputActionTypeFlags.Click) && !_denyFutureClick && !_isOverUiP1)
+                _onPointer1Clicked.OnNext(_pointer1Pos);
+
             _pointer1Pressed.Value = false;
+            _isOverUiP1 = false;
         }
         
         #endregion Pointer_1_Press
@@ -538,7 +557,11 @@ namespace Game.Services.Input
 
             _onMultiTouch.OnNext(new Vector2(twistOut, pinchOut));
 
-            _denyFutureClick = true;
+            // TASK-114/TASK-374: deny the tap only when a REAL two-finger gesture (pinch/twist beyond the noise eps)
+            // occurred — not merely because two fingers are down. A stationary co-tap (no movement past the eps) leaves
+            // _denyFutureClick untouched so both fingers reach gameplay; a genuine pinch/twist still suppresses the tap.
+            if (pinchOut != 0f || twistOut != 0f)
+                _denyFutureClick = true;
         }
 
         private void BufferGameplayClick(Vector2 clickPos)

@@ -39,8 +39,10 @@ namespace Gameplay.Core
         public LevelSourceKind Source { get; set; } = LevelSourceKind.Authored;
 
         /// <summary>Physics behaviour of placed pieces (TASK-021). Default <see cref="PhysicsMode.Assembly"/>
-        /// keeps the canonical freeze-on-rest stack; <see cref="PhysicsMode.Balance"/> switches the pivot beam
-        /// to a damped world hinge (snap/freeze off, verdict on global rest). See <see cref="PhysicsMode"/>.</summary>
+        /// keeps the canonical freeze-on-rest stack; <see cref="PhysicsMode.Balance"/> runs the pivot beam as a
+        /// FREE Dynamic body resting on its fulcrum — no world hinge/pin (TASK-023/027 de-pinned it; the "damped
+        /// world hinge" this doc once claimed has not existed since) — with the verdict deferred to global rest.
+        /// See <see cref="PhysicsMode"/>.</summary>
         public PhysicsMode PhysicsMode { get; set; } = PhysicsMode.Assembly;
 
         /// <summary>TASK-031d (pure-physics, opt-in on Balance/Catapult). When true, at global rest each placed
@@ -64,5 +66,16 @@ namespace Gameplay.Core
         /// this field (its bot policies compute their own order) → poseHash is byte-for-byte; consumers guard on null
         /// (mirrors <see cref="AirZones"/>/<see cref="Decoys"/>/<see cref="StaticVisuals"/>).</summary>
         public IReadOnlyList<int> WinningOrder { get; set; }
+
+        /// <summary>TASK-374: groups of placement indices (into <see cref="Pieces"/>) that must be tapped TOGETHER to
+        /// fall — the "co-release" rule. A tap on a member alone does NOTHING; the whole group releases in one step
+        /// only once every member has been tapped inside <c>ShapeFillTuning.CoReleaseWindowSteps</c> (else the group
+        /// silently resets). A piece not listed in any group releases immediately on tap, in every mode. Any number of
+        /// groups, each of size ≥2; a piece belongs to at most one group. Absent → null → no groups → every level up to
+        /// TASK-374 is byte-for-byte unchanged (the same additive-back-compat contract as
+        /// <see cref="AirZones"/>/<see cref="WinningOrder"/>/<see cref="Decoys"/>). The sim does NOT read this field to
+        /// build its bot orders — the DOMAIN enforces the rule in <c>OnIntent</c>, so poseHash of the winning
+        /// (synchronous-pair) path is unchanged; consumers guard on null.</summary>
+        public IReadOnlyList<IReadOnlyList<int>> CoReleaseGroups { get; set; }
     }
 }

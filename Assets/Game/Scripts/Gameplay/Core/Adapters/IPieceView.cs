@@ -9,11 +9,9 @@ namespace Gameplay.Core.Adapters
         void Sync(Vec2 position, float rotation);
         void SetState(PieceLifecycle state);
 
-        /// <summary>Telegraph that this Idle piece is armed and waiting for a deferred release — either the
-        /// balance-mode coalescence group (releases synchronously with its pair on flush, TASK-023 §2.4) or the
-        /// assembly/catapult serialized release queue (releases one at a time on field-ready, TASK-061). Cosmetic
-        /// only: the model stays Idle until release; headless views (sim) are no-ops.</summary>
-        void SetArmed(bool armed);
+        // TASK-374: the SetArmed seam was removed with the balance coalescence helper. Co-release is a CONDITION now,
+        // not a helper: a tapped-but-not-released group member shows NOTHING (no "armed" telegraph), so no view ever
+        // needs to be armed. A piece is either Idle (dim) or released (Active) — see SetState.
 
         void Dispose();
     }

@@ -175,6 +175,13 @@ namespace Gameplay.Core
             //     from a deep cut-through. ERROR named with the slot and its centre.
             ValidateSlotReachability(level, errors);
 
+            // 15. Co-release groups (TASK-374): OPTIONAL. Null → OK (no groups). If present, every index must be in
+            //     range, reference a NON-preplaced (tapable) piece, be unique across ALL groups, and each group must
+            //     hold ≥2 members — a group of one is just an ordinary immediate-release piece and declaring it is an
+            //     authoring mistake (a typo that would make the piece unreleasable). Same authoring-brak class as an
+            //     out-of-range WinningOrder index.
+            ValidateCoReleaseGroups(level, errors, warnings);
+
             return new ValidationResult(errors, warnings);
         }
 
@@ -585,6 +592,54 @@ namespace Gameplay.Core
                     errors.Add($"WinningOrder index {index} references a preplaced piece — the hint can only point " +
                                "at a tapable piece.");
             }
+        }
+
+        /// <summary>TASK-374: optional co-release group check. Absent → OK (no groups). When present, each group is a
+        /// set of placement indices that must be tapped together to fall (<see cref="LevelData.CoReleaseGroups"/>). A
+        /// group must have ≥2 members (a group of one is an ordinary piece — declaring it would make it unreleasable, so
+        /// it is an authoring error); every index must be in <c>[0, Pieces.Count)</c>, reference a NON-preplaced
+        /// (tapable) piece (a preplaced piece spawns Falling and is never tapped, so it can never complete a group), and
+        /// be UNIQUE across all groups (one piece belongs to at most one group — the domain maps index → single group).
+        /// A group on an Assembly-mode level is technically supported (the rule is general, not seesaw-only) but unusual,
+        /// so it is a WARNING, not an error. Mirrors the unknown-primitive / out-of-range-WinningOrder throw class.</summary>
+        private static void ValidateCoReleaseGroups(LevelData level, List<string> errors, List<string> warnings)
+        {
+            if (level.CoReleaseGroups == null)
+                return;
+
+            var pieceCount = level.Pieces?.Count ?? 0;
+            var seen = new HashSet<int>();
+            for (var g = 0; g < level.CoReleaseGroups.Count; g++)
+            {
+                var group = level.CoReleaseGroups[g];
+                if (group == null || group.Count < 2)
+                {
+                    errors.Add($"CoReleaseGroups[{g}] has {(group?.Count ?? 0)} members; a co-release group needs ≥2 " +
+                               "(a group of one is an ordinary immediate-release piece — declaring it would make it " +
+                               "unreleasable).");
+                    continue;
+                }
+
+                foreach (var index in group)
+                {
+                    if (index < 0 || index >= pieceCount)
+                    {
+                        errors.Add($"CoReleaseGroups[{g}] index {index} is out of range [0, {pieceCount}).");
+                        continue;
+                    }
+                    if (!seen.Add(index))
+                        errors.Add($"CoReleaseGroups[{g}] index {index} is listed more than once (a piece may belong " +
+                                   "to at most one co-release group).");
+                    if (level.Pieces[index].Preplaced)
+                        errors.Add($"CoReleaseGroups[{g}] index {index} references a preplaced piece — a co-release " +
+                                   "group can only hold tapable pieces (a preplaced piece spawns Falling and is never " +
+                                   "tapped, so the group could never complete).");
+                }
+            }
+
+            if (level.CoReleaseGroups.Count > 0 && level.PhysicsMode == PhysicsMode.Assembly)
+                warnings.Add("CoReleaseGroups are declared on an Assembly-mode level — supported (the rule is general), " +
+                             "but co-release was designed for balance/catapult pairs; double-check this is intended.");
         }
 
         /// <summary>

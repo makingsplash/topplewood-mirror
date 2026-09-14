@@ -17,6 +17,11 @@ namespace Gameplay.Adapters
     /// silently missed. It never surfaced because the prod scope was never instantiated until TASK-138 raised it;
     /// the first prod boot exposed it (same latent-defect class as the camera-projection and UiService findings).
     /// One tap = one intent (one-tap).
+    /// TASK-114/TASK-374: gameplay now merges BOTH pointers — pointer 0's <c>OnClicked</c> AND pointer 1's
+    /// <c>OnPointer1Clicked</c> — so the two-finger co-release gesture reaches the domain (a touch device aliases
+    /// Pointer.current to the primary touch, so finger 2 was silently dropped before). Each finger's tap is projected
+    /// through the camera independently and emitted as its own intent; the domain's co-release window then decides
+    /// whether the two taps land in the same declared group in time. One tap (either finger) = one intent.
     /// </summary>
     public sealed class InputServiceGameplayInputSource : IGameplayInputSource
     {
@@ -33,7 +38,9 @@ namespace Gameplay.Adapters
         }
 
         public Observable<InputIntent> Intents =>
-            _inputService.OnClickedAsObservable().Select(ToIntent);
+            _inputService.OnClickedAsObservable()
+                .Merge(_inputService.OnPointer1ClickedAsObservable())
+                .Select(ToIntent);
 
         private InputIntent ToIntent(Vector2 screenPosition)
         {

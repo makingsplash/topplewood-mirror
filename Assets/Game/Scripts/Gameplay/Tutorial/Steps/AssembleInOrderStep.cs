@@ -7,9 +7,10 @@ namespace Gameplay.Tutorial
     /// <summary>
     /// The step-by-step tutorial MECHANISM (TASK-078): one composite step that walks a level's pieces in a given
     /// order and, for each, highlights it, admits ONLY a tap on it, and waits for its REAL release before moving
-    /// on — repeating until every listed piece is assembled. It is level-agnostic: it knows nothing about
-    /// giraffe, it just reads the loaded <see cref="GameModel"/> and follows the tap order it is handed. The order
-    /// is the temporary hardcoded INPUT (giraffe placement-order, wired in the installer); the mechanism is not.
+    /// on — repeating until every listed piece is assembled. It is level-agnostic: it knows nothing about the
+    /// concrete figure, it just reads the loaded <see cref="GameModel"/> and follows the tap order it is handed. The
+    /// order is the INPUT the installer hands it (the campaign's first tutorial level, sailboat at index 0 — see
+    /// <c>GameplayCoreInstaller</c>); the mechanism is not tied to any one level.
     ///
     /// Completion contract with <see cref="TutorialRunner"/>: the returned observable emits exactly ONCE — after
     /// the LAST piece is released — so the runner's Take(1) advances the tour only when assembly is done, not on

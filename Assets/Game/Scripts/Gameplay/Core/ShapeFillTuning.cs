@@ -8,7 +8,7 @@ namespace Gameplay.Core
     /// TASK-043 (assist-layer removal): the snap-to-slot, soft-settle glide, physical-settle classification,
     /// TASK-042 honesty gate and retained PinHinge levers are all gone — a released piece falls, comes to rest
     /// under honest physics and is frozen where it lies. What remains are the rest-detection, release-damping and
-    /// balance coalescence knobs the honest-physics loop still needs.
+    /// the co-release coincidence-window knob (TASK-374) the honest-physics loop still needs.
     /// </summary>
     public sealed class ShapeFillTuning
     {
@@ -28,22 +28,23 @@ namespace Gameplay.Core
         /// reached fast (secondary to the mandatory Freeze-on-Placed).</summary>
         public float ReleaseAngularDrag { get; set; } = 3.0f;
 
-        // ── Balance-mode: synchronous group release (TASK-023). Only PhysicsMode.Balance touches these. On a free
-        //    beam the ONLY way to keep it level is to load both ends in the SAME physics step, so taps on separate
-        //    Idle pieces are buffered into a coalescence window and flushed as one synchronous release group. ──
+        // ── Co-release coincidence window (TASK-374, replaces the TASK-023 balance coalescence helper). A level may
+        //    DECLARE groups of pieces (LevelData.CoReleaseGroups) that must be tapped TOGETHER to fall. A single tap
+        //    on a group member does NOTHING; it just opens a silent window in which the OTHER members must be tapped.
+        //    When every member of a group has been tapped inside the window all its pieces release in ONE step
+        //    (synchronous entry into the physics — a symmetric pair keeps the free beam level). An INCOMPLETE group
+        //    goes SILENT when the window expires (nothing falls, nothing is shown — no "armed" state, no guaranteed
+        //    wait, no single-piece drop). A piece NOT in any group releases immediately on tap, in every mode. ──
 
-        /// <summary>Coalescence window (in fixed steps) opened by the first balance-mode tap: further taps on OTHER
-        /// Idle pieces within the window join the same release group, and the whole group is released in ONE flush
-        /// step so a symmetric pair enters the physics synchronously (net torque ≈ 0 → the free beam stays level).
-        /// A single tap that lets the window expire releases one piece → the beam honestly tips → Lost (the
-        /// winnability gate is the physics, not an artificial check). ~10 steps ≈ 167 ms @ 1/60 (a comfortable
-        /// double-tap; designer W≈120–200 ms). UNVERIFIED — ⟨balancer⟩ tunes against level-sim (no "swallowed
-        /// tap" too low, no lag too high). Assembly levels never open the window (one tap = immediate release).</summary>
-        public int CoalesceWindowSteps { get; set; } = 10;
-
-        /// <summary>Max pieces in one synchronous release group (v1 = a pair). When this many distinct Idle pieces
-        /// have been tapped inside the window the group flushes IMMEDIATELY (minimal latency) instead of waiting
-        /// for the window to expire. Generalises cheaply to larger groups later; v1 is capped at 2.</summary>
-        public int MaxCoalesceGroup { get; set; } = 2;
+        /// <summary>W — coincidence window (in fixed steps) opened by the first tap on a co-release group member: the
+        /// remaining members of THAT group must be tapped within W steps or the group silently resets (nothing falls).
+        /// This is a CLASS parameter ("how many steps to wait for the rest of a declared group"), not a per-level value.
+        /// 4 steps ≈ 67 ms @ 1/60 — centre of the industry "simultaneous" band (~50 ms), comfortable for two thumbs
+        /// yet distinctly stricter than the old 167 ms helper (no "I was helped" feel). Owner decision 2026-09-14
+        /// (variant B). UNVERIFIED — ⟨balancer⟩ tunes against playtest (too low → swallowed co-taps; too high → drifts
+        /// back into a forgiving helper). W=0/1 (one step) is intentionally NOT the default: two human fingers scatter
+        /// over several frames, so a literal-zero window is unplayable while the sim (which emits a pair in one step)
+        /// would still pass — a green gate over a dead level. A level with no CoReleaseGroups never opens a window.</summary>
+        public int CoReleaseWindowSteps { get; set; } = 4;
     }
 }

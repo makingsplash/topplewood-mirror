@@ -8,13 +8,18 @@ namespace Gameplay.Core.Mechanic
     /// <summary>
     /// Fills the <c>IMechanicController</c> seam with the pivoted shape_fill loop (GAME_RULES §2–3), all pure
     /// C# (headless-testable via ScriptedPoseSimulation): all pieces are pre-placed Idle over their target
-    /// slots; a tap hit-tests which Idle piece it hit and, in the immediate-release modes (assembly + catapult),
-    /// materialises it into free fall in the SAME step — however many pieces are already falling (TASK-069:
-    /// player input is sacrosanct, so a tap never waits; winnability is an AUTHORING property, not an input
-    /// limit — this reverts the TASK-061 serialized release queue). Balance keeps its synchronous coalescence
-    /// group (§L9, TASK-023) — a symmetric pair still enters the physics together. Releasing materialises the body
-    /// so it falls; poses are mirrored into PieceInstances; the Idle→Falling→Placed/Lost FSM runs; and on global
-    /// rest a pose-match decides Won/Lost. Physics itself lives behind IShapeFillSimulation.
+    /// slots; a tap hit-tests which Idle piece it hit and materialises it into free fall in the SAME step —
+    /// however many pieces are already falling (TASK-069: player input is sacrosanct, so a tap never waits;
+    /// winnability is an AUTHORING property, not an input limit — this reverts the TASK-061 serialized release
+    /// queue). TASK-374 (co-release as a CONDITION): a level may DECLARE groups of pieces
+    /// (<see cref="LevelData.CoReleaseGroups"/>) that fall ONLY when tapped together — a tap on a group member
+    /// alone does NOTHING (no drop, no "armed" state, no guaranteed wait); the group releases synchronously in one
+    /// step once every member is tapped inside a short coincidence window (<c>ShapeFillTuning.CoReleaseWindowSteps</c>),
+    /// and an incomplete group goes silent when the window expires. This REPLACES the TASK-023 balance coalescence
+    /// helper (which armed a piece, waited a fixed window, then dropped even a lone piece). A piece NOT in any group
+    /// releases immediately on tap, in every mode. Releasing materialises the body so it falls; poses are mirrored
+    /// into PieceInstances; the Idle→Falling→Placed/Lost FSM runs; and on global rest a pose-match decides Won/Lost.
+    /// Physics itself lives behind IShapeFillSimulation.
     ///
     /// TASK-043 (assist-layer removal): the whole pre-physics assist layer is gone — the in-fall snap-to-slot
     /// crystallisation, the soft-settle glide, the hybrid balance load-snap, and the TASK-042 honesty scaffolding
@@ -52,20 +57,6 @@ namespace Gameplay.Core.Mechanic
 
         private IDisposable _levelLoadedSub;
         private LevelData _level;
-        // Balance physics mode (TASK-021 → free-beam TASK-023): the beam is a FREE Dynamic body resting on the
-        // fulcrum (no world hinge/pin/limits), loads are released as synchronous groups (coalescence window), there
-        // is no in-fall snap. Since TASK-305 (freeze removal, variant A) this flag gates ONLY the INPUT concern —
-        // symmetric-pair coalescence — and no longer the physics/verdict path: every mode now keeps its pieces
-        // Dynamic and defers the verdict to GLOBAL rest (the two concerns the flag used to conflate are split; the
-        // rest-gated verdict is unconditional, see Tick/ReadyForNextRelease/ResolveAtRest). Assembly and catapult
-        // release on every tap; balance coalesces.
-        private bool _balanceMode;
-        // Catapult sub-mode of balance (TASK-025 → de-pinned TASK-027): _balanceMode is ALSO true here, so input
-        // coalescence is engaged-then-suppressed (see below). The free-body machinery (no snap, Dynamic arm+loads,
-        // global-rest verdict) is now the UNIVERSAL path (TASK-305), not catapult-specific. The arm is a
-        // FREE Dynamic body on a LOW fulcrum, its tilt limited by the NATURAL ground-stop. _catapultMode adds only ONE
-        // delta: coalescence is suppressed so the charge→overload chain is released as sequential SINGLE taps.
-        private bool _catapultMode;
         // Time the whole field has stayed below the rest speed (ALL modes since TASK-305) — the verdict fires only
         // once it exceeds RestDurationSeconds (every Dynamic piece has stopped moving).
         private float _globalRestTimer;
@@ -80,15 +71,20 @@ namespace Gameplay.Core.Mechanic
         // the seeded sweep is structurally blind to the whole class of reentrancy defect.
         private int _levelGeneration;
 
-        // ── Synchronous group release (TASK-023, balance-only). Taps on separate Idle pieces are buffered into a
-        //    coalescence group and released in ONE flush step so a symmetric pair enters the physics together and
-        //    the free beam stays level. Transient runtime state — NOT persisted. Assembly mode never touches it. ──
-        // InstanceIds tapped-and-armed, waiting for the flush.
-        private readonly List<int> _pendingRelease = new();
-        // >0 ⇒ the coalescence window is open (counts down in Tick).
-        private int _coalesceWindowStepsLeft;
+        // ── Co-release coincidence groups (TASK-374, replaces the TASK-023 balance coalescence buffer). A level may
+        //    declare groups of pieces that fall ONLY when tapped together (LevelData.CoReleaseGroups). A tap on a
+        //    member opens a silent window; when every member is tapped inside it the whole group releases in ONE step
+        //    (a symmetric pair enters the physics synchronously → the free beam stays level); an incomplete group goes
+        //    silent when the window expires (nothing falls, nothing is shown). Transient runtime state — NOT persisted.
+        //    Built per level in OnLevelLoaded; empty when the level declares no groups (→ every tap releases now). ──
+        // placementIndex → the id of the group it belongs to (a piece is in at most one group; validator enforces it).
+        private readonly Dictionary<int, int> _groupOfPlacement = new();
+        // Per group (by id): the placement indices tapped so far this window, and how many steps the window still has
+        // open (0 ⇒ closed). windowStepsLeft>0 with a non-empty tapped set is a group "in progress".
+        private readonly List<HashSet<int>> _groupTapped = new();
+        private readonly List<int> _groupWindowStepsLeft = new();
         // Last computed global-rest state, exposed via ReadyForNextRelease so the sim driver releases the next
-        // group only once the beam + loads have settled (balance) — recomputed each tick the field is not falling.
+        // group only once the beam + loads have settled — recomputed each tick the field is not falling.
         private bool _lastGlobalRestReached;
 
         public ShapeFillMechanicController(
@@ -111,16 +107,24 @@ namespace Gameplay.Core.Mechanic
             _levelLoadedSub = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
         }
 
-        // TASK-237: exposed for the Hint booster — an open coalescence window means a piece is armed but not yet
-        // flushed, so revealing it again would spend on an already-armed piece (the presenter treats it as no-op).
-        public bool HasPendingRelease => _pendingRelease.Count > 0 || _coalesceWindowStepsLeft > 0;
+        // TASK-237 / TASK-374: exposed for the Hint booster — a co-release group "in progress" (a member tapped, its
+        // window still open) means the piece is mid-gesture, so revealing it again would spend on a piece already
+        // being co-released (the presenter treats it as a neutral no-op).
+        public bool HasPendingRelease
+        {
+            get
+            {
+                foreach (var tapped in _groupTapped)
+                    if (tapped.Count > 0)
+                        return true;
+                return false;
+            }
+        }
 
         private void OnLevelLoaded()
         {
             _level = _model.CurrentLevel;
             _levelGeneration++; // see field doc: lets Tick detect a reload that happened under its own iteration
-            _balanceMode = _level.PhysicsMode is PhysicsMode.Balance or PhysicsMode.Catapult;
-            _catapultMode = _level.PhysicsMode == PhysicsMode.Catapult;
 
             var validation = _validator.Validate(_level);
             if (!validation.Ok)
@@ -131,6 +135,7 @@ namespace Gameplay.Core.Mechanic
             }
 
             ClearRuntime();
+            BuildCoReleaseGroups();
             _simulation.Reset();
             _simulation.LoadStatics(_level.StaticGeometry, _level.Bounds, _level.Gravity);
             _simulation.LoadFlowZones(_level.AirZones); // TASK-097: null ⇒ no flow (73 existing levels unchanged)
@@ -158,43 +163,32 @@ namespace Gameplay.Core.Mechanic
             if (hit == null)
                 return;
 
-            if (!_balanceMode)
+            // TASK-374: a piece NOT in a co-release group releases NOW, in this same step, in EVERY mode (assembly,
+            // balance, catapult) — player input is never serialized (TASK-069), and the level stays winnable by
+            // AUTHORING. This is byte-for-byte the pre-TASK-061 immediate path for every non-grouped piece.
+            if (!_groupOfPlacement.TryGetValue(hit.PlacementIndex, out var groupId))
             {
-                // Assembly (TASK-069): one tap = release NOW, in this same step, no matter how many pieces are
-                // already falling. Player input is never serialized — a fast multi-tap drops every hit piece at
-                // once; the level stays winnable by AUTHORING, not by throttling taps. For a rest-gated sim sweep
-                // the field is quiet between taps anyway, so this is byte-for-byte the pre-TASK-061 immediate path.
                 ReleasePiece(hit);
                 return;
             }
 
-            if (_catapultMode)
-            {
-                // Catapult (TASK-025): the solution is a SEQUENTIAL single-tap chain (fulcrum → arm → pebble charges
-                // the far end → boulder overloads the near end and flips the arm). It stays SINGLE-tap (never
-                // coalesced into a synchronous group — that would launch pebble+boulder together and break the
-                // charge), but like assembly each tap releases IMMEDIATELY (TASK-069): the player owns the timing.
-                ReleasePiece(hit);
-                return;
-            }
+            // A co-release group member: a single tap does NOTHING visible (no drop, no "armed" state). The piece
+            // stays Idle (PickIdlePieceAt keeps seeing it while the window is open) and its placement index joins the
+            // group's tapped set. The FIRST tap opens the silent coincidence window; when EVERY member is tapped
+            // inside it the whole group releases synchronously (FlushGroup). A re-tap on an already-tapped member is
+            // ignored. An incomplete group goes silent when the window expires (Tick) — nothing falls.
+            var tapped = _groupTapped[groupId];
+            if (!tapped.Add(hit.PlacementIndex))
+                return; // re-tap on a member already in the window — ignore, not progress
 
-            // Balance (TASK-023): buffer the tap into the coalescence group instead of releasing now. The piece
-            // stays Idle in the model until the flush (PickIdlePieceAt must keep seeing it while the window is
-            // open), and the whole group releases synchronously in FlushPendingRelease so a symmetric pair enters
-            // the physics in the same step (net torque ≈ 0 → the free beam holds level).
-            if (_pendingRelease.Contains(hit.InstanceId))
-                return; // re-tap on an already-armed piece — ignore, not a duplicate
+            if (_groupWindowStepsLeft[groupId] <= 0)
+                _groupWindowStepsLeft[groupId] = _tuning.CoReleaseWindowSteps; // first tap opens the window
 
-            _pendingRelease.Add(hit.InstanceId);
-            if (_coalesceWindowStepsLeft <= 0)
-                _coalesceWindowStepsLeft = _tuning.CoalesceWindowSteps; // first tap opens the window
-            _viewByInstance[hit.InstanceId].SetArmed(true);
-
-            if (_pendingRelease.Count >= _tuning.MaxCoalesceGroup)
-                FlushPendingRelease(); // group full → release now (minimal latency)
+            if (tapped.Count >= _level.CoReleaseGroups[groupId].Count)
+                FlushGroup(groupId); // every member tapped inside the window → release the whole group in one step
         }
 
-        /// <summary>Materialise one Idle piece into free fall (assembly path and every coalescence flush).</summary>
+        /// <summary>Materialise one Idle piece into free fall (immediate-tap path and every co-release group flush).</summary>
         private void ReleasePiece(PieceInstance piece)
         {
             _simulation.Release(_bodyByInstance[piece.InstanceId]);
@@ -205,30 +199,59 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>
-        /// Release the whole armed coalescence group in one shot (TASK-023 §2.2): every buffered piece becomes
-        /// physical NOW, so the next <c>_simulation.Step</c> integrates them together — a symmetric pair falls
-        /// synchronously. Order within the flush is irrelevant (no physics step runs between the Release calls),
-        /// which keeps the release deterministic. A group of one (base piece, or a lone tap whose window expired)
-        /// releases a single piece → on a seesaw that honestly tips the beam → Lost (the winnability gate).
+        /// Release a whole completed co-release group in one shot (TASK-374): every member becomes physical NOW, so
+        /// the next <c>_simulation.Step</c> integrates them together — a symmetric pair falls synchronously and the
+        /// free beam stays level. Order within the flush is irrelevant (no physics step runs between the Release
+        /// calls), which keeps the release deterministic — the same invariant the old TASK-023 flush relied on. The
+        /// group's tapped set and window are cleared afterwards.
         /// </summary>
-        private void FlushPendingRelease()
+        private void FlushGroup(int groupId)
         {
-            foreach (var instanceId in _pendingRelease)
+            foreach (var placementIndex in _level.CoReleaseGroups[groupId])
             {
-                var piece = FindPiece(instanceId);
+                var piece = FindPieceByPlacement(placementIndex);
                 if (piece == null || piece.State != PieceLifecycle.Idle)
                     continue;
                 ReleasePiece(piece);
-                _viewByInstance[instanceId].SetArmed(false);
             }
-            _pendingRelease.Clear();
-            _coalesceWindowStepsLeft = 0;
+            _groupTapped[groupId].Clear();
+            _groupWindowStepsLeft[groupId] = 0;
+        }
+
+        /// <summary>
+        /// Build the per-level co-release group tables from <see cref="LevelData.CoReleaseGroups"/> (TASK-374). Maps
+        /// each member's placement index → its group id and allocates the transient per-group tapped-set + window
+        /// counter. No groups (null) → the tables stay empty → every tap releases immediately. Called after
+        /// <see cref="ClearRuntime"/> (which empties the tables) in <see cref="OnLevelLoaded"/>; the validator has
+        /// already proven the groups are structurally sound (≥2 members, in range, tapable, one group per piece).
+        /// </summary>
+        private void BuildCoReleaseGroups()
+        {
+            var groups = _level.CoReleaseGroups;
+            if (groups == null)
+                return;
+
+            for (var g = 0; g < groups.Count; g++)
+            {
+                _groupTapped.Add(new HashSet<int>());
+                _groupWindowStepsLeft.Add(0);
+                foreach (var placementIndex in groups[g])
+                    _groupOfPlacement[placementIndex] = g;
+            }
         }
 
         private PieceInstance FindPiece(int instanceId)
         {
             foreach (var piece in _model.Pieces)
                 if (piece.InstanceId == instanceId)
+                    return piece;
+            return null;
+        }
+
+        private PieceInstance FindPieceByPlacement(int placementIndex)
+        {
+            foreach (var piece in _model.Pieces)
+                if (piece.PlacementIndex == placementIndex)
                     return piece;
             return null;
         }
@@ -243,13 +266,17 @@ namespace Gameplay.Core.Mechanic
             if (_model.CurrentPhase != GamePhase.Running)
                 return;
 
-            // Balance coalescence window (TASK-023): count it down and flush the armed group when it expires. A
-            // window that expires with a single armed piece still releases it (honest Lost — no artificial block).
-            if (_balanceMode && _coalesceWindowStepsLeft > 0)
+            // Co-release windows (TASK-374): count each open window down and, when it expires with an INCOMPLETE
+            // group, silently reset it — nothing falls, nothing is shown (no armed state, no single-piece drop). A
+            // completed group never reaches expiry: it flushes synchronously the moment its last member is tapped
+            // (OnIntent). Only groups that declared members open windows, so this loop is empty on grouped-less levels.
+            for (var g = 0; g < _groupWindowStepsLeft.Count; g++)
             {
-                _coalesceWindowStepsLeft--;
-                if (_coalesceWindowStepsLeft == 0)
-                    FlushPendingRelease();
+                if (_groupWindowStepsLeft[g] <= 0)
+                    continue;
+                _groupWindowStepsLeft[g]--;
+                if (_groupWindowStepsLeft[g] == 0)
+                    _groupTapped[g].Clear(); // window expired incomplete → silent reset, no release
             }
 
             var anyFalling = false;
@@ -329,8 +356,9 @@ namespace Gameplay.Core.Mechanic
         /// so the sim never re-derives it. Never ready while anything is Falling. Since TASK-305 (freeze removal)
         /// ALL modes additionally wait until the whole field has reached global rest — a placed piece now stays
         /// Dynamic, so the next drop must land on a field that has actually settled, not on one still micro-drifting
-        /// (else the poseHash diverges). Balance additionally waits until the coalescence group has flushed (nothing
-        /// armed, window closed).
+        /// (else the poseHash diverges). TASK-374: additionally waits until no co-release window is still open
+        /// (a group mid-gesture) — the sim never proposes the next group while one is collecting. In the sim a group
+        /// is emitted in ONE step, so its window opens and closes (flush) in that same step and never blocks here.
         /// </summary>
         public bool ReadyForNextRelease
         {
@@ -340,8 +368,9 @@ namespace Gameplay.Core.Mechanic
                     if (piece.State == PieceLifecycle.Falling)
                         return false;
 
-                if (_pendingRelease.Count > 0 || _coalesceWindowStepsLeft > 0)
-                    return false; // a balance coalescence group is still arming
+                foreach (var stepsLeft in _groupWindowStepsLeft)
+                    if (stepsLeft > 0)
+                        return false; // a co-release group is still collecting its members
                 return _lastGlobalRestReached; // the whole field has come to global rest
             }
         }
@@ -566,11 +595,10 @@ namespace Gameplay.Core.Mechanic
             _viewByInstance.Clear();
             _typeByInstance.Clear();
             _globalRestTimer = 0f;
-            _pendingRelease.Clear();
-            _coalesceWindowStepsLeft = 0;
+            _groupOfPlacement.Clear();
+            _groupTapped.Clear();
+            _groupWindowStepsLeft.Clear();
             _lastGlobalRestReached = false;
-            // NB: _catapultMode / _balanceMode are deliberately NOT reset here — ClearRuntime runs AFTER
-            // OnLevelLoaded has set the mode from the level, so clearing them would clobber it.
         }
 
         public void Dispose()

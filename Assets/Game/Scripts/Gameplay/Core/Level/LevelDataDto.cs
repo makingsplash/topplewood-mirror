@@ -38,6 +38,7 @@ namespace Gameplay.Core
         [JsonProperty("staticGeometry")] public List<PolygonDto> StaticGeometry { get; set; } = new();
         [JsonProperty("airZones")] public List<AirZoneDto> AirZones { get; set; } = new(); // absent/empty → null → no flow (TASK-097)
         [JsonProperty("winningOrder")] public List<int> WinningOrder { get; set; } // absent/empty → null → no hint (TASK-237)
+        [JsonProperty("coReleaseGroups")] public List<List<int>> CoReleaseGroups { get; set; } // absent/empty → null → no groups (TASK-374)
 
         public LevelData ToDomain()
         {
@@ -99,7 +100,25 @@ namespace Gameplay.Core
                 AirZones = airZones,
                 // TASK-237: absent/empty → null so every pre-TASK-237 level maps to no hint, exactly like AirZones.
                 WinningOrder = (WinningOrder != null && WinningOrder.Count > 0) ? WinningOrder : null,
+                // TASK-374: absent/empty → null so every pre-TASK-374 level maps to no co-release groups, exactly like
+                // WinningOrder. Each inner list is a group of placement indices; back-compat is the same additive contract.
+                CoReleaseGroups = MapCoReleaseGroups(CoReleaseGroups),
             };
+        }
+
+        /// <summary>TASK-374: map the optional <c>coReleaseGroups</c> (list of index lists) to the domain shape.
+        /// Absent/empty → null (no groups), exactly like <c>winningOrder</c>/<c>airZones</c> — no schema bump, no
+        /// migration. A null or empty inner group is dropped (structural validity — index range, ≥2 members, no
+        /// duplicates, not preplaced — is enforced at load by <see cref="LevelDataValidator"/>, not here).</summary>
+        private static IReadOnlyList<IReadOnlyList<int>> MapCoReleaseGroups(List<List<int>> groups)
+        {
+            if (groups == null || groups.Count == 0)
+                return null;
+            var domain = new List<IReadOnlyList<int>>(groups.Count);
+            foreach (var group in groups)
+                if (group != null && group.Count > 0)
+                    domain.Add(group);
+            return domain.Count > 0 ? domain : null;
         }
 
         /// <summary>TASK-185: map the optional <c>source</c> provenance string to the domain enum. Absent/empty →

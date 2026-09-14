@@ -427,11 +427,11 @@ namespace Gameplay.PlayScreen
                 return;
             }
 
-            // Balance coalescence window open → the tapped-but-unflushed piece is still Idle; revealing it again
-            // would spend on an already-armed piece. Treat as a neutral no-op (architect §13 flag 2).
+            // Co-release window open (TASK-374) → a tapped-but-unreleased group member is still Idle; revealing it
+            // again would spend on a piece already being co-released. Treat as a neutral no-op (architect §13 flag 2).
             if (_mechanic.HasPendingRelease)
             {
-                LogHint("swallowed: HasPendingRelease (balance coalescence window open)");
+                LogHint("swallowed: HasPendingRelease (co-release window open)");
                 return;
             }
 
