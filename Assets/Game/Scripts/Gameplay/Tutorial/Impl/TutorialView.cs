@@ -213,6 +213,15 @@ namespace Gameplay.Tutorial
                 // to the other side. The flip lives HERE, never on the finger itself, so it can't be clobbered by the
                 // finger's tap-pulse tween (which writes the finger's own localScale).
                 _fingerFlip = NewChild("FingerFlip", _anchor, Vector2.zero);
+                // MUST collapse the rect to a point (TASK-380 crop bug). NewChild leaves the DEFAULT sizeDelta
+                // (100,100), and the finger below is corner-anchored (anchorMin/Max 0,0), so its reference corner is
+                // the node's BOTTOM-LEFT = pivot − (50,50), not the pivot. A non-zero rect therefore (a) displaces
+                // EVERY finger by (−50,−50), and (b) puts the fingertip at local (−50,−50) instead of (0,0), so the
+                // x-flip reflects the tip about (−50,−50) rather than about the tip — sliding both tips toward the
+                // group centre and down (the exact defect in after-mirror-crop-BROKEN.png). This is the SAME trap the
+                // _anchor node zeroes its rect against above; the flip node needs the identical treatment so its
+                // pivot lands exactly on the tip and the reflection leaves the tip fixed.
+                _fingerFlip.sizeDelta = Vector2.zero;
                 _finger = NewImage("Finger", _fingerFlip, FingerSpriteCache.Get(), FingerSizePx, FingerOffset);
                 // The pulse/blink tweens are style-dependent (TASK-263 §2) → created per Show in ApplyStyle, not here.
             }
@@ -272,7 +281,35 @@ namespace Gameplay.Tutorial
             {
                 if (_fingerFlip == null)
                     return;
+
+                // TASK-380 owner-requested NUMBER (the crop, not the geometry, is the acceptance criterion): log the
+                // fingertip's actual overlay/screen position BEFORE and AFTER the flip, next to the pin point (the
+                // FingerFlip pivot, anchored on the piece). A CORRECT flip leaves tipAfter == tipBefore == pinScreen
+                // to sub-pixel — the tip is reflected about itself, so it does not move; both fingers read as two
+                // hands but each tip stays on its highlight. If tipAfter drifts from pinScreen, the pivot is off the
+                // tip and the reflection is displacing it (the previous defect). Read from the live transforms, so the
+                // log measures the actual scene, not a prediction.
+                var tipBefore = FingerTipOverlayPoint();
                 _fingerFlip.localScale = new Vector3(mirrored ? -1f : 1f, 1f, 1f);
+                var tipAfter = FingerTipOverlayPoint();
+                var pin = _fingerFlip.position; // pivot = tip target, on the piece; invariant under the flip
+                Debug.unityLogger.Log(LogType.Log,
+                    $"[{LogCategory.Tutorial}] SetMirrored mirrored={mirrored} originX={_worldOrigin.x:0.###} " +
+                    $"tipBefore=({tipBefore.x:0.#},{tipBefore.y:0.#}) tipAfter=({tipAfter.x:0.#},{tipAfter.y:0.#}) " +
+                    $"pinScreen=({pin.x:0.#},{pin.y:0.#}) tipDriftFromPin=({tipAfter.x - pin.x:0.#},{tipAfter.y - pin.y:0.#})");
+            }
+
+            // The fingertip's world position in the overlay canvas (= screen pixels for a ScreenSpaceOverlay canvas),
+            // read from the live transforms so it reflects the current flip. The tip is off-centre on the sprite by
+            // (−FingerTipFracX, +FingerTipFracY)·size in the finger's own y-up local frame (image y-down negated);
+            // TransformPoint carries it through the finger scale AND the FingerFlip x-flip, so this is the measured
+            // tip, not a computed guess.
+            private Vector3 FingerTipOverlayPoint()
+            {
+                if (_finger == null)
+                    return _fingerFlip != null ? _fingerFlip.position : Vector3.zero;
+                var tipLocal = new Vector3(-FingerTipFracX * FingerSizePx, FingerTipFracY * FingerSizePx, 0f);
+                return _finger.rectTransform.TransformPoint(tipLocal);
             }
 
             public void Show(Vec2 origin, float rotation, Shape shape, HighlightStyle style)
