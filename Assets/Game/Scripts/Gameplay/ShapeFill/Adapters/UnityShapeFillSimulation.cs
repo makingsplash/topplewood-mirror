@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using Gameplay.Core;
 using Gameplay.Core.Adapters;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using VContainer;
 using Rect = Gameplay.Core.Rect; // disambiguate from UnityEngine.Rect
 
 namespace Gameplay.Adapters
@@ -54,10 +56,29 @@ namespace Gameplay.Adapters
         // with no surface leaves it false ⇒ pieces stay Discrete (Unity's default) ⇒ every pre-TASK-325 level is
         // byte-for-byte unchanged in its contact manifolds and rest poses.
         private bool _hasSurfaceStatic;
+        // TASK-379: an optional LOCAL 2D physics scene that isolates this instance's Box2D world from every other
+        // run's. null (production DI + any pre-TASK-379 caller) ⇒ the default/active-scene world, byte-for-byte
+        // unchanged: Root stays in the active scene and Step drives the global Physics2D.Simulate. A valid handle ⇒
+        // Root (and thus every body/static parented under it) is moved into that scene and Step drives ITS
+        // PhysicsScene2D — so a FRESH scene per run gives a virgin broadphase / body-id pool / warm-start cache with
+        // no cross-run residue. That residue (destroying bodies does NOT reset the world) is the root cause of the
+        // history-/parity-dependent verdicts diagnosed in dev-architect 01 §2; a per-run scene is the documented
+        // Unity "hard restart" (reload-the-scene) done cheaply, without a domain reload.
+        private readonly Scene? _physicsScene;
 
-        public UnityShapeFillSimulation(ShapeFillTuning tuning)
+        // Production DI constructor (VContainer): pinned with [Inject] so the container binds THIS exact parameter
+        // list (ShapeFillTuning only, as before) regardless of the second constructor — prod resolves no Scene and
+        // stays byte-for-byte. The isolation ctor below is called explicitly by the sim harness (LevelSimRunner).
+        [Inject]
+        public UnityShapeFillSimulation(ShapeFillTuning tuning) : this(tuning, null)
+        {
+        }
+
+        // TASK-379: isolation constructor used by LevelSimRunner — physicsScene is this run's own local 2D world.
+        public UnityShapeFillSimulation(ShapeFillTuning tuning, Scene? physicsScene)
         {
             _tuning = tuning;
+            _physicsScene = physicsScene;
         }
 
         private Transform Root
@@ -67,6 +88,12 @@ namespace Gameplay.Adapters
                 if (_root == null)
                 {
                     var go = new GameObject("ShapeFillSimulation");
+                    // TASK-379: when isolating, move the root into this run's own physics scene. Every body/static is
+                    // parented under Root, so they follow it into the scene and simulate in — and are destroyed with
+                    // — that isolated Box2D world. MoveGameObjectToScene requires a scene-root object; Root has no
+                    // parent, so this is valid.
+                    if (_physicsScene.HasValue)
+                        SceneManager.MoveGameObjectToScene(go, _physicsScene.Value);
                     _root = go.transform;
                 }
                 return _root;
@@ -318,7 +345,13 @@ namespace Gameplay.Adapters
         public void Step(float dt)
         {
             ApplyFlow(); // TASK-097: accumulate directed air-flow force before integrating this step
-            Physics2D.Simulate(dt);
+            // TASK-379: step THIS run's isolated world when a local scene was supplied; otherwise the global
+            // default-scene world (production path, byte-for-byte unchanged). A LocalPhysicsMode.Physics2D scene is
+            // never auto-simulated — it advances ONLY through its own PhysicsScene2D.Simulate.
+            if (_physicsScene.HasValue)
+                _physicsScene.Value.GetPhysicsScene2D().Simulate(dt);
+            else
+                Physics2D.Simulate(dt);
         }
 
         /// <summary>
