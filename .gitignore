@@ -162,3 +162,7 @@ Assets/Plugins/Demigiant/DOTween/Editor/DOTweenUpgradeManager.XML
 
 # маркеры живых вотчеров прогонов (runtime, TASK-359-инцидент): .studio/.watching/<TASK>.<pid>
 .studio/.watching/
+
+# Локальная отметка сверки мета-слоя с шаблоном студии (template-sync.py ack) — состояние машины,
+# а не проекта: у каждого дерева своя.
+.studio/.template-sync.json
