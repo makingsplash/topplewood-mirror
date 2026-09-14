@@ -48,7 +48,7 @@ namespace Gameplay.Dev
         private readonly CampaignProgressionController _campaign;
         private readonly ICampaignStore _store;
         private readonly ITutorialProgressStore _tutorialProgress;
-        private readonly TutorialDefinition _tutorial;
+        private readonly TutorialCatalog _tutorialCatalog;
 
         private readonly RestartButtonGuard _restartGuard = new(); // hides the product RESTART canvas while the menu is open (TASK-117).
 
@@ -59,14 +59,14 @@ namespace Gameplay.Dev
 
         public BringupDebugMenuHost(
             ILevelSource levelSource, GameModel model, CampaignProgressionController campaign,
-            ICampaignStore store, ITutorialProgressStore tutorialProgress, TutorialDefinition tutorial)
+            ICampaignStore store, ITutorialProgressStore tutorialProgress, TutorialCatalog tutorialCatalog)
         {
             _levelSource = levelSource;
             _model = model;
             _campaign = campaign;
             _store = store;
             _tutorialProgress = tutorialProgress;
-            _tutorial = tutorial;
+            _tutorialCatalog = tutorialCatalog;
         }
 
         private string CurrentLevelId => _model.CurrentLevel == null ? "<none>" : _model.CurrentLevel.LevelId;
@@ -193,10 +193,12 @@ namespace Gameplay.Dev
                 _store.WriteLevelIndex(0);
 
                 // M-1: reset FTUE via the existing dev seam — "forget the tutorial so it replays"
-                // (ITutorialProgressStore.cs:17-18), durable. tutorialId is the one canon tour id
-                // (TutorialDefinition.Id = "first_tutorial", GameplayCoreInstaller.cs:105 — the same id
-                // TutorialRunner.ShouldPlay reads). Resets the bringup Tutorial.Completed contour.
-                _tutorialProgress.Reset(_tutorial.Id);
+                // (ITutorialProgressStore.cs:17-18), durable. The reset jumps to level 0, so it forgets the tour
+                // registered for level 0's id in the TutorialCatalog (sailboat → "first_tutorial", TASK-377) — the
+                // same id TutorialRunner.ShouldPlay reads there. A level 0 with no tour → nothing to reset.
+                var firstTour = _tutorialCatalog.Resolve(_levelSource.Load(0).LevelId);
+                if (firstTour != null)
+                    _tutorialProgress.Reset(firstTour.Id);
 
                 // Reload level 0 in-place → GameModel.LevelLoaded → TutorialRunner.OnLevelLoaded → ShouldPlay
                 // (now IsCompleted==false, ReadLevelIndex()==0) → FTUE replays. No relaunch needed.

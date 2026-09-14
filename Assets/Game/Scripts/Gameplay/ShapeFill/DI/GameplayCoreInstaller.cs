@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Gameplay.Adapters;
 using Gameplay.Core;
 using Gameplay.Core.Adapters;
@@ -97,19 +98,28 @@ namespace Gameplay.DI
             // this runner → the sim physically cannot play the tutorial (RFC §7).
             builder.Register<ITutorialInputGate, TutorialInputGate>(Lifetime.Singleton);
             builder.Register<ITutorialView, TutorialView>(Lifetime.Singleton);
-            // TEMPORARY INPUT (TASK-078, owner directive 1): the FIRST campaign level's winning tap order is
-            // hardcoded here. TASK-100 made sailboat campaign index 0 (was giraffe), so this is now sailboat's
-            // 2-piece order = placement-order 0..1 (hull, then sail; bottom-up). For a 2-piece stack the ONLY solve
-            // order is hull-before-sail (sail has no base to rest on otherwise) = slot-ascending = placement order
-            // 0..1 — sailboat is the canonical k=2 example in level-authoring.md §L13. sailboat's per-level
-            // winnability is unchanged by TASK-100 (its LevelData is byte-identical to the shipped corpus; only its
-            // array index moved), so the winning order is inherited, not newly introduced.
-            // AssembleInOrderStep itself is level-agnostic — remove this array once a certified order is exported
-            // into LevelData and fed from there (TASK-078 tech-debt; still dormant because winning order ==
-            // placement order here, so TASK-079's "winning order ≠ placement" trigger has NOT fired).
-            var sailboatTapOrder = new[] { 0, 1 };
-            builder.RegisterInstance(new TutorialDefinition(
-                "first_tutorial", new ITutorialStep[] { new AssembleInOrderStep(sailboatTapOrder) }));
+            // Per-level tutorial catalog (TASK-377, closing the TASK-078/243 hardcode): TutorialRunner resolves the
+            // tour for the LOADED level's id, so different levels teach different gestures. Keyed by LevelId (not
+            // campaign index), robust to a dev level-jump / manifest re-order (same reason as the id-based gate).
+            //
+            // sailboat (campaign index 0) → the assemble-in-order FTUE. Its 2-piece order = placement-order 0..1
+            // (hull, then sail; bottom-up) — the ONLY solve order for a 2-piece stack (sail has no base otherwise) =
+            // slot-ascending, the canonical k=2 example in level-authoring.md §L13. Still a hardcoded order
+            // (TASK-078/079 tech-debt: export a certified order into LevelData.WinningOrder and feed it from there;
+            // dormant while winning order == placement order here).
+            //
+            // grand_seesaw (campaign "level 5") → the simultaneous co-release tour: SimultaneousTapStep reads the
+            // level's FIRST CoReleaseGroup from data (the pan pair [2,3]) and highlights both members with two
+            // fingers — no per-level index is hardcoded here, so the same step teaches whatever group the level
+            // declares ("class, not case", owner 2026-09-14).
+            var catalog = new TutorialCatalog(new Dictionary<string, TutorialDefinition>
+            {
+                ["sailboat"] = new TutorialDefinition(
+                    "first_tutorial", new ITutorialStep[] { new AssembleInOrderStep(new[] { 0, 1 }) }),
+                ["grand_seesaw"] = new TutorialDefinition(
+                    "simul_release_tutorial", new ITutorialStep[] { new SimultaneousTapStep() }),
+            });
+            builder.RegisterInstance(catalog);
             builder.RegisterEntryPoint<TutorialRunner>();
             // NOTE: the dev level-switch cheat is NOT registered here. This core installer is context-independent
             // (shared with prod), and prod raises its own GameDebugMenu via LoadingGame — registering a cheat here

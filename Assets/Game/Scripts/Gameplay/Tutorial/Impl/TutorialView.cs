@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using Game.Services.LogService;
 using Gameplay.Core;
@@ -35,27 +36,45 @@ namespace Gameplay.Tutorial
     /// </summary>
     public sealed class TutorialView : ITutorialView, IDisposable
     {
-        private Overlay _overlay;
+        // Keyed overlays (TASK-377): one overlay per highlight key so several highlights (each its own contour +
+        // finger, independently re-projected each frame) can be shown at once — the simultaneous-tap tour points two
+        // fingers at a co-release pair. Single-highlight callers (assemble-in-order tour, Hint booster) use key 0 and
+        // reuse the one overlay exactly as before. Created lazily per key; kept across Clear (hidden, not destroyed)
+        // and reused, mirroring the previous single-overlay lifetime.
+        private readonly Dictionary<int, Overlay> _overlays = new();
 
-        public void Highlight(Vec2 origin, float rotation, Shape shape, HighlightStyle style)
+        public void Highlight(Vec2 origin, float rotation, Shape shape, HighlightStyle style) =>
+            Highlight(0, origin, rotation, shape, style);
+
+        public void Highlight(int key, Vec2 origin, float rotation, Shape shape, HighlightStyle style)
         {
             // TASK-309 diagnostic marker (owner-requested "лог-маркер на входе в Highlight"): proves the call
             // reaches the REAL view and reports the two facts that decide "draws-but-invisible" — the target pose
             // and whether Camera.main (the seam Reposition projects through) exists. A null camera means Reposition
             // early-returns forever and the contour never receives points (see Overlay.Reposition first-draw log).
             Debug.unityLogger.Log(LogType.Log,
-                $"[{LogCategory.Tutorial}] Highlight ENTER origin=({origin.X:0.##},{origin.Y:0.##}) " +
+                $"[{LogCategory.Tutorial}] Highlight ENTER key={key} origin=({origin.X:0.##},{origin.Y:0.##}) " +
                 $"rot={rotation:0.##} style={style} camMain={(UnityEngine.Camera.main != null)}");
-            (_overlay ??= Overlay.Create()).Show(origin, rotation, shape, style);
+            if (!_overlays.TryGetValue(key, out var overlay) || overlay == null)
+            {
+                overlay = Overlay.Create();
+                _overlays[key] = overlay;
+            }
+            overlay.Show(origin, rotation, shape, style);
         }
 
-        public void Clear() => _overlay?.Hide();
+        public void Clear()
+        {
+            foreach (var overlay in _overlays.Values)
+                overlay?.Hide();
+        }
 
         public void Dispose()
         {
-            if (_overlay != null)
-                _overlay.Destroy();
-            _overlay = null;
+            foreach (var overlay in _overlays.Values)
+                if (overlay != null)
+                    overlay.Destroy();
+            _overlays.Clear();
         }
 
         /// <summary>MonoBehaviour driver on the overlay GameObject: owns the contour/finger, tweens, and the

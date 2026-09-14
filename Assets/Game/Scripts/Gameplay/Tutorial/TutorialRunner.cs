@@ -24,15 +24,12 @@ namespace Gameplay.Tutorial
     /// </summary>
     public sealed class TutorialRunner : IStartable, IDisposable
     {
-        // v1 plays the first tour only on the campaign's first level, identified by LevelId (TASK-112): the gate
-        // compares the LOADED level's LevelId to the id of the level at campaign position 0 (ILevelSource.Load(0)),
-        // NOT the persisted campaign pointer. Reading what is actually loaded keeps the gate coherent with a DEV
-        // level-jump — a non-destructive preview that intentionally never writes the pointer — so the tour can no
-        // longer surface on a jumped-to level. Per-level tours keyed by LevelId are a follow-up (RFC §Q4/§8).
-        private const int FirstTutorialLevelIndex = 0;
-
+        // Per-level tours (TASK-377, closing the TASK-112 follow-up): the tour to play is resolved from the LOADED
+        // level's LevelId via the TutorialCatalog, NOT from a campaign index. Keying on the loaded LevelId keeps the
+        // gate coherent with a DEV level-jump (a non-destructive preview that never writes the pointer) and with any
+        // re-ordering of the manifest — a jumped-to or moved level plays exactly the tour registered for its id, or
+        // none. sailboat → assemble-in-order FTUE; grand_seesaw → the simultaneous co-release tour.
         private readonly GameModel _model;
-        private readonly ILevelSource _levelSource;
         private readonly ITutorialGate _gate;
         private readonly ITutorialProgressStore _progress;
         private readonly ITutorialAnalytics _analytics;
@@ -40,11 +37,12 @@ namespace Gameplay.Tutorial
         private readonly ITutorialInputGate _inputGate;
         private readonly IGameplayInputSource _input;
         private readonly IGameplayTapTolerance _tapTolerance;
-        private readonly TutorialDefinition _definition;
+        private readonly TutorialCatalog _catalog;
 
         private IDisposable _levelLoadedSubscription;
         private IDisposable _stepSubscription;
         private TutorialContext _context;
+        private TutorialDefinition _definition; // the tour resolved for the currently-loaded level (null ⇒ none)
         private int _stepIndex;
 
         // Reentrancy guard for a step that completes synchronously during Enter's Subscribe (see class summary):
@@ -55,7 +53,6 @@ namespace Gameplay.Tutorial
 
         public TutorialRunner(
             GameModel model,
-            ILevelSource levelSource,
             ITutorialGate gate,
             ITutorialProgressStore progress,
             ITutorialAnalytics analytics,
@@ -63,10 +60,9 @@ namespace Gameplay.Tutorial
             ITutorialInputGate inputGate,
             IGameplayInputSource input,
             IGameplayTapTolerance tapTolerance,
-            TutorialDefinition definition)
+            TutorialCatalog catalog)
         {
             _model = model;
-            _levelSource = levelSource;
             _gate = gate;
             _progress = progress;
             _analytics = analytics;
@@ -74,7 +70,7 @@ namespace Gameplay.Tutorial
             _inputGate = inputGate;
             _input = input;
             _tapTolerance = tapTolerance;
-            _definition = definition;
+            _catalog = catalog;
         }
 
         public void Start()
@@ -90,20 +86,24 @@ namespace Gameplay.Tutorial
 
         private void OnLevelLoaded()
         {
-            // Re-evaluate on every load: cancel any in-progress tour, then (re)start from step 0 if still
-            // eligible. Idempotent with the reset-in-place reload the campaign controller does on LOSS.
+            // Re-evaluate on every load: cancel any in-progress tour, resolve the tour for THIS level, then (re)start
+            // from step 0 if still eligible. Idempotent with the reset-in-place reload the campaign controller does on
+            // LOSS.
             StopSequence();
-            if (!ShouldPlay())
+            _definition = ResolveDefinition();
+            if (_definition == null || !ShouldPlay())
                 return;
             StartSequence();
         }
 
+        // The tour registered for the loaded level's id, or null if the level has none (→ no tour plays).
+        private TutorialDefinition ResolveDefinition() =>
+            _model.CurrentLevel == null ? null : _catalog.Resolve(_model.CurrentLevel.LevelId);
+
         private bool ShouldPlay()
         {
             return _gate.Enabled
-                && !_progress.IsCompleted(_definition.Id)
-                && _model.CurrentLevel != null
-                && _model.CurrentLevel.LevelId == _levelSource.Load(FirstTutorialLevelIndex).LevelId;
+                && !_progress.IsCompleted(_definition.Id);
         }
 
         private void StartSequence()
