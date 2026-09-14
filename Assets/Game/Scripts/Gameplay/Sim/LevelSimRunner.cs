@@ -338,7 +338,7 @@ namespace Gameplay.Sim
             // (loseability stays null), mirroring the M0 skip. WARNING-only — it never moves the verdict (sim-gate.py
             // reads only `runs`); threshold/error-mode is phase 2 after game-balancer calibrates per tier.
             object loseability = !partial && levels != null && runs.Count > 0
-                ? BuildLoseabilityReport(levels, runs, UnloseablePositionThreshold)
+                ? BuildLoseabilityReport(levels, runs, UnloseablePositionThreshold, UnloseableMinOrders)
                 : null;
             var written = WriteReports(runs, stats, m0, tapAudit, loseability, partial,
                 out var dir, out var csvPath, out var jsonPath);
@@ -894,6 +894,15 @@ namespace Gameplay.Sim
         // flag only fires from position 11. Corpus-level provenance, stamped into the report's `loseability` block.
         private const int UnloseablePositionThreshold = 11;
 
+        // TASK-231 (§D16 phase 2): credibility floor. A level judged for loseability must have sampled at least this
+        // many distinct release orders; below it, orderWinRate==1.0 is statistical blindness of small N, NOT proven
+        // unloseability. Number is from TASK-225 §2 (empirics: everything reading orderWinRate>0.13 had ordersTried≤6;
+        // river_canoe 1/1 is the canonical false positive — a single permutation trivially "wins any order", there is
+        // no wrong order to observe). NOT tunable-for-convenience: raising it to green a red corpus is forbidden (§D16
+        // gate). Below this floor the level is stamped judged=false and is EXCLUDED from the unloseable verdict, but
+        // stays VISIBLE in the report so the gate surfaces it rather than reading it green.
+        private const int UnloseableMinOrders = 6;
+
         // TASK-220 (§D16 phase 1): assemble the machine-readable `loseability` block (sibling of tapAudit/stats/m0/runs)
         // from the release-order sweep runs already produced — ZERO extra simulation. For each level, over its
         // release-order permutations ONLY (the "player picks an arbitrary order" cases; the intended-solution policies
@@ -903,14 +912,17 @@ namespace Gameplay.Sim
         // direction). orderWinRate==1.0 means EVERY arbitrary release order wins ⇒ the player literally cannot lose.
         // Healthy lineage references: ball_cradle 0/61 (only the policy wins), balance levels 0/N (§L9 negative gate);
         // the three rejected campaigns read 1.0 ("wins any order") — the "too easy" signal the owner flagged three
-        // times. `loseable` = at least one arbitrary order loses. `unloseable` = orderWinRate==1.0 AND position ≥
-        // threshold. Logs a [LOSEABILITY] line per flagged level + a one-line corpus summary so the orchestrator sees
-        // it without reading JSON; and unloseableCount equals the number of ⚠ lines (parity, like tapAudit). Every
-        // swept level gets an entry (so "no entry" = "not swept", not "0 orders"). timingSensitive is null in phase 1:
-        // it needs the OPT-IN impatient pass (a SEPARATE report, absent from the gated runs) — phase 2 wires it once
-        // game-balancer calibrates the per-tier thresholds.
+        // times. `loseable` = at least one arbitrary order loses.
+        // TASK-231 (§D16 phase 2): `judged` = position ≥ threshold AND ordersTried ≥ minOrders (the credibility floor).
+        // `unloseable` = `judged` AND orderWinRate==1.0 — this is the ERROR condition sim-gate.py now FAILs on (phase 1
+        // only WARNED). A level below the minOrders floor is stamped judged=false, is EXCLUDED from the verdict, and is
+        // counted into unjudgedLowN so the gate surfaces the small-N blind spot instead of reading it green.
+        // Logs a [LOSEABILITY] line per flagged level + a one-line corpus summary so the orchestrator sees it without
+        // reading JSON; unloseableCount equals the number of ⚠ lines (parity, like tapAudit). Every swept level gets an
+        // entry (so "no entry" = "not swept", not "0 orders"). timingSensitive is null: it needs the OPT-IN impatient
+        // pass (a SEPARATE report, absent from the gated runs) — the timing axis of §D16 stays deferred (TASK-232).
         private static object BuildLoseabilityReport(
-            IReadOnlyList<LevelData> levels, IReadOnlyList<SimRunResult> runs, int positionThreshold)
+            IReadOnlyList<LevelData> levels, IReadOnlyList<SimRunResult> runs, int positionThreshold, int minOrders)
         {
             // Per level → per release-order OrderKey → [repeats, solvedRepeats]. Only PolicyId=="release-order".
             var byLevel = new Dictionary<string, Dictionary<string, int[]>>();
@@ -929,6 +941,8 @@ namespace Gameplay.Sim
 
             var levelReports = new List<object>(levels.Count);
             var eligible = 0;          // levels at position ≥ threshold — the set the summary is "of"
+            var judgedCount = 0;       // eligible AND ordersTried ≥ minOrders — the set the VERDICT is actually "of"
+            var unjudgedLowN = 0;      // eligible by position but below the credibility floor — surfaced, not judged
             var unloseableCount = 0;
             for (var i = 0; i < levels.Count; i++)
             {
@@ -945,13 +959,21 @@ namespace Gameplay.Sim
                 var atOrPastThreshold = position >= positionThreshold;
                 if (atOrPastThreshold)
                     eligible++;
-                // ordersTried>0 guards the degenerate all-preplaced level (no release order) out of the flag.
-                var unloseable = atOrPastThreshold && ordersTried > 0 && ordersWon == ordersTried;
+                // TASK-231 (§D16 phase 2): a level is JUDGED only when it clears BOTH gates — position ≥ threshold
+                // (early levels teach the mechanic) AND ordersTried ≥ minOrders (the credibility floor). The
+                // ordersTried ≥ minOrders test also subsumes the old ordersTried>0 guard on the degenerate
+                // all-preplaced level (no release order → 0 < minOrders → not judged).
+                var judged = atOrPastThreshold && ordersTried >= minOrders;
+                if (judged)
+                    judgedCount++;
+                else if (atOrPastThreshold && ordersTried > 0)
+                    unjudgedLowN++; // eligible by position, below credibility floor — the blind spot the gate surfaces
+                var unloseable = judged && ordersWon == ordersTried;
                 if (unloseable)
                 {
                     unloseableCount++;
                     Debug.Log($"[LOSEABILITY] {levels[i].LevelId} (pos {position}): orderWinRate=1.0 " +
-                              $"({ordersWon}/{ordersTried} orders won) ⚠ unloseable — every arbitrary release order wins.");
+                              $"({ordersWon}/{ordersTried} orders won, N≥{minOrders}) ⚠ unloseable — every arbitrary release order wins.");
                 }
                 levelReports.Add(new
                 {
@@ -961,20 +983,24 @@ namespace Gameplay.Sim
                     ordersWon,
                     orderWinRate,
                     loseable,
-                    timingSensitive = (bool?)null, // phase 2: needs the opt-in impatient pass (separate report)
+                    judged,
+                    timingSensitive = (bool?)null, // timing axis deferred (TASK-232): needs the opt-in impatient pass
                     unloseable,
                 });
             }
 
             // Console summary (RFC-style grep line): the one-liner the orchestrator reads without opening JSON.
-            Debug.Log($"[level-sim] LOSEABILITY: {unloseableCount} unloseable of {eligible} " +
-                      $"(позиции {positionThreshold}+)");
+            Debug.Log($"[level-sim] LOSEABILITY: {unloseableCount} unloseable of {judgedCount} judged " +
+                      $"(позиции {positionThreshold}+, {eligible} eligible, {unjudgedLowN} below N≥{minOrders} floor)");
 
             return new
             {
                 positionThreshold,
+                minOrders,
                 unloseableCount,
                 eligibleLevels = eligible,
+                judgedLevels = judgedCount,
+                unjudgedLowN,
                 levels = levelReports,
             };
         }
