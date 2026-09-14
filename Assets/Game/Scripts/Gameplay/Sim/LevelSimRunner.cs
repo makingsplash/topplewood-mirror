@@ -9,6 +9,7 @@ using Gameplay.Core;
 using Gameplay.Core.Sim;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Gameplay.Sim
 {
@@ -205,7 +206,7 @@ namespace Gameplay.Sim
                         var orderKey = string.Join("-", order);
                         for (var r = 0; r < _repeats; r++)
                         {
-                            var sim = new UnityShapeFillSimulation(_tuning);
+                            var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world per run
                             try
                             {
                                 runs.Add(SimRun.Run(level, sim, new ReleaseOrderPolicy(order),
@@ -217,7 +218,9 @@ namespace Gameplay.Sim
                                 ok = false;
                             }
 
-                            yield return null; // RFC §6: let deferred Destroy flush before the next run
+                            // TASK-379: unload this run's isolated scene (was `yield return null`, RFC §6) — still
+                            // spends the frame that flushes deferred Destroys, and now also drops the leaked world.
+                            yield return UnloadIsolatedSim(physicsScene);
 
                             if (!ok || WatchdogExpired())
                             {
@@ -234,7 +237,7 @@ namespace Gameplay.Sim
                     {
                         for (var r = 0; r < _repeats; r++)
                         {
-                            var sim = new UnityShapeFillSimulation(_tuning);
+                            var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world per run
                             try
                             {
                                 runs.Add(SimRun.Run(level, sim, new SlotAscendingPolicy(),
@@ -246,7 +249,7 @@ namespace Gameplay.Sim
                                 ok = false;
                             }
 
-                            yield return null;
+                            yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null)
 
                             if (!ok || WatchdogExpired())
                             {
@@ -265,7 +268,7 @@ namespace Gameplay.Sim
                     {
                         for (var r = 0; r < _repeats; r++)
                         {
-                            var sim = new UnityShapeFillSimulation(_tuning);
+                            var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world per run
                             try
                             {
                                 runs.Add(SimRun.Run(level, sim, new PairReleasePolicy(),
@@ -277,7 +280,7 @@ namespace Gameplay.Sim
                                 ok = false;
                             }
 
-                            yield return null;
+                            yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null)
 
                             if (!ok || WatchdogExpired())
                             {
@@ -405,7 +408,7 @@ namespace Gameplay.Sim
             Debug.Log($"[level-sim] STEPLOG pass: {levelId} slot-ascending patient (editor half of the " +
                       "device↔editor diff) — SEPARATE from the gated sweep.");
 
-            var sim = new UnityShapeFillSimulation(_tuning);
+            var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world for this isolated run
             try
             {
                 // logSteps:true attaches the dev StepPoseLogger for THIS run only. SlotAscendingPolicy is the
@@ -419,7 +422,7 @@ namespace Gameplay.Sim
                 Debug.LogError($"[level-sim] STEPLOG pass threw: {e}");
             }
 
-            yield return null; // RFC §6: let the deferred body Destroy flush
+            yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null, RFC §6)
         }
 
         // TASK-060: the "impatient player" comparison. For every non-Balance level (Assembly + Catapult, where a tap
@@ -495,7 +498,7 @@ namespace Gameplay.Sim
                     var impatientSolved = 0;
                     for (var r = 0; r < _repeats; r++)
                     {
-                        var sim = new UnityShapeFillSimulation(_tuning);
+                        var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world per run
                         try
                         {
                             var res = SimRun.Run(level, sim, ScriptedReleasePolicy.Impatient(order, gap),
@@ -510,7 +513,7 @@ namespace Gameplay.Sim
                             Debug.LogError($"[level-sim] timing {level.LevelId} order {orderKey} run {r} threw: {e}");
                         }
 
-                        yield return null;
+                        yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null)
                         if (WatchdogExpired())
                             break;
                     }
@@ -576,7 +579,7 @@ namespace Gameplay.Sim
                     var fastSolved = 0;
                     for (var r = 0; r < _repeats; r++)
                     {
-                        var sim = new UnityShapeFillSimulation(_tuning);
+                        var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world per run
                         try
                         {
                             var res = SimRun.Run(level, sim, new ScriptedReleasePolicy(script),
@@ -592,7 +595,7 @@ namespace Gameplay.Sim
                                            $"run {r} threw: {e}");
                         }
 
-                        yield return null;
+                        yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null)
                         if (WatchdogExpired())
                             break;
                     }
@@ -1054,6 +1057,40 @@ namespace Gameplay.Sim
             return levels;
         }
 
+        // TASK-379: isolation seam. Every SimRun executes in its OWN local 2D physics scene so no run inherits the
+        // previous run's Box2D world (broadphase tree, body-id / contact-id pools, warm-start impulse cache). A fresh
+        // adapter instance alone did NOT do this — destroying bodies leaves the shared world's internal state intact,
+        // which made a level's verdict depend on sweep history and repeat parity (dev-architect 01 §2). NewIsolatedSim
+        // creates the scene and hands its handle to the adapter; UnloadIsolatedSim tears the scene (and its whole
+        // world) down AFTER the run, piggy-backing on the frame-yield the RFC §6 teardown already spends.
+        private int _isolationSeq;
+
+        private UnityShapeFillSimulation NewIsolatedSim(out Scene physicsScene)
+        {
+            physicsScene = SceneManager.CreateScene(
+                "SimRunPhysics_" + _isolationSeq++,
+                new CreateSceneParameters(LocalPhysicsMode.Physics2D));
+            return new UnityShapeFillSimulation(_tuning, physicsScene);
+        }
+
+        // Unload the run's local physics scene, destroying its isolated Box2D world in full. Yields on the async
+        // unload so the next run starts against a scene that is gone — and still spends the one frame the old
+        // `yield return null` did, so deferred body Destroys flush exactly as before. Guards an invalid/never-loaded
+        // handle (e.g. a run that threw before ever touching Root) by falling back to the plain frame yield.
+        private IEnumerator UnloadIsolatedSim(Scene physicsScene)
+        {
+            if (physicsScene.IsValid() && physicsScene.isLoaded)
+            {
+                var op = SceneManager.UnloadSceneAsync(physicsScene);
+                if (op != null)
+                {
+                    yield return op;
+                    yield break;
+                }
+            }
+            yield return null;
+        }
+
         private bool WatchdogExpired()
         {
             if (Time.realtimeSinceStartup - _startRealtime <= _batchTimeoutSeconds)
@@ -1074,7 +1111,7 @@ namespace Gameplay.Sim
             var hashes = new HashSet<long>();
             for (var i = 0; i < _m0ReproRepeats; i++)
             {
-                var sim = new UnityShapeFillSimulation(_tuning);
+                var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world per repeat
                 try
                 {
                     var res = SimRun.Run(level, sim, new ReleaseOrderPolicy((int[])order.Clone()),
@@ -1087,7 +1124,7 @@ namespace Gameplay.Sim
                     _m0Faulted = true;
                 }
 
-                yield return null;
+                yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null)
                 if (_m0Faulted)
                     break;
             }
@@ -1096,16 +1133,17 @@ namespace Gameplay.Sim
             // M0.2 — safe acceleration: the same order run all-in-one-frame (∞) vs spread across frames in
             // batches of stepsPerFrame must reach an identical final pose hash (RFC §8.2).
             long oneFrameHash = 0;
+            Scene oneFrameScene = default; // TASK-379: this run's isolated scene, unloaded after the try
             try
             {
-                oneFrameHash = RunOneFrameHash(level, (int[])order.Clone());
+                oneFrameHash = RunOneFrameHash(level, (int[])order.Clone(), out oneFrameScene);
             }
             catch (Exception e)
             {
                 Debug.LogError($"[level-sim] M0 one-frame reference threw: {e}");
                 _m0Faulted = true;
             }
-            yield return null;
+            yield return UnloadIsolatedSim(oneFrameScene); // TASK-379 (was yield return null)
 
             var accelSafe = true;
             var accelVariants = new List<object>();
@@ -1153,10 +1191,13 @@ namespace Gameplay.Sim
             });
         }
 
-        // Small helper so the M0 one-frame reference reads by intent (and its SimRun.Run can be wrapped).
-        private long RunOneFrameHash(LevelData level, int[] order)
+        // Small helper so the M0 one-frame reference reads by intent (and its SimRun.Run can be wrapped). TASK-379:
+        // synchronous, so it cannot await the async scene unload itself — it OUTPUTS its isolated scene handle and the
+        // (coroutine) caller unloads it. NewIsolatedSim assigns physicsScene before SimRun.Run runs, so the handle is
+        // valid for the caller to tear down even if the run throws.
+        private long RunOneFrameHash(LevelData level, int[] order, out Scene physicsScene)
         {
-            var sim = new UnityShapeFillSimulation(_tuning);
+            var sim = NewIsolatedSim(out physicsScene);
             return SimRun.Run(level, sim, new ReleaseOrderPolicy(order), "m0-accel", "inf", 0, _maxSteps).PoseHash;
         }
 
@@ -1164,7 +1205,7 @@ namespace Gameplay.Sim
         // any Lost bodies flush mid-run — the sensitive path the accel-safe check probes (RFC §6/§8.2).
         private IEnumerator RunChunked(LevelData level, int[] order, int stepsPerFrame, Action<long> done)
         {
-            var sim = new UnityShapeFillSimulation(_tuning);
+            var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world for this multi-frame run
             using var run = new SimRun(level, sim, new ReleaseOrderPolicy(order));
 
             var steps = 0;
@@ -1176,12 +1217,12 @@ namespace Gameplay.Sim
                     run.Step();
                     steps++;
                 }
-                yield return null;
+                yield return null; // mid-run frame batching (M0 accel-safe): scene stays loaded until the run ends
             }
 
             done(run.PoseHash());
             sim.Reset();
-            yield return null;
+            yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null)
         }
 
         private bool WriteReports(IReadOnlyList<SimRunResult> runs, IReadOnlyList<LevelSolveStats> stats, object m0,
