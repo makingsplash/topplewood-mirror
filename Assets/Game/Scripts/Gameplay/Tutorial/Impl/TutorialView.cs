@@ -131,13 +131,19 @@ namespace Gameplay.Tutorial
             private const float BlinkHalfSec = 0.5f; // ~1s full blink cycle
 
             // The finger sprite's TIP is off-centre: measured (−0.266, −0.390) of the sprite size from its centre
-            // in image space (y-down, owner 2026-08-04). To land the tip on the target, offset the sprite centre by
-            // (+0.266, −0.390)·size in UI space (y-up) so the fingertip points at the piece and the hand falls
-            // down-right of it. Kept as fractions of FingerSizePx so the size stays a single knob.
+            // in image space (y-down, owner 2026-08-04). In UI space (y-up) the tip sits at (−0.266, +0.390)·size
+            // from the sprite centre, so the hand falls down-right of the tip. Kept as fractions of FingerSizePx so
+            // the size stays a single knob.
             private const float FingerTipFracX = 0.266f;
             private const float FingerTipFracY = 0.390f;
-            private static readonly Vector2 FingerOffset =
-                new(FingerTipFracX * FingerSizePx, -FingerTipFracY * FingerSizePx);
+            // Put the finger's PIVOT on the tip (TASK-382): with the pivot at the tip BOTH the tap-pulse scale and
+            // the mirror flip rotate/scale about the tip, so the tip stays pinned on the piece through the WHOLE
+            // animation — not just at the pulse extreme. The previous centre-pivot pulse scaled the off-centre tip
+            // around the sprite centre, sliding it up to ~(1−FingerTapScale)·(tipOffset) ≈ (9,14) px off the piece;
+            // invisible on a tiny Game view, plainly visible on 1080×1920 (owner's tipDriftFromPin log). Pivot is
+            // (0.5,0.5) + the tip offset (normalised), so it stays a single source of truth with the fracs above.
+            private static readonly Vector2 FingerTipPivot =
+                new(0.5f - FingerTipFracX, 0.5f + FingerTipFracY);
 
             private RectTransform _anchor;   // repositioned each frame to the target's screen point
             private RectTransform _canvasRect; // overlay canvas rect — reference space for the screen→UI conversion
@@ -190,7 +196,8 @@ namespace Gameplay.Tutorial
                 // BOTTOM-LEFT = anchoredPosition − (50,50) — a constant offset that put the highlight 50px below-left
                 // of the piece (TASK-078 editor repro: worldCenter (371,874) vs target screen (421,924) = −(50,50),
                 // exactly half the default rect). Collapsing the rect to a point makes bottom-left == centre, so each
-                // child's offset (0 for the contour, FingerOffset for the finger) reads from the target itself.
+                // child reads from the target itself: the contour sits at offset 0, and the finger (via FingerFlip)
+                // sits at offset 0 with its pivot on the tip (TASK-382).
                 _anchor.sizeDelta = Vector2.zero;
 
                 // Contour: a green shape-matching outline. Its node sits AT the target (offset 0), and its mesh
@@ -222,7 +229,13 @@ namespace Gameplay.Tutorial
                 // _anchor node zeroes its rect against above; the flip node needs the identical treatment so its
                 // pivot lands exactly on the tip and the reflection leaves the tip fixed.
                 _fingerFlip.sizeDelta = Vector2.zero;
-                _finger = NewImage("Finger", _fingerFlip, FingerSpriteCache.Get(), FingerSizePx, FingerOffset);
+                // Finger at the FingerFlip origin with its PIVOT on the tip (TASK-382): anchoredPosition 0 places the
+                // pivot (= the tip) exactly on the pin, and setting the pivot to FingerTipPivot makes both the
+                // tap-pulse (scales _finger.localScale) and the mirror flip (scales _fingerFlip.localScale) rotate
+                // about the tip, so the tip never leaves the piece. Was FingerOffset with a centre pivot, which pinned
+                // the tip only at rest — the pulse then slid it off-piece (visible at 1080×1920).
+                _finger = NewImage("Finger", _fingerFlip, FingerSpriteCache.Get(), FingerSizePx, Vector2.zero);
+                _finger.rectTransform.pivot = FingerTipPivot;
                 // The pulse/blink tweens are style-dependent (TASK-263 §2) → created per Show in ApplyStyle, not here.
             }
 
@@ -308,8 +321,10 @@ namespace Gameplay.Tutorial
             {
                 if (_finger == null)
                     return _fingerFlip != null ? _fingerFlip.position : Vector3.zero;
-                var tipLocal = new Vector3(-FingerTipFracX * FingerSizePx, FingerTipFracY * FingerSizePx, 0f);
-                return _finger.rectTransform.TransformPoint(tipLocal);
+                // The finger's PIVOT sits on the tip (FingerTipPivot, TASK-382), so the pivot's WORLD position is the
+                // live tip — carried through the finger's tap-pulse scale AND the FingerFlip x-flip. Measured from the
+                // transform, not computed: RectTransform.position is exactly the pivot in overlay/screen pixels.
+                return _finger.rectTransform.position;
             }
 
             public void Show(Vec2 origin, float rotation, Shape shape, HighlightStyle style)

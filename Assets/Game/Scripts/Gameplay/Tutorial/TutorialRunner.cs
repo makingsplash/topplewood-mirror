@@ -16,6 +16,13 @@ namespace Gameplay.Tutorial
     /// (re)starts the tour from step 0 when eligible — so a LOSS reload of the tutorial level replays the tour,
     /// and completion is persisted only after the LAST step (mid-tour LOSS ⇒ tour repeats, RFC §Q4).
     ///
+    /// A REDUNDANT re-dispatch of <see cref="GameModel.LevelLoaded"/> — the same level id, tour freshly armed
+    /// (step 0), no resolution since — is IGNORED rather than torn-down-and-rebuilt (TASK-382): a single transition
+    /// re-announced the event and the second dispatch's <see cref="StopSequence"/> was killing the tour the first
+    /// had just armed, so the player saw only a flash ("no tutorial"). The re-arm path is re-opened by
+    /// <see cref="GameModel.LevelResolved"/> (win/loss), which keeps the documented LOSS-replay working; only the
+    /// resolution-less duplicate is suppressed.
+    ///
     /// A synchronously-completing step is supported by design: a step that observes a <c>ReactiveProperty</c>
     /// (e.g. <see cref="GameModel.Phase"/>/<see cref="GameModel.Outcome"/>, which replay their current value on
     /// Subscribe) can fire completion INSIDE <see cref="ITutorialStep.Enter"/>'s Subscribe call. Advancement is
@@ -40,10 +47,23 @@ namespace Gameplay.Tutorial
         private readonly TutorialCatalog _catalog;
 
         private IDisposable _levelLoadedSubscription;
+        private IDisposable _resolvedSubscription;
         private IDisposable _stepSubscription;
         private TutorialContext _context;
         private TutorialDefinition _definition; // the tour resolved for the currently-loaded level (null ⇒ none)
         private int _stepIndex;
+
+        // Idempotency against a REDUNDANT LevelLoaded within one transition (TASK-382): a single 4→5 transition
+        // re-announced LevelLoaded more than once, and StopSequence()'s _view.Clear() on the second dispatch tore
+        // down the tour the first had just armed — the player saw a flash, i.e. "no tutorial". _armedLevelId is the
+        // LevelId the current tour is running for (null ⇒ none running); a repeat load of that SAME id, at step 0,
+        // with no resolution in between, is a redundant re-dispatch and is IGNORED so the running tour survives.
+        // _replayArmed re-opens a genuine restart: LevelResolved (win/loss) sets it, so the documented LOSS-replay of
+        // a tutorial level (class summary / RFC §Q4) still re-arms from step 0 — only the resolution-less duplicate
+        // is suppressed. Piece InstanceIds are deterministic across reloads (seed*1000+index), so a kept tour keeps
+        // pointing at valid targets.
+        private string _armedLevelId;
+        private bool _replayArmed;
 
         // Reentrancy guard for a step that completes synchronously during Enter's Subscribe (see class summary):
         // OnStepCompleted then sets _advancePending instead of recursing, and the PlayCurrentStep loop advances
@@ -77,6 +97,9 @@ namespace Gameplay.Tutorial
         {
             _context = new TutorialContext(_model, _view, _inputGate, _input.Intents, _tapTolerance);
             _levelLoadedSubscription = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
+            // A resolution (win/loss) means the NEXT load is a genuine fresh start — a LOSS-replay of the tutorial
+            // level, or an advance — so allow it to re-arm even when the level id is unchanged (TASK-382).
+            _resolvedSubscription = _model.LevelResolved.Subscribe(_ => _replayArmed = true);
 
             // A level is already loaded before this entry point starts (GameControllerRunner + the campaign
             // controller run first and fire LevelLoaded synchronously), so evaluate the current state once now —
@@ -89,6 +112,18 @@ namespace Gameplay.Tutorial
             // Re-evaluate on every load: cancel any in-progress tour, resolve the tour for THIS level, then (re)start
             // from step 0 if still eligible. Idempotent with the reset-in-place reload the campaign controller does on
             // LOSS.
+            //
+            // Suppress a REDUNDANT re-dispatch (TASK-382): the same level id, while its tour is freshly armed
+            // (step 0), with no resolution since — that is a duplicate LevelLoaded of the current transition, and
+            // running StopSequence()→_view.Clear() here would tear down the tour just armed. Keeping it is safe: the
+            // level's pieces reload with the SAME deterministic InstanceIds, so the highlights and the release gate
+            // still target valid pieces. A different id, an advanced tour (step > 0, e.g. a mid-tour Restart), or a
+            // post-resolution load (_replayArmed) all fall through and re-arm normally.
+            var loadedId = _model.CurrentLevel == null ? null : _model.CurrentLevel.LevelId;
+            if (!_replayArmed && loadedId != null && loadedId == _armedLevelId && _stepIndex == 0)
+                return;
+
+            _replayArmed = false;
             StopSequence();
             _definition = ResolveDefinition();
             if (_definition == null || !ShouldPlay())
@@ -109,6 +144,10 @@ namespace Gameplay.Tutorial
         private void StartSequence()
         {
             _stepIndex = 0;
+            // Mark WHICH level this tour is armed for so a redundant re-dispatch of the same load is recognised and
+            // ignored (TASK-382). Cleared on StopSequence / CompleteTutorial so a finished-or-torn-down tour never
+            // suppresses a legitimate re-arm.
+            _armedLevelId = _model.CurrentLevel == null ? null : _model.CurrentLevel.LevelId;
             PlayCurrentStep();
         }
 
@@ -163,6 +202,7 @@ namespace Gameplay.Tutorial
             _progress.MarkCompleted(_definition.Id); // durable — survives a kill
             _analytics.LogComplete(_definition.Id);
             _view.Clear();
+            _armedLevelId = null; // tour finished — a future load of this level must be free to re-evaluate
             Debug.unityLogger.Log(LogType.Log, $"[{LogCategory.Tutorial}] Tutorial '{_definition.Id}' completed");
         }
 
@@ -170,6 +210,7 @@ namespace Gameplay.Tutorial
         {
             _stepSubscription?.Dispose();
             _stepSubscription = null;
+            _armedLevelId = null; // nothing armed after a teardown
             _view.Clear();
         }
 
@@ -177,6 +218,8 @@ namespace Gameplay.Tutorial
         {
             _levelLoadedSubscription?.Dispose();
             _levelLoadedSubscription = null;
+            _resolvedSubscription?.Dispose();
+            _resolvedSubscription = null;
             StopSequence();
         }
     }
