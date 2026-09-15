@@ -119,9 +119,23 @@ namespace Gameplay.PlayScreen
             _model.PieceReleased.Subscribe(OnPieceReleased).AddTo(_subs);
             _model.LevelLoaded.Subscribe(_ =>
             {
-                // New level (or reload): drop any active highlight, clear the proactive affordance, and let a
+                // New level (or reload): drop any active hint WE own, clear the proactive affordance, and let a
                 // fresh struggle re-earn the offer.
-                ClearHighlight();
+                //
+                // Clear the SHARED overlay only when a hint of ours is actually showing (TASK-382). This presenter
+                // and TutorialRunner share ONE ITutorialView singleton, and both subscribe to LevelLoaded. R3 fans a
+                // Subject out to its subscribers synchronously, in registration order, so a single LevelLoaded reaches
+                // the runner FIRST — it arms the level's tour (grand_seesaw's two fingers) — and then reaches this
+                // handler. TutorialView.Clear() hides EVERY overlay, so an unconditional Clear() here tore the
+                // just-armed tour down inside the same delivery: the player saw a flash, i.e. "no tutorial" on level 5
+                // (owner probe 2026-09-15 proved exactly one LevelLoaded per transition, with the tour's Highlight
+                // then a Hide from this handler, then his own last-subscribed probe). When no hint is showing there is
+                // nothing of OURS to clear, so only cancel the fallback timer and leave the shared view — and the
+                // tour armed on this same load — untouched.
+                if (_activeHighlightId >= 0)
+                    ClearHighlight();
+                else
+                    CancelHighlightTimer();
                 _proactiveSuppressed = false;
                 _suppressedAtStreak = 0;
                 RefreshState();
@@ -574,11 +588,19 @@ namespace Gameplay.PlayScreen
 
         private void ClearHighlight()
         {
+            CancelHighlightTimer();
+            _activeHighlightId = -1;
+            _highlightView.Clear();
+        }
+
+        // Cancel the fallback auto-clear timer WITHOUT touching the shared overlay view. Used by the LevelLoaded
+        // handler when no hint of ours is showing: clearing the shared view there would tear down a tutorial tour
+        // armed on the same load (TASK-382), so we drop only our own pending timer.
+        private void CancelHighlightTimer()
+        {
             _highlightCts?.Cancel();
             _highlightCts?.Dispose();
             _highlightCts = null;
-            _activeHighlightId = -1;
-            _highlightView.Clear();
         }
 
         public void Dispose()
