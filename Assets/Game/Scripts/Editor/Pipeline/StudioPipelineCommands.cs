@@ -11,7 +11,7 @@ namespace Game.Editor.Pipeline
 {
     /// <summary>
     /// GENERIC (проекто-независимые) команды студии поверх пакета com.unity.pipeline (TASK-028) — ТОЛЬКО то,
-    /// чего в пакете нет; всё остальное берём у пакета как есть (editor_status/recompile/get_console_logs/
+    /// чего в пакете нет; всё остальное берём у пакета как есть (editor_status/recompile/console/
     /// editor_play/editor_stop/find_gameobjects/get_scene_hierarchy/eval/run_tests/menu …):
     ///  • ui_click    — укол pointer-click по uGUI-объекту (simulate_pointer пакета живёт только в Player-рантайме);
     ///  • image_stats — вердикт «пустой кадр» по записанному PNG (кадр приёмки, референс, рендер компилятора UI):
