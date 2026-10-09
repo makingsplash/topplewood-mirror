@@ -69,6 +69,10 @@ namespace Infrastructure.Loading
 
         public async UniTask StartAsync(CancellationToken cancellationToken)
         {
+            // TASK-408: remember what the Loading scene was authored with BEFORE the boot instantiates anything into it
+            // (UiService's Canvas(Clone), the gameplay scope). HideLoadingSceneStaticCanvases decides by this list.
+            var sceneCanvasesAtBoot = SceneCanvasSnapshot.Capture(SceneManager.GetActiveScene());
+
             // TASK-134 (owner 16:11): initialize SayKit HERE, at the very start of the boot — NOT from
             // [RuntimeInitializeOnLoadMethod(BeforeSceneLoad)] as before. From BeforeSceneLoad the play-loop
             // is not spinning yet and SayKit's editor bridge deadlocks the main thread on a blocking
@@ -125,7 +129,7 @@ namespace Infrastructure.Loading
 
             // TASK-126 (owner 08:39): гасим статический ScreenSpaceOverlay-канвас сцены Loading здесь же,
             // где приложение «показано» — сразу после того, как убран DontDestroyOnLoad-лоадинг-скрин.
-            HideLoadingSceneStaticCanvases();
+            HideLoadingSceneStaticCanvases(sceneCanvasesAtBoot);
 
             // app_loaded должен уходить, когда игра полностью загружена
             // и игрок может взаимодействовать с экраном (см. доку SayKit).
@@ -454,8 +458,11 @@ namespace Infrastructure.Loading
         // инертен — UiService не реализует ни одного VContainer entry-point-интерфейса), поэтому
         // Service.UI всегда возвращал null. Мост — ровно та же форма, что GlobalService.Create
         // (GlobalService.cs:23): Create() один раз + Register сервисов. UiService конструируется голым
-        // new (нет ctor-зависимостей); Register зовёт его Init() — это лишь взводит ленивый
-        // InitializeAsync, реальный Canvas инстанцируется на первом Show. Контейнер создаём РОВНО ОДИН
+        // new (нет ctor-зависимостей); Register зовёт его Init(). TASK-408: Init() НЕ откладывает работу до
+        // первого Show, как утверждалось здесь раньше, — InitializeAsync() вызывается сразу, а ToAsyncLazy(task)
+        // лишь оборачивает уже бегущую задачу (UniTaskExtensions.ToAsyncLazy → new AsyncLazy(task)). Значит
+        // Canvas(Clone) начинает инстанцироваться ЗДЕСЬ и живёт без worldCamera, пока ждёт камеру, — ровно в это
+        // окно и попадал HideLoadingSceneStaticCanvases. Контейнер создаём РОВНО ОДИН
         // РАЗ на app-lifetime: повторный Create() сделал бы DeInit старого инстанса и стёр реестр
         // (LocalServiceContainer.cs) — поэтому пакетный per-level LevelController.Create (мёртвый путь,
         // подклассов нет) сюда НЕ тащим.
@@ -492,28 +499,22 @@ namespace Infrastructure.Loading
         // премиса «в проде сцена выгрузится LoadSceneMode.Single, и правка станет no-op» относилась к
         // отвергнутому Варианту A и более не верна.)
         //
-        // Ищем БЕЗ хардкода имён (owner п.1): перебираем корневые объекты активной сцены и гасим Canvas в
-        // ScreenSpaceOverlay. Такой обход по построению НЕ трогает (owner п.2): (а) лоадинг-скрин — он в
-        // псевдо-сцене DontDestroyOnLoad, а не в активной; (б) наш Canvas(Clone) — он ScreenSpaceCamera,
-        // а не Overlay, и под фильтр renderMode не попадает. Гасим сам GameObject (SetActive(false)), а не
-        // только Canvas.enabled — чтобы отсутствие рендера было проверяемо (unity_find_gameobjects покажет
-        // active:false, owner п.5). Метод идемпотентен и безопасен при нуле подходящих канвасов.
-        private void HideLoadingSceneStaticCanvases()
+        // Ищем БЕЗ хардкода имён (owner п.1): гасим ScreenSpaceOverlay-канвасы из снимка, снятого в начале
+        // StartAsync, — то есть только объекты, с которыми сцена была ЗАГРУЖЕНА (owner п.2): (а) лоадинг-скрин
+        // не трогается — он в псевдо-сцене DontDestroyOnLoad, а не в активной; (б) наш Canvas(Clone) не
+        // трогается — он инстанцирован UiService ПОСЛЕ снимка и в него не попал. TASK-408: прежняя гарантия (б)
+        // «он ScreenSpaceCamera и под фильтр renderMode не попадает» была ложной — пока UiService ждёт
+        // инстанцирования камеры, геттер renderMode у канваса без worldCamera отдаёт ScreenSpaceOverlay, и шаг
+        // гасил корень UI (лог «Hid 2 … [Canvas, Canvas(Clone)]», TASK-401). Гасим сам GameObject
+        // (SetActive(false)), а не только Canvas.enabled — чтобы отсутствие рендера было проверяемо
+        // (unity_find_gameobjects покажет active:false, owner п.5). Метод идемпотентен и безопасен при нуле
+        // подходящих канвасов.
+        private void HideLoadingSceneStaticCanvases(SceneCanvasSnapshot sceneCanvasesAtBoot)
         {
             var scene = SceneManager.GetActiveScene();
 
             using var handle = ListPool<string>.Get(out var hidden);
-            foreach (var root in scene.GetRootGameObjects())
-            {
-                foreach (var canvas in root.GetComponentsInChildren<Canvas>(true))
-                {
-                    if (canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-                        continue;
-
-                    hidden.Add(canvas.name);
-                    canvas.gameObject.SetActive(false);
-                }
-            }
+            sceneCanvasesAtBoot.HideOverlayCanvases(hidden);
 
             var time = DateTime.Now;
             _logService.Log(
