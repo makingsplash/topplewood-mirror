@@ -6383,7 +6383,7 @@
           "kind": "lime_j",
           "startPosition": {
             "x": -1.275,
-            "y": 4.3
+            "y": 6.425
           },
           "startRotation": -1.5707963
         },
@@ -6391,7 +6391,7 @@
           "kind": "amber_box",
           "startPosition": {
             "x": 1.275,
-            "y": 4.3
+            "y": 5.51
           },
           "startRotation": 0
         },
@@ -6399,7 +6399,7 @@
           "kind": "rose_bar",
           "startPosition": {
             "x": -0.85,
-            "y": 4.6
+            "y": 7.0
           },
           "startRotation": 0
         },
@@ -6407,7 +6407,7 @@
           "kind": "mint_bar",
           "startPosition": {
             "x": -1.275,
-            "y": 4.9
+            "y": 3.875
           },
           "startRotation": 0
         },
@@ -6415,7 +6415,7 @@
           "kind": "sky_bar",
           "startPosition": {
             "x": 1.275,
-            "y": 4.9
+            "y": 6.975
           },
           "startRotation": 0
         },
@@ -6423,7 +6423,7 @@
           "kind": "jade_bar",
           "startPosition": {
             "x": -1.275,
-            "y": 5.6
+            "y": 4.96
           },
           "startRotation": 0
         },
@@ -6431,7 +6431,7 @@
           "kind": "sand_bar",
           "startPosition": {
             "x": 1.275,
-            "y": 5.6
+            "y": 4.0
           },
           "startRotation": 0
         }
