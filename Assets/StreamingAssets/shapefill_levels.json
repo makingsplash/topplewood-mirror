@@ -9137,6 +9137,472 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "cargo_truck",
+      "seed": 432,
+      "difficultyTier": 10,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        2,
+        3,
+        6,
+        4,
+        5
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -7,
+          "y": -1
+        },
+        "max": {
+          "x": 7,
+          "y": 8
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "wheel",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "halfdisc",
+            "radius": 0.4,
+            "segments": 7
+          }
+        },
+        {
+          "kind": "frame",
+          "color": "#48699A",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 3.8,
+            "height": 0.3
+          }
+        },
+        {
+          "kind": "cab",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 2.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.9,
+                "y": -0.6
+              },
+              {
+                "x": 0.9,
+                "y": -0.6
+              },
+              {
+                "x": 0.9,
+                "y": 0.0
+              },
+              {
+                "x": 0.15,
+                "y": 0.0
+              },
+              {
+                "x": -0.15,
+                "y": 0.6
+              },
+              {
+                "x": -0.9,
+                "y": 0.6
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.9,
+                  "y": -0.6
+                },
+                {
+                  "x": 0.15,
+                  "y": -0.6
+                },
+                {
+                  "x": 0.15,
+                  "y": 0.0
+                },
+                {
+                  "x": -0.15,
+                  "y": 0.6
+                },
+                {
+                  "x": -0.9,
+                  "y": 0.6
+                }
+              ],
+              [
+                {
+                  "x": 0.15,
+                  "y": -0.6
+                },
+                {
+                  "x": 0.9,
+                  "y": -0.6
+                },
+                {
+                  "x": 0.9,
+                  "y": 0.0
+                },
+                {
+                  "x": 0.15,
+                  "y": 0.0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "crate_a",
+          "color": "#CBA016",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.0,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.6,
+            "height": 0.6
+          }
+        },
+        {
+          "kind": "crate_b",
+          "color": "#8B5A9E",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.0,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.6,
+            "height": 0.6
+          }
+        },
+        {
+          "kind": "crate_c",
+          "color": "#5C8E3E",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.0,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.6,
+            "height": 0.6
+          }
+        }
+      ],
+      "pieces": [
+        {
+          "kind": "wheel",
+          "startPosition": {
+            "x": -1.5,
+            "y": 0.0
+          },
+          "startRotation": 0,
+          "preplaced": true
+        },
+        {
+          "kind": "wheel",
+          "startPosition": {
+            "x": 0.9,
+            "y": 0.0
+          },
+          "startRotation": 0,
+          "preplaced": true
+        },
+        {
+          "kind": "frame",
+          "startPosition": {
+            "x": -0.3,
+            "y": 2.4
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cab",
+          "startPosition": {
+            "x": 0.7,
+            "y": 3.7
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "crate_b",
+          "startPosition": {
+            "x": -3.294,
+            "y": 1.911
+          },
+          "startRotation": -0.6283
+        },
+        {
+          "kind": "crate_c",
+          "startPosition": {
+            "x": -4.194,
+            "y": 2.564
+          },
+          "startRotation": -0.6283
+        },
+        {
+          "kind": "crate_a",
+          "startPosition": {
+            "x": -5.094,
+            "y": 3.217
+          },
+          "startRotation": -0.6283
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -2.2,
+            "y": 0.4
+          },
+          {
+            "x": -1.9,
+            "y": 0.4
+          },
+          {
+            "x": -1.9,
+            "y": 0.0
+          },
+          {
+            "x": -1.1,
+            "y": 0.0
+          },
+          {
+            "x": -1.1,
+            "y": 0.4
+          },
+          {
+            "x": 0.5,
+            "y": 0.4
+          },
+          {
+            "x": 0.5,
+            "y": 0.0
+          },
+          {
+            "x": 1.3,
+            "y": 0.0
+          },
+          {
+            "x": 1.3,
+            "y": 0.4
+          },
+          {
+            "x": 1.6,
+            "y": 0.4
+          },
+          {
+            "x": 1.6,
+            "y": 1.3
+          },
+          {
+            "x": 0.85,
+            "y": 1.3
+          },
+          {
+            "x": 0.55,
+            "y": 1.9
+          },
+          {
+            "x": -0.2,
+            "y": 1.9
+          },
+          {
+            "x": -0.2,
+            "y": 1.3
+          },
+          {
+            "x": -2.0,
+            "y": 1.3
+          },
+          {
+            "x": -2.0,
+            "y": 0.7
+          },
+          {
+            "x": -2.2,
+            "y": 0.7
+          }
+        ],
+        "slots": [
+          {
+            "kind": "wheel",
+            "position": {
+              "x": -1.5,
+              "y": 0.0
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "wheel",
+            "position": {
+              "x": 0.9,
+              "y": 0.0
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "frame",
+            "position": {
+              "x": -0.3,
+              "y": 0.55
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cab",
+            "position": {
+              "x": 0.7,
+              "y": 1.3
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "crate_a",
+            "position": {
+              "x": -0.5,
+              "y": 1.0
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "crate_b",
+            "position": {
+              "x": -1.1,
+              "y": 1.0
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "crate_c",
+            "position": {
+              "x": -1.7,
+              "y": 1.0
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -7,
+              "y": -0.6
+            },
+            {
+              "x": 7,
+              "y": -0.6
+            },
+            {
+              "x": 7,
+              "y": 0
+            },
+            {
+              "x": -7,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "surface": true,
+          "thickness": 0.2,
+          "outline": [
+            {
+              "x": -6.3,
+              "y": 3.66
+            },
+            {
+              "x": -2.75,
+              "y": 1.08
+            },
+            {
+              "x": -2.5,
+              "y": 0.86
+            },
+            {
+              "x": -2.25,
+              "y": 0.75
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "collider": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -6.6,
+              "y": -0.6
+            },
+            {
+              "x": -2.25,
+              "y": -0.6
+            },
+            {
+              "x": -2.25,
+              "y": 0.75
+            },
+            {
+              "x": -2.5,
+              "y": 0.86
+            },
+            {
+              "x": -2.75,
+              "y": 1.08
+            },
+            {
+              "x": -6.3,
+              "y": 3.66
+            },
+            {
+              "x": -6.6,
+              "y": 3.66
+            }
+          ]
+        }
+      ]
     }
   ]
 }
