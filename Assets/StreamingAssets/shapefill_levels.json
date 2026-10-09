@@ -6859,6 +6859,490 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "balloon_cloud",
+      "seed": 431,
+      "difficultyTier": 7,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        1,
+        4,
+        3,
+        5,
+        2
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -7,
+          "y": -1
+        },
+        "max": {
+          "x": 7,
+          "y": 16
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "envelope",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.85,
+                "y": -1.0
+              },
+              {
+                "x": 0.85,
+                "y": -1.0
+              },
+              {
+                "x": 1.4,
+                "y": -0.45
+              },
+              {
+                "x": 1.5,
+                "y": 0.25
+              },
+              {
+                "x": 1.3,
+                "y": 1.0
+              },
+              {
+                "x": -1.3,
+                "y": 1.0
+              },
+              {
+                "x": -1.5,
+                "y": 0.25
+              },
+              {
+                "x": -1.4,
+                "y": -0.45
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -1.4,
+                  "y": -0.45
+                },
+                {
+                  "x": -0.85,
+                  "y": -1.0
+                },
+                {
+                  "x": 0.85,
+                  "y": -1.0
+                },
+                {
+                  "x": 1.4,
+                  "y": -0.45
+                },
+                {
+                  "x": 1.5,
+                  "y": 0.25
+                },
+                {
+                  "x": 1.3,
+                  "y": 1.0
+                },
+                {
+                  "x": -1.3,
+                  "y": 1.0
+                },
+                {
+                  "x": -1.5,
+                  "y": 0.25
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "rigging",
+          "color": "#CBA016",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 0.86,
+            "topWidth": 0.56,
+            "height": 0.55
+          }
+        },
+        {
+          "kind": "sandbag",
+          "color": "#48699A",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.36,
+            "height": 0.36
+          }
+        },
+        {
+          "kind": "basket",
+          "color": "#5C8E3E",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.86,
+            "height": 0.6
+          }
+        },
+        {
+          "kind": "anchor",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "triangle",
+            "width": 0.5,
+            "height": 0.45
+          }
+        }
+      ],
+      "pieces": [
+        {
+          "kind": "envelope",
+          "startPosition": {
+            "x": 0.0,
+            "y": 3.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "rigging",
+          "startPosition": {
+            "x": 0.0,
+            "y": 1.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "sandbag",
+          "startPosition": {
+            "x": -0.66,
+            "y": 5.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "sandbag",
+          "startPosition": {
+            "x": 0.66,
+            "y": 5.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "basket",
+          "startPosition": {
+            "x": 0.0,
+            "y": 7.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "anchor",
+          "startPosition": {
+            "x": 0.0,
+            "y": 5.1
+          },
+          "startRotation": 3.14159
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": 0.0,
+            "y": 8.4
+          },
+          {
+            "x": 0.25,
+            "y": 8.85
+          },
+          {
+            "x": 0.43,
+            "y": 8.85
+          },
+          {
+            "x": 0.43,
+            "y": 9.45
+          },
+          {
+            "x": 0.4,
+            "y": 9.64
+          },
+          {
+            "x": 0.84,
+            "y": 9.64
+          },
+          {
+            "x": 0.84,
+            "y": 10.0
+          },
+          {
+            "x": 1.4,
+            "y": 10.55
+          },
+          {
+            "x": 1.5,
+            "y": 11.25
+          },
+          {
+            "x": 1.3,
+            "y": 12.0
+          },
+          {
+            "x": -1.3,
+            "y": 12.0
+          },
+          {
+            "x": -1.5,
+            "y": 11.25
+          },
+          {
+            "x": -1.4,
+            "y": 10.55
+          },
+          {
+            "x": -0.84,
+            "y": 10.0
+          },
+          {
+            "x": -0.84,
+            "y": 9.64
+          },
+          {
+            "x": -0.4,
+            "y": 9.64
+          },
+          {
+            "x": -0.43,
+            "y": 9.45
+          },
+          {
+            "x": -0.43,
+            "y": 8.85
+          },
+          {
+            "x": -0.25,
+            "y": 8.85
+          }
+        ],
+        "slots": [
+          {
+            "kind": "envelope",
+            "position": {
+              "x": 0.0,
+              "y": 11.0
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "rigging",
+            "position": {
+              "x": 0.0,
+              "y": 9.725
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "sandbag",
+            "position": {
+              "x": -0.66,
+              "y": 9.82
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "sandbag",
+            "position": {
+              "x": 0.66,
+              "y": 9.82
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "basket",
+            "position": {
+              "x": 0.0,
+              "y": 9.15
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "anchor",
+            "position": {
+              "x": 0.0,
+              "y": 8.625
+            },
+            "rotation": 3.14159
+          }
+        ]
+      },
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -7,
+              "y": -0.6
+            },
+            {
+              "x": 7,
+              "y": -0.6
+            },
+            {
+              "x": 7,
+              "y": 0
+            },
+            {
+              "x": -7,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.6,
+              "y": 12.0
+            },
+            {
+              "x": 2.6,
+              "y": 12.0
+            },
+            {
+              "x": 2.6,
+              "y": 12.6
+            },
+            {
+              "x": -2.6,
+              "y": 12.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "collider": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.2,
+              "y": 12.0
+            },
+            {
+              "x": 3.2,
+              "y": 12.0
+            },
+            {
+              "x": 3.4,
+              "y": 12.5
+            },
+            {
+              "x": 3.0,
+              "y": 13.1
+            },
+            {
+              "x": 2.3,
+              "y": 13.2
+            },
+            {
+              "x": 1.9,
+              "y": 13.8
+            },
+            {
+              "x": 1.0,
+              "y": 14.1
+            },
+            {
+              "x": 0.2,
+              "y": 13.8
+            },
+            {
+              "x": -0.5,
+              "y": 14.2
+            },
+            {
+              "x": -1.4,
+              "y": 13.95
+            },
+            {
+              "x": -1.9,
+              "y": 13.3
+            },
+            {
+              "x": -2.7,
+              "y": 13.25
+            },
+            {
+              "x": -3.4,
+              "y": 12.6
+            }
+          ]
+        }
+      ],
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -2.0,
+              "y": 1.0
+            },
+            "max": {
+              "x": 2.0,
+              "y": 12.0
+            }
+          },
+          "direction": {
+            "x": 0,
+            "y": 1
+          },
+          "acceleration": 15.0,
+          "color": "#CFE8F5",
+          "bypassHoverGuard": true
+        }
+      ]
     }
   ]
 }
