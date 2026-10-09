@@ -6,6 +6,7 @@ using System.Text;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TextCore;
 using UnityEngine.TextCore.LowLevel;
 
 namespace Iliai.UiBuild
@@ -32,9 +33,10 @@ namespace Iliai.UiBuild
     ///   "ranges": ["20-7E", "D7", "400-45F"], "chars": "",
     ///   "materials": [ { "out": "Assets/…/Font SDF - Reward.mat", "atFontSize": 108,
     ///                    "outline":  { "color": "token|#hex", "px": 8 },
-    ///                    "underlay": { "color": "token|#hex", "x": 0, "y": -4, "softness": 0.3 } } ] }
+    ///                    "underlay": { "color": "token|#hex", "x": 0, "y": -4, "softness": 0.3 },
+    ///                    "face":     { "texture": "Assets/…/ramp.png", "fit": "cap|x|line" } } ] }
     /// </code>
-    /// Цвета — токены `tokens.json` (hex допустим с предупреждением, как в спеке).
+    /// Цвета — токены `tokens.json` (hex допустим с предупреждением, как в спеке). `face` — см. ApplyFace.
     /// </summary>
     public static class UiFontBake
     {
@@ -168,6 +170,13 @@ namespace Iliai.UiBuild
             var mat = new Material(fa.material) { name = Path.GetFileNameWithoutExtension(outPath) };
             mat.shaderKeywords = new string[0];
 
+            // Лицо — первым: оно меняет шейдер, а ключи обводки/тени ставятся уже на итоговом.
+            if (m.TryGetValue("face", out object fo))
+            {
+                if (!(fo is Dictionary<string, object> face)) { report.Error(where + ".face", "ожидался объект { texture, fit }"); return; }
+                if (!ApplyFace(mat, face, fa.faceInfo, where + ".face", report)) return;
+            }
+
             if (m.TryGetValue("outline", out object o) && o is Dictionary<string, object> outline)
             {
                 if (!tokens.TryColor(Str(outline, "color"), report, where + ".outline", out Color c)) return;
@@ -218,6 +227,66 @@ namespace Iliai.UiBuild
                         $"Underlay ({mat.GetFloat(ShaderUtilities.ID_UnderlayOffsetX):0.###}, {mat.GetFloat(ShaderUtilities.ID_UnderlayOffsetY):0.###}) " +
                         $"keywords [{string.Join(",", mat.shaderKeywords)}]");
         }
+
+        /// <summary>
+        /// Текстура лица (`_FaceTex`) — многостопная заливка глифа: блик, тело, рефлекс. Вершинный
+        /// `gradient` стиля даёт только два цвета на квад глифа, и растяжка с бликом в нём не выразима.
+        ///
+        /// Как ложится. Шейдер берёт UV лица из UV2 меша, а UV2 строит КОМПОНЕНТ по своему
+        /// `verticalMapping`. Character — 0..1 по прямоугольнику глифа с паддингом: у «+» и «7» квады разной высоты,
+        /// и блик на них оказывается на разной высоте. Line — по высоте строки, (y − descender) /
+        /// (ascender − descender), одинаково для всех глифов. Поэтому выпечка калибрует тайлинг/офсет
+        /// `_FaceTex` под Line и под метрики ЭТОГО шрифта так, что 0..1 растяжки ложится на полосу `fit`
+        /// (`cap` — базовая линия…высота прописных/цифр, `x` — …высота строчных, `line` — вся строка),
+        /// а Line на компоненте ставит компилятор, увидев лицо в материале (UiTextStyleApplier).
+        /// Вне полосы — Clamp: кромка растяжки, а не её повтор.
+        ///
+        /// Шейдер — полный «TextMeshPro/Distance Field»: в мобильном SDF текстуры лица нет.
+        /// </summary>
+        static bool ApplyFace(Material mat, Dictionary<string, object> face, FaceInfo fi, string where, UiBuildReport report)
+        {
+            string texPath = Str(face, "texture");
+            string fit = Str(face, "fit");
+            if (string.IsNullOrEmpty(texPath)) { report.Error(where, "нет 'texture' (PNG растяжки в Assets; делает artcut.py ramp)"); return false; }
+
+            float lo, hi;
+            switch (fit)
+            {
+                case "cap": lo = 0f; hi = fi.capLine; break;
+                case "x": lo = 0f; hi = fi.meanLine; break;
+                case "line": lo = fi.descentLine; hi = fi.ascentLine; break;
+                default:
+                    report.Error(where, $"fit '{fit ?? "—"}': ожидается 'cap' (цифры, прописные), 'x' (строчные) или 'line' (вся строка) — на какую высоту глифа ляжет растяжка");
+                    return false;
+            }
+            if (hi - lo <= 0f) { report.Error(where, $"у шрифта нет метрики для fit '{fit}' ({lo}…{hi})"); return false; }
+
+            var importer = AssetImporter.GetAtPath(texPath) as TextureImporter;
+            if (importer != null && (importer.wrapModeU != TextureWrapMode.Clamp || importer.wrapModeV != TextureWrapMode.Clamp))
+            {
+                // Repeat кладёт верх растяжки под базовую линию: дилейт и хвосты глифов выходят за 0..1.
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.SaveAndReimport();
+                report.Note($"{texPath}: wrapMode → Clamp (растяжка вне полосы не должна повторяться)");
+            }
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
+            if (tex == null) { report.Error(where, $"текстура лица не найдена или не текстура: {texPath}"); return false; }
+
+            var shader = Shader.Find(FaceShader);
+            if (shader == null) { report.Error(where, $"шейдер '{FaceShader}' не найден (TMP Essentials не импортированы?)"); return false; }
+            mat.shader = shader;
+
+            // u = (y − lo) / (hi − lo) при v = (y − descender) / (ascender − descender) ⇒ u = v·tiling + offset.
+            float band = hi - lo;
+            mat.SetTexture(ShaderUtilities.ID_FaceTex, tex);
+            mat.SetTextureScale(ShaderUtilities.ID_FaceTex, new Vector2(1f, (fi.ascentLine - fi.descentLine) / band));
+            mat.SetTextureOffset(ShaderUtilities.ID_FaceTex, new Vector2(0f, (fi.descentLine - lo) / band));
+            report.Note($"лицо {texPath} ({tex.width}x{tex.height}), fit {fit}: tiling.y {mat.GetTextureScale(ShaderUtilities.ID_FaceTex).y:0.###}, " +
+                        $"offset.y {mat.GetTextureOffset(ShaderUtilities.ID_FaceTex).y:0.###} при verticalMapping Line");
+            return true;
+        }
+
+        const string FaceShader = "TextMeshPro/Distance Field";
 
         /// <summary>Состав атласа: `ranges` — hex-диапазоны «20-7E» или одиночные «D7», `chars` — строка как есть.</summary>
         static uint[] Charset(Dictionary<string, object> r, string where, UiBuildReport report)

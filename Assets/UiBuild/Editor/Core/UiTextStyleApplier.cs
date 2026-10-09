@@ -53,6 +53,12 @@ namespace Iliai.UiBuild
             }
 
             text.fontSharedMaterial = material;
+
+            // Текстура лица в пресете откалибрована (UiFontBake.ApplyFace) под UV2 по ВЫСОТЕ СТРОКИ. При
+            // дефолтном Character TMP растянул бы её на прямоугольник каждого глифа — блик на «+» и на «7»
+            // встал бы на разную высоту. Маппинг — свойство компонента, а не материала, поэтому ставится здесь.
+            if (material.HasProperty(ShaderUtilities.ID_FaceTex) && material.GetTexture(ShaderUtilities.ID_FaceTex) != null)
+                text.verticalMapping = TextureMappingOptions.Line;
         }
 
         /// <summary>
