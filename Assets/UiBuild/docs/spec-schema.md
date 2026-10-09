@@ -83,6 +83,45 @@ design/
 | `bind` | string | Имя поля контроллера, в которое прошить этот объект после сборки |
 | `children` | array | Дети, рекурсивно |
 
+## Токены (`tokens.json`)
+
+Два словаря: `colors` (имя → `#RRGGBB` / `#RRGGBBAA`) и `styles` (имя → объект стиля). Спека ссылается
+на них ИМЕНЕМ (`color`, `style`). Неизвестное поле стиля — ошибка сборки, как и в спеке.
+
+### Поля стиля текста (`styles.<имя>`)
+
+| Поле | Тип | По умолчанию | Описание |
+|---|---|---|---|
+| `fontSize` | float | 36 | Кегль, design-px |
+| `bold` | bool | false | `FontStyles.Bold` |
+| `uppercase` | bool | false | `FontStyles.UpperCase` — регистр меняет рендер, текст в спеке остаётся как есть |
+| `lineSpacing` | float | 0 | Межстрочный интервал TMP (единицы TMP, не px) |
+| `characterSpacing` | float | 0 | Трекинг TMP (единицы TMP, не px) |
+| `color` | string | — | Цвет-токен или hex. `color` узла перекрывает его. При `gradient` — **тинт**: TMP умножает градиент на `color`, поэтому под градиент оставляй белый |
+| `font` | string | шрифт TMP по умолчанию | Путь к `TMP_FontAsset` (`.asset`) |
+| `material` | string | материал шрифта | Путь к материалу TMP (`.mat`) — **обводка, тень (underlay), свечение живут здесь**, а не в компоненте. Назначается как `fontSharedMaterial`. Материал обязан сэмплить атлас ТОГО ЖЕ шрифта (делается из материала шрифта: TMP → Create → Material Preset). Чужой атлас — **ошибка сборки с `файл:id`**: TMP при загрузке молча заменил бы его материалом шрифта, и в префабе обводки бы не было |
+| `gradient` | object | — | `{ "top": <цвет-токен>, "bottom": <цвет-токен> }` → вертикальный градиент заливки (`enableVertexGradient` + `colorGradient`). Только парой: половина — ошибка |
+
+Пример «праздничного» числа: золото градиентом + тёмная обводка материалом.
+
+```json
+"reward": {
+  "fontSize": 190, "bold": true, "color": "text",
+  "font": "Assets/…/MyFont SDF.asset",
+  "material": "Assets/…/MyFont SDF - Outline.mat",
+  "gradient": { "top": "gold-hi", "bottom": "gold-lo" }
+}
+```
+
+⚠ Обводка должна быть включена в самом материале keyword-ом `OUTLINE_ON`, а не одними свойствами, и пресет
+должен быть материалом-АССЕТОМ — оба подвоха и цена толщины в пикселях: `docs/platform/unity-gotchas.md`
+(раздел про TMP-обводку). `bold: true` на шрифте, у которого в таблице весов есть отдельный bold-ассет,
+уводит глифы в материал ДРУГОГО атласа — `material` стиля до них не дойдёт; для «праздничного» числа
+бери насыщенный шрифт напрямую в `font`, а не `bold`.
+
+⚠ `prefab` с deep-override (`OverrideText`) из стиля применяет только `fontSize` и `color` — `material`,
+`gradient`, `font` и прочее остаются от префаба.
+
 ## Пресеты привязки
 
 | Пресет | anchorMin | anchorMax | Что задаёт `offset` |

@@ -349,15 +349,7 @@ namespace Iliai.UiBuild
             text.raycastTarget = false;                       // текст ловит тапы только если попросят явно
 
             UiTextStyle style = ctx.Tokens.Style(node.Style, ctx.Report, node.Where);
-            if (style != null)
-            {
-                text.fontSize = style.FontSize;
-                text.fontStyle = (style.Bold ? FontStyles.Bold : FontStyles.Normal) | (style.Uppercase ? FontStyles.UpperCase : FontStyles.Normal);
-                if (Mathf.Abs(style.LineSpacing) > 0.001f) text.lineSpacing = style.LineSpacing;
-                if (Mathf.Abs(style.CharacterSpacing) > 0.001f) text.characterSpacing = style.CharacterSpacing;
-                TMP_FontAsset font = ctx.Tokens.Font(style.Font, ctx.Report, node.Where);
-                if (font != null) text.font = font;
-            }
+            UiTextStyleApplier.Apply(text, style, ctx.Tokens, ctx.Report, node.Where);
 
             string colorRef = node.Color ?? style?.Color;
             if (ctx.Tokens.TryColor(colorRef, ctx.Report, node.Where, out Color c)) text.color = c;

@@ -16,6 +16,9 @@ namespace Iliai.UiBuild
         public float CharacterSpacing;
         public string Color;
         public string Font;                      // путь к TMP_FontAsset
+        public string Material;                  // путь к материалу TMP (.mat) — обводка/тень/свечение; атлас обязан совпадать со шрифтом
+        public string GradientTop;               // цвет-токен верха вертикального градиента заливки
+        public string GradientBottom;            // цвет-токен низа; задаются только парой
     }
 
     /// <summary>
@@ -28,36 +31,43 @@ namespace Iliai.UiBuild
         readonly Dictionary<string, string> _colors = new Dictionary<string, string>();
         readonly Dictionary<string, UiTextStyle> _styles = new Dictionary<string, UiTextStyle>();
         readonly Dictionary<string, TMP_FontAsset> _fontCache = new Dictionary<string, TMP_FontAsset>();
+        readonly Dictionary<string, Material> _materialCache = new Dictionary<string, Material>();
 
         public bool HasAny => _colors.Count > 0 || _styles.Count > 0;
 
         public static UiTokens Load(UiBuildConfig cfg, UiBuildReport report)
         {
-            var tokens = new UiTokens();
             string path = cfg.Abs(cfg.TokensPath);
-            if (!File.Exists(path)) return tokens;              // токены опциональны
+            if (!File.Exists(path)) return new UiTokens();      // токены опциональны
+            return Parse(File.ReadAllText(path), cfg.TokensPath, report);
+        }
 
+        /// <summary>Разбор текста tokens.json. Отдельно от <see cref="Load"/>, чтобы тесты гоняли ровно
+        /// тот же разбор, что и сборка, без файла на диске. <paramref name="where"/> — имя файла для отчёта.</summary>
+        public static UiTokens Parse(string json, string where, UiBuildReport report)
+        {
+            var tokens = new UiTokens();
             object root;
-            try { root = UiJson.Parse(File.ReadAllText(path)); }
+            try { root = UiJson.Parse(json); }
             catch (UiJsonException e)
             {
-                report.Error(cfg.TokensPath, "битый JSON: " + e.Message);
+                report.Error(where, "битый JSON: " + e.Message);
                 return tokens;
             }
             if (!(root is Dictionary<string, object> map))
             {
-                report.Error(cfg.TokensPath, "корень должен быть объектом");
+                report.Error(where, "корень должен быть объектом");
                 return tokens;
             }
 
-            var r = new UiReader(map, report, cfg.TokensPath);
+            var r = new UiReader(map, report, where);
             Dictionary<string, object> colors = r.Map("colors");
             if (colors != null)
             {
                 foreach (KeyValuePair<string, object> kv in colors)
                 {
                     if (kv.Value is string hex) tokens._colors[kv.Key] = hex;
-                    else report.Error(cfg.TokensPath, $"colors.{kv.Key} должен быть строкой '#RRGGBB'");
+                    else report.Error(where, $"colors.{kv.Key} должен быть строкой '#RRGGBB'");
                 }
             }
 
@@ -68,10 +78,10 @@ namespace Iliai.UiBuild
                 {
                     if (!(kv.Value is Dictionary<string, object> sm))
                     {
-                        report.Error(cfg.TokensPath, $"styles.{kv.Key} должен быть объектом");
+                        report.Error(where, $"styles.{kv.Key} должен быть объектом");
                         continue;
                     }
-                    var sr = new UiReader(sm, report, cfg.TokensPath + ".styles." + kv.Key);
+                    var sr = new UiReader(sm, report, where + ".styles." + kv.Key);
                     var style = new UiTextStyle
                     {
                         Name = kv.Key,
@@ -82,13 +92,31 @@ namespace Iliai.UiBuild
                         CharacterSpacing = sr.Float("characterSpacing", 0f),
                         Color = sr.Str("color"),
                         Font = sr.Str("font"),
+                        Material = sr.Str("material"),
                     };
+                    ReadGradient(sr, style, report);
                     sr.Finish();
                     tokens._styles[kv.Key] = style;
                 }
             }
             r.Finish();
             return tokens;
+        }
+
+        /// <summary>`gradient: { top, bottom }` — только парой: половина градиента в TMP значит «вторая
+        /// половина белая», то есть молча другой цвет, а не отсутствие градиента.</summary>
+        static void ReadGradient(UiReader sr, UiTextStyle style, UiBuildReport report)
+        {
+            UiReader g = sr.Sub("gradient");
+            if (g == null) return;
+            style.GradientTop = g.Str("top");
+            style.GradientBottom = g.Str("bottom");
+            g.Finish("у gradient есть только 'top' и 'bottom'");
+            if (string.IsNullOrEmpty(style.GradientTop) || string.IsNullOrEmpty(style.GradientBottom))
+            {
+                report.Error(g.Where, "gradient задаётся парой: нужны и 'top', и 'bottom' (цвет-токены)");
+                style.GradientTop = style.GradientBottom = null;
+            }
         }
 
         public UiTextStyle Style(string name, UiBuildReport report, string where)
@@ -134,6 +162,16 @@ namespace Iliai.UiBuild
             if (font == null) report.Error(where, $"шрифт не найден: {path}");
             _fontCache[path] = font;
             return font;
+        }
+
+        public Material Material(string path, UiBuildReport report, string where)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            if (_materialCache.TryGetValue(path, out Material cached)) return cached;
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null) report.Error(where, $"материал не найден: {path}");
+            _materialCache[path] = material;
+            return material;
         }
     }
 }
