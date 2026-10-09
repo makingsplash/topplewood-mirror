@@ -19,6 +19,7 @@ namespace Iliai.UiBuild
     ///   { "cmd": "buildAll" }
     ///   { "cmd": "render",   "spec": "no_lives", "flat": true, "out": "design/.render/no_lives.wire.png" }
     ///   { "cmd": "catalog" }
+    ///   { "cmd": "font",     "recipe": "design/fonts/rubik-black.json" }   — SDF-атлас + пресеты (UiFontBake)
     /// </summary>
     [InitializeOnLoad]
     public static class UiBuildAgentEndpoint
@@ -89,7 +90,10 @@ namespace Iliai.UiBuild
                 case "buildAll": return UiBuildApi.BuildAll().ToText();
                 case "render": return UiBuildApi.Render(spec, flat, outPath).ToText();
                 case "catalog": return "OK · каталог\n" + UiBuildApi.CatalogText();
-                default: return $"FAILED · неизвестная команда '{cmd}'. Есть: build, buildAll, render, catalog\n";
+                case "font":
+                    string recipe = map.TryGetValue("recipe", out object rc) ? rc as string : null;
+                    return UiFontBake.Bake(recipe).ToText();
+                default: return $"FAILED · неизвестная команда '{cmd}'. Есть: build, buildAll, render, catalog, font\n";
             }
         }
     }

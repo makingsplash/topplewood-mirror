@@ -122,6 +122,28 @@ design/
 ⚠ `prefab` с deep-override (`OverrideText`) из стиля применяет только `fontSize` и `color` — `material`,
 `gradient`, `font` и прочее остаются от префаба.
 
+### Шрифт и пресеты — рецептом, а не окном Font Asset Creator (`UiFontBake`)
+
+Атлас для `font` и материалы для `material` выпекаются из рецепта `design/fonts/<имя>.json` командой
+эндпоинта `{ "cmd": "font", "recipe": "design/fonts/<имя>.json" }` (файл-команда `Temp/uibuild_cmd.json` в
+дереве с открытым редактором; результат — `Temp/uibuild_result.txt`, тот же контракт `OK…/FAILED…`).
+Выход — статичный SDF-атлас (Static, без ссылки на TTF в билде) и пресеты, которые перевыпекаются ВМЕСТЕ с
+атласом и сохраняют свой GUID — поэтому пресет не может остаться на старом атласе.
+
+| Поле рецепта | Обязательно | Смысл |
+|---|---|---|
+| `source` | да | `.ttf`/`.otf` в `Assets/` (статичный инстанс начертания; вариативный — см. unity-gotchas) |
+| `out` | да | путь `.asset` атласа |
+| `pointSize`, `padding`, `atlas: {w,h}` | да | выпечка; **дефолтов нет** — без них отказ с названной причиной |
+| `faceIndex` | нет (0) | ≠ 0 через `Font` недоступно — отказ |
+| `expectStyle` | нет | сверка `faceInfo.styleName` (ловит вариативный файл, выпекшийся не тем весом) |
+| `ranges` / `chars` | одно из | hex-диапазоны `"20-7E"`, `"D7"` и/или строка символов; не влезло или нет в шрифте — отказ со списком |
+| `materials[]` | нет | `{ out, atFontSize, outline: {color, px}, underlay: {color, x, y, softness} }` — толщины в **px при кегле `atFontSize`**, цвета — токены |
+
+Перевод px → доли SDF: `OutlineWidth = FaceDilate = px·pointSize / (2·padding·atFontSize)` (кант целиком
+снаружи), смещение тени — `px·pointSize / (padding·atFontSize)`. Двойка подписана кадром, механизм —
+`docs/platform/unity-gotchas.md` (раздел про цену единицы `_OutlineWidth`).
+
 ## Пресеты привязки
 
 | Пресет | anchorMin | anchorMax | Что задаёт `offset` |
