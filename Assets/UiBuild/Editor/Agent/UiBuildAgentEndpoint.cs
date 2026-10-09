@@ -19,7 +19,7 @@ namespace Iliai.UiBuild
     ///   { "cmd": "buildAll" }
     ///   { "cmd": "render",   "spec": "no_lives", "flat": true, "out": "design/.render/no_lives.wire.png" }
     ///   { "cmd": "catalog" }
-    ///   { "cmd": "font",     "recipe": "design/fonts/rubik-black.json" }   — SDF-атлас + пресеты (UiFontBake)
+    ///   { "cmd": "font",     "recipe": "design/fonts/nunito-black.json" }   — SDF-атлас + пресеты (UiFontBake)
     /// </summary>
     [InitializeOnLoad]
     public static class UiBuildAgentEndpoint
