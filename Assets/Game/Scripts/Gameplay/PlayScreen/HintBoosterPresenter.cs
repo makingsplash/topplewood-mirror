@@ -35,7 +35,8 @@ namespace Gameplay.PlayScreen
     /// The EventSystem is raised with the SAME idempotent guard as <see cref="RestartButtonPresenter"/> (create only
     /// if none, destroy only our own) so ownership is order-independent whichever HUD presenter starts first. The
     /// canvas sits at <c>short.MaxValue-2</c> — above the banner/tutorial highlight, below the RESTART button
-    /// (<c>short.MaxValue-1</c>). The proactive A/B affordance (glow pulse + tooltip) is non-modal and never blocks
+    /// (<c>short.MaxValue-1</c>); like RESTART it hides while a UiService screen is up (<see cref="HudCover"/>,
+    /// TASK-398). The proactive A/B affordance (glow pulse + tooltip) is non-modal and never blocks
     /// the field (one-tap is sacrosanct); it is driven by <see cref="LevelFailStreak"/> under the treatment arm.
     /// </summary>
     public sealed class HintBoosterPresenter : IStartable, IDisposable
@@ -49,6 +50,7 @@ namespace Gameplay.PlayScreen
 
         private GameObject _eventSystem;
         private GameObject _canvas;
+        private CanvasGroup _group;
         private Button _button;
         private Image _icon;
         private Text _countLabel;
@@ -112,6 +114,8 @@ namespace Gameplay.PlayScreen
 
             _subs = new CompositeDisposable();
             _interaction.IsBusy.Subscribe(_ => RefreshState()).AddTo(_subs);
+            // TASK-398: hidden (render + hit-test) while a UiService screen is up — win/lose, popups.
+            _interaction.IsCoveredByScreen.Subscribe(covered => HudCover.Apply(_group, covered)).AddTo(_subs);
             _hint.Charges.Subscribe(_ => RefreshState()).AddTo(_subs);
             _failStreak.Current.Subscribe(_ => RefreshProactive()).AddTo(_subs);
             // TASK-263 §2b: kill the hint outline the instant the player releases the piece it pointed at — the same
@@ -166,12 +170,14 @@ namespace Gameplay.PlayScreen
         private void BuildUi()
         {
             _canvas = new GameObject("[PlayScreen] HintBoosterButton",
-                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(CanvasGroup));
             UnityEngine.Object.DontDestroyOnLoad(_canvas);
+            _group = _canvas.GetComponent<CanvasGroup>();
 
             var canvas = _canvas.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             // Above the banner (31000) and tutorial highlight (32000), BELOW the RESTART button (short.MaxValue-1).
+            // Not a lever against UiService screens (Overlay beats their Camera canvas at any order) — see HudCover.
             canvas.sortingOrder = short.MaxValue - 2;
 
             var scaler = _canvas.GetComponent<CanvasScaler>();

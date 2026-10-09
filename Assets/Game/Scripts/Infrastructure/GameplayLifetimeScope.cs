@@ -86,6 +86,11 @@ namespace Game.Code.Infrastructure
             // the win/lose screens are.
             builder.Register<PlayScreenInteraction>(Lifetime.Singleton);
             builder.RegisterEntryPoint<RestartButtonPresenter>();
+            // TASK-398: the HUD buttons are Overlay canvases and draw ABOVE every UiService screen whatever their
+            // sortingOrder, so they hide themselves while a screen is up. This bridge feeds that flag
+            // (PlayScreenInteraction.IsCoveredByScreen) from the UiService show/hide events; UiService is bound below
+            // (RegisterSessionServices). Prod-only: bringup shows no UiService screens, its flag stays false.
+            builder.RegisterEntryPoint<HudScreenCoverBridge>();
 
             // TASK-237: Hint booster — prod-only (the sim never builds these; they are not in GameplayCoreInstaller,
             // so the "sim does not create presenters/boosters" invariant holds, exactly like the tutorial). The

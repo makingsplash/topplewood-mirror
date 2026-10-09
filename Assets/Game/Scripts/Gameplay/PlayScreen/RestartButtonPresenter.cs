@@ -23,7 +23,8 @@ namespace Gameplay.PlayScreen
     /// DDM host is not compiled, and this is the sole EventSystem owner.
     ///
     /// The button is disabled while <see cref="PlayScreenInteraction.IsBusy"/> (the WIN/LOSE hold), so a restart
-    /// cannot race the auto-transition (Q1). Tapping it opens the confirm popup (TASK-153) rather than reloading
+    /// cannot race the auto-transition (Q1). It is HIDDEN while a UiService screen is up
+    /// (<see cref="PlayScreenInteraction.IsCoveredByScreen"/>, TASK-398) — including its own confirm popup. Tapping it opens the confirm popup (TASK-153) rather than reloading
     /// directly; confirming reloads the current level via <see cref="ICampaignRestart"/> without resolving a loss,
     /// so restart stays neutral for the domain (Q3).
     /// </summary>
@@ -34,8 +35,10 @@ namespace Gameplay.PlayScreen
 
         private GameObject _eventSystem;
         private GameObject _canvas;
+        private CanvasGroup _group;
         private Button _button;
         private IDisposable _busySub;
+        private IDisposable _coverSub;
 
         public RestartButtonPresenter(ICampaignRestart restart, PlayScreenInteraction interaction)
         {
@@ -52,6 +55,7 @@ namespace Gameplay.PlayScreen
                 if (_button != null)
                     _button.interactable = !busy;
             });
+            _coverSub = _interaction.IsCoveredByScreen.Subscribe(covered => HudCover.Apply(_group, covered));
         }
 
         // Idempotent EventSystem guard (see class summary). DontDestroyOnLoad so a level reload does not drop it.
@@ -68,12 +72,15 @@ namespace Gameplay.PlayScreen
         private void CreateButton()
         {
             _canvas = new GameObject("[PlayScreen] RestartButton",
-                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(CanvasGroup));
             UnityEngine.Object.DontDestroyOnLoad(_canvas);
+            _group = _canvas.GetComponent<CanvasGroup>();
 
             var canvas = _canvas.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = short.MaxValue - 1; // above the banner (31000); below any topmost dev overlay.
+            // Above the banner (31000); below any topmost dev overlay. NOT a lever against UiService screens: Overlay
+            // draws above their Screen Space Camera canvas whatever this number is — hence HudCover (TASK-398).
+            canvas.sortingOrder = short.MaxValue - 1;
 
             var scaler = _canvas.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -165,6 +172,8 @@ namespace Gameplay.PlayScreen
         {
             _busySub?.Dispose();
             _busySub = null;
+            _coverSub?.Dispose();
+            _coverSub = null;
 
             // Both canvases are DontDestroyOnLoad, so tear them down explicitly (mirrors BringupDebugMenuHost).
             if (_canvas != null)
