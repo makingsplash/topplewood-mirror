@@ -7042,7 +7042,7 @@
           "kind": "envelope",
           "startPosition": {
             "x": 0.0,
-            "y": 3.6
+            "y": 6.9
           },
           "startRotation": 0
         },
@@ -7050,7 +7050,7 @@
           "kind": "rigging",
           "startPosition": {
             "x": 0.0,
-            "y": 1.8
+            "y": 4.425
           },
           "startRotation": 0
         },
@@ -7058,7 +7058,7 @@
           "kind": "sandbag",
           "startPosition": {
             "x": -0.66,
-            "y": 5.9
+            "y": 2.92
           },
           "startRotation": 0
         },
@@ -7066,7 +7066,7 @@
           "kind": "sandbag",
           "startPosition": {
             "x": 0.66,
-            "y": 5.9
+            "y": 2.92
           },
           "startRotation": 0
         },
@@ -7074,7 +7074,7 @@
           "kind": "basket",
           "startPosition": {
             "x": 0.0,
-            "y": 7.0
+            "y": 5.3
           },
           "startRotation": 0
         },
@@ -7082,7 +7082,7 @@
           "kind": "anchor",
           "startPosition": {
             "x": 0.0,
-            "y": 5.1
+            "y": 3.55
           },
           "startRotation": 3.14159
         }
