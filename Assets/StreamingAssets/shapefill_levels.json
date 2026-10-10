@@ -17085,6 +17085,569 @@
           "color": "#CFE8F5"
         }
       ]
+    },
+    {
+      "levelId": "windy_tent",
+      "seed": 448,
+      "difficultyTier": 10,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -3
+        },
+        "max": {
+          "x": 6,
+          "y": 8
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "peg",
+          "color": "#5A55A3",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.18,
+            "height": 1.0
+          }
+        },
+        {
+          "kind": "tent_r",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.2,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.65,
+                "y": -0.7
+              },
+              {
+                "x": 0.65,
+                "y": -0.7
+              },
+              {
+                "x": 0.65,
+                "y": -0.4
+              },
+              {
+                "x": -0.5,
+                "y": 0.7
+              },
+              {
+                "x": -0.65,
+                "y": 0.7
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.65,
+                  "y": 0.7
+                },
+                {
+                  "x": -0.65,
+                  "y": -0.7
+                },
+                {
+                  "x": 0.65,
+                  "y": -0.7
+                },
+                {
+                  "x": 0.65,
+                  "y": -0.4
+                },
+                {
+                  "x": -0.5,
+                  "y": 0.7
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "tent_l",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.2,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": 0.65,
+                "y": 0.7
+              },
+              {
+                "x": 0.5,
+                "y": 0.7
+              },
+              {
+                "x": -0.65,
+                "y": -0.4
+              },
+              {
+                "x": -0.65,
+                "y": -0.7
+              },
+              {
+                "x": 0.65,
+                "y": -0.7
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0.65,
+                  "y": -0.7
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.7
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.7
+                },
+                {
+                  "x": -0.65,
+                  "y": -0.4
+                },
+                {
+                  "x": -0.65,
+                  "y": -0.7
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "backpack",
+          "color": "#CBA016",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.2,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.6,
+            "height": 0.7
+          }
+        },
+        {
+          "kind": "pennant",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.25,
+                "y": -0.35
+              },
+              {
+                "x": 0.05,
+                "y": -0.35
+              },
+              {
+                "x": 0.05,
+                "y": -0.27
+              },
+              {
+                "x": -0.15,
+                "y": -0.27
+              },
+              {
+                "x": -0.15,
+                "y": 0.05
+              },
+              {
+                "x": 0.25,
+                "y": 0.2
+              },
+              {
+                "x": -0.15,
+                "y": 0.35
+              },
+              {
+                "x": -0.25,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.25,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.05,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.05,
+                  "y": -0.27
+                },
+                {
+                  "x": -0.15,
+                  "y": -0.27
+                }
+              ],
+              [
+                {
+                  "x": -0.25,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.25,
+                  "y": -0.35
+                },
+                {
+                  "x": -0.15,
+                  "y": -0.27
+                },
+                {
+                  "x": -0.15,
+                  "y": 0.05
+                }
+              ],
+              [
+                {
+                  "x": -0.25,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.15,
+                  "y": 0.05
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.2
+                },
+                {
+                  "x": -0.15,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "pieces": [
+        {
+          "kind": "peg",
+          "startPosition": {
+            "x": 1.95,
+            "y": 3.5
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "tent_r",
+          "startPosition": {
+            "x": 1.1,
+            "y": 5.4
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "tent_l",
+          "startPosition": {
+            "x": -0.2,
+            "y": 4.2
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "backpack",
+          "startPosition": {
+            "x": -1.15,
+            "y": 2.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "pennant",
+          "startPosition": {
+            "x": 0.8,
+            "y": 3.2
+          },
+          "startRotation": 0
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -1.2,
+            "y": 0
+          },
+          {
+            "x": 2.18,
+            "y": 0
+          },
+          {
+            "x": 2.18,
+            "y": 0.4
+          },
+          {
+            "x": 2.0,
+            "y": 0.4
+          },
+          {
+            "x": 2.0,
+            "y": 0.3
+          },
+          {
+            "x": 0.85,
+            "y": 1.4
+          },
+          {
+            "x": 0.85,
+            "y": 1.48
+          },
+          {
+            "x": 0.65,
+            "y": 1.48
+          },
+          {
+            "x": 0.65,
+            "y": 1.8
+          },
+          {
+            "x": 1.05,
+            "y": 1.95
+          },
+          {
+            "x": 0.65,
+            "y": 2.1
+          },
+          {
+            "x": 0.55,
+            "y": 2.1
+          },
+          {
+            "x": 0.55,
+            "y": 1.4
+          },
+          {
+            "x": -0.6,
+            "y": 0.3
+          },
+          {
+            "x": -0.6,
+            "y": 0.7
+          },
+          {
+            "x": -1.2,
+            "y": 0.7
+          }
+        ],
+        "slots": [
+          {
+            "kind": "peg",
+            "position": {
+              "x": 2.09,
+              "y": -0.1
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "tent_r",
+            "position": {
+              "x": 1.35,
+              "y": 0.7
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "tent_l",
+            "position": {
+              "x": 0.05,
+              "y": 0.7
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "backpack",
+            "position": {
+              "x": -0.9,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "pennant",
+            "position": {
+              "x": 0.8,
+              "y": 1.75
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "staticGeometry": [
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -6,
+              "y": -1.0
+            },
+            {
+              "x": 1.82,
+              "y": -1.0
+            },
+            {
+              "x": 1.82,
+              "y": 0
+            },
+            {
+              "x": -6,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.82,
+              "y": -1.0
+            },
+            {
+              "x": 2.18,
+              "y": -1.0
+            },
+            {
+              "x": 2.18,
+              "y": -0.6
+            },
+            {
+              "x": 1.82,
+              "y": -0.6
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 2.18,
+              "y": -1.0
+            },
+            {
+              "x": 2.6,
+              "y": -1.0
+            },
+            {
+              "x": 2.6,
+              "y": -0.03
+            },
+            {
+              "x": 2.18,
+              "y": -0.03
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "collider": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -6,
+              "y": -1.0
+            },
+            {
+              "x": 2.6,
+              "y": -1.0
+            },
+            {
+              "x": 2.6,
+              "y": -0.03
+            },
+            {
+              "x": 2.18,
+              "y": -0.03
+            },
+            {
+              "x": 2.18,
+              "y": -0.6
+            },
+            {
+              "x": 1.82,
+              "y": -0.6
+            },
+            {
+              "x": 1.82,
+              "y": 0
+            },
+            {
+              "x": -6,
+              "y": 0
+            }
+          ]
+        }
+      ],
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -1.8,
+              "y": -0.7
+            },
+            "max": {
+              "x": 3.0,
+              "y": 1.0
+            }
+          },
+          "direction": {
+            "x": 1,
+            "y": 0
+          },
+          "acceleration": 6.0,
+          "color": "#CFE8F5"
+        }
+      ]
     }
   ]
 }
