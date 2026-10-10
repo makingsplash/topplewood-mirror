@@ -16171,6 +16171,405 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "diving_tower",
+      "seed": 447,
+      "difficultyTier": 10,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -3
+        },
+        "max": {
+          "x": 6,
+          "y": 8
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "tower_base",
+          "color": "#48699A",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 1.4,
+            "height": 1.6
+          }
+        },
+        {
+          "kind": "deck",
+          "color": "#5A55A3",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 2.0,
+            "height": 0.3
+          }
+        },
+        {
+          "kind": "board",
+          "color": "#CBA016",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 3.6,
+            "height": 0.2
+          }
+        },
+        {
+          "kind": "weight_a",
+          "color": "#8B5A9E",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.8,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.6,
+            "height": 0.6
+          }
+        },
+        {
+          "kind": "weight_b",
+          "color": "#2F8C86",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 2.2,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.5,
+            "height": 1.0
+          }
+        },
+        {
+          "kind": "diver",
+          "color": "#B8577A",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 3.7,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.55,
+            "height": 0.55
+          }
+        }
+      ],
+      "pieces": [
+        {
+          "kind": "tower_base",
+          "startPosition": {
+            "x": -1.7,
+            "y": 5.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "deck",
+          "startPosition": {
+            "x": -2.0,
+            "y": 3.75
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "board",
+          "startPosition": {
+            "x": -1.2,
+            "y": 6.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "weight_a",
+          "startPosition": {
+            "x": -2.7,
+            "y": 3.2
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "weight_b",
+          "startPosition": {
+            "x": -1.95,
+            "y": 4.5
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "diver",
+          "startPosition": {
+            "x": 0.325,
+            "y": 3.15
+          },
+          "startRotation": 0
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -2.4,
+            "y": 0
+          },
+          {
+            "x": -1.0,
+            "y": 0
+          },
+          {
+            "x": -1.0,
+            "y": 1.9
+          },
+          {
+            "x": 0.6,
+            "y": 1.9
+          },
+          {
+            "x": 0.6,
+            "y": 2.65
+          },
+          {
+            "x": 0.05,
+            "y": 2.65
+          },
+          {
+            "x": 0.05,
+            "y": 2.1
+          },
+          {
+            "x": -1.7,
+            "y": 2.1
+          },
+          {
+            "x": -1.7,
+            "y": 3.1
+          },
+          {
+            "x": -2.2,
+            "y": 3.1
+          },
+          {
+            "x": -2.2,
+            "y": 2.1
+          },
+          {
+            "x": -2.4,
+            "y": 2.1
+          },
+          {
+            "x": -2.4,
+            "y": 2.7
+          },
+          {
+            "x": -3.0,
+            "y": 2.7
+          },
+          {
+            "x": -3.0,
+            "y": 1.6
+          },
+          {
+            "x": -2.4,
+            "y": 1.6
+          }
+        ],
+        "slots": [
+          {
+            "kind": "tower_base",
+            "position": {
+              "x": -1.7,
+              "y": 0.8
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "deck",
+            "position": {
+              "x": -2.0,
+              "y": 1.75
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "board",
+            "position": {
+              "x": -1.2,
+              "y": 2.0
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "weight_a",
+            "position": {
+              "x": -2.7,
+              "y": 2.4
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "weight_b",
+            "position": {
+              "x": -1.95,
+              "y": 2.6
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "diver",
+            "position": {
+              "x": 0.325,
+              "y": 2.375
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "staticGeometry": [
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -6,
+              "y": -2.0
+            },
+            {
+              "x": -0.6,
+              "y": -2.0
+            },
+            {
+              "x": -0.6,
+              "y": 0
+            },
+            {
+              "x": -6,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.6,
+              "y": -2.0
+            },
+            {
+              "x": 1.7,
+              "y": -2.0
+            },
+            {
+              "x": 1.7,
+              "y": -1.4
+            },
+            {
+              "x": -0.6,
+              "y": -1.4
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.7,
+              "y": -2.0
+            },
+            {
+              "x": 6,
+              "y": -2.0
+            },
+            {
+              "x": 6,
+              "y": 0
+            },
+            {
+              "x": 1.7,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "collider": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -6,
+              "y": -2.0
+            },
+            {
+              "x": 6,
+              "y": -2.0
+            },
+            {
+              "x": 6,
+              "y": 0
+            },
+            {
+              "x": 1.7,
+              "y": 0
+            },
+            {
+              "x": 1.7,
+              "y": -1.4
+            },
+            {
+              "x": -0.6,
+              "y": -1.4
+            },
+            {
+              "x": -0.6,
+              "y": 0
+            },
+            {
+              "x": -6,
+              "y": 0
+            }
+          ]
+        }
+      ]
     }
   ]
 }
