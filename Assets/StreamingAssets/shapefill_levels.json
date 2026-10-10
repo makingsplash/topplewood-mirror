@@ -8455,10 +8455,11 @@
       "difficultyTier": 10,
       "physicsMode": "assembly",
       "winningOrder": [
+        0,
+        1,
         2,
         3,
-        4,
-        5
+        4
       ],
       "matchTolerance": {
         "posTol": 0.3,
@@ -8480,7 +8481,7 @@
       },
       "pieceTypes": [
         {
-          "kind": "tier1",
+          "kind": "base",
           "color": "#5A55A3",
           "symmetryOrder": 1,
           "material": {
@@ -8489,26 +8490,71 @@
             "restitution": 0.05
           },
           "shape": {
-            "primitive": "trapezoid",
-            "width": 1.4,
-            "topWidth": 1.1,
-            "height": 1.4
-          }
-        },
-        {
-          "kind": "tier2",
-          "color": "#B8577A",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "trapezoid",
-            "width": 1.1,
-            "topWidth": 0.9,
-            "height": 1.2
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.7,
+                "y": -1.3
+              },
+              {
+                "x": 0.7,
+                "y": -1.3
+              },
+              {
+                "x": 0.55,
+                "y": 0.1
+              },
+              {
+                "x": 0.45,
+                "y": 1.3
+              },
+              {
+                "x": -0.45,
+                "y": 1.3
+              },
+              {
+                "x": -0.55,
+                "y": 0.1
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.7,
+                  "y": -1.3
+                },
+                {
+                  "x": 0.7,
+                  "y": -1.3
+                },
+                {
+                  "x": 0.55,
+                  "y": 0.1
+                },
+                {
+                  "x": -0.55,
+                  "y": 0.1
+                }
+              ],
+              [
+                {
+                  "x": -0.55,
+                  "y": 0.1
+                },
+                {
+                  "x": 0.55,
+                  "y": 0.1
+                },
+                {
+                  "x": 0.45,
+                  "y": 1.3
+                },
+                {
+                  "x": -0.45,
+                  "y": 1.3
+                }
+              ]
+            ]
           }
         },
         {
@@ -8696,22 +8742,12 @@
       ],
       "pieces": [
         {
-          "kind": "tier1",
+          "kind": "base",
           "startPosition": {
             "x": 3.3,
-            "y": 1.7
+            "y": 9.95
           },
-          "startRotation": 0,
-          "preplaced": true
-        },
-        {
-          "kind": "tier2",
-          "startPosition": {
-            "x": 3.3,
-            "y": 3.0
-          },
-          "startRotation": 0,
-          "preplaced": true
+          "startRotation": 0
         },
         {
           "kind": "gallery",
@@ -8733,7 +8769,7 @@
           "kind": "near_rail",
           "startPosition": {
             "x": 2.45,
-            "y": 8.8
+            "y": 10.5
           },
           "startRotation": 0
         },
@@ -8803,18 +8839,10 @@
         ],
         "slots": [
           {
-            "kind": "tier1",
+            "kind": "base",
             "position": {
               "x": 3.3,
-              "y": 1.7
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "tier2",
-            "position": {
-              "x": 3.3,
-              "y": 3.0
+              "y": 2.3
             },
             "rotation": 0
           },
