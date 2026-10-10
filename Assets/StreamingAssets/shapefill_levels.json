@@ -9931,7 +9931,7 @@
           "kind": "rider",
           "startPosition": {
             "x": -0.2,
-            "y": 3.25
+            "y": 3.1
           },
           "startRotation": 0
         },
@@ -9939,7 +9939,7 @@
           "kind": "tail",
           "startPosition": {
             "x": -0.74,
-            "y": 6.6
+            "y": 3.55
           },
           "startRotation": 0
         },
