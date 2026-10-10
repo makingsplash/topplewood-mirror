@@ -186,11 +186,10 @@ namespace Gameplay.Sim
                     // proximity_eps — before trusting the reference-rest floor. Diagnostic only; never gates.
                     LogTouchClassification(level);
 
-                    IReadOnlyList<int[]> orders = null;
+                    List<(int[] Order, string PolicyId)> orders = null;
                     try
                     {
-                        orders = SolveSweepPlan.BuildOrders(
-                            TappableIndices(level), _maxFullPermute, _sampleCount, level.Seed, Debug.Log);
+                        orders = SweepOrders(level, Debug.Log);
                     }
                     catch (Exception e)
                     {
@@ -201,7 +200,7 @@ namespace Gameplay.Sim
                     if (!ok)
                         break;
 
-                    foreach (var order in orders)
+                    foreach (var (order, policyId) in orders)
                     {
                         var orderKey = string.Join("-", order);
                         for (var r = 0; r < _repeats; r++)
@@ -210,7 +209,7 @@ namespace Gameplay.Sim
                             try
                             {
                                 runs.Add(SimRun.Run(level, sim, new ReleaseOrderPolicy(order),
-                                    "release-order", orderKey, r, _maxSteps));
+                                    policyId, orderKey, r, _maxSteps));
                             }
                             catch (Exception e)
                             {
@@ -450,7 +449,7 @@ namespace Gameplay.Sim
             var patientPolicySolved = new Dictionary<string, int>();
             foreach (var r in patientRuns)
             {
-                if (r.PolicyId == "release-order")
+                if (r.PolicyId == "release-order" || r.PolicyId == SolveSweepPlan.PinnedPolicyId)
                 {
                     var key = r.LevelId + "|" + r.OrderKey;
                     if (!patientHashes.TryGetValue(key, out var set))
@@ -478,11 +477,10 @@ namespace Gameplay.Sim
                 if (level.PhysicsMode == PhysicsMode.Balance)
                     continue; // balance inserts a coalescence window between tap and release; gap composes with it
 
-                IReadOnlyList<int[]> orders;
+                List<(int[] Order, string PolicyId)> orders;
                 try
                 {
-                    orders = SolveSweepPlan.BuildOrders(
-                        TappableIndices(level), _maxFullPermute, _sampleCount, level.Seed, null);
+                    orders = SweepOrders(level, null);
                 }
                 catch (Exception e)
                 {
@@ -491,7 +489,7 @@ namespace Gameplay.Sim
                 }
 
                 var levelDiverged = false;
-                foreach (var order in orders)
+                foreach (var (order, _) in orders)
                 {
                     var orderKey = string.Join("-", order);
                     var impatientHashes = new HashSet<long>();
@@ -1337,6 +1335,24 @@ namespace Gameplay.Sim
                 if (!level.Pieces[i].Preplaced)
                     indices.Add(i);
             return indices;
+        }
+
+        // TASK-427: every release order the sweep tries for a level, each tagged with the PolicyId its runs carry —
+        // SolveSweepPlan's orders as "release-order" (exhaustive, or the seeded sample above _maxFullPermute), then,
+        // for a sampled level only, its authored winningOrder as SolveSweepPlan.PinnedPolicyId. The gated sweep and
+        // the timing pass both read this one list, so the pinned order also gets its fast-play row.
+        private List<(int[] Order, string PolicyId)> SweepOrders(LevelData level, Action<string> log)
+        {
+            var tappable = TappableIndices(level);
+            var orders = new List<(int[] Order, string PolicyId)>();
+            foreach (var order in SolveSweepPlan.BuildOrders(tappable, _maxFullPermute, _sampleCount, level.Seed, log))
+                orders.Add((order, "release-order"));
+
+            var pinned = SolveSweepPlan.PinnedOrder(tappable, _maxFullPermute, level.WinningOrder,
+                log == null ? null : msg => log($"{msg} [{level.LevelId}]"));
+            if (pinned != null)
+                orders.Add((pinned, SolveSweepPlan.PinnedPolicyId));
+            return orders;
         }
 
         private static int[] Identity(int n)
