@@ -7350,12 +7350,13 @@
       "difficultyTier": 8,
       "physicsMode": "assembly",
       "winningOrder": [
-        2,
+        0,
         4,
-        6,
         3,
         1,
-        5
+        2,
+        5,
+        6
       ],
       "matchTolerance": {
         "posTol": 0.3,
@@ -7799,10 +7800,9 @@
           "kind": "crown",
           "startPosition": {
             "x": 0.0,
-            "y": 5.4
+            "y": 6.7
           },
-          "startRotation": 0,
-          "preplaced": true
+          "startRotation": 0
         },
         {
           "kind": "basket_l",
