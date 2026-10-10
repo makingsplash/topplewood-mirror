@@ -9,8 +9,10 @@ namespace Gameplay.View
     /// <summary>
     /// Fits the orthographic <c>Camera.main</c> to the level content on load (TASK-009, RFC 07 §1). The
     /// bringup scene's camera is fixed, so tall levels (L5 snowman stacks to y≈8) fall outside the viewport
-    /// and their top pieces become untappable → the level is unwinnable. This view-side seam frames the union
-    /// AABB of the pieces + target slots + static geometry so every piece is on screen and tappable.
+    /// and their top pieces become untappable → the level is unwinnable. This view-side seam frames the box
+    /// <see cref="CameraFramingMath.TryContentBounds"/> returns — the pieces + target slots + air zones, with static
+    /// geometry counted only vertically inside their X span (TASK-442: a wide floor runs off the screen edges
+    /// instead of shrinking the level) — so every piece is on screen and tappable.
     ///
     /// Registered BEFORE <see cref="TargetPreviewPresenter"/> (RFC 07 §1.1): the preview anchors to a
     /// <c>Camera.main</c> viewport point, so the camera must be framed first. Both re-fire on LevelLoaded, so a
