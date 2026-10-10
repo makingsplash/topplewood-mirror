@@ -59,8 +59,9 @@
 | Проектные post-build шаги | там же | контракт экрана: регистрация в загрузчике ассетов, генерация констант, атласы |
 
 В этом проекте примеры лежат в `Assets/Game/Scripts/Editor/UiBuild/`:
-`SafeAreaHandler` (обёртка над компонентом safe-area) и `ScreenRegistrationStep` (Addressables +
-слияние констант экранов).
+`SafeAreaHandler` (обёртка над компонентом safe-area), `ScreenRegistrationStep` (Addressables +
+слияние констант экранов) и `RevealHandlers.cs` — анимация показа экрана данными (`Reveal` на узле,
+`ScreenReveal` на корне как `IWindowAnimator`, пост-шаг сверки; DOTween + SayKit-стек).
 
 ## Точки расширения
 

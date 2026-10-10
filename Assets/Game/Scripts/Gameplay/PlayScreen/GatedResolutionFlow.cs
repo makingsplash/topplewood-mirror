@@ -112,7 +112,7 @@ namespace Gameplay.PlayScreen
 
             // Settle-beat before the panel appears (design 01-game-designer.md §96, range 1.0–1.5s; number lives
             // in PlayScreenConfig.LoseSettleSeconds, not a constant — open tuning lever for game-balancer against
-            // the working screen). No fade: IWindowAnimator is absent (TASK-121), so v1 shows instantly.
+            // the working screen). The panel's own show-animation is data on the prefab (ScreenReveal, TASK-425).
             await UniTask.Delay(TimeSpan.FromSeconds(_config.LoseSettleSeconds), cancellationToken: ct);
 
             var screen = await Service.UI.Show<LoseScreen>(ScreenNames.LoseScreen);
