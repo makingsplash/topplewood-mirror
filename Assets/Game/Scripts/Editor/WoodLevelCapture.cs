@@ -263,6 +263,12 @@ namespace Game.Editor
         /// пикселей на пере-масштабе). <c>WOOD_CAPTURE_ZOOM</c> — длинная сторона кропа в px (дефолт
         /// <see cref="DefaultZoom"/>). Нет env ⇒ поведение как раньше (только start/target во весь кадр).
         /// </para>
+        ///
+        /// <para>
+        /// TASK-442 — АСПЕКТ: env <c>WOOD_CAPTURE_SIZE</c> (<c>WxH</c>, обёртка — <c>render-level.sh --size</c>)
+        /// задаёт размер полного кадра, а значит и аспект, на котором судится кадрирование. Нет env ⇒ прежние
+        /// 853×1517 (9:16); кривое значение ⇒ <c>Exit(2)</c> с причиной, без подстановки.
+        /// </para>
         /// </summary>
         public static void CaptureForRole()
         {
@@ -299,6 +305,19 @@ namespace Game.Editor
                                "дефолта у тулы нет (директива портируемости CLAUDE.md)");
                 EditorApplication.Exit(2);
                 return;
+            }
+
+            // Размер кадра = аспект, на котором судится кадрирование (TASK-442). Нет env ⇒ прежний 9:16.
+            if (!TryParseSize(out var size))
+            {
+                EditorApplication.Exit(2);
+                return;
+            }
+            if (size.HasValue)
+            {
+                Width = size.Value.w;
+                Height = size.Value.h;
+                Debug.Log($"[render] WOOD_CAPTURE_SIZE: кадр {Width}x{Height} (аспект {Width / (float)Height:0.####})");
             }
 
             var crops = ParseCrops();
@@ -885,6 +904,34 @@ namespace Game.Editor
             if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var z) && z >= 64 && z <= 4096)
                 return z;
             return DefaultZoom;
+        }
+
+        /// <summary>
+        /// Размер полного кадра из env <c>WOOD_CAPTURE_SIZE</c> (<c>WxH</c> в px, 64..8192 по стороне — тот же
+        /// диапазон, что валидирует <c>render-level.sh --size</c>). Нет env ⇒ <c>true</c> и <c>null</c>: кадр
+        /// прежний. Кривое значение ⇒ <c>LogError</c> с причиной и <c>false</c> — вызывающий выходит с кодом 2:
+        /// молча снять кадр на другом аспекте значит принять кадрирование, которое никто не заказывал.
+        /// </summary>
+        private static bool TryParseSize(out (int w, int h)? size)
+        {
+            size = null;
+            var raw = System.Environment.GetEnvironmentVariable("WOOD_CAPTURE_SIZE");
+            if (string.IsNullOrWhiteSpace(raw))
+                return true;
+
+            var parts = raw.Trim().Split('x');
+            if (parts.Length != 2 ||
+                !int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out var w) ||
+                !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var h) ||
+                w < 64 || h < 64 || w > 8192 || h > 8192)
+            {
+                Debug.LogError($"[render] WOOD_CAPTURE_SIZE='{raw}' не разобран: ждал WxH в px, 64..8192 по стороне " +
+                               "(например 738x1600) — кадр на непрошеном аспекте не снимаю");
+                return false;
+            }
+
+            size = (w, h);
+            return true;
         }
 
         private static bool TryFloat(string s, out float v)

@@ -21,8 +21,13 @@ namespace Gameplay.Core
         /// </summary>
         public const float AirZoneFanReserve = 1.15f;
 
-        /// <summary>Union AABB (world space) of every piece's start silhouette, the target slots and the static
-        /// geometry — the full content the player must see and reach. Returns false when there is no content.</summary>
+        /// <summary>World-space AABB the camera frames (TASK-442). The DYNAMIC content sets the box: every piece's
+        /// start silhouette, the target slots and the air zones with their fan reserve. Static geometry only extends
+        /// the box VERTICALLY, and only with the part of it that lies inside the dynamic X span (each outline edge is
+        /// clipped to that span; a closed block also contributes its closing edge, an open surface does not) — a
+        /// wide floor no longer widens the frame, it runs off the screen edges. With no dynamic content at all the
+        /// box falls back to the full static AABB. Returns false when there is no content. The result is always a
+        /// subset of the union AABB of dynamic + all static, so the derived orthoSize never grows.</summary>
         public static bool TryContentBounds(LevelData level, out Vec2 min, out Vec2 max)
         {
             min = default;
@@ -70,20 +75,6 @@ namespace Gameplay.Core
                 }
             }
 
-            if (level.StaticGeometry != null)
-            {
-                foreach (var poly in level.StaticGeometry)
-                {
-                    if (poly?.Outline == null)
-                        continue;
-                    foreach (var v in poly.Outline)
-                    {
-                        Accumulate(v, ref minX, ref minY, ref maxX, ref maxY);
-                        any = true;
-                    }
-                }
-            }
-
             // Зоны воздуха и КОРПУС ВЕНТИЛЯТОРА. Сама зона почти всегда лежит внутри контента, а вот
             // вентилятор стоит СНАРУЖИ входной грани — и на узком телефоне его резало краем кадра:
             // замер piggy_bank дал 0.45 мировой единицы за левым краем при 19.5:9 и 20:9, при 9:16 и
@@ -125,6 +116,34 @@ namespace Gameplay.Core
                 }
             }
 
+            // СТАТИКА (TASK-442). Кадр задаёт динамика выше; статика добавляет только ВЫСОТУ и только ту свою
+            // часть, что лежит в X-пролёте динамики. Широкий пол (±7 у волны 31–35) прежде задавал ширину кадра
+            // и отдалял уровень в 2–3 раза; теперь он обрезается краями экрана и читается бесконечным — решение
+            // владельца 2026-10-10. Без динамики (чистая сцена) — прежний полный AABB статики.
+            if (level.StaticGeometry != null)
+            {
+                if (any)
+                {
+                    var slabMin = minX;
+                    var slabMax = maxX;
+                    foreach (var poly in level.StaticGeometry)
+                        AccumulateStaticInSlab(poly, slabMin, slabMax, ref minY, ref maxY);
+                }
+                else
+                {
+                    foreach (var poly in level.StaticGeometry)
+                    {
+                        if (poly?.Outline == null)
+                            continue;
+                        foreach (var v in poly.Outline)
+                        {
+                            Accumulate(v, ref minX, ref minY, ref maxX, ref maxY);
+                            any = true;
+                        }
+                    }
+                }
+            }
+
             if (!any)
                 return false;
 
@@ -157,6 +176,59 @@ namespace Gameplay.Core
             if (v.Y < minY) minY = v.Y;
             if (v.X > maxX) maxX = v.X;
             if (v.Y > maxY) maxY = v.Y;
+        }
+
+        // Y-экстремумы части статики внутри полосы x∈[xmin,xmax]. У многоугольника, обрезанного выпуклой полосой,
+        // экстремумы по Y лежат на концах обрезанных рёбер (новые рёбра на x=xmin/xmax соединяют те же точки),
+        // поэтому клипа рёбер достаточно — и для вогнутого контура, и для открытой ломаной surface.
+        private static void AccumulateStaticInSlab(Polygon poly, float xmin, float xmax, ref float minY, ref float maxY)
+        {
+            var outline = poly?.Outline;
+            if (outline == null || outline.Length == 0)
+                return;
+
+            if (outline.Length == 1)
+            {
+                ClipEdgeToSlabY(outline[0], outline[0], xmin, xmax, ref minY, ref maxY);
+                return;
+            }
+
+            for (var i = 0; i + 1 < outline.Length; i++)
+                ClipEdgeToSlabY(outline[i], outline[i + 1], xmin, xmax, ref minY, ref maxY);
+            if (!poly.IsSurface)
+                ClipEdgeToSlabY(outline[outline.Length - 1], outline[0], xmin, xmax, ref minY, ref maxY);
+        }
+
+        // Liang–Barsky по одной оси: обрезает отрезок a→b полосой x∈[xmin,xmax] и расширяет minY/maxY концами
+        // обрезанной части. Ребро целиком вне полосы ничего не даёт.
+        private static void ClipEdgeToSlabY(Vec2 a, Vec2 b, float xmin, float xmax, ref float minY, ref float maxY)
+        {
+            var dx = b.X - a.X;
+            var dy = b.Y - a.Y;
+            float tEnter, tExit;
+            if (dx == 0f)
+            {
+                if (a.X < xmin || a.X > xmax)
+                    return;
+                tEnter = 0f;
+                tExit = 1f;
+            }
+            else
+            {
+                var t0 = (xmin - a.X) / dx;
+                var t1 = (xmax - a.X) / dx;
+                tEnter = MathF.Max(0f, MathF.Min(t0, t1));
+                tExit = MathF.Min(1f, MathF.Max(t0, t1));
+                if (tEnter > tExit)
+                    return;
+            }
+
+            var y0 = a.Y + dy * tEnter;
+            var y1 = a.Y + dy * tExit;
+            if (y0 < minY) minY = y0;
+            if (y0 > maxY) maxY = y0;
+            if (y1 < minY) minY = y1;
+            if (y1 > maxY) maxY = y1;
         }
 
         // Slots carry only a Kind; recover each Kind's shape from the pieces the level ships (mirrors
