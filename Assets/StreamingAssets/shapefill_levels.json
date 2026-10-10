@@ -9144,6 +9144,8 @@
       "difficultyTier": 10,
       "physicsMode": "assembly",
       "winningOrder": [
+        0,
+        1,
         2,
         3,
         6,
@@ -9331,25 +9333,23 @@
           "kind": "wheel",
           "startPosition": {
             "x": -1.5,
-            "y": 0.0
+            "y": 5.3
           },
-          "startRotation": 0,
-          "preplaced": true
+          "startRotation": 0
         },
         {
           "kind": "wheel",
           "startPosition": {
             "x": 0.9,
-            "y": 0.0
+            "y": 5.3
           },
-          "startRotation": 0,
-          "preplaced": true
+          "startRotation": 0
         },
         {
           "kind": "frame",
           "startPosition": {
             "x": -0.3,
-            "y": 5.0
+            "y": 6.7
           },
           "startRotation": 0
         },
