@@ -15274,6 +15274,401 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "circus_board",
+      "winningOrder": [
+        4,
+        5,
+        6,
+        0,
+        1,
+        2,
+        3
+      ],
+      "seed": 450,
+      "difficultyTier": 11,
+      "physicsMode": "catapult",
+      "freezeLoadsAtRest": true,
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.43633
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -6
+        },
+        "max": {
+          "x": 6,
+          "y": 10
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "tumba",
+          "color": "#8B5A9E",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 2.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 2.6,
+            "height": 1.0
+          }
+        },
+        {
+          "kind": "board",
+          "color": "#CBA016",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 4.0,
+            "height": 0.4
+          }
+        },
+        {
+          "kind": "acrobat",
+          "color": "#B8577A",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.5,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "strongman",
+          "color": "#5A55A3",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 2.6,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.8,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "porter",
+          "color": "#48699A",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 1.4,
+            "height": 1.3
+          }
+        },
+        {
+          "kind": "middle",
+          "color": "#2F8C86",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 1.0,
+            "height": 1.5
+          }
+        },
+        {
+          "kind": "top_man",
+          "color": "#5C8E3E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 0.8,
+            "topWidth": 1.4,
+            "height": 1.2
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": 3.5,
+            "y": 0
+          },
+          {
+            "x": 4.9,
+            "y": 0
+          },
+          {
+            "x": 4.9,
+            "y": 1.3
+          },
+          {
+            "x": 4.7,
+            "y": 1.3
+          },
+          {
+            "x": 4.7,
+            "y": 2.8
+          },
+          {
+            "x": 4.6,
+            "y": 2.8
+          },
+          {
+            "x": 4.9,
+            "y": 4.0
+          },
+          {
+            "x": 4.7,
+            "y": 4.0
+          },
+          {
+            "x": 4.7,
+            "y": 5.0
+          },
+          {
+            "x": 3.7,
+            "y": 5.0
+          },
+          {
+            "x": 3.7,
+            "y": 4.0
+          },
+          {
+            "x": 3.5,
+            "y": 4.0
+          },
+          {
+            "x": 3.8,
+            "y": 2.8
+          },
+          {
+            "x": 3.7,
+            "y": 2.8
+          },
+          {
+            "x": 3.7,
+            "y": 1.3
+          },
+          {
+            "x": 3.5,
+            "y": 1.3
+          }
+        ],
+        "slots": [
+          {
+            "kind": "porter",
+            "position": {
+              "x": 4.2,
+              "y": 0.65
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "middle",
+            "position": {
+              "x": 4.2,
+              "y": 2.05
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "top_man",
+            "position": {
+              "x": 4.2,
+              "y": 3.4
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "acrobat",
+            "position": {
+              "x": 4.2,
+              "y": 4.5
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "tumba",
+          "startPosition": {
+            "x": -2.2,
+            "y": 5.95
+          },
+          "startRotation": 0,
+          "expendable": true
+        },
+        {
+          "kind": "board",
+          "startPosition": {
+            "x": -1.05,
+            "y": 3.8
+          },
+          "startRotation": 0,
+          "expendable": true
+        },
+        {
+          "kind": "acrobat",
+          "startPosition": {
+            "x": -2.05,
+            "y": 4.75
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "strongman",
+          "startPosition": {
+            "x": 0.25,
+            "y": 9.8
+          },
+          "startRotation": 0,
+          "expendable": true
+        },
+        {
+          "kind": "porter",
+          "startPosition": {
+            "x": 4.2,
+            "y": 8.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "middle",
+          "startPosition": {
+            "x": 4.2,
+            "y": 5.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "top_man",
+          "startPosition": {
+            "x": 4.2,
+            "y": 7.4
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.5,
+              "y": -1.0
+            },
+            {
+              "x": -0.9,
+              "y": -1.0
+            },
+            {
+              "x": -0.9,
+              "y": 1.5
+            },
+            {
+              "x": -3.5,
+              "y": 1.5
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 3.4,
+              "y": -0.3
+            },
+            {
+              "x": 5.1,
+              "y": -0.3
+            },
+            {
+              "x": 5.1,
+              "y": 0
+            },
+            {
+              "x": 3.4,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 5.0,
+              "y": 3.9
+            },
+            {
+              "x": 5.1,
+              "y": 3.9
+            },
+            {
+              "x": 5.1,
+              "y": 5.6
+            },
+            {
+              "x": 5.0,
+              "y": 5.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 3.3,
+              "y": 3.9
+            },
+            {
+              "x": 3.4,
+              "y": 3.9
+            },
+            {
+              "x": 3.4,
+              "y": 5.2
+            },
+            {
+              "x": 3.3,
+              "y": 5.2
+            }
+          ]
+        }
+      ]
     }
   ]
 }
