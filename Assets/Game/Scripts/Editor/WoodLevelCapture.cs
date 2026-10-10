@@ -491,10 +491,18 @@ namespace Game.Editor
             // fixedTimeStep: TRUE обязателен. С false Unity прогоняет весь интервал ОДНИМ шагом, и
             // частицы либо улетают за кадр, либо сразу переживают своё время жизни — на кадре поток
             // выглядел неподвижной полоской у входной грани.
-            foreach (var ps in Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
-            {
+            var systems = Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None);
+            foreach (var ps in systems)
                 ps.Simulate(3f, true, true, true);
 
+            // Срез потока по области зоны (TASK-448). В игре его делает LateUpdate, а здесь время не
+            // течёт — без явного вызова кадр приёмки показывал бы полосы за зоной, которых в игре нет.
+            // Упреждения ноль: следующего кадра у съёмки не будет.
+            foreach (var clip in Object.FindObjectsByType<AirFlowClip>(FindObjectsSortMode.None))
+                Debug.Log($"[air] срез по зоне {clip.transform.parent.name}: погашено {clip.Apply(0f)} частиц");
+
+            foreach (var ps in systems)
+            {
                 // Диагностика: сколько частиц живо и в каком объёме они разлетелись. Без неё
                 // «поток стоит» приходилось лечить наугад — три попытки подряд мимо.
                 var buf = new ParticleSystem.Particle[ps.main.maxParticles];

@@ -21,9 +21,17 @@ namespace Gameplay.View
     {
         // Pieces live at z=0; larger z = further from the +Z-facing camera (see BlockMaterial). Keep the whole zone
         // behind pieces, and layer fill < emitter < arrows within the zone so the cue reads over the fill.
-        private const float ZFill = 0.7f;
+        //
+        // Поток стоит ЗА статикой (0.5) и визуальной массой (0.55), а не на одной глубине с массой: на 0.55
+        // ленты ветра ложились поверх рампы kangaroo_pouch (TASK-448). Перед тенями деталей на стене (0.9).
+        private const float ZFill = 0.88f;
         private const float ZEmitter = 0.6f;
-        private const float ZArrow = 0.55f;
+        private const float ZFlow = 0.72f;
+
+        /// <summary>Полуширина полосы глубины, в которой живёт поток: 0.6..0.84, то есть строго между
+        /// вентилятором/массой спереди и заливкой/тенями сзади. Камера ортографическая — на кадре
+        /// глубины не видно, она решает только, кто кого перекрывает.</summary>
+        private const float FlowDepthHalf = 0.12f;
 
         /// <summary>Лицо арта вентилятора смотрит на +Y (кадр 456×252 — наклонённый диск), поэтому
         /// поворот к потоку отсчитывается отсюда, а не от +X как у стрелки.</summary>
@@ -272,7 +280,7 @@ namespace Gameplay.View
                                          * (dir.x < 0f ? Quaternion.Euler(0f, 0f, 180f) : Quaternion.identity);
             go.transform.localScale = Vector3.one * scale;
             var origin = faceCentre + dir * (DonorWindNativeSpan * scale);
-            go.transform.localPosition = new Vector3(origin.x, origin.y, ZArrow);
+            go.transform.localPosition = new Vector3(origin.x, origin.y, ZFlow);
 
             // Конус на ВСЕХ зонах, боковых тоже: развилка «горизонталь донорской лентой» убрана
             // по указанию владельца. Основание конуса — по ширине вентилятора (WindConeStart = 1),
@@ -297,8 +305,21 @@ namespace Gameplay.View
             foreach (var r in go.GetComponentsInChildren<Renderer>(true))
                 r.sortingOrder = FlowSortingOrder;
 
+            ClipToRegion(go, min, max);
             PlayFlow(go);
             return true;
+        }
+
+        /// <summary>
+        /// Поток рисуется ТОЛЬКО внутри области силы (TASK-448). Ветер — видимая сила, и полосы там,
+        /// где не дует, врут игроку о том, куда дует: у kangaroo_pouch они шли через всю фигуру до
+        /// края экрана. Долёт (<c>WindReachSide</c> 3.2 длины зоны) и раскрытие конуса
+        /// (<c>WindConeEnd</c> 1.1) остаются ползунками, но наружу из зоны больше не выносят.
+        /// </summary>
+        private static void ClipToRegion(GameObject root, Vector2 min, Vector2 max)
+        {
+            root.AddComponent<AirFlowClip>().Bind(root.GetComponentsInChildren<ParticleSystem>(true),
+                min, max, ZFlow - FlowDepthHalf, ZFlow + FlowDepthHalf);
         }
 
         /// <summary>
@@ -375,7 +396,10 @@ namespace Gameplay.View
                 return;
 
             var reach = Mathf.Max(reachInSpans, 0.1f);
-            var r0 = Mathf.Max(fanRadius * tuning.WindConeStart, 0.01f);
+            // Основание конуса не шире самой зоны. У узкой зоны вентилятор шире её поперечника
+            // (golf_cup: высота зоны 1.05), и без зажима частицы рождались уже за границей области
+            // силы — срез гасил их на первом же кадре, 103 из 145.
+            var r0 = Mathf.Clamp(fanRadius * tuning.WindConeStart, 0.01f, Mathf.Max(crossSpan * 0.5f, 0.01f));
             var r1 = Mathf.Max(crossSpan * 0.5f * tuning.WindConeEnd, r0);
             var angle = Mathf.Clamp(Mathf.Atan2(r1 - r0, span) * Mathf.Rad2Deg, 0f,
                 Mathf.Max(tuning.WindConeMaxAngle, 0f));
@@ -407,6 +431,14 @@ namespace Gameplay.View
                     continue;
 
                 Prewarm(main);
+
+                // ГЛУБИНА ЭМИТТЕРА. В префабе эмиттеры стоят на локальной y = 1, а локальная Y корня после
+                // LookRotation(поток, +Z) — это мировая глубина. Значит, поток висел на ZFlow ± масштаб
+                // зоны: 0.53 у вертикальной зоны, и знак зависел от того, куда дует (у зоны «влево»
+                // корень докручен на 180°). На прежних 0.55 это ставило ленты левых зон почти вровень
+                // с деталями (0.02), а правых — за тени на стене. Сажаем каждый эмиттер ровно на ZFlow.
+                var at = ps.transform.position;
+                ps.transform.position = new Vector3(at.x, at.y, root.transform.position.z);
 
                 // ЛЕНТЫ — НА КАМЕРУ. Видимый ветер это не частицы, а их ХВОСТЫ: у всех трёх систем
                 // потока режим отрисовки None, рисуется только трейл. И выровнены эти ленты по осям
@@ -460,11 +492,53 @@ namespace Gameplay.View
 
                 // После разворота локальная Y формы смотрит в ГЛУБИНУ. Сплющиваем по ней: камера
                 // ортографическая, глубину не видно, а разлёт по ней зря растаскивает частицы.
-                shape.scale = new Vector3(1f, Mathf.Clamp01(tuning.WindConeFlat), 1f);
+                //
+                // Ползунок ограничен сверху полосой глубины потока: разлёт по глубине ≈ конечный радиус ×
+                // сплющивание, и у широкой зоны (piggy_bank, r1 ≈ 3.4) родные 0.12 давали ±0.4 — поток
+                // вылезал перед статикой. Срез по глубине (AirFlowClip) гасил бы такие частицы пачками,
+                // а на кадре разницы между 0.12 и 0.02 нет: глубину ортокамера не показывает.
+                var flat = Mathf.Min(Mathf.Clamp01(tuning.WindConeFlat), FlowDepthHalf * 0.5f / r1);
+                shape.scale = new Vector3(1f, flat, 1f);
+                FlattenNoise(ps, depth);
 
                 ApplyLifeAndDensity(ps, main, span, reach, speed, scale,
                     Mathf.Cos(angle * Mathf.Deg2Rad), tuning);
             }
+        }
+
+        /// <summary>
+        /// Шум донорского потока дует по всем трём осям одинаково — значит, и в глубину, где его не видно,
+        /// но где он уводит ленты из-за массы вперёд, поверх рампы. Гасим шум ТОЛЬКО по оси глубины:
+        /// экранный рисунок струи (две другие оси) остаётся донорским.
+        ///
+        /// <paramref name="depth"/> — мировой +Z в локальных осях эмиттера. Эмиттеры донора повёрнуты
+        /// на прямые углы, поэтому глубина ложится на одну локальную ось; берём ту, где её больше.
+        /// </summary>
+        private static void FlattenNoise(ParticleSystem ps, Vector3 depth)
+        {
+            var noise = ps.noise;
+            if (!noise.enabled)
+                return;
+
+            if (!noise.separateAxes)
+            {
+                var strength = noise.strength;
+                noise.separateAxes = true;
+                noise.strengthX = strength;
+                noise.strengthY = strength;
+                noise.strengthZ = strength;
+            }
+
+            var ax = Mathf.Abs(depth.x);
+            var ay = Mathf.Abs(depth.y);
+            var az = Mathf.Abs(depth.z);
+            var none = new ParticleSystem.MinMaxCurve(0f);
+            if (ax >= ay && ax >= az)
+                noise.strengthX = none;
+            else if (ay >= az)
+                noise.strengthY = none;
+            else
+                noise.strengthZ = none;
         }
 
         /// <summary>
@@ -519,7 +593,7 @@ namespace Gameplay.View
 
             var go = new GameObject("Flow");
             go.transform.SetParent(transform, false);
-            go.transform.localPosition = new Vector3(faceCentre.x, faceCentre.y, ZArrow);
+            go.transform.localPosition = new Vector3(faceCentre.x, faceCentre.y, ZFlow);
 
             // Эмиттер развёрнут так, что его СОБСТВЕННАЯ ось выброса (+Z у Box-формы) смотрит вдоль
             // потока, а локальный X ложится поперёк в плоскости экрана (up = мировой +Z даёт именно
@@ -586,6 +660,8 @@ namespace Gameplay.View
             renderer.sortingOrder = FlowSortingOrder;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
+
+            ClipToRegion(go, min, max);
         }
 
         /// <summary>Диапазон скорости по оси: разброс ±15% вдоль потока плюс поперечное дрожание.
@@ -721,7 +797,7 @@ namespace Gameplay.View
                 var pos = start + dir * (i * ArrowSpacing);
                 var go = new GameObject($"Arrow_{i}");
                 go.transform.SetParent(transform, false);
-                go.transform.localPosition = new Vector3(pos.x, pos.y, ZArrow);
+                go.transform.localPosition = new Vector3(pos.x, pos.y, ZFlow);
                 go.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
                 go.transform.localScale = new Vector3(scale, scale, 1f);
                 var sr = go.AddComponent<SpriteRenderer>();
