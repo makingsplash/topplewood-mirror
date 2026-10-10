@@ -62,8 +62,10 @@ namespace Gameplay.Core
         /// "next piece" (<see cref="Gameplay.Core.Mechanic.NextHintResolver"/>), and, later, of the tutorial (closes
         /// the dormant TASK-078/079 hardcode). Absent → null → the hint is a no-op (it never GUESSES an order). The
         /// order is the sim's deterministic winning policy order (slot-ascending for assembly, pair-release for
-        /// balance/catapult), so "the hint never lies" is true by construction (balancer §7). The sim does NOT read
-        /// this field (its bot policies compute their own order) → poseHash is byte-for-byte; consumers guard on null
+        /// balance/catapult), so "the hint never lies" is true by construction (balancer §7). The sim's bot policies
+        /// compute their own orders; since TASK-427 the sweep ALSO replays this order as a separate bucket
+        /// (<see cref="Gameplay.Core.Sim.SolveSweepPlan.PinnedOrder"/>) on levels too large to enumerate, so a narrow
+        /// winning set stays provable — it never alters any other run's poseHash; consumers guard on null
         /// (mirrors <see cref="AirZones"/>/<see cref="Decoys"/>/<see cref="StaticVisuals"/>).</summary>
         public IReadOnlyList<int> WinningOrder { get; set; }
 

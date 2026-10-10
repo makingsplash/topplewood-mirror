@@ -12,9 +12,62 @@ namespace Gameplay.Core.Sim
     /// mapping is identity and the orders are byte-for-byte the pre-TASK-031 set. For a small tappable count it
     /// enumerates EVERY permutation (exhaustive solvability proof); above the threshold it draws a seeded sample
     /// and logs the fallback plus how many orders go uncovered — no silent cap.
+    /// TASK-427: the seeded sample alone cannot PROVE a level whose winning set is narrower than ~1/sampleCount of the
+    /// permutations (a 6-piece level with one winner out of 720 reads WINNABLE 0/1 although it is solvable). So above
+    /// the threshold the level's authored <c>winningOrder</c> is tried as well — see <see cref="PinnedOrder"/>. It is a
+    /// SEPARATE bucket (<see cref="PinnedPolicyId"/>), not mixed into the sample: the random sample stays byte-for-byte
+    /// what it was, and the loseability audit (arbitrary orders only) never counts the authored winner.
     /// </summary>
     public static class SolveSweepPlan
     {
+        /// <summary>PolicyId of the runs that replay the level's authored winning order (TASK-427). The gate
+        /// (sim-gate.py: any (policy, order) solved in every repeat) accepts it like any other order; the
+        /// loseability audit, which counts only "release-order" runs, ignores it by construction.</summary>
+        public const string PinnedPolicyId = "winning-order";
+
+        /// <summary>
+        /// The authored winning order to try IN ADDITION to the seeded sample, or null when there is nothing to pin:
+        /// the level is enumerated exhaustively (n ≤ <paramref name="maxFullPermute"/> — the order is already among
+        /// the permutations), it has no <c>winningOrder</c>, or that order is not a full permutation of the tappable
+        /// pieces (a partial / preplaced-referencing order cannot be replayed as a release order; the reason is
+        /// logged, never silently dropped). The order is level DATA, not a gate knob: a wrong order simply loses and
+        /// proves nothing, so pinning it cannot turn an unsolvable level green.
+        /// </summary>
+        public static int[] PinnedOrder(
+            IReadOnlyList<int> tappableIndices, int maxFullPermute, IReadOnlyList<int> winningOrder, Action<string> log)
+        {
+            if (tappableIndices.Count <= maxFullPermute || winningOrder == null)
+                return null;
+
+            var tappable = new HashSet<int>(tappableIndices);
+            var seen = new HashSet<int>();
+            foreach (var index in winningOrder)
+            {
+                if (!tappable.Contains(index) || !seen.Add(index))
+                {
+                    log?.Invoke($"[level-sim] winningOrder [{string.Join(",", winningOrder)}] is not a permutation of " +
+                                $"the {tappableIndices.Count} tappable pieces [{string.Join(",", tappableIndices)}] " +
+                                "— NOT pinned; the seeded sample alone decides winnability.");
+                    return null;
+                }
+            }
+
+            if (seen.Count != tappable.Count)
+            {
+                log?.Invoke($"[level-sim] winningOrder [{string.Join(",", winningOrder)}] covers {seen.Count} of " +
+                            $"{tappable.Count} tappable pieces — NOT pinned; the seeded sample alone decides winnability.");
+                return null;
+            }
+
+            var pinned = new int[winningOrder.Count];
+            for (var i = 0; i < pinned.Length; i++)
+                pinned[i] = winningOrder[i];
+
+            log?.Invoke($"[level-sim] pinned winningOrder {string.Join("-", pinned)} as policy '{PinnedPolicyId}' " +
+                        "(authored order, tried in addition to the seeded sample; not counted by loseability).");
+            return pinned;
+        }
+
         public static IReadOnlyList<int[]> BuildOrders(
             IReadOnlyList<int> tappableIndices, int maxFullPermute, int sampleCount, int seed, Action<string> log)
         {
