@@ -52,7 +52,8 @@ namespace Ui.Screens
                 _x2Button.onClick.RemoveListener(OnClickX2);
         }
 
-        /// <param name="reward">Coins credited for this win. 0 (a replay) hides the reward row instead of "+0".</param>
+        /// <param name="reward">Coins credited for this win (every win pays, a replay included — TASK-432).
+        /// 0 (only a misconfigured reward table) hides the reward row instead of "+0".</param>
         /// <param name="x2Available">Show the ×2 button (owner: visible stub from <c>WinScreenX2ButtonStartLevel</c>).</param>
         /// <param name="onX2">Invoked on a ×2 tap — the reward-doubler stub; does NOT close the screen (the player
         /// still taps Next).</param>
