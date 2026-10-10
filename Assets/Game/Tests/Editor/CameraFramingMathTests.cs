@@ -7,8 +7,8 @@ namespace Gameplay.Tests
 {
     /// <summary>
     /// TASK-442 scene-free tests of <see cref="CameraFramingMath.TryContentBounds"/>: the DYNAMIC content (pieces,
-    /// slots, air zones with the fan reserve) sets the frame box; static geometry only extends it vertically, and only
-    /// with the part of each outline edge clipped to the dynamic X span. Fixtures are built from domain types in code
+    /// slots, air zones with the fan reserve, surface strips in full) sets the frame box; closed static blocks only
+    /// extend it vertically, and only with the part of each outline edge clipped to that X span. Fixtures are built from domain types in code
     /// (no manifest). <see cref="WideFloor_DoesNotWidenBounds"/> is the test that fails first on the pre-TASK-442 body
     /// (there min.X was the floor's −7).
     /// </summary>
@@ -68,8 +68,8 @@ namespace Gameplay.Tests
         [Test]
         public void SlantedStatic_ClippedAtSlabEdge_YInterpolated()
         {
-            // Ramp (-5,0)→(5,5) as an open surface; span [-1, 1] ⇒ its in-span Y range is [2.0, 3.0], not [0, 5].
-            var ramp = Surface(new Vec2(-5f, 0f), new Vec2(5f, 5f));
+            // Closed sliver (-5,0)→(5,5); span [-1, 1] ⇒ its in-span Y range is [2.0, 3.0], not [0, 5].
+            var ramp = Sliver(new Vec2(-5f, 0f), new Vec2(5f, 5f));
 
             var high = Level(Pieces((-0.75f, 10f), (0.75f, 10f)), ramp);
             Assert.That(CameraFramingMath.TryContentBounds(high, out var minHigh, out _), Is.True);
@@ -81,21 +81,17 @@ namespace Gameplay.Tests
         }
 
         [Test]
-        public void ClosedPolygon_ClosingEdgeCounts_OpenSurfaceDoesNot()
+        public void ClosedPolygon_ClosingEdgeCounts()
         {
             // Outline whose only in-span edge at y = -3 is the CLOSING edge (5,-3)→(-5,-3).
             var outline = new[] { new Vec2(-5f, -3f), new Vec2(-5f, 5f), new Vec2(5f, 5f), new Vec2(5f, -3f) };
             var pieces = Pieces((-0.75f, 0f), (0.75f, 0f));
 
-            Assert.That(CameraFramingMath.TryContentBounds(Level(pieces, new Polygon(outline)), out var closedMin, out var closedMax),
+            Assert.That(CameraFramingMath.TryContentBounds(Level(pieces, new Polygon(outline)), out var min, out var max),
                 Is.True);
-            Assert.That(closedMin.Y, Is.EqualTo(-3f).Within(Eps), "closed block: the closing edge is part of the outline");
-            Assert.That(closedMax.Y, Is.EqualTo(5f).Within(Eps));
-
-            Assert.That(CameraFramingMath.TryContentBounds(Level(pieces, Surface(outline)), out var openMin, out var openMax),
-                Is.True);
-            Assert.That(openMin.Y, Is.EqualTo(-0.25f).Within(Eps), "open surface: no closing edge, pieces set the bottom");
-            Assert.That(openMax.Y, Is.EqualTo(5f).Within(Eps));
+            Assert.That(min.Y, Is.EqualTo(-3f).Within(Eps), "closed block: the closing edge is part of the outline");
+            Assert.That(max.Y, Is.EqualTo(5f).Within(Eps));
+            Assert.That(min.X, Is.EqualTo(-1f).Within(Eps), "a closed block never widens the box");
         }
 
         [Test]
@@ -103,13 +99,33 @@ namespace Gameplay.Tests
         {
             var pieces = Pieces((-0.75f, 2f), (0.75f, 2f));   // span [-1, 1]
 
-            var onEdge = Level(pieces, Surface(new Vec2(1f, -5f), new Vec2(1f, -4f)));
+            var onEdge = Level(pieces, Sliver(new Vec2(1f, -5f), new Vec2(1f, -4f)));
             Assert.That(CameraFramingMath.TryContentBounds(onEdge, out var minOn, out _), Is.True);
             Assert.That(minOn.Y, Is.EqualTo(-5f).Within(Eps));
 
-            var outside = Level(pieces, Surface(new Vec2(1.001f, -5f), new Vec2(1.001f, -4f)));
+            var outside = Level(pieces, Sliver(new Vec2(1.001f, -5f), new Vec2(1.001f, -4f)));
             Assert.That(CameraFramingMath.TryContentBounds(outside, out var minOut, out _), Is.True);
             Assert.That(minOut.Y, Is.EqualTo(1.75f).Within(Eps));
+        }
+
+        // ---------------------------------------------------------------- surface strip = the piece's path
+
+        [Test]
+        public void SurfaceStrip_OutsideSpan_EntersWhole_AndWidensTheStaticSpan()
+        {
+            // Pieces span x [-1, 1], y [1.75, 2.25]. A chute (-6,3)→(-4,0) lies wholly left of that span (the
+            // chute_cross case). It is the piece's path, so it enters in X and Y; the floor under it (x ∈ [-7, -3],
+            // also outside the original span) then counts in Y within the WIDENED span; a wall right of it does not.
+            var chute = Surface(new Vec2(-6f, 3f), new Vec2(-4f, 0f));
+            var floorUnderChute = Filled(-7f, -2f, -3f, -1.5f);
+            var wall = Filled(3f, 0f, 4f, 20f);
+
+            var level = Level(Pieces((-0.75f, 2f), (0.75f, 2f)), chute, floorUnderChute, wall);
+            Assert.That(CameraFramingMath.TryContentBounds(level, out var min, out var max), Is.True);
+            Assert.That(min.X, Is.EqualTo(-6f).Within(Eps), "the chute widens the box in X");
+            Assert.That(max.Y, Is.EqualTo(3f).Within(Eps), "the chute's top counts in Y");
+            Assert.That(min.Y, Is.EqualTo(-2f).Within(Eps), "the floor under the chute counts in the widened span");
+            Assert.That(max.X, Is.EqualTo(1f).Within(Eps), "closed statics still never widen the box");
         }
 
         // ---------------------------------------------------------------- fallback and dynamic reserve
@@ -162,7 +178,9 @@ namespace Gameplay.Tests
         {
             yield return Level(Pieces((-0.75f, 2f), (0.75f, 2f)), Filled(-7f, -0.6f, 7f, 0f));
             yield return Level(Pieces((-0.75f, 2f), (0.75f, 2f)), Filled(3f, 0f, 4f, 20f));
-            yield return Level(Pieces((-0.75f, 10f), (0.75f, 10f)), Surface(new Vec2(-5f, 0f), new Vec2(5f, 5f)));
+            yield return Level(Pieces((-0.75f, 10f), (0.75f, 10f)), Sliver(new Vec2(-5f, 0f), new Vec2(5f, 5f)));
+            yield return Level(Pieces((-0.75f, 2f), (0.75f, 2f)), Surface(new Vec2(-6f, 3f), new Vec2(-4f, 0f)),
+                Filled(-7f, -2f, -3f, -1.5f), Filled(3f, 0f, 4f, 20f));
             yield return Level(Pieces((-0.75f, 0f), (0.75f, 0f)),
                 new Polygon(new[] { new Vec2(-5f, -3f), new Vec2(-5f, 5f), new Vec2(5f, 5f), new Vec2(5f, -3f) }));
             yield return Level(null, Filled(-7f, -0.6f, 7f, 0f));
@@ -200,6 +218,9 @@ namespace Gameplay.Tests
 
         private static Polygon Filled(float x0, float y0, float x1, float y1)
             => new Polygon(new[] { new Vec2(x0, y0), new Vec2(x1, y0), new Vec2(x1, y1), new Vec2(x0, y1) });
+
+        // A closed two-vertex outline: a segment whose closing edge is itself — isolates edge clipping.
+        private static Polygon Sliver(Vec2 a, Vec2 b) => new Polygon(new[] { a, b });
 
         private static Polygon Surface(params Vec2[] polyline) => new Polygon(polyline, surface: new StaticSurface(0.2f));
 

@@ -22,10 +22,10 @@ namespace Gameplay.Core
         public const float AirZoneFanReserve = 1.15f;
 
         /// <summary>World-space AABB the camera frames (TASK-442). The DYNAMIC content sets the box: every piece's
-        /// start silhouette, the target slots and the air zones with their fan reserve. Static geometry only extends
-        /// the box VERTICALLY, and only with the part of it that lies inside the dynamic X span (each outline edge is
-        /// clipped to that span; a closed block also contributes its closing edge, an open surface does not) — a
-        /// wide floor no longer widens the frame, it runs off the screen edges. With no dynamic content at all the
+        /// start silhouette, the target slots, the air zones with their fan reserve and every <c>surface</c> strip
+        /// (chute, ramp, slope — the path a piece travels) in full. Closed static blocks only extend the box
+        /// VERTICALLY, and only with the part of them that lies inside that extended X span (each outline edge is
+        /// clipped to the span) — a wide floor no longer widens the frame, it runs off the screen edges. With no dynamic content at all the
         /// box falls back to the full static AABB. Returns false when there is no content. The result is always a
         /// subset of the union AABB of dynamic + all static, so the derived orthoSize never grows.</summary>
         public static bool TryContentBounds(LevelData level, out Vec2 min, out Vec2 max)
@@ -124,10 +124,24 @@ namespace Gameplay.Core
             {
                 if (any)
                 {
+                    // Surface-лента (жёлоб, рампа, склон) — путь детали, а значит часть динамики: входит в коробку
+                    // ЦЕЛИКОМ, по X и по Y, ДО того как зафиксирована полоса. Иначе шар chute_cross, поднимаясь по
+                    // левому жёлобу за пролётом динамики, уходил за край экрана (TASK-442, решение гейта).
+                    foreach (var poly in level.StaticGeometry)
+                    {
+                        if (poly?.Outline == null || !poly.IsSurface)
+                            continue;
+                        foreach (var v in poly.Outline)
+                            Accumulate(v, ref minX, ref minY, ref maxX, ref maxY);
+                    }
+
                     var slabMin = minX;
                     var slabMax = maxX;
                     foreach (var poly in level.StaticGeometry)
-                        AccumulateStaticInSlab(poly, slabMin, slabMax, ref minY, ref maxY);
+                    {
+                        if (poly != null && !poly.IsSurface)
+                            AccumulateStaticInSlab(poly, slabMin, slabMax, ref minY, ref maxY);
+                    }
                 }
                 else
                 {
@@ -180,7 +194,8 @@ namespace Gameplay.Core
 
         // Y-экстремумы части статики внутри полосы x∈[xmin,xmax]. У многоугольника, обрезанного выпуклой полосой,
         // экстремумы по Y лежат на концах обрезанных рёбер (новые рёбра на x=xmin/xmax соединяют те же точки),
-        // поэтому клипа рёбер достаточно — и для вогнутого контура, и для открытой ломаной surface.
+        // поэтому клипа рёбер достаточно и для вогнутого контура. Только замкнутые блоки: surface-лента сюда не
+        // приходит, она уже целиком в коробке.
         private static void AccumulateStaticInSlab(Polygon poly, float xmin, float xmax, ref float minY, ref float maxY)
         {
             var outline = poly?.Outline;
@@ -195,8 +210,7 @@ namespace Gameplay.Core
 
             for (var i = 0; i + 1 < outline.Length; i++)
                 ClipEdgeToSlabY(outline[i], outline[i + 1], xmin, xmax, ref minY, ref maxY);
-            if (!poly.IsSurface)
-                ClipEdgeToSlabY(outline[outline.Length - 1], outline[0], xmin, xmax, ref minY, ref maxY);
+            ClipEdgeToSlabY(outline[outline.Length - 1], outline[0], xmin, xmax, ref minY, ref maxY);
         }
 
         // Liang–Barsky по одной оси: обрезает отрезок a→b полосой x∈[xmin,xmax] и расширяет minY/maxY концами
