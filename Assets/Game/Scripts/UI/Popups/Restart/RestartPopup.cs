@@ -11,12 +11,16 @@ namespace Ui.Popups
     {
         [SerializeField] private Button _cancelButton;
         [SerializeField] private Button _submitButton;
+        // Tap on the dim outside the window cancels too (owner decision, TASK-426).
+        [SerializeField] private Button _dismissArea;
 
         private Action ClickCancel, ClickSubmit;
 
         public override void Init()
         {
+            base.Init();
             _cancelButton.onClick.AddListener(OnClickCancel);
+            _dismissArea.onClick.AddListener(OnClickCancel);
             _submitButton.onClick.AddListener(OnClickSubmit);
         }
 
@@ -24,6 +28,7 @@ namespace Ui.Popups
         {
             base.DeInit();
             _cancelButton.onClick.RemoveListener(OnClickCancel);
+            _dismissArea.onClick.RemoveListener(OnClickCancel);
             _submitButton.onClick.RemoveListener(OnClickSubmit);
         }
 
