@@ -16570,6 +16570,521 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "caterpillar_wind",
+      "seed": 446,
+      "difficultyTier": 10,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        1
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -3
+        },
+        "max": {
+          "x": 6,
+          "y": 9
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "cat_head",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 2.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.4,
+                "y": -0.45
+              },
+              {
+                "x": 0.4,
+                "y": -0.45
+              },
+              {
+                "x": 0.5,
+                "y": -0.15
+              },
+              {
+                "x": 0.5,
+                "y": 0.15
+              },
+              {
+                "x": 0.3,
+                "y": 0.45
+              },
+              {
+                "x": -0.3,
+                "y": 0.45
+              },
+              {
+                "x": -0.5,
+                "y": 0.15
+              },
+              {
+                "x": -0.5,
+                "y": -0.15
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.5,
+                  "y": -0.15
+                },
+                {
+                  "x": -0.4,
+                  "y": -0.45
+                },
+                {
+                  "x": 0.4,
+                  "y": -0.45
+                },
+                {
+                  "x": 0.5,
+                  "y": -0.15
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.15
+                },
+                {
+                  "x": 0.3,
+                  "y": 0.45
+                },
+                {
+                  "x": -0.3,
+                  "y": 0.45
+                },
+                {
+                  "x": -0.5,
+                  "y": 0.15
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "antennae",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.25,
+                "y": -0.225
+              },
+              {
+                "x": 0.25,
+                "y": -0.225
+              },
+              {
+                "x": 0.25,
+                "y": 0.225
+              },
+              {
+                "x": 0.13,
+                "y": 0.225
+              },
+              {
+                "x": 0.13,
+                "y": -0.105
+              },
+              {
+                "x": -0.13,
+                "y": -0.105
+              },
+              {
+                "x": -0.13,
+                "y": 0.225
+              },
+              {
+                "x": -0.25,
+                "y": 0.225
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0.25,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.225
+                },
+                {
+                  "x": 0.13,
+                  "y": 0.225
+                },
+                {
+                  "x": 0.13,
+                  "y": -0.105
+                }
+              ],
+              [
+                {
+                  "x": -0.25,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.25,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.13,
+                  "y": -0.105
+                },
+                {
+                  "x": -0.13,
+                  "y": -0.105
+                }
+              ],
+              [
+                {
+                  "x": -0.25,
+                  "y": 0.225
+                },
+                {
+                  "x": -0.25,
+                  "y": -0.225
+                },
+                {
+                  "x": -0.13,
+                  "y": -0.105
+                },
+                {
+                  "x": -0.13,
+                  "y": 0.225
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "seg_a",
+          "color": "#5C8E3E",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.4,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "seg_b",
+          "color": "#CBA016",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.4,
+            "segments": 24
+          }
+        }
+      ],
+      "pieces": [
+        {
+          "kind": "cat_head",
+          "startPosition": {
+            "x": -4.0,
+            "y": 6.95
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "antennae",
+          "startPosition": {
+            "x": -4.0,
+            "y": 5.85
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "seg_a",
+          "startPosition": {
+            "x": 2.2,
+            "y": 2.4
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "seg_b",
+          "startPosition": {
+            "x": 2.2,
+            "y": 3.5
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "seg_a",
+          "startPosition": {
+            "x": 2.2,
+            "y": 5.7
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "seg_b",
+          "startPosition": {
+            "x": 2.2,
+            "y": 4.6
+          },
+          "startRotation": 0
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -4.4,
+            "y": 0
+          },
+          {
+            "x": -0.3,
+            "y": 0
+          },
+          {
+            "x": -0.3,
+            "y": 0.8
+          },
+          {
+            "x": -3.567,
+            "y": 0.8
+          },
+          {
+            "x": -3.7,
+            "y": 0.9
+          },
+          {
+            "x": -3.75,
+            "y": 0.9
+          },
+          {
+            "x": -3.75,
+            "y": 1.35
+          },
+          {
+            "x": -3.87,
+            "y": 1.35
+          },
+          {
+            "x": -3.87,
+            "y": 1.02
+          },
+          {
+            "x": -4.13,
+            "y": 1.02
+          },
+          {
+            "x": -4.13,
+            "y": 1.35
+          },
+          {
+            "x": -4.25,
+            "y": 1.35
+          },
+          {
+            "x": -4.25,
+            "y": 0.9
+          },
+          {
+            "x": -4.3,
+            "y": 0.9
+          },
+          {
+            "x": -4.5,
+            "y": 0.6
+          },
+          {
+            "x": -4.5,
+            "y": 0.3
+          }
+        ],
+        "slots": [
+          {
+            "kind": "cat_head",
+            "position": {
+              "x": -4.0,
+              "y": 0.45
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "antennae",
+            "position": {
+              "x": -4.0,
+              "y": 1.125
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "seg_a",
+            "position": {
+              "x": -3.1,
+              "y": 0.4
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "seg_b",
+            "position": {
+              "x": -2.3,
+              "y": 0.4
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "seg_a",
+            "position": {
+              "x": -1.5,
+              "y": 0.4
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "seg_b",
+            "position": {
+              "x": -0.7,
+              "y": 0.4
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "staticGeometry": [
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -4.75,
+              "y": -0.6
+            },
+            {
+              "x": 6,
+              "y": -0.6
+            },
+            {
+              "x": 6,
+              "y": 0
+            },
+            {
+              "x": -4.75,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -4.75,
+              "y": 0
+            },
+            {
+              "x": -4.55,
+              "y": 0
+            },
+            {
+              "x": -4.55,
+              "y": 0.35
+            },
+            {
+              "x": -4.75,
+              "y": 0.35
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "collider": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -4.75,
+              "y": -0.6
+            },
+            {
+              "x": 6,
+              "y": -0.6
+            },
+            {
+              "x": 6,
+              "y": 0
+            },
+            {
+              "x": -4.55,
+              "y": 0
+            },
+            {
+              "x": -4.55,
+              "y": 0.35
+            },
+            {
+              "x": -4.75,
+              "y": 0.35
+            }
+          ]
+        }
+      ],
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -3.45,
+              "y": 0.0
+            },
+            "max": {
+              "x": 3.0,
+              "y": 7.6
+            }
+          },
+          "direction": {
+            "x": -1,
+            "y": 0
+          },
+          "acceleration": 3.0,
+          "color": "#CFE8F5"
+        }
+      ]
     }
   ]
 }
