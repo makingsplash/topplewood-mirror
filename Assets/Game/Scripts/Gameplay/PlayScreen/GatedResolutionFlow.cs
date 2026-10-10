@@ -94,7 +94,8 @@ namespace Gameplay.PlayScreen
 
             // The faucet (LevelRewardService) computed this synchronously during the LevelResolved dispatch, i.e.
             // before this settle-beat delay elapsed, so LastReward is always the value for the level just won
-            // (TASK-240, architect §8). 0 on a replay → the screen hides the reward row.
+            // (TASK-240, architect §8). Every win pays since TASK-432, a replay included; 0 only under a misconfigured
+            // reward table → the screen hides the reward row.
             var reward = _reward.LastReward;
             var x2Available = _core.WinScreenX2Enabled
                               && Data.Meta.CurrentLevel.Value >= _core.WinScreenX2ButtonStartLevel;

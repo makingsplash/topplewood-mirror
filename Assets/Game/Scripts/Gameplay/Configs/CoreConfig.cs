@@ -24,11 +24,6 @@ namespace Gameplay.Configs
             // arithmetic (architect §2.3); A/B-able through the already-mapped config_core, no new asset.
             [JsonProperty]
             public string LevelRewardByTierBand = "40:2,50:4,60:6,70:8,80:999";
-            // TASK-240: coins for RE-clearing an already-rewarded level (campaign wraps at the end, architect §5).
-            // Default 0 keeps the faucet single-pass (holds the balancer ledger); raise via config for a grind loop,
-            // no code change.
-            [JsonProperty]
-            public int ReplayReward;
             [JsonProperty]
             public int AdditionalTimeSeconds = 20;
             [JsonProperty]
@@ -56,7 +51,6 @@ namespace Gameplay.Configs
         }
 
         public int LevelReward => Config.LevelReward;
-        public int ReplayReward => Config.ReplayReward;
         public bool WinScreenX2Enabled => Config.WinScreenX2Enabled;
 
         public int AdditionalTimeSeconds => Config.AdditionalTimeSeconds;
