@@ -42,7 +42,7 @@ namespace Gameplay.View
 
         private const float LineWidth = 0.08f;
         private const float LineDepth = 0.1f;
-        private const int JoinSegments = 12;
+        public const int JoinSegments = 12;
 
         public void Initialize(Polygon polygon, Color color)
         {
@@ -75,8 +75,12 @@ namespace Gameplay.View
         ///
         /// Треугольники двусторонние — видимость не зависит от того, куда смотрит камера и какой
         /// culling у запасного шейдера.
+        ///
+        /// Контракт раскладки (на него опирается <c>SilhouetteStrokeTests</c>): сначала по 4 вершины на каждое
+        /// невырожденное ребро в порядке контура (a−n, b−n, b+n, a+n), затем по 1 + <see cref="JoinSegments"/>
+        /// вершин круга на каждую вершину контура.
         /// </summary>
-        internal static Mesh BuildStrokeMesh(Vec2[] outline, float halfWidth, float z)
+        public static Mesh BuildStrokeMesh(Vec2[] outline, float halfWidth, float z)
         {
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
