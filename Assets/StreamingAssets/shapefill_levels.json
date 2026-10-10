@@ -11906,6 +11906,442 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "carrot_bed",
+      "seed": 437,
+      "difficultyTier": 7,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -7,
+          "y": -3
+        },
+        "max": {
+          "x": 7,
+          "y": 8
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "tip",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "triangle",
+            "width": 0.7,
+            "height": 0.7
+          }
+        },
+        {
+          "kind": "mid",
+          "color": "#CBA016",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 0.8,
+            "topWidth": 1.1,
+            "height": 0.7
+          }
+        },
+        {
+          "kind": "top",
+          "color": "#8B5A9E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 1.1,
+            "topWidth": 1.5,
+            "height": 0.7
+          }
+        },
+        {
+          "kind": "leaf_c",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "triangle",
+            "width": 0.5,
+            "height": 1.0
+          }
+        },
+        {
+          "kind": "leaf_side",
+          "color": "#5C8E3E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "triangle",
+            "width": 0.42,
+            "height": 0.8
+          }
+        }
+      ],
+      "pieces": [
+        {
+          "kind": "tip",
+          "startPosition": {
+            "x": 0.0,
+            "y": 5.1
+          },
+          "startRotation": 3.14159
+        },
+        {
+          "kind": "mid",
+          "startPosition": {
+            "x": 0.0,
+            "y": 7.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "top",
+          "startPosition": {
+            "x": 0.0,
+            "y": 3.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "leaf_c",
+          "startPosition": {
+            "x": 0.0,
+            "y": 4.05
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "leaf_side",
+          "startPosition": {
+            "x": -0.52,
+            "y": 6.05
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "leaf_side",
+          "startPosition": {
+            "x": 0.52,
+            "y": 6.05
+          },
+          "startRotation": 0
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": 0,
+            "y": -2.1
+          },
+          {
+            "x": 0.35,
+            "y": -1.4
+          },
+          {
+            "x": 0.4,
+            "y": -1.4
+          },
+          {
+            "x": 0.55,
+            "y": -0.7
+          },
+          {
+            "x": 0.75,
+            "y": 0
+          },
+          {
+            "x": 0.73,
+            "y": 0
+          },
+          {
+            "x": 0.52,
+            "y": 0.8
+          },
+          {
+            "x": 0.31,
+            "y": 0
+          },
+          {
+            "x": 0.25,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1.0
+          },
+          {
+            "x": -0.25,
+            "y": 0
+          },
+          {
+            "x": -0.31,
+            "y": 0
+          },
+          {
+            "x": -0.52,
+            "y": 0.8
+          },
+          {
+            "x": -0.73,
+            "y": 0
+          },
+          {
+            "x": -0.75,
+            "y": 0
+          },
+          {
+            "x": -0.55,
+            "y": -0.7
+          },
+          {
+            "x": -0.4,
+            "y": -1.4
+          },
+          {
+            "x": -0.35,
+            "y": -1.4
+          }
+        ],
+        "slots": [
+          {
+            "kind": "tip",
+            "position": {
+              "x": 0.0,
+              "y": -1.75
+            },
+            "rotation": 3.14159
+          },
+          {
+            "kind": "mid",
+            "position": {
+              "x": 0.0,
+              "y": -1.05
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "top",
+            "position": {
+              "x": 0.0,
+              "y": -0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "leaf_c",
+            "position": {
+              "x": 0.0,
+              "y": 0.5
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "leaf_side",
+            "position": {
+              "x": -0.52,
+              "y": 0.4
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "leaf_side",
+            "position": {
+              "x": 0.52,
+              "y": 0.4
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "staticGeometry": [
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -7,
+              "y": -2.6
+            },
+            {
+              "x": -0.8,
+              "y": -2.6
+            },
+            {
+              "x": -0.8,
+              "y": 0
+            },
+            {
+              "x": -7,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.8,
+              "y": -2.6
+            },
+            {
+              "x": 7,
+              "y": -2.6
+            },
+            {
+              "x": 7,
+              "y": 0
+            },
+            {
+              "x": 0.8,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.8,
+              "y": -2.6
+            },
+            {
+              "x": 0,
+              "y": -2.6
+            },
+            {
+              "x": 0,
+              "y": -2.1
+            },
+            {
+              "x": -0.35,
+              "y": -1.4
+            },
+            {
+              "x": -0.8,
+              "y": -1.4
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0,
+              "y": -2.6
+            },
+            {
+              "x": 0.8,
+              "y": -2.6
+            },
+            {
+              "x": 0.8,
+              "y": -1.4
+            },
+            {
+              "x": 0.35,
+              "y": -1.4
+            },
+            {
+              "x": 0,
+              "y": -2.1
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "collider": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -7,
+              "y": -2.6
+            },
+            {
+              "x": 7,
+              "y": -2.6
+            },
+            {
+              "x": 7,
+              "y": 0
+            },
+            {
+              "x": 0.8,
+              "y": 0
+            },
+            {
+              "x": 0.8,
+              "y": -1.4
+            },
+            {
+              "x": 0.35,
+              "y": -1.4
+            },
+            {
+              "x": 0,
+              "y": -2.1
+            },
+            {
+              "x": -0.35,
+              "y": -1.4
+            },
+            {
+              "x": -0.8,
+              "y": -1.4
+            },
+            {
+              "x": -0.8,
+              "y": 0
+            },
+            {
+              "x": -7,
+              "y": 0
+            }
+          ]
+        }
+      ]
     }
   ]
 }
