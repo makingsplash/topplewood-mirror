@@ -17365,6 +17365,543 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "hedgehog_apples",
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "seed": 459,
+      "difficultyTier": 10,
+      "physicsMode": "assembly",
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -5,
+          "y": -2
+        },
+        "max": {
+          "x": 4.2,
+          "y": 8
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "hedgehog",
+          "color": "#8B5A9E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.7,
+                "y": -0.625
+              },
+              {
+                "x": 0.9,
+                "y": -0.625
+              },
+              {
+                "x": 1.02,
+                "y": -0.275
+              },
+              {
+                "x": 0.85,
+                "y": 0.125
+              },
+              {
+                "x": 0.75,
+                "y": 0.525
+              },
+              {
+                "x": 0.4,
+                "y": 0.295
+              },
+              {
+                "x": 0.15,
+                "y": 0.625
+              },
+              {
+                "x": -0.2,
+                "y": 0.255
+              },
+              {
+                "x": -0.3,
+                "y": 0.495
+              },
+              {
+                "x": -0.55,
+                "y": 0.075
+              },
+              {
+                "x": -1.02,
+                "y": -0.125
+              },
+              {
+                "x": -0.7,
+                "y": -0.205
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.7,
+                  "y": -0.625
+                },
+                {
+                  "x": 0.9,
+                  "y": -0.625
+                },
+                {
+                  "x": 1.02,
+                  "y": -0.275
+                },
+                {
+                  "x": 0.85,
+                  "y": 0.125
+                },
+                {
+                  "x": 0.4,
+                  "y": 0.295
+                },
+                {
+                  "x": -0.2,
+                  "y": 0.255
+                },
+                {
+                  "x": -0.55,
+                  "y": 0.075
+                },
+                {
+                  "x": -0.7,
+                  "y": -0.205
+                }
+              ],
+              [
+                {
+                  "x": 0.4,
+                  "y": 0.295
+                },
+                {
+                  "x": 0.85,
+                  "y": 0.125
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.525
+                }
+              ],
+              [
+                {
+                  "x": -0.2,
+                  "y": 0.255
+                },
+                {
+                  "x": 0.4,
+                  "y": 0.295
+                },
+                {
+                  "x": 0.15,
+                  "y": 0.625
+                }
+              ],
+              [
+                {
+                  "x": -0.55,
+                  "y": 0.075
+                },
+                {
+                  "x": -0.2,
+                  "y": 0.255
+                },
+                {
+                  "x": -0.3,
+                  "y": 0.495
+                }
+              ],
+              [
+                {
+                  "x": -0.7,
+                  "y": -0.205
+                },
+                {
+                  "x": -0.55,
+                  "y": 0.075
+                },
+                {
+                  "x": -1.02,
+                  "y": -0.125
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "berry_blue",
+          "color": "#48699A",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.18,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "berry_indigo",
+          "color": "#5A55A3",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.18,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "apple_yellow",
+          "color": "#CBA016",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.32,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "apple_rose",
+          "color": "#B8577A",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.32,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "melon_green",
+          "color": "#5C8E3E",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.5,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -2.1,
+            "y": 1.45
+          },
+          {
+            "x": 1.5,
+            "y": 1.0
+          },
+          {
+            "x": 3.25,
+            "y": 1.0
+          },
+          {
+            "x": 3.25,
+            "y": 1.9
+          },
+          {
+            "x": 2.55,
+            "y": 2.25
+          },
+          {
+            "x": 1.6,
+            "y": 2.05
+          },
+          {
+            "x": 0.0,
+            "y": 1.95
+          },
+          {
+            "x": -1.0,
+            "y": 2.3
+          },
+          {
+            "x": -2.1,
+            "y": 2.6
+          }
+        ],
+        "slots": [
+          {
+            "kind": "hedgehog",
+            "position": {
+              "x": 2.2,
+              "y": 1.64
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "berry_blue",
+            "position": {
+              "x": 1.32,
+              "y": 1.215
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "berry_indigo",
+            "position": {
+              "x": 0.966,
+              "y": 1.277
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "apple_yellow",
+            "position": {
+              "x": 0.186,
+              "y": 1.557
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "apple_rose",
+            "position": {
+              "x": -0.444,
+              "y": 1.668
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "melon_green",
+            "position": {
+              "x": -1.575,
+              "y": 2.05
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "hedgehog",
+          "startPosition": {
+            "x": 2.2,
+            "y": 3.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "berry_blue",
+          "startPosition": {
+            "x": -2.55,
+            "y": 4.3
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "berry_indigo",
+          "startPosition": {
+            "x": -2.55,
+            "y": 5.5
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "apple_yellow",
+          "startPosition": {
+            "x": -2.55,
+            "y": 3.3
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "apple_rose",
+          "startPosition": {
+            "x": -3.45,
+            "y": 3.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "melon_green",
+          "startPosition": {
+            "x": -3.45,
+            "y": 4.9
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "collider": false,
+          "outline": [
+            {
+              "x": -4.4,
+              "y": -0.2
+            },
+            {
+              "x": 3.4,
+              "y": -0.2
+            },
+            {
+              "x": 3.4,
+              "y": 1.0
+            },
+            {
+              "x": 1.5,
+              "y": 1.0
+            },
+            {
+              "x": -4.4,
+              "y": 2.04
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "surface": true,
+          "thickness": 0.2,
+          "outline": [
+            {
+              "x": -4.2,
+              "y": 2.005
+            },
+            {
+              "x": 1.5,
+              "y": 1.0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.5,
+              "y": 0.6
+            },
+            {
+              "x": 3.4,
+              "y": 0.6
+            },
+            {
+              "x": 3.4,
+              "y": 1.0
+            },
+            {
+              "x": 1.5,
+              "y": 1.0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.1,
+              "y": 2.21
+            },
+            {
+              "x": -0.95,
+              "y": 2.21
+            },
+            {
+              "x": -0.95,
+              "y": 3.05
+            },
+            {
+              "x": -1.1,
+              "y": 3.05
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.5,
+              "y": 1.62
+            },
+            {
+              "x": 0.64,
+              "y": 1.62
+            },
+            {
+              "x": 0.64,
+              "y": 3.05
+            },
+            {
+              "x": 0.5,
+              "y": 3.05
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.45,
+              "y": 3.05
+            },
+            {
+              "x": 1.0,
+              "y": 3.05
+            },
+            {
+              "x": 1.0,
+              "y": 3.55
+            },
+            {
+              "x": -1.45,
+              "y": 3.55
+            }
+          ]
+        }
+      ]
     }
   ]
 }
