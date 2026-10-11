@@ -191,9 +191,16 @@ namespace Gameplay.Core
         /// world units via the level's PREDICTED orthoSize (<see cref="CameraFramingMath"/> replayed on the reference
         /// device) — the same framing the live camera applies — so the check tracks what the player actually sees. The
         /// guard is on START poses of non-<c>Preplaced</c> pieces (the only tapable ones; preplaced pieces are Dynamic
-        /// furniture, never tapped). Metric v1 = centre-to-centre (StartPosition): exact for the compact pieces that
-        /// are actually the problem (horn/head/ear); elongated planks are large and never a tap problem (edge-to-edge
-        /// is the tech-debt refinement, TASK-087).
+        /// furniture, never tapped).
+        ///
+        /// TASK-087, metric v2 (v1 centre-to-centre was wrong both ways: it missed card_house, whose long planks have
+        /// far centres but ends ≈3dp apart, and false-flagged parallel vertical planks). The idle polygon a finger hits
+        /// (<c>PickIdlePieceAt</c> on the start pose) is compared EDGE-TO-EDGE. Rule 1, ANY two tapable pieces:
+        /// <see cref="Geometry.PolygonGap"/> &lt; minTapWorld ⇒ violation — the resolver inflates each piece by a halo of
+        /// ½·MinTapDp, so the two tap targets overlap exactly below a gap of MinTapDp. Rule 2, members of ONE co-release
+        /// group only: centre distance &lt; <see cref="TapZoneConfig.MinCoReleaseSpreadDp"/> ⇒ violation (two fingers at
+        /// once must fit and stay two touches). Both rules apply to a pair while
+        /// <see cref="TapZoneConfig.JudgeCoReleasePairs"/> is on (default).
         ///
         /// TASK-181: this is the STRUCTURAL, side-effect-free heart of the check — it returns the audit as data (see
         /// <see cref="TapSpacingAudit"/>) so the sim sweep can serialise it into its report, not only log it. It is
@@ -205,50 +212,99 @@ namespace Gameplay.Core
         public TapSpacingAudit AuditTapSpacing(LevelData level)
         {
             if (level?.Pieces == null || level.Pieces.Count < 2)
-                return new TapSpacingAudit(level?.LevelId, 0f, 0f, null);
+                return new TapSpacingAudit(level?.LevelId, 0f, 0f, 0f, null);
             if (!CameraFramingMath.TryContentBounds(level, out var min, out var max))
-                return new TapSpacingAudit(level.LevelId, 0f, 0f, null);
+                return new TapSpacingAudit(level.LevelId, 0f, 0f, 0f, null);
 
             var orthoSize = CameraFramingMath.ComputeOrthoSize(
                 min, max, _tapZone.ReferenceAspect,
                 _tapZone.RefMargin, _tapZone.RefPreviewBand, _tapZone.RefMinOrthoSize);
             var minWorld = _tapZone.MinTapDp * _tapZone.RefKDevice * orthoSize; // tap-zone DIAMETER in world units
+            var spreadWorld = _tapZone.MinCoReleaseSpreadDp * _tapZone.RefKDevice * orthoSize; // two-finger spread
+
+            // The polygon a finger hits on the start pose (PickIdlePieceAt), once per piece. Null = not tapable
+            // (preplaced furniture) or shapeless (already an error from ValidatePieces) — skipped, never an NRE.
+            var count = level.Pieces.Count;
+            var polys = new Vec2[count][];
+            for (var i = 0; i < count; i++)
+            {
+                var p = level.Pieces[i];
+                if (!p.Preplaced && p.Type?.Shape != null)
+                    polys[i] = Geometry.WorldVertices(p.Type.Shape, p.StartPosition, p.StartRotation);
+            }
+            var groupOf = CoReleaseGroupIndex(level, count);
 
             var violations = new List<TapSpacingViolation>();
-            for (var i = 0; i < level.Pieces.Count; i++)
+            for (var i = 0; i < count; i++)
             {
-                if (level.Pieces[i].Preplaced)
+                if (polys[i] == null)
                     continue;
-                for (var j = i + 1; j < level.Pieces.Count; j++)
+                for (var j = i + 1; j < count; j++)
                 {
-                    if (level.Pieces[j].Preplaced)
+                    if (polys[j] == null)
                         continue;
-                    var dist = (level.Pieces[i].StartPosition - level.Pieces[j].StartPosition).Length;
-                    if (dist >= minWorld)
+                    var sameGroup = groupOf[i] >= 0 && groupOf[i] == groupOf[j];
+                    if (sameGroup && !_tapZone.JudgeCoReleasePairs)
                         continue;
-                    violations.Add(new TapSpacingViolation(
-                        i, level.Pieces[i].Type?.Kind, j, level.Pieces[j].Type?.Kind, dist));
+
+                    var gap = Geometry.PolygonGap(polys[i], polys[j]);
+                    var centre = (level.Pieces[i].StartPosition - level.Pieces[j].StartPosition).Length;
+                    var kindI = level.Pieces[i].Type.Kind;
+                    var kindJ = level.Pieces[j].Type.Kind;
+                    if (gap < minWorld)
+                        violations.Add(new TapSpacingViolation(
+                            i, kindI, j, kindJ, TapSpacingRule.Gap, gap, centre, sameGroup));
+                    if (sameGroup && centre < spreadWorld)
+                        violations.Add(new TapSpacingViolation(
+                            i, kindI, j, kindJ, TapSpacingRule.CoReleaseSpread, gap, centre, true));
                 }
             }
-            return new TapSpacingAudit(level.LevelId, minWorld, orthoSize, violations);
+            return new TapSpacingAudit(level.LevelId, minWorld, orthoSize, spreadWorld, violations);
+        }
+
+        /// <summary>TASK-087: placement index → co-release group id (−1 = in no group). Null-safe; out-of-range indices
+        /// are ignored here (<see cref="ValidateCoReleaseGroups"/> reports them as errors).</summary>
+        private static int[] CoReleaseGroupIndex(LevelData level, int pieceCount)
+        {
+            var groupOf = new int[pieceCount];
+            for (var i = 0; i < pieceCount; i++)
+                groupOf[i] = -1;
+            var groups = level.CoReleaseGroups;
+            if (groups == null)
+                return groupOf;
+            for (var g = 0; g < groups.Count; g++)
+            {
+                if (groups[g] == null)
+                    continue;
+                foreach (var index in groups[g])
+                    if (index >= 0 && index < pieceCount)
+                        groupOf[index] = g;
+            }
+            return groupOf;
         }
 
         /// <summary>
         /// Phase-1/2 policy wrapper around <see cref="AuditTapSpacing"/>: formats each structural violation into the
         /// author-facing message and routes it to <paramref name="errors"/> or <paramref name="warnings"/> per
         /// <see cref="TapZoneConfig.EnforceMinDistanceAsError"/> (false = non-blocking WARNING, this task's phase 1;
-        /// true = hard ERROR, phase 2 after the corpus is cleaned). The message text is preserved byte-for-byte from
-        /// TASK-085 so load-time strings and any snapshot of them are unchanged.
+        /// true = hard ERROR, phase 2 after the corpus is cleaned). TASK-087: the text changed with metric v2 (one
+        /// message per rule). The "Tap spacing:" PREFIX is kept verbatim — the sim sweep keys on it to count tap
+        /// violations (<c>LevelSimRunner.AuditTapSpacing</c>).
         /// </summary>
         private void ValidateTapSpacing(LevelData level, List<string> errors, List<string> warnings)
         {
             var audit = AuditTapSpacing(level);
             foreach (var v in audit.Violations)
             {
-                var msg =
-                    $"Tap spacing: Pieces[{v.IndexA}] '{v.KindA}' and Pieces[{v.IndexB}] " +
-                    $"'{v.KindB}' start {v.Distance:F3} apart — closer than the {audit.MinTapWorld:F3} world " +
-                    $"tap zone ({_tapZone.MinTapDp}dp @ orthoSize {audit.OrthoSize:F2}); their tap targets merge.";
+                var msg = v.Rule == TapSpacingRule.CoReleaseSpread
+                    ? $"Tap spacing: co-release pair Pieces[{v.IndexA}] '{v.KindA}' and Pieces[{v.IndexB}] " +
+                      $"'{v.KindB}' centres {v.CentreDistance:F3} apart — closer than the " +
+                      $"{audit.CoReleaseSpreadWorld:F3} world two-finger spread ({_tapZone.MinCoReleaseSpreadDp}dp @ " +
+                      $"orthoSize {audit.OrthoSize:F2}); two simultaneous fingers will not fit / may merge into one touch."
+                    : $"Tap spacing: Pieces[{v.IndexA}] '{v.KindA}' and Pieces[{v.IndexB}] " +
+                      $"'{v.KindB}'{(v.SameGroup ? " (co-release pair)" : "")} start {v.Gap:F3} apart edge-to-edge " +
+                      $"(centres {v.CentreDistance:F3}) — closer than the {audit.MinTapWorld:F3} world tap zone " +
+                      $"({_tapZone.MinTapDp}dp @ orthoSize {audit.OrthoSize:F2}); their tap targets overlap.";
                 if (_tapZone.EnforceMinDistanceAsError)
                     errors.Add(msg);
                 else

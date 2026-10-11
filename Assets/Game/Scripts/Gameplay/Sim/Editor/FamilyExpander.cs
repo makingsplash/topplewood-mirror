@@ -184,7 +184,9 @@ namespace Gameplay.Sim.Editor
                 if (audit.Violations.Count > 0)
                 {
                     var pairs = string.Join(", ", audit.Violations.Select(v =>
-                        $"{v.KindA}↔{v.KindB} {v.Distance:F3}<{audit.MinTapWorld:F3}"));
+                        v.Rule == TapSpacingRule.CoReleaseSpread
+                            ? $"{v.KindA}↔{v.KindB} centres {v.CentreDistance:F3}<{audit.CoReleaseSpreadWorld:F3}"
+                            : $"{v.KindA}↔{v.KindB} gap {v.Gap:F3}<{audit.MinTapWorld:F3}"));
                     Reject(r, levelId, $"tap-spacing (§D12): {audit.Violations.Count} pair(s) merge [{pairs}]");
                     continue;
                 }

@@ -223,6 +223,59 @@ namespace Gameplay.Core
         }
 
         /// <summary>
+        /// TASK-087: Euclidean GAP (world units) between two SIMPLE polygons — concave allowed, any winding. 0 when they
+        /// touch, cross, or one lies inside the other. The tap-spacing audit's edge-to-edge metric: two pieces' tap
+        /// targets (polygon ⊕ halo disc, <see cref="PieceHitResolver"/>) stop overlapping exactly when this reaches the
+        /// halo diameter. Standard brute force (MATLAB/matgeom "distancePolygons", PostGIS dist2d): intersection test
+        /// first, then the minimum over vertex→edge pairs in BOTH directions, because for two disjoint polygons the
+        /// closest pair always involves a vertex of one and an edge of the other. O(n·m) — piece outlines are tens of
+        /// vertices, so the per-level audit stays in milliseconds. Not <see cref="Separation"/>: its poly-poly arm returns
+        /// a "not touching" sentinel, and SAT (<see cref="ConvexPenetration"/>) is convex-only.
+        /// </summary>
+        public static float PolygonGap(Vec2[] a, Vec2[] b)
+        {
+            // Containment without crossing edges (one polygon swallowed by the other): any vertex inside ⇒ overlap.
+            foreach (var v in a)
+                if (PointInPolygon(b, v))
+                    return 0f;
+            foreach (var v in b)
+                if (PointInPolygon(a, v))
+                    return 0f;
+
+            // A cross with no vertex inside the other (two planks laid over each other) is caught only by the edges.
+            for (int i = 0, n = a.Length; i < n; i++)
+                for (int j = 0, m = b.Length; j < m; j++)
+                    if (SegmentsIntersect(a[i], a[(i + 1) % n], b[j], b[(j + 1) % m]))
+                        return 0f;
+
+            var gap = float.MaxValue;
+            foreach (var v in a)
+                gap = MathF.Min(gap, DistanceToPolygonBoundary(b, v));
+            foreach (var v in b)
+                gap = MathF.Min(gap, DistanceToPolygonBoundary(a, v));
+            return gap;
+        }
+
+        /// <summary>Closed-segment intersection p1p2 × q1q2: proper crossing, or an endpoint lying on the other segment
+        /// (touching / collinear overlap) — both mean the polygons share a point, so their gap is 0.</summary>
+        private static bool SegmentsIntersect(Vec2 p1, Vec2 p2, Vec2 q1, Vec2 q2)
+        {
+            var d1 = TriArea2(q1, q2, p1);
+            var d2 = TriArea2(q1, q2, p2);
+            var d3 = TriArea2(p1, p2, q1);
+            var d4 = TriArea2(p1, p2, q2);
+            if (((d1 > 0f && d2 < 0f) || (d1 < 0f && d2 > 0f)) && ((d3 > 0f && d4 < 0f) || (d3 < 0f && d4 > 0f)))
+                return true;
+            return (d1 == 0f && OnSegment(q1, q2, p1)) || (d2 == 0f && OnSegment(q1, q2, p2))
+                || (d3 == 0f && OnSegment(p1, p2, q1)) || (d4 == 0f && OnSegment(p1, p2, q2));
+
+            // Collinear point p within the bounding box of segment a-b ⇒ on the segment.
+            static bool OnSegment(Vec2 a, Vec2 b, Vec2 p)
+                => MathF.Min(a.X, b.X) <= p.X && p.X <= MathF.Max(a.X, b.X)
+                && MathF.Min(a.Y, b.Y) <= p.Y && p.Y <= MathF.Max(a.Y, b.Y);
+        }
+
+        /// <summary>
         /// TASK-349: distance (world units) from a point to a polygon's BOUNDARY AND the index of the boundary edge that
         /// carries that distance (edge <c>i</c> is <c>verts[i]→verts[i+1]</c>). ONE closest-point pass, so the distance
         /// and the edge can never disagree — the SDF concave fill (<c>PieceMeshBuilder</c>) needs BOTH a per-vertex

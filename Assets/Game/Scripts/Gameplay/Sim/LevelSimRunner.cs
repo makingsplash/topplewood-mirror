@@ -805,7 +805,8 @@ namespace Gameplay.Sim
         // same structural validation production runs) so the sweep drives the real two_cubes…snowman — no
         // duplicate loader. JsonLevelSource validates eagerly and throws on malformed content (fail-fast → exit 1).
         // TASK-085: enumerate every campaign level through the tap-spacing check and log each warning, so the
-        // author-time audit of "tapable pieces closer than the min tap zone" falls out of the normal sweep (RFC §7's
+        // author-time audit of "tapable pieces closer than the min tap zone" (since TASK-087: edge-to-edge gap, plus the
+        // two-finger spread inside co-release pairs) falls out of the normal sweep (RFC §7's
         // sanctioned enumerate-all-levels method). Log-only for the gate; never gates (the check is a WARNING in
         // phase 1). Uses a fresh validator with the default TapZoneConfig — the SAME reference-device prediction the
         // shipped validator emits at load — so the count here is exactly what LevelDataValidator would report.
@@ -854,12 +855,17 @@ namespace Gameplay.Sim
         // [TAP-AUDIT] log lines derive from LevelDataValidator.AuditTapSpacing, it equals the [TAP-AUDIT] line count.
         // Every swept level gets an entry even when clean (violations: []), so "no entry" (level not swept) is
         // distinguishable from "0 violations". Serialised only when non-null → the timing report is unaffected.
+        // TASK-087 (metric v2): `distance` became `gap` (edge-to-edge) — renamed, not re-meant, so no old reader silently
+        // takes a gap for a centre distance; gapDp/centreDp convert back through the level's own world-per-dp
+        // (minTapWorld / minTapDp), and `metric` stamps which metric produced the block so v1 and v2 reports never mix.
         private static object BuildTapAuditReport(TapZoneConfig config, IReadOnlyList<TapSpacingAudit> audits)
         {
             var total = 0;
             var levels = new List<object>(audits.Count);
             foreach (var a in audits)
             {
+                // A violation exists only when MinTapWorld > 0 (early-exit audits carry none), so no division by zero.
+                var worldPerDp = a.MinTapWorld / config.MinTapDp;
                 var violations = new List<object>(a.Violations.Count);
                 foreach (var v in a.Violations)
                 {
@@ -870,20 +876,29 @@ namespace Gameplay.Sim
                         kindA = v.KindA,
                         indexB = v.IndexB,
                         kindB = v.KindB,
-                        distance = v.Distance,
+                        rule = v.Rule == TapSpacingRule.CoReleaseSpread ? "coReleaseSpread" : "gap",
+                        sameGroup = v.SameGroup,
+                        gap = v.Gap,
+                        gapDp = v.Gap / worldPerDp,
+                        centreDistance = v.CentreDistance,
+                        centreDp = v.CentreDistance / worldPerDp,
                     });
                 }
                 levels.Add(new
                 {
                     levelId = a.LevelId,
                     minTapWorld = a.MinTapWorld,
+                    coReleaseSpreadWorld = a.CoReleaseSpreadWorld,
                     orthoSize = a.OrthoSize,
                     violations,
                 });
             }
             return new
             {
+                metric = "edge-to-edge+spread",
                 minTapDp = config.MinTapDp,
+                minCoReleaseSpreadDp = config.MinCoReleaseSpreadDp,
+                judgeCoReleasePairs = config.JudgeCoReleasePairs,
                 enforcedAsError = config.EnforceMinDistanceAsError,
                 totalViolations = total,
                 levels,

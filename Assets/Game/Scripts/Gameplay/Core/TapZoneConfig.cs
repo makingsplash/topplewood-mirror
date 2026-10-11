@@ -17,9 +17,25 @@ namespace Gameplay.Core
     {
         /// <summary>Minimum tap-target DIAMETER in dp. 48dp = the Android minimum touch target (owner's measure).
         /// Both the runtime halo (radius = ½·this in world units at the live orthoSize) and the author-time spacing
-        /// warning (two tapable start poses closer than this in world units at the predicted orthoSize) key on it.
-        /// UNVERIFIED — ⟨balancer⟩ may move it after a device playtest (it is a config, not a save field).</summary>
+        /// warning key on it. TASK-087 (metric v2): the warning fires when the EDGE-TO-EDGE gap of two tapable start
+        /// polygons is below this in world units at the predicted orthoSize — exactly when their halo-inflated tap
+        /// targets (polygon ⊕ disc of radius ½·this) overlap. UNVERIFIED — ⟨balancer⟩ may move it after a device
+        /// playtest (it is a config, not a save field).</summary>
         public float MinTapDp { get; set; } = 48f;
+
+        /// <summary>TASK-087 rule 2: minimum CENTRE-TO-CENTRE distance in dp between members of one co-release group
+        /// (<c>LevelData.CoReleaseGroups</c>) — two fingers land at once, so both must fit and the touchscreen must
+        /// see two touches. 100dp ≈ 15.9 mm = the low end of adult finger width (16–20 mm, MIT Touch Lab); above the
+        /// only written sensor norm (Windows touch "Finger Separation": Ø7 mm probes resolved at 8 mm edge-to-edge ⇒
+        /// centres ≥15 mm). Derived, not measured — UNVERIFIED on a device; the owner's finger on paired levels decides,
+        /// and a different verdict is a config change, not a code change. Author-time only: the runtime never reads it.</summary>
+        public float MinCoReleaseSpreadDp { get; set; } = 100f;
+
+        /// <summary>TASK-087: whether members of the SAME co-release group are judged at all (rule 1 gap AND rule 2
+        /// spread). True by default: a pair is two fingers, each must hit its own piece (a finger resolving to the
+        /// partner breaks the release, <c>ShapeFillMechanicController.OnIntent</c>) — canon §D15 (2026-10-11). False is a
+        /// fallback switch only, restoring "pairs not judged" if a device verdict says otherwise.</summary>
+        public bool JudgeCoReleasePairs { get; set; } = true;
 
         /// <summary>Phase flag (TASK-085 §7): false = the spacing check is a non-blocking WARNING (this task);
         /// flip to true (phase 2, after the corpus is cleaned) to make it a hard validation ERROR that refuses to
@@ -44,7 +60,8 @@ namespace Gameplay.Core
         public float RefMinOrthoSize { get; set; } = 3.5f;
 
         /// <summary>Device constant of the dp→world conversion at the reference device: <c>(dpi/160)·2/pixelHeight</c>.
-        /// World-per-dp = this · orthoSize, so world tap diameter = MinTapDp · RefKDevice · orthoSize.</summary>
+        /// World-per-dp = this · orthoSize, so world tap diameter = MinTapDp · RefKDevice · orthoSize (and the
+        /// two-finger spread = MinCoReleaseSpreadDp · RefKDevice · orthoSize).</summary>
         public float RefKDevice => (RefDpi / 160f) * 2f / RefPixelHeight;
     }
 }
