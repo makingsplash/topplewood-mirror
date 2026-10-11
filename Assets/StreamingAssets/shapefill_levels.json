@@ -16959,6 +16959,412 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "card_house",
+      "seed": 457,
+      "difficultyTier": 9,
+      "physicsMode": "balance",
+      "freezeLoadsAtRest": true,
+      "coReleaseGroups": [
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585,
+        "rigidityTol": 0.2
+      },
+      "bounds": {
+        "min": {
+          "x": -3.5,
+          "y": -3
+        },
+        "max": {
+          "x": 3.5,
+          "y": 9
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "card_a",
+          "color": "#2F8C86",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 0.3,
+            "height": 1.6
+          }
+        },
+        {
+          "kind": "card_b",
+          "color": "#48699A",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 0.3,
+            "height": 1.6
+          }
+        },
+        {
+          "kind": "slab",
+          "color": "#CBA016",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 3.0,
+            "height": 0.3
+          }
+        },
+        {
+          "kind": "card_c",
+          "color": "#B8577A",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 0.3,
+            "height": 1.6
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -1.9,
+            "y": 0
+          },
+          {
+            "x": 1.9,
+            "y": 0
+          },
+          {
+            "x": 1.9,
+            "y": 1.94
+          },
+          {
+            "x": 0.85,
+            "y": 1.94
+          },
+          {
+            "x": 0,
+            "y": 3.6
+          },
+          {
+            "x": -0.85,
+            "y": 1.94
+          },
+          {
+            "x": -1.9,
+            "y": 1.94
+          }
+        ],
+        "slots": [
+          {
+            "kind": "card_a",
+            "position": {
+              "x": -1.5146,
+              "y": 0.818
+            },
+            "rotation": -0.3491
+          },
+          {
+            "kind": "card_a",
+            "position": {
+              "x": -0.6854,
+              "y": 0.818
+            },
+            "rotation": 0.3491
+          },
+          {
+            "kind": "card_b",
+            "position": {
+              "x": 0.6854,
+              "y": 0.818
+            },
+            "rotation": -0.3491
+          },
+          {
+            "kind": "card_b",
+            "position": {
+              "x": 1.5146,
+              "y": 0.818
+            },
+            "rotation": 0.3491
+          },
+          {
+            "kind": "slab",
+            "position": {
+              "x": 0,
+              "y": 1.79
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "card_c",
+            "position": {
+              "x": -0.4146,
+              "y": 2.76
+            },
+            "rotation": -0.3491
+          },
+          {
+            "kind": "card_c",
+            "position": {
+              "x": 0.4146,
+              "y": 2.76
+            },
+            "rotation": 0.3491
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "card_a",
+          "startPosition": {
+            "x": -1.5146,
+            "y": 6.45
+          },
+          "startRotation": -0.3491
+        },
+        {
+          "kind": "card_a",
+          "startPosition": {
+            "x": -0.6854,
+            "y": 6.45
+          },
+          "startRotation": 0.3491
+        },
+        {
+          "kind": "card_b",
+          "startPosition": {
+            "x": 0.6854,
+            "y": 6.45
+          },
+          "startRotation": -0.3491
+        },
+        {
+          "kind": "card_b",
+          "startPosition": {
+            "x": 1.5146,
+            "y": 6.45
+          },
+          "startRotation": 0.3491
+        },
+        {
+          "kind": "slab",
+          "startPosition": {
+            "x": 0,
+            "y": 3.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "card_c",
+          "startPosition": {
+            "x": -0.4146,
+            "y": 4.9
+          },
+          "startRotation": -0.3491
+        },
+        {
+          "kind": "card_c",
+          "startPosition": {
+            "x": 0.4146,
+            "y": 4.9
+          },
+          "startRotation": 0.3491
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.4,
+              "y": -0.3
+            },
+            {
+              "x": 2.4,
+              "y": -0.3
+            },
+            {
+              "x": 2.4,
+              "y": 0
+            },
+            {
+              "x": -2.4,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.2,
+              "y": -2.2
+            },
+            {
+              "x": -1.95,
+              "y": -2.2
+            },
+            {
+              "x": -1.95,
+              "y": -0.3
+            },
+            {
+              "x": -2.2,
+              "y": -0.3
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.95,
+              "y": -2.2
+            },
+            {
+              "x": 2.2,
+              "y": -2.2
+            },
+            {
+              "x": 2.2,
+              "y": -0.3
+            },
+            {
+              "x": 1.95,
+              "y": -0.3
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.094,
+              "y": 0
+            },
+            {
+              "x": -1.934,
+              "y": 0
+            },
+            {
+              "x": -1.934,
+              "y": 0.2
+            },
+            {
+              "x": -2.094,
+              "y": 0.2
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.266,
+              "y": 0
+            },
+            {
+              "x": -0.106,
+              "y": 0
+            },
+            {
+              "x": -0.106,
+              "y": 0.2
+            },
+            {
+              "x": -0.266,
+              "y": 0.2
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.106,
+              "y": 0
+            },
+            {
+              "x": 0.266,
+              "y": 0
+            },
+            {
+              "x": 0.266,
+              "y": 0.2
+            },
+            {
+              "x": 0.106,
+              "y": 0.2
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.934,
+              "y": 0
+            },
+            {
+              "x": 2.094,
+              "y": 0
+            },
+            {
+              "x": 2.094,
+              "y": 0.2
+            },
+            {
+              "x": 1.934,
+              "y": 0.2
+            }
+          ]
+        }
+      ]
     }
   ]
 }
