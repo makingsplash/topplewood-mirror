@@ -17882,6 +17882,497 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "ice_cream_cone",
+      "seed": 458,
+      "difficultyTier": 10,
+      "physicsMode": "assembly",
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -2.5,
+          "y": -1.0
+        },
+        "max": {
+          "x": 2.5,
+          "y": 11.0
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "pieceTypes": [
+        {
+          "kind": "cone",
+          "color": "#CDB27E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": 0,
+                "y": -1.5
+              },
+              {
+                "x": 1.15,
+                "y": 1.5
+              },
+              {
+                "x": 1.0,
+                "y": 1.5
+              },
+              {
+                "x": 0,
+                "y": -0.1
+              },
+              {
+                "x": -1.0,
+                "y": 1.5
+              },
+              {
+                "x": -1.15,
+                "y": 1.5
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0,
+                  "y": -1.5
+                },
+                {
+                  "x": 1.15,
+                  "y": 1.5
+                },
+                {
+                  "x": 1.0,
+                  "y": 1.5
+                },
+                {
+                  "x": 0,
+                  "y": -0.1
+                }
+              ],
+              [
+                {
+                  "x": 0,
+                  "y": -1.5
+                },
+                {
+                  "x": 0,
+                  "y": -0.1
+                },
+                {
+                  "x": -1.0,
+                  "y": 1.5
+                },
+                {
+                  "x": -1.15,
+                  "y": 1.5
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "scoop_plum",
+          "color": "#8B5A9E",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.3,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "scoop_teal",
+          "color": "#2F8C86",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.3,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "scoop_blue",
+          "color": "#48699A",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.3,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "scoop_green",
+          "color": "#5C8E3E",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.3,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "scoop_yellow",
+          "color": "#CBA016",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.3,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "scoop_rose",
+          "color": "#B8577A",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.6,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 1.15,
+            "y": 3.0
+          },
+          {
+            "x": 0.935,
+            "y": 3.0
+          },
+          {
+            "x": 0.85,
+            "y": 3.18
+          },
+          {
+            "x": 0.636,
+            "y": 3.284
+          },
+          {
+            "x": 0.424,
+            "y": 3.196
+          },
+          {
+            "x": 0.52,
+            "y": 3.321
+          },
+          {
+            "x": 0.6,
+            "y": 3.621
+          },
+          {
+            "x": 0.52,
+            "y": 3.921
+          },
+          {
+            "x": 0.3,
+            "y": 4.141
+          },
+          {
+            "x": 0,
+            "y": 4.221
+          },
+          {
+            "x": -0.3,
+            "y": 4.141
+          },
+          {
+            "x": -0.52,
+            "y": 3.921
+          },
+          {
+            "x": -0.6,
+            "y": 3.621
+          },
+          {
+            "x": -0.52,
+            "y": 3.321
+          },
+          {
+            "x": -0.424,
+            "y": 3.196
+          },
+          {
+            "x": -0.636,
+            "y": 3.284
+          },
+          {
+            "x": -0.85,
+            "y": 3.18
+          },
+          {
+            "x": -0.935,
+            "y": 3.0
+          },
+          {
+            "x": -1.15,
+            "y": 3.0
+          }
+        ],
+        "slots": [
+          {
+            "kind": "cone",
+            "position": {
+              "x": 0,
+              "y": 1.5
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "scoop_plum",
+            "position": {
+              "x": 0,
+              "y": 1.966
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "scoop_teal",
+            "position": {
+              "x": 0.318,
+              "y": 2.475
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "scoop_blue",
+            "position": {
+              "x": -0.318,
+              "y": 2.475
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "scoop_green",
+            "position": {
+              "x": 0.636,
+              "y": 2.984
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "scoop_yellow",
+            "position": {
+              "x": -0.636,
+              "y": 2.984
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "scoop_rose",
+            "position": {
+              "x": 0,
+              "y": 3.621
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "cone",
+          "startPosition": {
+            "x": 0,
+            "y": 6.65
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "scoop_plum",
+          "startPosition": {
+            "x": 0,
+            "y": 9.85
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "scoop_teal",
+          "startPosition": {
+            "x": 0.318,
+            "y": 5.05
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "scoop_blue",
+          "startPosition": {
+            "x": -0.318,
+            "y": 4.61
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "scoop_green",
+          "startPosition": {
+            "x": 0.636,
+            "y": 5.75
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "scoop_yellow",
+          "startPosition": {
+            "x": -0.636,
+            "y": 5.35
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "scoop_rose",
+          "startPosition": {
+            "x": 0,
+            "y": 8.85
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "collider": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.0,
+              "y": -0.3
+            },
+            {
+              "x": 2.0,
+              "y": -0.3
+            },
+            {
+              "x": 2.0,
+              "y": 1.2
+            },
+            {
+              "x": 0.46,
+              "y": 1.2
+            },
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": -0.46,
+              "y": 1.2
+            },
+            {
+              "x": -2.0,
+              "y": 1.2
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0,
+              "y": -0.3
+            },
+            {
+              "x": 2.0,
+              "y": -0.3
+            },
+            {
+              "x": 2.0,
+              "y": 1.2
+            },
+            {
+              "x": 0.46,
+              "y": 1.2
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.0,
+              "y": -0.3
+            },
+            {
+              "x": 0,
+              "y": -0.3
+            },
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": -0.46,
+              "y": 1.2
+            },
+            {
+              "x": -2.0,
+              "y": 1.2
+            }
+          ]
+        }
+      ]
     }
   ]
 }
