@@ -25114,6 +25114,559 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "diamond_gem",
+      "seed": 492,
+      "difficultyTier": 10,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        5
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -3,
+          "y": -1.5
+        },
+        "max": {
+          "x": 3,
+          "y": 6
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "tri_tip",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": 0.0,
+                "y": -0.225
+              },
+              {
+                "x": 0.45,
+                "y": 0.225
+              },
+              {
+                "x": -0.45,
+                "y": 0.225
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0.0,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.45,
+                  "y": 0.225
+                },
+                {
+                  "x": -0.45,
+                  "y": 0.225
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "tri_mid",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.45,
+                "y": -0.225
+              },
+              {
+                "x": 0.45,
+                "y": -0.225
+              },
+              {
+                "x": 0.0,
+                "y": 0.225
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.45,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.45,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.0,
+                  "y": 0.225
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "tri_left",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": 0.0,
+                "y": -0.225
+              },
+              {
+                "x": 0.45,
+                "y": 0.225
+              },
+              {
+                "x": -0.45,
+                "y": 0.225
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0.0,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.45,
+                  "y": 0.225
+                },
+                {
+                  "x": -0.45,
+                  "y": 0.225
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "tri_right",
+          "color": "#8B5A9E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": 0.0,
+                "y": -0.225
+              },
+              {
+                "x": 0.45,
+                "y": 0.225
+              },
+              {
+                "x": -0.45,
+                "y": 0.225
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0.0,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.45,
+                  "y": 0.225
+                },
+                {
+                  "x": -0.45,
+                  "y": 0.225
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "facet_l",
+          "color": "#5C8E3E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.225,
+                "y": -0.225
+              },
+              {
+                "x": 0.225,
+                "y": -0.225
+              },
+              {
+                "x": 0.225,
+                "y": 0.225
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.225,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.225,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.225,
+                  "y": 0.225
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "table",
+          "color": "#CBA016",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.84,
+            "height": 0.45
+          }
+        },
+        {
+          "kind": "facet_r",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.225,
+                "y": -0.225
+              },
+              {
+                "x": 0.225,
+                "y": -0.225
+              },
+              {
+                "x": -0.225,
+                "y": 0.225
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.225,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.225,
+                  "y": -0.225
+                },
+                {
+                  "x": -0.225,
+                  "y": 0.225
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -0.001,
+            "y": 0.122
+          },
+          {
+            "x": 0.911,
+            "y": 1.035
+          },
+          {
+            "x": 0.9,
+            "y": 1.055
+          },
+          {
+            "x": 0.45,
+            "y": 1.505
+          },
+          {
+            "x": 0.42,
+            "y": 1.505
+          },
+          {
+            "x": -0.42,
+            "y": 1.505
+          },
+          {
+            "x": -0.45,
+            "y": 1.505
+          },
+          {
+            "x": -0.9,
+            "y": 1.055
+          },
+          {
+            "x": -0.919,
+            "y": 1.043
+          }
+        ],
+        "slots": [
+          {
+            "kind": "tri_tip",
+            "position": {
+              "x": -0.001,
+              "y": 0.347
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "tri_mid",
+            "position": {
+              "x": -0.001,
+              "y": 0.806
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "tri_left",
+            "position": {
+              "x": -0.469,
+              "y": 0.818
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "tri_right",
+            "position": {
+              "x": 0.461,
+              "y": 0.81
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "facet_l",
+            "position": {
+              "x": -0.675,
+              "y": 1.28
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "table",
+            "position": {
+              "x": 0,
+              "y": 1.28
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "facet_r",
+            "position": {
+              "x": 0.675,
+              "y": 1.28
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "tri_tip",
+          "startPosition": {
+            "x": 0.45,
+            "y": 1.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "tri_mid",
+          "startPosition": {
+            "x": 0,
+            "y": 2.3
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "tri_left",
+          "startPosition": {
+            "x": -0.469,
+            "y": 1.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "tri_right",
+          "startPosition": {
+            "x": 0.461,
+            "y": 4.1
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "facet_l",
+          "startPosition": {
+            "x": -0.675,
+            "y": 2.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "table",
+          "startPosition": {
+            "x": 0,
+            "y": 3.1
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "facet_r",
+          "startPosition": {
+            "x": 0.675,
+            "y": 3.6
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "collider": false,
+          "outline": [
+            {
+              "x": -1.4,
+              "y": -0.4
+            },
+            {
+              "x": 1.4,
+              "y": -0.4
+            },
+            {
+              "x": 1.4,
+              "y": 1.0
+            },
+            {
+              "x": 0.9,
+              "y": 1.0
+            },
+            {
+              "x": 0,
+              "y": 0.1
+            },
+            {
+              "x": -0.9,
+              "y": 1.0
+            },
+            {
+              "x": -1.4,
+              "y": 1.0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": 0.1
+            },
+            {
+              "x": -0.9,
+              "y": 1.0
+            },
+            {
+              "x": -1.4,
+              "y": 1.0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0,
+              "y": -0.4
+            },
+            {
+              "x": 1.4,
+              "y": -0.4
+            },
+            {
+              "x": 1.4,
+              "y": 1.0
+            },
+            {
+              "x": 0.9,
+              "y": 1.0
+            },
+            {
+              "x": 0,
+              "y": 0.1
+            }
+          ]
+        }
+      ]
     }
   ]
 }
