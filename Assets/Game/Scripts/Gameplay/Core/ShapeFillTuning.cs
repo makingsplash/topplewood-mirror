@@ -44,7 +44,9 @@ namespace Gameplay.Core
         /// (variant B). UNVERIFIED — ⟨balancer⟩ tunes against playtest (too low → swallowed co-taps; too high → drifts
         /// back into a forgiving helper). W=0/1 (one step) is intentionally NOT the default: two human fingers scatter
         /// over several frames, so a literal-zero window is unplayable while the sim (which emits a pair in one step)
-        /// would still pass — a green gate over a dead level. A level with no CoReleaseGroups never opens a window.</summary>
+        /// would still pass — a green gate over a dead level. A level with no CoReleaseGroups never opens a window.
+        /// TASK-482: in the EDITOR with no touchscreen (mouse) <c>EditorMouseCoReleaseWindow</c> overrides this to a
+        /// wide window (≈0.6 s) so a pair can be clicked member by member; device builds and the sim keep this value.</summary>
         public int CoReleaseWindowSteps { get; set; } = 4;
     }
 }

@@ -37,6 +37,11 @@ namespace Gameplay.DI
 
             // Mechanic seams (replace Null/Empty stubs).
             builder.Register<IMechanicController, ShapeFillMechanicController>(Lifetime.Singleton);
+#if UNITY_EDITOR
+            // TASK-482: in the editor with no touchscreen (mouse) the co-release window widens so a pair can be
+            // clicked one member after the other; device builds never compile this line, the sim never runs it.
+            builder.RegisterEntryPoint<EditorMouseCoReleaseWindow>();
+#endif
 
             // Level storage (TASK-009): authored JSON in StreamingAssets read through the ILevelStore seam,
             // replacing the hardcoded ShapeFillLevelSource (the human's 15:04 "storage system" mandate).
