@@ -27958,6 +27958,635 @@
           "bypassHoverGuard": true
         }
       ]
+    },
+    {
+      "levelId": "grape_vine",
+      "seed": 4873,
+      "difficultyTier": 10,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -7,
+          "y": -1
+        },
+        "max": {
+          "x": 7,
+          "y": 13
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "leaf",
+          "color": "#5C8E3E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -1.05,
+                "y": -0.45
+              },
+              {
+                "x": -0.85,
+                "y": -0.25
+              },
+              {
+                "x": -0.65,
+                "y": -0.45
+              },
+              {
+                "x": -0.2,
+                "y": -0.45
+              },
+              {
+                "x": 0.0,
+                "y": -0.25
+              },
+              {
+                "x": 0.2,
+                "y": -0.45
+              },
+              {
+                "x": 0.65,
+                "y": -0.45
+              },
+              {
+                "x": 0.85,
+                "y": -0.25
+              },
+              {
+                "x": 1.05,
+                "y": -0.45
+              },
+              {
+                "x": 1.65,
+                "y": -0.55
+              },
+              {
+                "x": 1.5,
+                "y": -0.13
+              },
+              {
+                "x": 2.05,
+                "y": 0.3
+              },
+              {
+                "x": 1.2,
+                "y": 0.55
+              },
+              {
+                "x": -1.2,
+                "y": 0.55
+              },
+              {
+                "x": -2.05,
+                "y": 0.3
+              },
+              {
+                "x": -1.5,
+                "y": -0.13
+              },
+              {
+                "x": -1.65,
+                "y": -0.55
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -1.65,
+                  "y": -0.55
+                },
+                {
+                  "x": -1.05,
+                  "y": -0.45
+                },
+                {
+                  "x": -1.5,
+                  "y": -0.13
+                }
+              ],
+              [
+                {
+                  "x": -1.5,
+                  "y": -0.13
+                },
+                {
+                  "x": -1.05,
+                  "y": -0.45
+                },
+                {
+                  "x": -0.85,
+                  "y": -0.25
+                },
+                {
+                  "x": -0.85,
+                  "y": 0.55
+                },
+                {
+                  "x": -1.2,
+                  "y": 0.55
+                },
+                {
+                  "x": -2.05,
+                  "y": 0.3
+                }
+              ],
+              [
+                {
+                  "x": -0.85,
+                  "y": -0.25
+                },
+                {
+                  "x": -0.65,
+                  "y": -0.45
+                },
+                {
+                  "x": -0.2,
+                  "y": -0.45
+                },
+                {
+                  "x": 0.0,
+                  "y": -0.25
+                },
+                {
+                  "x": 0.0,
+                  "y": 0.55
+                },
+                {
+                  "x": -0.85,
+                  "y": 0.55
+                }
+              ],
+              [
+                {
+                  "x": 0.0,
+                  "y": -0.25
+                },
+                {
+                  "x": 0.2,
+                  "y": -0.45
+                },
+                {
+                  "x": 0.65,
+                  "y": -0.45
+                },
+                {
+                  "x": 0.85,
+                  "y": -0.25
+                },
+                {
+                  "x": 0.85,
+                  "y": 0.55
+                },
+                {
+                  "x": 0.0,
+                  "y": 0.55
+                }
+              ],
+              [
+                {
+                  "x": 0.85,
+                  "y": -0.25
+                },
+                {
+                  "x": 1.05,
+                  "y": -0.45
+                },
+                {
+                  "x": 1.5,
+                  "y": -0.13
+                },
+                {
+                  "x": 2.05,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.2,
+                  "y": 0.55
+                },
+                {
+                  "x": 0.85,
+                  "y": 0.55
+                }
+              ],
+              [
+                {
+                  "x": 1.05,
+                  "y": -0.45
+                },
+                {
+                  "x": 1.65,
+                  "y": -0.55
+                },
+                {
+                  "x": 1.5,
+                  "y": -0.13
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "grape_plum",
+          "color": "#8B5A9E",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.4,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "grape_teal",
+          "color": "#2F8C86",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.4,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "grape_indigo",
+          "color": "#5A55A3",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.4,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "grape_rose",
+          "color": "#B8577A",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.4,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "grape_gold",
+          "color": "#CBA016",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.4,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "grape_blue",
+          "color": "#48699A",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.4,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": 0.0,
+            "y": 7.898
+          },
+          {
+            "x": 0.283,
+            "y": 8.015
+          },
+          {
+            "x": 0.4,
+            "y": 8.298
+          },
+          {
+            "x": 0.708,
+            "y": 8.693
+          },
+          {
+            "x": 0.825,
+            "y": 8.976
+          },
+          {
+            "x": 1.133,
+            "y": 9.371
+          },
+          {
+            "x": 1.25,
+            "y": 9.654
+          },
+          {
+            "x": 1.133,
+            "y": 9.937
+          },
+          {
+            "x": 1.05,
+            "y": 10.0
+          },
+          {
+            "x": 1.65,
+            "y": 9.9
+          },
+          {
+            "x": 1.5,
+            "y": 10.32
+          },
+          {
+            "x": 2.05,
+            "y": 10.75
+          },
+          {
+            "x": 1.2,
+            "y": 11.0
+          },
+          {
+            "x": -1.2,
+            "y": 11.0
+          },
+          {
+            "x": -2.05,
+            "y": 10.75
+          },
+          {
+            "x": -1.5,
+            "y": 10.32
+          },
+          {
+            "x": -1.65,
+            "y": 9.9
+          },
+          {
+            "x": -1.05,
+            "y": 10.0
+          },
+          {
+            "x": -1.133,
+            "y": 9.937
+          },
+          {
+            "x": -1.25,
+            "y": 9.654
+          },
+          {
+            "x": -1.133,
+            "y": 9.371
+          },
+          {
+            "x": -0.825,
+            "y": 8.976
+          },
+          {
+            "x": -0.708,
+            "y": 8.693
+          },
+          {
+            "x": -0.4,
+            "y": 8.298
+          },
+          {
+            "x": -0.283,
+            "y": 8.015
+          }
+        ],
+        "slots": [
+          {
+            "kind": "leaf",
+            "position": {
+              "x": 0.0,
+              "y": 10.45
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "grape_plum",
+            "position": {
+              "x": -0.85,
+              "y": 9.6536
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "grape_teal",
+            "position": {
+              "x": 0.0,
+              "y": 9.6536
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "grape_indigo",
+            "position": {
+              "x": 0.85,
+              "y": 9.6536
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "grape_rose",
+            "position": {
+              "x": -0.425,
+              "y": 8.9758
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "grape_gold",
+            "position": {
+              "x": 0.425,
+              "y": 8.9758
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "grape_blue",
+            "position": {
+              "x": 0.0,
+              "y": 8.298
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "leaf",
+          "startPosition": {
+            "x": 0.0,
+            "y": 5.7
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "grape_plum",
+          "startPosition": {
+            "x": -0.85,
+            "y": 2.4
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "grape_teal",
+          "startPosition": {
+            "x": 0.0,
+            "y": 3.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "grape_indigo",
+          "startPosition": {
+            "x": 0.85,
+            "y": 1.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "grape_rose",
+          "startPosition": {
+            "x": -0.425,
+            "y": 4.7
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "grape_gold",
+          "startPosition": {
+            "x": 0.425,
+            "y": 2.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "grape_blue",
+          "startPosition": {
+            "x": 0.0,
+            "y": 2.0
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.2,
+              "y": 11.0
+            },
+            {
+              "x": 3.2,
+              "y": 11.0
+            },
+            {
+              "x": 3.2,
+              "y": 11.6
+            },
+            {
+              "x": -3.2,
+              "y": 11.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.2,
+              "y": -0.6
+            },
+            {
+              "x": 3.2,
+              "y": -0.6
+            },
+            {
+              "x": 3.2,
+              "y": 0.0
+            },
+            {
+              "x": -3.2,
+              "y": 0.0
+            }
+          ]
+        }
+      ],
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -2.3,
+              "y": 1.0
+            },
+            "max": {
+              "x": 2.3,
+              "y": 11.0
+            }
+          },
+          "direction": {
+            "x": 0,
+            "y": 1
+          },
+          "acceleration": 15.0,
+          "color": "#CFE8F5",
+          "bypassHoverGuard": true
+        }
+      ]
     }
   ]
 }
