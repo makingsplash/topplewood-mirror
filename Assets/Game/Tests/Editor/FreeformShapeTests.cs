@@ -229,6 +229,47 @@ namespace Gameplay.Tests
             Assert.That(msg, Is.Not.Empty);
         }
 
+        [Test]
+        public void Symmetry_FivePointStar_Order5_IsLegal()
+            // An ODD order: the 5-point star self-coincides at 72° about its centroid. A candidate list without 5 judged
+            // it order 1 and rejected the honest claim (TASK-474, bead_necklace v2).
+            => Assert.That(SymMessages(ValidateSym(FreeformPiece("star", StarContour(), StarParts(), 5))), Is.Empty);
+
+        [Test]
+        public void Symmetry_FivePointStar_Order10_IsFlagged()
+        {
+            // 10 ∤ 5: a star is not 10-fold, the over-claim is still caught.
+            var msg = SymMessages(ValidateSym(FreeformPiece("star", StarContour(), StarParts(), 10)));
+            Assert.That(msg, Is.Not.Empty);
+        }
+
+        // StarContour — a regular 5-point star (R 1, r 0.4), CCW from the top tip, then shifted so the BBOX centre is
+        // the origin (as authors bake a freeform): the centroid sits off the origin, so the test also pins that the
+        // symmetry is judged about the centroid. Parts: the inner pentagon plus one triangle per ray.
+        private static Vec2[] StarContour()
+        {
+            var raw = new Vec2[10];
+            for (var i = 0; i < 10; i++)
+            {
+                var a = System.MathF.PI / 2f + System.MathF.PI * i / 5f;
+                var rad = i % 2 == 0 ? 1f : 0.4f;
+                raw[i] = new Vec2(rad * System.MathF.Cos(a), rad * System.MathF.Sin(a));
+            }
+            var minY = raw.Min(v => v.Y);
+            var shift = (1f + minY) / 2f;
+            return raw.Select(v => new Vec2(v.X, v.Y - shift)).ToArray();
+        }
+
+        private static Vec2[][] StarParts()
+        {
+            var c = StarContour();
+            var parts = new Vec2[6][];
+            parts[0] = new[] { c[1], c[3], c[5], c[7], c[9] };
+            for (var i = 0; i < 5; i++)
+                parts[i + 1] = new[] { c[(2 * i + 9) % 10], c[2 * i], c[2 * i + 1] };
+            return parts;
+        }
+
         // ---------------------------------------------------------------- helpers
 
         private static List<Vec2Dto> ToDtoList(Vec2[] verts)

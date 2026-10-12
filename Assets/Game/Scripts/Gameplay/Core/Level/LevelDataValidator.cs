@@ -392,10 +392,13 @@ namespace Gameplay.Core
             }
         }
 
-        private static readonly int[] FreeformSymmetryCandidates = { 12, 8, 6, 4, 3, 2 };
+        // Every k in 12..2, descending: odd orders (a 5-point star, a pentagon, a 7-petal flower) are real silhouettes,
+        // and a list without them forces such a shape to order 1 — the judge then fails a 72°-turned star that looks
+        // identical (TASK-474, bead_necklace v2).
+        private static readonly int[] FreeformSymmetryCandidates = { 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
 
         /// <summary>TASK-360: the true rotational-symmetry order of a FREEFORM silhouette, judged GEOMETRICALLY (it has
-        /// no catalogue row): the LARGEST k ∈ {12,8,6,4,3,2} for which rotating the contour by 2π/k about its AREA
+        /// no catalogue row): the LARGEST k ∈ 12..2 for which rotating the contour by 2π/k about its AREA
         /// centroid carries the vertex set onto itself (within ε), else 1. About the centroid, NOT the transform origin,
         /// so a shape symmetric about its centre is not falsely rejected — the same parallelogram trap the switch
         /// docstring warns of. Order 1 (the chiral default of a figurative detail) always passes; a genuine 2-/4-fold
