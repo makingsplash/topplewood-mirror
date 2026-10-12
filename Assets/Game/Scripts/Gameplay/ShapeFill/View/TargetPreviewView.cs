@@ -120,8 +120,12 @@ namespace Gameplay.View
                 var meshFilter = child.AddComponent<MeshFilter>();
                 meshFilter.mesh = PieceMeshBuilder.Build(type.Shape);
 
+                // TASK-368: картинка-цель рисует freeform-деталь так же, как поле, — без шва между частями.
+                var silhouette = PieceMeshBuilder.SeamlessSilhouette(type.Shape);
+                var packed = silhouette == null ? null : BlockMaterial.PackSilhouette(silhouette);
+
                 var renderer = child.AddComponent<MeshRenderer>();
-                renderer.sharedMaterial = BlockMaterial.Shared;
+                renderer.sharedMaterial = packed != null ? BlockMaterial.ConcaveShared : BlockMaterial.Shared;
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 renderer.receiveShadows = false;
 
@@ -134,7 +138,14 @@ namespace Gameplay.View
                 // синее с зелёным. Поэтому ремап палитры (WoodTuning.PaletteToGame) идёт и здесь.
                 // Вид ОБЯЗАН попасть в слот: цветовая схема уровня раздаёт оттенки по видам, и без
                 // него превью красилось прежней общей палитрой — «фигуры другого цвета, чем у нас».
-                _slots.Add(new Slot { Renderer = renderer, LevelColor = color, Kind = slot.Kind });
+                _slots.Add(new Slot
+                {
+                    Renderer = renderer,
+                    LevelColor = color,
+                    Kind = slot.Kind,
+                    Silhouette = packed,
+                    SilhouetteCount = packed == null ? 0 : silhouette.Length,
+                });
             }
 
             Repaint();
@@ -153,6 +164,10 @@ namespace Gameplay.View
             public MeshRenderer Renderer;
             public Color LevelColor;
             public string Kind;
+
+            /// <summary>TASK-368: упакованный силуэт freeform-детали (null у остальных форм).</summary>
+            public Vector4[] Silhouette;
+            public int SilhouetteCount;
         }
 
         private readonly List<Slot> _slots = new List<Slot>();
@@ -169,8 +184,12 @@ namespace Gameplay.View
                     continue;
                 var color = tuning.ResolveLevelColor(slot.LevelColor, slot.Kind);
                 color.a = 1f;
+                // Блок один на все слоты: Clear, чтобы контур freeform-слота не доехал до следующего слота.
+                mpb.Clear();
                 mpb.SetColor(BlockMaterial.ColorProperty, color);
                 mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
+                if (slot.Silhouette != null)
+                    BlockMaterial.SetSilhouette(mpb, slot.Silhouette, slot.SilhouetteCount);
                 slot.Renderer.SetPropertyBlock(mpb);
             }
         }

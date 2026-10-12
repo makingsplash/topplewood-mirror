@@ -28,6 +28,12 @@ namespace Gameplay.View
         /// потому что масса детали в фигуре — свойство вида, а не формы.</summary>
         private string _kind;
 
+        /// <summary>TASK-368: упакованный силуэт freeform-детали для шейдера (<see cref="BlockMaterial.PackSilhouette"/>);
+        /// <c>null</c> у всех остальных форм. Полем, а не разово: <see cref="ApplyColor"/> собирает блок заново
+        /// (Clear) на каждом перекрашивании, и контур обязан класться туда каждый раз.</summary>
+        private Vector4[] _silhouette;
+        private int _silhouetteCount;
+
         public string StyleKey => _styleKey;
 
         public void Initialize(Shape shape, string colorHex) => Initialize(shape, colorHex, null);
@@ -44,13 +50,19 @@ namespace Gameplay.View
             _mesh = PieceMeshBuilder.Build(shape);
             meshFilter.mesh = _mesh;
 
+            // TASK-368: составная freeform-деталь рисует кромку по СИЛУЭТУ, а не по рёбрам частей — иначе стык
+            // частей читается лишней линией посреди фигуры. Меш остаётся покрытием (и запасным путём со швом).
+            var silhouette = PieceMeshBuilder.SeamlessSilhouette(shape);
+            _silhouette = silhouette == null ? null : BlockMaterial.PackSilhouette(silhouette);
+            _silhouetteCount = _silhouette == null ? 0 : silhouette.Length;
+
             _renderer = gameObject.AddComponent<MeshRenderer>();
-            _renderer.sharedMaterial = BlockMaterial.Shared;
+            _renderer.sharedMaterial = _silhouette != null ? BlockMaterial.ConcaveShared : BlockMaterial.Shared;
             _renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _renderer.receiveShadows = false;
 
             // Тень — отдельный дочерний меш позади детали (объём, просьба владельца).
-            _shadow = PieceShadow.Attach(transform, _mesh);
+            _shadow = PieceShadow.Attach(transform, _mesh, _silhouette, _silhouetteCount);
 
             _mpb = new MaterialPropertyBlock();
             RefreshColor();
@@ -118,6 +130,11 @@ namespace Gameplay.View
             _mpb.SetColor(BlockMaterial.ColorProperty, color);
             _mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
             WoodTuning.Current.ApplyPieceStyle(_mpb, _styleKey);
+
+            // TASK-368: Clear выше стёр и силуэт — без повторной загрузки живое перекрашивание (стейт, ползунок)
+            // оставило бы freeform-деталь с пустым контуром, то есть без фаски и канта.
+            if (_silhouette != null)
+                BlockMaterial.SetSilhouette(_mpb, _silhouette, _silhouetteCount);
 
             _renderer.SetPropertyBlock(_mpb);
         }

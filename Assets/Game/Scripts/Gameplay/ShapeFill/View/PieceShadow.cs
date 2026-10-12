@@ -29,6 +29,7 @@ namespace Gameplay.View
         private static readonly int SoftId = Shader.PropertyToID("_Soft");
 
         private static Material _shared;
+        private static Material _silhouetteShared;
 
         // Обычные (не слабые) ссылки: уничтоженный Unity-объект сравнивается с null, по этому
         // признаку запись и выметается в RefreshLiveShadows. Список короткий — детали на экране.
@@ -55,12 +56,42 @@ namespace Gameplay.View
         }
 
         /// <summary>
+        /// TASK-368: тень составной freeform-детали — тот же шейдер с кейвордом <c>_CONCAVE_SDF</c>: размытие края
+        /// считается по СИЛУЭТУ, а не по <c>uv2.x</c> меша. Иначе стык частей (его uv2.x = 0, то есть альфа 0)
+        /// прорезал бы тень прозрачной щелью. Контур — per-renderer в MaterialPropertyBlock (<see cref="Attach(Transform, Mesh, Vector4[], int)"/>).
+        /// </summary>
+        public static Material SilhouetteShared
+        {
+            get
+            {
+                if (_silhouetteShared == null)
+                {
+                    var shader = Shader.Find("Game/Wood Piece Shadow");
+                    if (shader == null)
+                        return null;
+                    _silhouetteShared = new Material(shader) { name = "PieceShadowSilhouetteMaterial" };
+                    _silhouetteShared.EnableKeyword(BlockMaterial.ConcaveKeyword);
+                    _silhouetteShared.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                    WoodTuning.Current.ApplyToShadow(_silhouetteShared);
+                }
+                return _silhouetteShared;
+            }
+        }
+
+        /// <summary>
         /// Вешает тень на деталь. Возвращает трансформ тени (или null, если шейдера нет) —
         /// звать <see cref="LocalOffset"/> при каждом изменении позы.
         /// </summary>
-        public static Transform Attach(Transform owner, Mesh mesh)
+        public static Transform Attach(Transform owner, Mesh mesh) => Attach(owner, mesh, null, 0);
+
+        /// <summary>
+        /// То же, но с силуэтом (TASK-368): при <paramref name="silhouette"/> ≠ null тень берёт
+        /// <see cref="SilhouetteShared"/> и получает упакованный контур (<see cref="BlockMaterial.PackSilhouette"/>) в свой
+        /// MaterialPropertyBlock. Кладётся один раз: <see cref="ApplySoft"/> блок дописывает, а не очищает.
+        /// </summary>
+        public static Transform Attach(Transform owner, Mesh mesh, Vector4[] silhouette, int silhouetteCount)
         {
-            var material = Shared;
+            var material = silhouette != null ? SilhouetteShared : Shared;
             if (material == null || owner == null || mesh == null)
                 return null;
 
@@ -75,6 +106,12 @@ namespace Gameplay.View
             renderer.sharedMaterial = material;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
+            if (silhouette != null)
+            {
+                var mpb = new MaterialPropertyBlock();
+                BlockMaterial.SetSilhouette(mpb, silhouette, silhouetteCount);
+                renderer.SetPropertyBlock(mpb);
+            }
             ApplySoft(renderer, mesh);
 
             LiveShadows.Add(t);

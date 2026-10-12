@@ -24,17 +24,18 @@ namespace Gameplay.View
 
         private static readonly Color DefaultColor = new Color(0.72f, 0.57f, 0.42f); // neutral block brown
 
-        // TASK-353: the shader's _ConcaveOutline uniform holds at most this many vertices. A concave mass with more
-        // (none in the current manifest) falls back to the dense per-vertex SDF mesh instead of the analytic path.
-        private const int ConcaveOutlineMax = 64;
+        // TASK-353: the shader's _ConcaveOutline uniform holds at most BlockMaterial.SilhouetteMax vertices. A concave mass
+        // with more (none in the current manifest) falls back to the dense per-vertex SDF mesh instead of the analytic path.
 
         private MeshRenderer _renderer;
         private MaterialPropertyBlock _mpb;
 
         // TASK-353: packed world-space CCW outline uploaded to the shader on the analytic-SDF mass path; null on every
         // other path. Kept as a field because RefreshColor rebuilds the MaterialPropertyBlock from scratch (it Clear()s),
-        // so the outline must be re-applied there on each live re-colour, not once at init.
+        // so the outline must be re-applied there on each live re-colour, not once at init. Packed to the full
+        // SilhouetteMax length (BlockMaterial.PackSilhouette); the live node count is _concaveOutlineCount.
         private Vector4[] _concaveOutline;
+        private int _concaveOutlineCount;
 
         /// <summary>Полка рисуется под тенями деталей, но над фоном.</summary>
         private const int ShelfSortingOrder = -100;
@@ -87,21 +88,20 @@ namespace Gameplay.View
             // static still renders (slowly) instead of blank.
             Mesh mesh = null;
             Vec2[] boundary = null;
-            if (worldOutline != null && worldOutline.Length <= ConcaveOutlineMax)
+            if (worldOutline != null && worldOutline.Length <= BlockMaterial.SilhouetteMax)
                 mesh = PieceMeshBuilder.BuildConcaveMass(worldOutline, out boundary);
 
             if (mesh != null && boundary != null)
             {
                 _renderer.sharedMaterial = BlockMaterial.ConcaveShared;
-                _concaveOutline = new Vector4[boundary.Length];
-                for (var i = 0; i < boundary.Length; i++)
-                    _concaveOutline[i] = new Vector4(boundary[i].X, boundary[i].Y, 0f, 0f);
+                _concaveOutline = BlockMaterial.PackSilhouette(boundary);
+                _concaveOutlineCount = boundary.Length;
             }
             else
             {
-                if (worldOutline != null && worldOutline.Length > ConcaveOutlineMax)
+                if (worldOutline != null && worldOutline.Length > BlockMaterial.SilhouetteMax)
                     Debug.LogWarning($"StaticGeometryView: concave mass has {worldOutline.Length} verts (> " +
-                                     $"{ConcaveOutlineMax} shader-uniform limit) — falling back to the dense SDF mesh.");
+                                     $"{BlockMaterial.SilhouetteMax} shader-uniform limit) — falling back to the dense SDF mesh.");
                 mesh = PieceMeshBuilder.BuildConcaveFill(worldOutline, _styleKey);
                 _renderer.sharedMaterial = BlockMaterial.Shared;
                 _concaveOutline = null;
@@ -218,10 +218,7 @@ namespace Gameplay.View
             // uniform. Clear() above wiped it, so re-upload here — otherwise a live re-colour (WoodTuning.Changed)
             // would leave the mass with an empty outline and no edge band.
             if (_concaveOutline != null)
-            {
-                _mpb.SetVectorArray(BlockMaterial.ConcaveOutlineProperty, _concaveOutline);
-                _mpb.SetFloat(BlockMaterial.ConcaveOutlineCountProperty, _concaveOutline.Length);
-            }
+                BlockMaterial.SetSilhouette(_mpb, _concaveOutline, _concaveOutlineCount);
 
             _renderer.SetPropertyBlock(_mpb);
         }

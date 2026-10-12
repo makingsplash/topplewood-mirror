@@ -41,10 +41,44 @@ namespace Gameplay.View
         // into ONE combined mesh, so the silhouette fills solid with correct per-edge wood normals. Corner rounding is
         // skipped for polyominoes (rounding each rectangular part would notch the internal seams); rounded silhouette
         // corners for tetrominoes are art-director's call (tech-debt in the artifact). Convex primitives are unchanged.
+        // TASK-368: the per-part fan is COVERAGE. Its per-vertex edge distance is 0 along every internal part edge (the
+        // edge's endpoints lie on the silhouette), so the shader draws a seam there. For a FREEFORM piece the view does not
+        // use that channel: the edge is computed per-fragment from the silhouette (SeamlessSilhouette → _CONCAVE_SDF).
+        // Polyominoes keep the per-part seam on purpose — it reads as tiles of the mosaic target.
         public static Mesh Build(Shape shape)
             => shape.ConvexParts != null
                 ? BuildCompound(shape.ConvexParts, WoodPieceKey.Of(shape))
                 : Build(ShapeVisualOutline.Build(shape), WoodPieceKey.Of(shape));
+
+        /// <summary>
+        /// TASK-368: the ONE scope predicate for "draw this compound piece without internal seams". Returns the CCW
+        /// silhouette the shader's <c>_CONCAVE_SDF</c> variant measures the edge against, or <c>null</c> when the piece
+        /// stays on the per-vertex path (and keeps its per-part seam).
+        /// <para>
+        /// Scope = FREEFORM only. The seam was called a defect twice, both times on freeform figures (burger 2026-09-09,
+        /// palm 2026-10-12); on polyominoes the parts coincide with the mosaic cells and the seam reads as tiles across 27
+        /// shipped levels. To include polyominoes, drop the <c>Primitive == Freeform</c> condition (their contours are
+        /// ≤12 vertices, CCW by construction) and flip <c>Polyomino_SeamlessSilhouette_IsNull</c>.
+        /// </para>
+        /// The contour is CCW by validation (<c>ValidateFreeformContour</c> rejects CW), not re-normalised here. Over
+        /// <see cref="BlockMaterial.SilhouetteMax"/> vertices the piece falls back to the seam path with a warning —
+        /// it keeps rendering instead of drawing a truncated outline.
+        /// </summary>
+        public static Vec2[] SeamlessSilhouette(Shape shape)
+        {
+            if (shape == null || shape.ConvexParts == null || shape.Primitive != ShapePrimitive.Freeform)
+                return null;
+            var contour = shape.Vertices;
+            if (contour == null || contour.Length < 3)
+                return null;
+            if (contour.Length > BlockMaterial.SilhouetteMax)
+            {
+                Debug.LogWarning($"PieceMeshBuilder: freeform contour has {contour.Length} verts (> " +
+                                 $"{BlockMaterial.SilhouetteMax} shader-uniform limit) — drawn per part, internal seams stay.");
+                return null;
+            }
+            return contour;
+        }
 
         /// <summary>
         /// Радиус скругления углов для детали ОПОРНОГО размера (<see cref="WoodTuning.DetailRefSize"/>);

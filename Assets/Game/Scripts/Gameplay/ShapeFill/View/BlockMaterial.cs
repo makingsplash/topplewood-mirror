@@ -1,3 +1,4 @@
+using Gameplay.Core;
 using UnityEngine;
 
 namespace Gameplay.View
@@ -13,12 +14,43 @@ namespace Gameplay.View
         public static readonly int LegacyColorProperty = Shader.PropertyToID("_Color");
         private static readonly int CullProperty = Shader.PropertyToID("_Cull");
 
-        // TASK-353: канал контура вогнутой массы для аналитического SDF-варианта шейдера. Заливается
-        // per-renderer через MaterialPropertyBlock (StaticGeometryView), не в материал.
+        // TASK-353/368: канал контура силуэта для аналитического SDF-варианта шейдеров (вогнутая масса, freeform-деталь,
+        // их тень). Заливается per-renderer через MaterialPropertyBlock (SetSilhouette), не в материал.
         public static readonly int ConcaveOutlineProperty = Shader.PropertyToID("_ConcaveOutline");
         public static readonly int ConcaveOutlineCountProperty = Shader.PropertyToID("_ConcaveOutlineCount");
 
-        private const string ConcaveKeyword = "_CONCAVE_SDF";
+        /// <summary>Потолок узлов контура в uniform-массиве <c>_ConcaveOutline[64]</c> (SilhouetteSdf.hlsl). Единый
+        /// источник лимита для всех, кто кладёт силуэт в шейдер.</summary>
+        public const int SilhouetteMax = 64;
+
+        public const string ConcaveKeyword = "_CONCAVE_SDF";
+
+        /// <summary>
+        /// Упаковать CCW-контур для <see cref="SetSilhouette"/>. Массив ВСЕГДА длины <see cref="SilhouetteMax"/>, хвост
+        /// нулями: Unity фиксирует длину массива в MaterialPropertyBlock при ПЕРВОМ <c>SetVectorArray</c> и молча
+        /// обрезает более длинный массив позже — на блоке, переиспользуемом без <c>Clear()</c>, второй контур потерял бы
+        /// хвост (замер TASK-368: 5 → 40 узлов дало 5; после <c>Clear()</c> длина не держится и обрезки нет).
+        /// Контур длиннее лимита → <c>null</c>: отказ виден вызывающему, а не обрезан молча.
+        /// </summary>
+        public static Vector4[] PackSilhouette(Vec2[] ccw)
+        {
+            if (ccw == null || ccw.Length > SilhouetteMax)
+                return null;
+            var packed = new Vector4[SilhouetteMax];
+            for (var i = 0; i < ccw.Length; i++)
+                packed[i] = new Vector4(ccw[i].X, ccw[i].Y, 0f, 0f);
+            return packed;
+        }
+
+        /// <summary>Положить упакованный контур (<see cref="PackSilhouette"/>) и число его узлов в блок. Звать ПОСЛЕ
+        /// каждого <c>mpb.Clear()</c> — Clear стирает и контур.</summary>
+        public static void SetSilhouette(MaterialPropertyBlock mpb, Vector4[] packed, int count)
+        {
+            if (mpb == null || packed == null)
+                return;
+            mpb.SetVectorArray(ConcaveOutlineProperty, packed);
+            mpb.SetFloat(ConcaveOutlineCountProperty, count);
+        }
 
         private static Material _shared;
         private static Material _concaveShared;
@@ -57,13 +89,13 @@ namespace Gameplay.View
         }
 
         /// <summary>
-        /// TASK-353: материал вогнутой ВИДИМОЙ МАССЫ. Тот же <c>Game/Wood Block</c>, но с включённым
-        /// кейвордом <c>_CONCAVE_SDF</c> — фрагмент считает расстояние до кромки аналитически по полилинии
-        /// силуэта, а меш массы несёт лишь сырой ear-clip (без плотного SDF-рефайна, который фризил
-        /// загрузку на 4.7 с). Кейворд живёт на МАТЕРИАЛЕ, а не в MaterialPropertyBlock (MPB кейворды не
-        /// несёт), поэтому массе нужен свой инстанс материала; таких масс на экране ≤1, потеря батчинга
-        /// нерелевантна. Откат — как у <see cref="Shared"/>: если <c>Game/Wood Block</c> не собрался,
-        /// кейворд на fallback-шейдере — no-op, и масса деградирует в плоскую заливку, а не в пропажу.
+        /// TASK-353/368: материал «кромка по силуэту» — вогнутой ВИДИМОЙ МАССЫ и составной freeform-ДЕТАЛИ. Тот же
+        /// <c>Game/Wood Block</c>, но с включённым кейвордом <c>_CONCAVE_SDF</c> — фрагмент считает расстояние до
+        /// кромки аналитически по полилинии силуэта (в объектном пространстве рендерера), а не по вершинам меша, у
+        /// которого внутренние рёбра дали бы шов. Кейворд живёт на МАТЕРИАЛЕ, а не в MaterialPropertyBlock (MPB
+        /// кейворды не несёт), поэтому нужен отдельный инстанс материала; контур у каждого рендерера свой — в MPB.
+        /// Откат — как у <see cref="Shared"/>: если <c>Game/Wood Block</c> не собрался, кейворд на fallback-шейдере —
+        /// no-op, и деталь деградирует в плоскую заливку, а не в пропажу.
         /// </summary>
         public static Material ConcaveShared
         {
