@@ -24156,6 +24156,660 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "tea_party_wind",
+      "seed": 476,
+      "difficultyTier": 11,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        3,
+        1,
+        4,
+        2,
+        5
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -4,
+          "y": -1.5
+        },
+        "max": {
+          "x": 4,
+          "y": 8
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "teapot",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 2.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.45,
+                "y": -0.5
+              },
+              {
+                "x": 0.45,
+                "y": -0.5
+              },
+              {
+                "x": 0.45,
+                "y": -0.2
+              },
+              {
+                "x": 0.75,
+                "y": 0.25
+              },
+              {
+                "x": 0.65,
+                "y": 0.25
+              },
+              {
+                "x": 0.45,
+                "y": 0.0
+              },
+              {
+                "x": 0.45,
+                "y": 0.3
+              },
+              {
+                "x": 0.1,
+                "y": 0.3
+              },
+              {
+                "x": 0.1,
+                "y": 0.5
+              },
+              {
+                "x": -0.1,
+                "y": 0.5
+              },
+              {
+                "x": -0.1,
+                "y": 0.3
+              },
+              {
+                "x": -0.45,
+                "y": 0.3
+              },
+              {
+                "x": -0.45,
+                "y": 0.2
+              },
+              {
+                "x": -0.75,
+                "y": 0.2
+              },
+              {
+                "x": -0.75,
+                "y": -0.3
+              },
+              {
+                "x": -0.45,
+                "y": -0.3
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.45,
+                  "y": -0.5
+                },
+                {
+                  "x": 0.45,
+                  "y": -0.5
+                },
+                {
+                  "x": 0.45,
+                  "y": 0.3
+                },
+                {
+                  "x": -0.45,
+                  "y": 0.3
+                }
+              ],
+              [
+                {
+                  "x": 0.45,
+                  "y": -0.2
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.25
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.25
+                },
+                {
+                  "x": 0.45,
+                  "y": 0.0
+                }
+              ],
+              [
+                {
+                  "x": -0.1,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.1,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.1,
+                  "y": 0.5
+                },
+                {
+                  "x": -0.1,
+                  "y": 0.5
+                }
+              ],
+              [
+                {
+                  "x": -0.75,
+                  "y": -0.3
+                },
+                {
+                  "x": -0.45,
+                  "y": -0.3
+                },
+                {
+                  "x": -0.45,
+                  "y": 0.2
+                },
+                {
+                  "x": -0.75,
+                  "y": 0.2
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "cup_far",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 3.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.175,
+                "y": -0.225
+              },
+              {
+                "x": 0.325,
+                "y": -0.225
+              },
+              {
+                "x": 0.325,
+                "y": 0.225
+              },
+              {
+                "x": -0.175,
+                "y": 0.225
+              },
+              {
+                "x": -0.175,
+                "y": 0.15
+              },
+              {
+                "x": -0.325,
+                "y": 0.15
+              },
+              {
+                "x": -0.325,
+                "y": -0.1
+              },
+              {
+                "x": -0.175,
+                "y": -0.1
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.175,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.325,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.325,
+                  "y": 0.225
+                },
+                {
+                  "x": -0.175,
+                  "y": 0.225
+                }
+              ],
+              [
+                {
+                  "x": -0.325,
+                  "y": -0.1
+                },
+                {
+                  "x": -0.175,
+                  "y": -0.1
+                },
+                {
+                  "x": -0.175,
+                  "y": 0.15
+                },
+                {
+                  "x": -0.325,
+                  "y": 0.15
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "cup_near",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 3.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.175,
+                "y": -0.225
+              },
+              {
+                "x": 0.325,
+                "y": -0.225
+              },
+              {
+                "x": 0.325,
+                "y": 0.225
+              },
+              {
+                "x": -0.175,
+                "y": 0.225
+              },
+              {
+                "x": -0.175,
+                "y": 0.15
+              },
+              {
+                "x": -0.325,
+                "y": 0.15
+              },
+              {
+                "x": -0.325,
+                "y": -0.1
+              },
+              {
+                "x": -0.175,
+                "y": -0.1
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.175,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.325,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.325,
+                  "y": 0.225
+                },
+                {
+                  "x": -0.175,
+                  "y": 0.225
+                }
+              ],
+              [
+                {
+                  "x": -0.325,
+                  "y": -0.1
+                },
+                {
+                  "x": -0.175,
+                  "y": -0.1
+                },
+                {
+                  "x": -0.175,
+                  "y": 0.15
+                },
+                {
+                  "x": -0.325,
+                  "y": 0.15
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "fruit_plum",
+          "color": "#8B5A9E",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.3,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "fruit_apple",
+          "color": "#5C8E3E",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.3,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "fruit_lemon",
+          "color": "#CBA016",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.3,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -2.25,
+            "y": 1.5
+          },
+          {
+            "x": 2.65,
+            "y": 1.5
+          },
+          {
+            "x": 2.65,
+            "y": 2.5
+          },
+          {
+            "x": -2.25,
+            "y": 2.5
+          }
+        ],
+        "slots": [
+          {
+            "kind": "teapot",
+            "position": {
+              "x": 1.891,
+              "y": 2.015
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cup_far",
+            "position": {
+              "x": 0.105,
+              "y": 1.741
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cup_near",
+            "position": {
+              "x": -1.316,
+              "y": 1.74
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "fruit_plum",
+            "position": {
+              "x": 0.836,
+              "y": 1.809
+            },
+            "rotation": -0.0966
+          },
+          {
+            "kind": "fruit_apple",
+            "position": {
+              "x": -0.525,
+              "y": 1.806
+            },
+            "rotation": 0.0538
+          },
+          {
+            "kind": "fruit_lemon",
+            "position": {
+              "x": -1.946,
+              "y": 1.809
+            },
+            "rotation": -0.0455
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "teapot",
+          "startPosition": {
+            "x": 1.85,
+            "y": 3.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cup_far",
+          "startPosition": {
+            "x": 0.025,
+            "y": 4.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cup_near",
+          "startPosition": {
+            "x": -1.375,
+            "y": 5.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "fruit_plum",
+          "startPosition": {
+            "x": -2.55,
+            "y": 5.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "fruit_apple",
+          "startPosition": {
+            "x": -2.55,
+            "y": 6.4
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "fruit_lemon",
+          "startPosition": {
+            "x": -2.55,
+            "y": 3.6
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.4,
+              "y": -0.4
+            },
+            {
+              "x": 3.4,
+              "y": -0.4
+            },
+            {
+              "x": 3.4,
+              "y": 0
+            },
+            {
+              "x": -3.4,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.2,
+              "y": 1.2
+            },
+            {
+              "x": 2.9,
+              "y": 1.2
+            },
+            {
+              "x": 2.9,
+              "y": 1.5
+            },
+            {
+              "x": -3.2,
+              "y": 1.5
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.2,
+              "y": 1.5
+            },
+            {
+              "x": -3.0,
+              "y": 1.5
+            },
+            {
+              "x": -3.0,
+              "y": 2.1
+            },
+            {
+              "x": -3.2,
+              "y": 2.1
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.6,
+              "y": 0
+            },
+            {
+              "x": -2.4,
+              "y": 0
+            },
+            {
+              "x": -2.4,
+              "y": 1.2
+            },
+            {
+              "x": -2.6,
+              "y": 1.2
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 2.2,
+              "y": 0
+            },
+            {
+              "x": 2.4,
+              "y": 0
+            },
+            {
+              "x": 2.4,
+              "y": 1.2
+            },
+            {
+              "x": 2.2,
+              "y": 1.2
+            }
+          ]
+        }
+      ],
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -3.0,
+              "y": 1.5
+            },
+            "max": {
+              "x": 2.9,
+              "y": 2.6
+            }
+          },
+          "direction": {
+            "x": 1,
+            "y": 0
+          },
+          "acceleration": 3.0,
+          "color": "#CFE8F5"
+        }
+      ]
     }
   ]
 }
