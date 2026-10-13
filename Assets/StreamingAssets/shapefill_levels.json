@@ -43781,6 +43781,751 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "long_ramp",
+      "seed": 5114,
+      "difficultyTier": 11,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -7.0,
+          "y": -3.0
+        },
+        "max": {
+          "x": 7.0,
+          "y": 12.0
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "heel",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.44,
+                "y": -0.35
+              },
+              {
+                "x": 0.44,
+                "y": -0.35
+              },
+              {
+                "x": -0.06,
+                "y": 0.35
+              },
+              {
+                "x": -0.44,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.44,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.44,
+                  "y": -0.35
+                },
+                {
+                  "x": -0.06,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.44,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "foot",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.42,
+                "y": -0.35
+              },
+              {
+                "x": 0.92,
+                "y": -0.35
+              },
+              {
+                "x": 0.42,
+                "y": 0.35
+              },
+              {
+                "x": -0.92,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.42,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.92,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.42,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.92,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "post_r",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.82,
+                "y": -0.7
+              },
+              {
+                "x": 0.82,
+                "y": -0.7
+              },
+              {
+                "x": 0.82,
+                "y": 0.7
+              },
+              {
+                "x": 0.18,
+                "y": 0.7
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.82,
+                  "y": -0.7
+                },
+                {
+                  "x": 0.82,
+                  "y": -0.7
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.7
+                },
+                {
+                  "x": 0.18,
+                  "y": 0.7
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "back",
+          "color": "#CBA016",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.58,
+            "height": 1.4
+          }
+        },
+        {
+          "kind": "key",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 0.6,
+            "topWidth": 1.6,
+            "height": 0.7
+          }
+        },
+        {
+          "kind": "deck",
+          "color": "#5C8E3E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -1.05,
+                "y": -0.35
+              },
+              {
+                "x": 0.55,
+                "y": -0.35
+              },
+              {
+                "x": 1.05,
+                "y": 0.35
+              },
+              {
+                "x": -1.05,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -1.05,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.55,
+                  "y": -0.35
+                },
+                {
+                  "x": 1.05,
+                  "y": 0.35
+                },
+                {
+                  "x": -1.05,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "ramp_1",
+          "color": "#8B5A9E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.88,
+                "y": -0.35
+              },
+              {
+                "x": 0.88,
+                "y": -0.35
+              },
+              {
+                "x": 0.88,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.88,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.88,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.88,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "ramp_2",
+          "color": "#CDB27E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.83,
+                "y": -0.35
+              },
+              {
+                "x": 0.83,
+                "y": -0.35
+              },
+              {
+                "x": 0.83,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.83,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.83,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.83,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "step_a",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.44,
+                "y": -0.35
+              },
+              {
+                "x": 0.44,
+                "y": -0.35
+              },
+              {
+                "x": -0.06,
+                "y": 0.35
+              },
+              {
+                "x": -0.44,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.44,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.44,
+                  "y": -0.35
+                },
+                {
+                  "x": -0.06,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.44,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "step_b",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.14,
+                "y": -0.35
+              },
+              {
+                "x": 0.64,
+                "y": -0.35
+              },
+              {
+                "x": 0.64,
+                "y": 0.35
+              },
+              {
+                "x": -0.64,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.14,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.64,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.64,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "ramp_3",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.85,
+                "y": -0.35
+              },
+              {
+                "x": 0.85,
+                "y": -0.35
+              },
+              {
+                "x": 0.85,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.85,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.85,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.85,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -2.6,
+            "y": 0.0
+          },
+          {
+            "x": 2.6,
+            "y": 0.0
+          },
+          {
+            "x": 2.6,
+            "y": 2.8
+          },
+          {
+            "x": 0.9,
+            "y": 2.1
+          },
+          {
+            "x": 0.86,
+            "y": 2.1
+          },
+          {
+            "x": -0.8,
+            "y": 1.4
+          },
+          {
+            "x": -0.84,
+            "y": 1.4
+          },
+          {
+            "x": -2.6,
+            "y": 0.7
+          }
+        ],
+        "slots": [
+          {
+            "kind": "heel",
+            "position": {
+              "x": -2.16,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "foot",
+            "position": {
+              "x": -1.26,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "post_r",
+            "position": {
+              "x": 1.16,
+              "y": 0.7
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "back",
+            "position": {
+              "x": 2.31,
+              "y": 0.7
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "key",
+            "position": {
+              "x": 0.0,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "deck",
+            "position": {
+              "x": 0.25,
+              "y": 1.05
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "ramp_1",
+            "position": {
+              "x": -1.72,
+              "y": 1.05
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "ramp_2",
+            "position": {
+              "x": 0.03,
+              "y": 1.75
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "step_a",
+            "position": {
+              "x": 1.34,
+              "y": 1.75
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "step_b",
+            "position": {
+              "x": 1.96,
+              "y": 1.75
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "ramp_3",
+            "position": {
+              "x": 1.75,
+              "y": 2.45
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "heel",
+          "startPosition": {
+            "x": -2.16,
+            "y": 1.76
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "foot",
+          "startPosition": {
+            "x": -1.26,
+            "y": 5.45
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "post_r",
+          "startPosition": {
+            "x": 1.16,
+            "y": 6.49
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "back",
+          "startPosition": {
+            "x": 2.31,
+            "y": 4.44
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "key",
+          "startPosition": {
+            "x": 0.0,
+            "y": 3.15
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "deck",
+          "startPosition": {
+            "x": 0.25,
+            "y": 4.71
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "ramp_1",
+          "startPosition": {
+            "x": -1.72,
+            "y": 6.56
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "ramp_2",
+          "startPosition": {
+            "x": 0.03,
+            "y": 2.65
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "step_a",
+          "startPosition": {
+            "x": 1.34,
+            "y": 4.09
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "step_b",
+          "startPosition": {
+            "x": 1.96,
+            "y": 3.35
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "ramp_3",
+          "startPosition": {
+            "x": 1.75,
+            "y": 5.66
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -4.0,
+              "y": -0.5
+            },
+            {
+              "x": 4.0,
+              "y": -0.5
+            },
+            {
+              "x": 4.0,
+              "y": 0.0
+            },
+            {
+              "x": -4.0,
+              "y": 0.0
+            }
+          ]
+        }
+      ]
     }
   ]
 }
