@@ -43024,6 +43024,763 @@
           ]
         }
       ]
+    },
+    {
+      "levelId": "stair_block",
+      "seed": 5113,
+      "difficultyTier": 11,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -7.0,
+          "y": -3.0
+        },
+        "max": {
+          "x": 7.0,
+          "y": 12.0
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "brick_b",
+          "color": "#CBA016",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.47,
+                "y": -0.35
+              },
+              {
+                "x": 0.47,
+                "y": -0.35
+              },
+              {
+                "x": 0.47,
+                "y": 0.35
+              },
+              {
+                "x": 0.03,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.47,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.47,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.47,
+                  "y": 0.35
+                },
+                {
+                  "x": 0.03,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "brick_a",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.49,
+                "y": -0.35
+              },
+              {
+                "x": -0.01,
+                "y": -0.35
+              },
+              {
+                "x": 0.49,
+                "y": 0.35
+              },
+              {
+                "x": -0.49,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.49,
+                  "y": -0.35
+                },
+                {
+                  "x": -0.01,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.49,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.49,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "block_c",
+          "color": "#8B5A9E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.44,
+                "y": -0.35
+              },
+              {
+                "x": 0.44,
+                "y": -0.35
+              },
+              {
+                "x": -0.06,
+                "y": 0.35
+              },
+              {
+                "x": -0.44,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.44,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.44,
+                  "y": -0.35
+                },
+                {
+                  "x": -0.06,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.44,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "block_d",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.02,
+                "y": -0.35
+              },
+              {
+                "x": 0.52,
+                "y": -0.35
+              },
+              {
+                "x": 0.52,
+                "y": 0.35
+              },
+              {
+                "x": -0.52,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.02,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.52,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.52,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.52,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "pillar",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.75,
+                "y": -0.7
+              },
+              {
+                "x": 0.75,
+                "y": -0.7
+              },
+              {
+                "x": -0.25,
+                "y": 0.7
+              },
+              {
+                "x": -0.75,
+                "y": 0.7
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.75,
+                  "y": -0.7
+                },
+                {
+                  "x": 0.75,
+                  "y": -0.7
+                },
+                {
+                  "x": -0.25,
+                  "y": 0.7
+                },
+                {
+                  "x": -0.75,
+                  "y": 0.7
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "toe",
+          "color": "#5C8E3E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.46,
+                "y": -0.35
+              },
+              {
+                "x": 0.46,
+                "y": -0.35
+              },
+              {
+                "x": 0.46,
+                "y": 0.35
+              },
+              {
+                "x": 0.04,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.46,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.46,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.46,
+                  "y": 0.35
+                },
+                {
+                  "x": 0.04,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "wing",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 0.6,
+            "topWidth": 1.6,
+            "height": 0.7
+          }
+        },
+        {
+          "kind": "bump",
+          "color": "#CDB27E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "halfdisc",
+            "radius": 0.45,
+            "segments": 6
+          }
+        },
+        {
+          "kind": "cap_b",
+          "color": "#CDB27E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.49,
+                "y": -0.35
+              },
+              {
+                "x": 0.49,
+                "y": -0.35
+              },
+              {
+                "x": 0.49,
+                "y": 0.35
+              },
+              {
+                "x": 0.01,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.49,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.49,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.49,
+                  "y": 0.35
+                },
+                {
+                  "x": 0.01,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "cap_a",
+          "color": "#5C8E3E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.74,
+                "y": -0.35
+              },
+              {
+                "x": 0.24,
+                "y": -0.35
+              },
+              {
+                "x": 0.74,
+                "y": 0.35
+              },
+              {
+                "x": -0.74,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.74,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.24,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.74,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.74,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "slope",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "righttriangle",
+            "width": 2.0,
+            "height": 1.0
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -2.4,
+            "y": 0.0
+          },
+          {
+            "x": 2.2,
+            "y": 0.0
+          },
+          {
+            "x": 2.2,
+            "y": 0.7
+          },
+          {
+            "x": 1.51,
+            "y": 0.7
+          },
+          {
+            "x": 1.45,
+            "y": 0.925
+          },
+          {
+            "x": 1.285,
+            "y": 1.09
+          },
+          {
+            "x": 1.06,
+            "y": 1.15
+          },
+          {
+            "x": 0.835,
+            "y": 1.09
+          },
+          {
+            "x": 0.67,
+            "y": 0.925
+          },
+          {
+            "x": 0.61,
+            "y": 0.7
+          },
+          {
+            "x": 0.1,
+            "y": 0.7
+          },
+          {
+            "x": -0.4,
+            "y": 1.4
+          },
+          {
+            "x": -0.4,
+            "y": 2.1
+          },
+          {
+            "x": -2.4,
+            "y": 3.1
+          }
+        ],
+        "slots": [
+          {
+            "kind": "brick_b",
+            "position": {
+              "x": -1.41,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "brick_a",
+            "position": {
+              "x": -1.91,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "block_c",
+            "position": {
+              "x": -1.96,
+              "y": 1.05
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "block_d",
+            "position": {
+              "x": -1.46,
+              "y": 1.05
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "pillar",
+            "position": {
+              "x": -0.15,
+              "y": 0.7
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "toe",
+            "position": {
+              "x": 1.74,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "wing",
+            "position": {
+              "x": 0.94,
+              "y": 0.35
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "bump",
+            "position": {
+              "x": 1.06,
+              "y": 0.7
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cap_b",
+            "position": {
+              "x": -0.89,
+              "y": 1.75
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cap_a",
+            "position": {
+              "x": -1.66,
+              "y": 1.75
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "slope",
+            "position": {
+              "x": -1.4,
+              "y": 2.6
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "brick_b",
+          "startPosition": {
+            "x": -1.41,
+            "y": 5.68
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "brick_a",
+          "startPosition": {
+            "x": -1.91,
+            "y": 4.94
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "block_c",
+          "startPosition": {
+            "x": -1.96,
+            "y": 4.2
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "block_d",
+          "startPosition": {
+            "x": -1.46,
+            "y": 3.46
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "pillar",
+          "startPosition": {
+            "x": -0.15,
+            "y": 7.13
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "toe",
+          "startPosition": {
+            "x": 1.74,
+            "y": 1.64
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "wing",
+          "startPosition": {
+            "x": 0.94,
+            "y": 4.94
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "bump",
+          "startPosition": {
+            "x": 1.06,
+            "y": 3.46
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cap_b",
+          "startPosition": {
+            "x": -0.89,
+            "y": 4.94
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cap_a",
+          "startPosition": {
+            "x": -1.66,
+            "y": 7.51
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "slope",
+          "startPosition": {
+            "x": -1.4,
+            "y": 6.57
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -4.0,
+              "y": -0.5
+            },
+            {
+              "x": 4.0,
+              "y": -0.5
+            },
+            {
+              "x": 4.0,
+              "y": 0.0
+            },
+            {
+              "x": -4.0,
+              "y": 0.0
+            }
+          ]
+        }
+      ]
     }
   ]
 }
