@@ -6,7 +6,8 @@ using R3;
 namespace Gameplay.Tutorial
 {
     /// <summary>
-    /// Teaches the CO-RELEASE gesture (TASK-377): highlight EVERY member of a declared co-release group at once —
+    /// Teaches the CO-RELEASE gesture (TASK-377): once the field is at rest (<see cref="GameModel.FieldAtRest"/>,
+    /// TASK-524 — input blocked until then), highlight EVERY member of a declared co-release group at once —
     /// each with its own finger — and wait for the group's REAL simultaneous release before advancing. It reads the
     /// group members from the loaded level's <see cref="LevelData.CoReleaseGroups"/> (a data-driven list of placement
     /// indices), NOT from a hardcoded pair, so the same step teaches whatever group the level declares — the "class,
@@ -47,34 +48,58 @@ namespace Gameplay.Tutorial
                     return Disposable.Empty;
                 }
 
-                // Highlight EVERY member with its own overlay key so N fingers show at once (multi-highlight, TASK-377).
-                // The keyed Highlight overload keeps a distinct overlay per member; Clear() (in Exit) hides them all.
-                var targetIds = new HashSet<int>();
-                for (var i = 0; i < targets.Count; i++)
+                // The active phase: either (rest-wait + input block) or (release-sub + allow-gate) for the group.
+                var current = new SerialDisposable();
+
+                void Arm()
                 {
-                    var target = targets[i];
-                    targetIds.Add(target.InstanceId);
-                    context.View.Highlight(i, target.Position, target.Rotation,
-                        context.Model.TypeFor(target).Shape, HighlightStyle.FingerPoint);
+                    // Highlight EVERY member with its own overlay key so N fingers show at once (multi-highlight,
+                    // TASK-377). The keyed Highlight overload keeps a distinct overlay per member; Clear() (in Exit)
+                    // hides them all.
+                    var targetIds = new HashSet<int>();
+                    for (var i = 0; i < targets.Count; i++)
+                    {
+                        var target = targets[i];
+                        targetIds.Add(target.InstanceId);
+                        context.View.Highlight(i, target.Position, target.Rotation,
+                            context.Model.TypeFor(target).Shape, HighlightStyle.FingerPoint);
+                    }
+
+                    // Admit a tap on ANY member (both fingers pass); the domain's co-release window then requires the
+                    // whole group within CoReleaseWindowSteps. Build the gate over the SAME shared resolver the domain
+                    // uses so the tutorial gate and the domain can never disagree on which piece a tap hits (TASK-085).
+                    var remaining = new HashSet<int>(targetIds);
+                    var gate = context.InputGate.AllowOnly(HitTest(context, targetIds));
+                    var release = context.Model.PieceReleased
+                        .Where(id => remaining.Contains(id))
+                        .Subscribe(id =>
+                        {
+                            remaining.Remove(id);
+                            if (remaining.Count != 0)
+                                return;
+                            observer.OnNext(Unit.Default); // whole group released → runner advances the tour
+                            observer.OnCompleted();
+                        });
+
+                    current.Disposable = Disposable.Combine(release, gate);
                 }
 
-                // Admit a tap on ANY member (both fingers pass); the domain's co-release window then requires the
-                // whole group within CoReleaseWindowSteps. Build the gate over the SAME shared resolver the domain
-                // uses so the tutorial gate and the domain can never disagree on which piece a tap hits (TASK-085).
-                var remaining = new HashSet<int>(targetIds);
-                var gate = context.InputGate.AllowOnly(HitTest(context, targetIds));
-                var release = context.Model.PieceReleased
-                    .Where(id => remaining.Contains(id))
-                    .Subscribe(id =>
-                    {
-                        remaining.Remove(id);
-                        if (remaining.Count != 0)
-                            return;
-                        observer.OnNext(Unit.Default); // whole group released → runner advances the tour
-                        observer.OnCompleted();
-                    });
+                // TASK-524 (same rule as AssembleInOrderStep): the group is shown and admitted only once the field is
+                // at rest, so the fingers never invite a co-release onto a field that is still moving (a beam still
+                // swinging from an earlier drop, or preplaced furniture still settling). Input is blocked meanwhile.
+                if (context.Model.FieldAtRest.CurrentValue)
+                {
+                    Arm();
+                    return current;
+                }
 
-                return Disposable.Combine(release, gate);
+                var block = context.InputGate.Block();
+                var rest = context.Model.FieldAtRest
+                    .Where(atRest => atRest)
+                    .Take(1)
+                    .Subscribe(_ => Arm());
+                current.Disposable = Disposable.Combine(rest, block);
+                return current;
             });
         }
 

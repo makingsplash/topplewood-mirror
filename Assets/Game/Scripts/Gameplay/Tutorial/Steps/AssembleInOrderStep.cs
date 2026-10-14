@@ -6,8 +6,9 @@ namespace Gameplay.Tutorial
 {
     /// <summary>
     /// The step-by-step tutorial MECHANISM (TASK-078): one composite step that walks a level's pieces in a given
-    /// order and, for each, highlights it, admits ONLY a tap on it, and waits for its REAL release before moving
-    /// on — repeating until every listed piece is assembled. It is level-agnostic: it knows nothing about the
+    /// order and, for each, waits until the field is at rest (<see cref="GameModel.FieldAtRest"/>, TASK-524 — input
+    /// blocked, no highlight meanwhile), then highlights it, admits ONLY a tap on it, and waits for its REAL release
+    /// before moving on — repeating until every listed piece is assembled. It is level-agnostic: it knows nothing about the
     /// concrete figure, it just reads the loaded <see cref="GameModel"/> and follows the tap order it is handed. The
     /// order is the INPUT the installer hands it (the campaign's first tutorial level, sailboat at index 0 — see
     /// <c>GameplayCoreInstaller</c>); the mechanism is not tied to any one level.
@@ -35,10 +36,16 @@ namespace Gameplay.Tutorial
             return Observable.Create<Unit>(observer =>
             {
                 var targets = ResolveTargets(context.Model, _tapOrder);
-                var current = new SerialDisposable(); // active (release-sub + gate handle) for the piece being tapped
+                // The active phase: either (rest-wait + input block) or (release-sub + allow-gate) for the current piece.
+                var current = new SerialDisposable();
                 var index = 0;
 
-                void Arm()
+                // TASK-524: the next piece is shown and admitted only once the field is at rest — the previous piece
+                // has landed and nothing moves. Arming on the release itself let the finger jump to the sail while the
+                // hull was still falling, and a player following the finger without a pause lost level 1. While
+                // waiting, input is BLOCKED (not merely un-whitelisted: a disposed AllowOnly opens the gate to every
+                // tap) and the highlight is cleared, so the finger never points at a piece that cannot be tapped yet.
+                void AwaitRest()
                 {
                     if (index >= targets.Count)
                     {
@@ -47,6 +54,26 @@ namespace Gameplay.Tutorial
                         return;
                     }
 
+                    if (context.Model.FieldAtRest.CurrentValue)
+                    {
+                        Arm();
+                        return;
+                    }
+
+                    context.View.Clear();
+                    // Block BEFORE swapping, so the previous allow-gate's dispose never leaves the gate open.
+                    var block = context.InputGate.Block();
+                    // CurrentValue is false here, so the replayed value is filtered out — Arm never runs inside
+                    // Subscribe and cannot be overwritten by the assignment below.
+                    var rest = context.Model.FieldAtRest
+                        .Where(atRest => atRest)
+                        .Take(1)
+                        .Subscribe(_ => Arm());
+                    current.Disposable = Disposable.Combine(rest, block);
+                }
+
+                void Arm()
+                {
                     var target = targets[index];
                     // Hand the view the piece's pose AND shape so it can trace a contour matching the silhouette
                     // (TASK-083). Read-only domain access — TypeFor is the same seam HitTest below uses. The FTUE tour
@@ -63,13 +90,13 @@ namespace Gameplay.Tutorial
                         .Subscribe(_ =>
                         {
                             index++;
-                            Arm();
+                            AwaitRest();
                         });
 
                     current.Disposable = Disposable.Combine(release, gate);
                 }
 
-                Arm();
+                AwaitRest();
                 return current;
             });
         }

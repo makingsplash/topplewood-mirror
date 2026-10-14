@@ -337,7 +337,10 @@ namespace Gameplay.Core.Mechanic
 
             // Defer the verdict while any piece is still falling.
             if (anyFalling)
+            {
+                _model.SetFieldAtRest(false);
                 return;
+            }
 
             // TASK-305: EVERY mode now keeps its placed pieces Dynamic (no freeze), so "nothing Falling" is NOT yet
             // rest — a placed piece can still be settling or be shoved by a later drop. Hold the verdict until the
@@ -346,9 +349,18 @@ namespace Gameplay.Core.Mechanic
             // reaches global rest times out — the honest signal that it was not self-supporting (ADR-0005).
             _lastGlobalRestReached = GlobalRestReached(dt);
             if (!_lastGlobalRestReached)
+            {
+                _model.SetFieldAtRest(false);
                 return;
+            }
 
             ResolveAtRest();
+
+            // TASK-524: publish "at rest, waiting for the next tap" only AFTER the verdict, and only if play goes on —
+            // a Lost verdict reloads the level synchronously on device (generation bump), and a stale "true" must not
+            // leak into the fresh level. Observe-only for the tutorial; the sim reads ReadyForNextRelease, not this.
+            if (_levelGeneration == generation && _model.CurrentPhase == GamePhase.Running)
+                _model.SetFieldAtRest(true);
         }
 
         /// <summary>

@@ -15,6 +15,7 @@ namespace Gameplay.Core
         private readonly Subject<Unit> _levelLoaded = new();
         private readonly Subject<Unit> _levelResolved = new();
         private readonly Subject<int> _pieceReleased = new();
+        private readonly ReactiveProperty<bool> _fieldAtRest = new(false);
         private readonly List<PieceInstance> _pieces = new();
 
         public ReadOnlyReactiveProperty<GamePhase> Phase => _phase;
@@ -30,6 +31,17 @@ namespace Gameplay.Core
         /// the headless-simulatable invariant holds; the sim graph subscribes to nothing here, so it is a no-op.
         /// </summary>
         public Observable<int> PieceReleased => _pieceReleased;
+
+        /// <summary>
+        /// True while the whole field has come to GLOBAL rest and play continues — i.e. the moment the field is
+        /// waiting for the player's next tap (TASK-524). Raised by the mechanic controller on the same global-rest
+        /// gate that drives the verdict; dropped by every player release (<see cref="RegisterAttempt"/>, BEFORE
+        /// <see cref="PieceReleased"/> emits, so an observer of the release never reads a stale "at rest") and by
+        /// every level (re)load. The tutorial waits on it so a step never points at the next piece while the previous
+        /// one is still falling. Observe-only, like <see cref="PieceReleased"/>: the sim graph subscribes to nothing
+        /// here, so poseHash/level-sim are unaffected.
+        /// </summary>
+        public ReadOnlyReactiveProperty<bool> FieldAtRest => _fieldAtRest;
 
         public LevelData CurrentLevel { get; private set; }
         public IReadOnlyList<PieceInstance> Pieces => _pieces;
@@ -52,6 +64,7 @@ namespace Gameplay.Core
             _pieces.Clear();
             AttemptsUsed = 0;
             _outcome.Value = GameOutcome.None;
+            _fieldAtRest.Value = false;
 
             var id = level.Seed * 1000;
             for (var i = 0; i < level.Pieces.Count; i++)
@@ -73,8 +86,13 @@ namespace Gameplay.Core
         public void RegisterAttempt(int instanceId)
         {
             AttemptsUsed++;
+            _fieldAtRest.Value = false; // a release disturbs the field; drop BEFORE observers of the release run
             _pieceReleased.OnNext(instanceId);
         }
+
+        /// <summary>Mechanic controller only: publish whether the field is at global rest with play continuing
+        /// (see <see cref="FieldAtRest"/>).</summary>
+        public void SetFieldAtRest(bool atRest) => _fieldAtRest.Value = atRest;
 
         public void Resolve(GameOutcome outcome)
         {
