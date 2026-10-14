@@ -3,6 +3,7 @@ using DataStorage;
 using Gameplay.Configs;
 using Gameplay.Core;
 using R3;
+using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 using Tools.Constants;
 using VContainer.Unity;
 
@@ -72,7 +73,10 @@ namespace Services.Gameplay
             {
                 var goldBefore = Data.Meta.GoldAmount.Value;
                 Data.Meta.GoldAmount.Value += reward;
-                Data.Meta.GoldAmount.ForceSave();
+                // Durable NOW (TASK-537): the Value setter only stages PlayerPrefs.SetInt — ForceSave is the same
+                // SetInt again — and only PlayerPrefs.Save() reaches disk. Don't lean on the campaign checkpoint's
+                // flush: it may run BEFORE this subscriber, and a kill in focus then loses the reward.
+                PlayerPrefsCollection.Instance?.SaveDataIfChanged();
                 GlobalService.Analytics.Resource.SendSoftIncome(reward, goldBefore, Placement.SoftWinLevelIncome);
             }
         }

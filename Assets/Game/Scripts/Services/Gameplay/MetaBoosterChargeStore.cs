@@ -1,15 +1,18 @@
 using DataStorage;
 using SGS.Infrastructure.Tools.PlayerPrefsWrapper;
+using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 using UnityEngine;
 
 namespace Services.Gameplay
 {
     /// <summary>
     /// Prod <see cref="IBoosterChargeStore"/> (architect §3.2): a booster charge is a <see cref="PlayerPrefsInt"/>
-    /// in <c>Meta</c>, beside <c>GoldAmount</c>/<c>HeartsAmount</c> — the same proven mutate-then-<c>ForceSave</c>
-    /// pattern as <c>HeartsService</c>. <see cref="Grant"/> clamps to the caller's cap; <see cref="TrySpend"/> is
-    /// atomic (never drives the balance negative). Today only <see cref="BoosterId.Hint"/> has a key; a second
-    /// booster turns <see cref="ChargesPref"/> into a per-id table (tech-debt).
+    /// in <c>Meta</c>, beside <c>GoldAmount</c>/<c>HeartsAmount</c>. Every mutation flushes to disk on the spot
+    /// (<c>SaveDataIfChanged</c>, TASK-537): the <c>Value</c> setter only stages <c>PlayerPrefs.SetInt</c>
+    /// (<c>ForceSave</c> is the same <c>SetInt</c> again, NOT durable), so without the flush a kill in focus handed a
+    /// spent charge back. <see cref="Grant"/> clamps to the caller's cap; <see cref="TrySpend"/> is atomic (never
+    /// drives the balance negative). Today only <see cref="BoosterId.Hint"/> has a key; a second booster turns
+    /// <see cref="ChargesPref"/> into a per-id table (tech-debt).
     /// </summary>
     public sealed class MetaBoosterChargeStore : IBoosterChargeStore
     {
@@ -25,7 +28,7 @@ namespace Services.Gameplay
                 return false;
 
             pref.Value -= amount;
-            pref.ForceSave();
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
             return true;
         }
 
@@ -36,7 +39,7 @@ namespace Services.Gameplay
 
             var pref = ChargesPref(id);
             pref.Value = Mathf.Clamp(pref.Value + amount, 0, cap);
-            pref.ForceSave();
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
         }
 
         private static PlayerPrefsInt ChargesPref(BoosterId id) => Data.Meta.HintCharges;

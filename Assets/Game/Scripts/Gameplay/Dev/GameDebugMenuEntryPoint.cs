@@ -18,7 +18,7 @@ namespace Gameplay.Dev
     /// second menu: a corner <b>DEV</b> button + backquote (`) flip <c>SayData.Debug.DebugMenuShown</c> — the SAME
     /// observable seam shake flips — so <c>DebugService.ShowDebugMenu</c> instantiates the existing prod
     /// <c>GameDebugMenu</c> (Go to Level, Reset, resources, language). Nothing about the menu content or the jump
-    /// persist path (TASK-113: "Go to Level" → <c>SayData.Meta.CurrentLevel</c> → <c>GameDebugMenuRestartBridge</c>)
+    /// persist path (TASK-113: "Go to Level" → <c>MetaCampaignStore.Write</c> since TASK-537 → <c>GameDebugMenuRestartBridge</c>)
     /// is touched — the deficit was only the entry, so that is all this adds.
     ///
     /// Registered ONLY by the prod <c>GameplayLifetimeScope</c> under <c>GPIE_DEVELOPMENT</c> (next to
