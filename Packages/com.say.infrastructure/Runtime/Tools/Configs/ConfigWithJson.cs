@@ -38,8 +38,14 @@ namespace SGS.Infrastructure.Tools.Configs
                 Config = _data;
                 return;
             }
-#endif            
-            
+#elif SAYKIT_SMOKE_DISABLE_RUNTIME
+            // Project edit (TASK-533): the smoke player never inits SayKit, so remote never arrives and the
+            // empty-remote branch below would hand out a blank TData (null nested sections → NRE in overrides,
+            // e.g. RewardedConfig.Revives). Mirror the editor's local mode: serve the asset's own data.
+            Config = _data;
+            return;
+#endif
+
             if (!string.IsNullOrEmpty(remoteConfig))
             {
                 LoadFromJson(remoteConfig);
