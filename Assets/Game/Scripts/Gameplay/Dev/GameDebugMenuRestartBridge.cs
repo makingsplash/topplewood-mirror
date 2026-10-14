@@ -54,6 +54,7 @@ namespace Gameplay.Dev
             // Second seam (TASK-174): the ◀/▶ arrows page levels WITHOUT closing the menu, so they cannot ride the
             // close event above — they emit through the project-owned GameDebugMenuLevelStep signal instead.
             GameDebugMenuLevelStep.Requested += HandleStep;
+            GameDebugMenuLevelStep.PoolJumpRequested += HandlePoolJump;   // TASK-528
         }
 
         public void Dispose()
@@ -62,6 +63,7 @@ namespace Gameplay.Dev
             // -= is mandatory: the static event outlives this scope; a leaked delegate would fire into a dead
             // controller (same contract as OnDebugMenuClose above).
             GameDebugMenuLevelStep.Requested -= HandleStep;
+            GameDebugMenuLevelStep.PoolJumpRequested -= HandlePoolJump;
         }
 
         private void HandleClose(bool isRestart)
@@ -89,8 +91,8 @@ namespace Gameplay.Dev
 
         // ◀/▶ level step (TASK-174). Same IsBusy gate as HandleClose: while the win/lose panel is pending/up we
         // touch neither the index nor the reload, so the panel's captured applyTransition stays valid and fires on
-        // the tap. Log the skip so the no-op is not silent (dev-UX: close the panel first, then step). delta is
-        // clamped to the line-up bounds in DevStepPersisted (edge = no-op, no wrap).
+        // the tap. Log the skip so the no-op is not silent (dev-UX: close the panel first, then step). On the line-up
+        // delta is clamped in DevStepPersisted (edge = no-op, no wrap); in the pool it goes around the circle (TASK-528).
         private void HandleStep(int delta)
         {
             if (_interaction.IsBusy.Value)
@@ -101,6 +103,20 @@ namespace Gameplay.Dev
             }
 
             _campaign.DevStepPersisted(delta);
+        }
+
+        // "Jump to pool" (TASK-528): owner acceptance of the pool without 80 wins. Same IsBusy gate as above; persists,
+        // so the jump survives a relaunch like the ◀/▶ arrows.
+        private void HandlePoolJump()
+        {
+            if (_interaction.IsBusy.Value)
+            {
+                GlobalService.DebugLog.Log(
+                    "[TASK-528] pool jump skipped: resolution panel open", DebugLogType.ApplicationFlow);
+                return;
+            }
+
+            _campaign.DevJumpToPool(0, persist: true);
         }
     }
 }

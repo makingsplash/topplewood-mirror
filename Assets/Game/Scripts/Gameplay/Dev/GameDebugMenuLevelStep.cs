@@ -20,7 +20,12 @@ namespace Gameplay.Dev
     {
         public static event Action<int> Requested;
 
+        /// <summary>TASK-528: "Jump to pool" — enter the pool circle at its first place (in-scope: persist + reload).</summary>
+        public static event Action PoolJumpRequested;
+
         public static void Request(int delta) => Requested?.Invoke(delta);
+
+        public static void RequestPoolJump() => PoolJumpRequested?.Invoke();
     }
 }
 #endif

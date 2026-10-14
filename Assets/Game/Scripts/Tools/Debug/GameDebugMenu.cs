@@ -72,6 +72,10 @@ namespace Tools.Debug
 
                 SayData.Meta.CurrentLevel.Value = 1;
                 SayData.Meta.CurrentLevelIndex.Value = 0;
+                // TASK-528: forget "line-up cleared" and the pool place EXPLICITLY — DeleteAllPrefs only wipes keys
+                // touched this session, which would make the reset correct by coincidence, not by construction.
+                Data.Meta.LineupCleared.Value = 0;
+                Data.Meta.PoolCursor.Value = 0;
 
                 // Re-seed the start bank so the reset lands on a true fresh-install state WITHOUT relaunching (Reset
                 // is a reload-in-place, not a reboot — architect §7). The guard was just cleared by RefreshAll, so
@@ -99,6 +103,10 @@ namespace Tools.Debug
                     }
 
                     SayData.Meta.CurrentLevel.Value = _level;
+                    // TASK-528: "Go to Level N" means line-up level N (first pass). Without dropping the pool keys a
+                    // player in the pool would see the number change while the content stayed put.
+                    Data.Meta.LineupCleared.Value = 0;
+                    Data.Meta.PoolCursor.Value = 0;
                     Data.Meta.ClearProgress(_level - 1);
 
                     context.Main.SetRestart();
@@ -112,6 +120,8 @@ namespace Tools.Debug
             // Gameplay.Dev namespace is empty and a `using` would not compile.
             DDMButton.Create(context, "◀ Prev", () => StepLevel(-1));
             DDMButton.Create(context, "Next ▶", () => StepLevel(1));
+            // TASK-528: enter the pool circle at place 1 (persisted; ◀/▶ then go around the circle).
+            DDMButton.Create(context, "Jump to pool", JumpToPool);
 #endif
 
             DDMLabel.Create(context, $"Level restarts: {Data.Meta.CurrentLevelRestarts.Value}, revives: {Data.Meta.CurrentLevelRevives.Value}");
@@ -120,10 +130,16 @@ namespace Tools.Debug
 #if GPIE_DEVELOPMENT
         private static void StepLevel(int delta)
         {
-            Gameplay.Dev.GameDebugMenuLevelStep.Request(delta);   // in-scope: clamp + persist + reload, SYNCHRONOUS
+            Gameplay.Dev.GameDebugMenuLevelStep.Request(delta);   // in-scope: step + persist + reload, SYNCHRONOUS
             _level = SayData.Meta.CurrentLevel.Value;             // sync app bookkeeping to the clamped value
             Data.Meta.ClearProgress(_level - 1);                  // parity with "Go to Level" (no-op for ShapeFill)
             // NO CloseMenu() — the menu stays open (the core of the task).
+        }
+
+        private static void JumpToPool()
+        {
+            Gameplay.Dev.GameDebugMenuLevelStep.RequestPoolJump();   // in-scope: persist + reload, SYNCHRONOUS
+            _level = SayData.Meta.CurrentLevel.Value;               // sync app bookkeeping to the pool's number
         }
 #endif
 

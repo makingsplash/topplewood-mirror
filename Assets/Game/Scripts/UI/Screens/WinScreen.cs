@@ -15,7 +15,8 @@ namespace Ui.Screens
     /// <see cref="Gameplay.PlayScreen.ILevelResolutionFlow"/>). Tap-gated, closes itself on tap. No auto-dismiss.
     ///
     /// Two copy configurations, one prefab (ui-composer 03 §4): the normal state ("VICTORY!"/"Continue") and the
-    /// campaign-wrap state ("ALL DONE!"/"Play again"). Titles are baked lettering sprites (owner-sanctioned by the TASK-272 reference; loc-debt TASK-160), labels stay text nodes. Both title/label pairs are overlapping nodes in the same
+    /// end-of-line-up state ("ALL DONE!"/"Next" — shown once per game, on the last line-up level; the tap enters the
+    /// replay pool, TASK-528). Titles are baked lettering sprites (owner-sanctioned by the TASK-272 reference; loc-debt TASK-160), labels stay text nodes. Both title/label pairs are overlapping nodes in the same
     /// position (so the compiler measures BOTH for localization overflow); <see cref="Setup"/> toggles the
     /// visible pair by the presentational <c>isFinalLevel</c> flag — the flag never changes the transition itself.
     /// </summary>

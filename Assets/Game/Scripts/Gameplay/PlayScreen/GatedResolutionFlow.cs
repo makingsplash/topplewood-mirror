@@ -17,7 +17,8 @@ namespace Gameplay.PlayScreen
     /// <list type="bullet">
     /// <item><c>Lost</c> → <see cref="LoseScreen"/>, waits for the "Try again" tap (TASK-154, unchanged).</item>
     /// <item><c>Won</c> → the settle-beat lingers on the ASSEMBLED figure (the visual reward, design §2), then
-    /// <see cref="Ui.Screens.WinScreen"/> waits for the "Next"/"Play again" tap (TASK-157). This replaces the old
+    /// <see cref="Ui.Screens.WinScreen"/> waits for the "Continue"/"Next" tap (TASK-157; "Next" under "ALL DONE!" on
+    /// the last line-up level, TASK-528). This replaces the old
     /// silent auto-advance.</item>
     /// </list>
     /// The tap runs <paramref name="applyTransition"/> (the campaign controller's own advance/retry path). The
@@ -33,8 +34,9 @@ namespace Gameplay.PlayScreen
     /// awaited settle-beat throws <see cref="OperationCanceledException"/> (swallowed by the fire-and-forget
     /// UniTaskVoid), the panel is never shown and the transition is (correctly) NOT run. Only ever one resolution
     /// is live at a time — the domain is frozen at Won/Lost until the transition, and the next resolution cannot
-    /// fire before it — so no overlap. For a non-final Won the durable checkpoint is already written on resolve
-    /// (CampaignProgressionController), so a teardown before the tap does NOT lose the win — relaunch resumes N+1.
+    /// fire before it — so no overlap. For EVERY Won (the final line-up level included since TASK-528) the durable
+    /// checkpoint is already written on resolve (CampaignProgressionController), so a teardown before the tap does NOT
+    /// lose the win — relaunch resumes the next level (after the last line-up level: the first pool level).
     ///
     /// No fade on either panel: <c>IWindowAnimator</c> is absent (TASK-121/155) — v1 shows instantly; the win
     /// "celebration" is carried by the figure reveal in the settle-beat + the warm copy, not by animation.

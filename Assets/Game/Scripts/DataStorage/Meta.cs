@@ -10,13 +10,15 @@ namespace DataStorage
 {
     public class Meta
     {
-        // 1-based level counter, increments on every level win
+        // 1-based level counter, increments on every level win — keeps growing past the line-up into the pool
+        // (TASK-528: "Level 81, 82…"), so it is the shown number, not a line-up position
         public PlayerPrefsInt CurrentLevel => SayData.Meta.CurrentLevel;
         public readonly PlayerPrefsInt CurrentLevelRestarts = new ("Meta.CurrentLevelRestarts", 0);
         public readonly PlayerPrefsInt CurrentLevelRevives = new ("Meta.CurrentLevelRevives", 0);
         public readonly PlayerPrefsInt CurrentLevelRewardedRevives = new ("Meta.CurrentLevelRewardedRevives", 0);
 
-        // 0-based level index in levels config, calculated from CurrentLevel on level start
+        // Mirror of CurrentLevel − 1, kept coherent by MetaCampaignStore. NOT a line-up index after the line-up
+        // (TASK-528): in the pool the loaded level comes from PoolCursor. No reader in game code.
         public PlayerPrefsInt CurrentLevelIndex => SayData.Meta.CurrentLevelIndex;
 
         /// <summary>
@@ -49,6 +51,11 @@ namespace DataStorage
         // fires on an upgrading install; no schema bump, no migration — architect §9).
         // StartGoldSeeded guards the one-time start-gold grant (EconomySeedService).
         public readonly PlayerPrefsBool StartGoldSeeded = new ("Meta.StartGoldSeeded", false);
+        // TASK-528: level pool after the line-up — additive keys (a missing key defaults to 0 = first pass, so an
+        // upgrading install behaves as before; no schema bump, no migration). LineupCleared > 0 is the persisted
+        // "campaign completed" fact (closes TASK-158); PoolCursor is the next place in the pool circle.
+        public readonly PlayerPrefsInt LineupCleared = new ("Meta.LineupCleared", 0);
+        public readonly PlayerPrefsInt PoolCursor = new ("Meta.PoolCursor", 0);
         // TASK-432: the first-clear set "Meta.RewardedLevelIds" is gone with the gate it served (every win pays now).
         // Installs that had it keep an orphan PlayerPrefs key nothing reads — harmless, no migration needed.
 

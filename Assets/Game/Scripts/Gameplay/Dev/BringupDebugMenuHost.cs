@@ -168,12 +168,14 @@ namespace Gameplay.Dev
         // Content generator handed the live DDMContext by DDMMain — mirrors the retired overlay's UX.
         private void BuildContent(DDMContext context)
         {
-            // Live i/N + current level id; DDMLabel.CreateDynamic re-reads this every frame in its own Update.
-            DDMLabel.CreateDynamic(context,
-                () => $"Level {_campaign.DevCampaignIndex + 1}/{_levelSource.Count}: {CurrentLevelId}");
+            // Live number + track position + current level id; DDMLabel.CreateDynamic re-reads this every frame.
+            DDMLabel.CreateDynamic(context, PositionLabel);
 
-            DDMButton.Create(context, "◀ Prev", () => Jump(_campaign.DevCampaignIndex - 1));
-            DDMButton.Create(context, "Next ▶", () => Jump(_campaign.DevCampaignIndex + 1));
+            // ◀/▶ move along the current track (TASK-528): clamped on the line-up, around the circle in the pool.
+            // Non-persisting, like every bringup jump (RFC Q2).
+            DDMButton.Create(context, "◀ Prev", () => _campaign.DevStep(-1));
+            DDMButton.Create(context, "Next ▶", () => _campaign.DevStep(1));
+            DDMButton.Create(context, "Jump to pool", () => _campaign.DevJumpToPool(0, persist: false));
 
             DDMInputButton.Create(context, "Go to Level (1-based): ", "Go", InputField.ContentType.IntegerNumber,
                 () => (_campaign.DevCampaignIndex + 1).ToString(),
@@ -188,9 +190,10 @@ namespace Gameplay.Dev
             // domain contracts (ICampaignStore, ITutorialProgressStore) are untouched.
             DDMButton.Create(context, "Reset progress", () =>
             {
-                // M-2: durable-reset the campaign pointer to the first level. WriteLevelIndex(0) is now durable even
-                // when the stored value already equals the default (PrefsCampaignStore.ForceSave, TASK-109 §3.2).
-                _store.WriteLevelIndex(0);
+                // M-2: durable-reset the campaign to a fresh install — number, "line-up cleared" and pool place
+                // (TASK-528). Durable even when the stored values already equal the defaults
+                // (PrefsCampaignStore.ForceSave, TASK-109 §3.2).
+                _store.Write(CampaignProgress.Fresh);
 
                 // M-1: reset FTUE via the existing dev seam — "forget the tutorial so it replays"
                 // (ITutorialProgressStore.cs:17-18), durable. The reset jumps to level 0, so it forgets the tour
@@ -201,14 +204,25 @@ namespace Gameplay.Dev
                     _tutorialProgress.Reset(firstTour.Id);
 
                 // Reload level 0 in-place → GameModel.LevelLoaded → TutorialRunner.OnLevelLoaded → ShouldPlay
-                // (now IsCompleted==false, ReadLevelIndex()==0) → FTUE replays. No relaunch needed.
+                // (now IsCompleted==false, level 0 loaded) → FTUE replays. No relaunch needed.
                 _campaign.DevJumpToLevel(0);
             });
         }
 
-        // DevJumpToLevel clamps out-of-range to the level bounds; an edge prev/next simply reloads the current
-        // level (a harmless dev restart). The dynamic label picks up the new index on its next Update.
+        // DevJumpToLevel clamps out-of-range to the line-up bounds (a first-pass jump). The dynamic label picks up the
+        // new position on its next Update.
         private void Jump(int index) => _campaign.DevJumpToLevel(index);
+
+        // "Level N · lineup i/Count: id" or "Level N · pool k/M: id" (TASK-528) — the shown number and the content
+        // position diverge after the line-up, so both are visible.
+        private string PositionLabel()
+        {
+            var position = _campaign.DevPosition;
+            var number = _campaign.DevProgress.LevelNumber;
+            return position.Track == CampaignTrack.Pool
+                ? $"Level {number} · pool {position.PoolPlace + 1}/{_campaign.DevPoolCount}: {CurrentLevelId}"
+                : $"Level {number} · lineup {position.LineupIndex + 1}/{_levelSource.Count}: {CurrentLevelId}";
+        }
 
         public void Dispose()
         {

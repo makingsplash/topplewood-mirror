@@ -18,8 +18,9 @@ namespace Gameplay.PlayScreen
         /// <param name="outcome">Terminal outcome, for the banner/screen (Won/Lost).</param>
         /// <param name="applyTransition">The campaign controller's private transition; invoke to actually advance/reload.</param>
         /// <param name="isFinalLevel">
-        /// Presentational meta-info only (TASK-157): the win screen shows a campaign-wrap copy ("All done!"/"Play
-        /// again") instead of the normal "Nice!"/"Next" when this is the last level. It is "what to show", NOT
+        /// Presentational meta-info only (TASK-157): the win screen shows the end-of-line-up copy ("ALL DONE!"/"Next")
+        /// instead of the normal copy when this is the last level of the FIRST pass of the line-up (TASK-528: once per
+        /// game — catch-up and pool levels are never final; the tap enters the pool). It is "what to show", NOT
         /// "what to do" — the actual won?advance:reload stays in the controller, so the seam invariant holds. The
         /// bringup flow ignores it (its banner is outcome-only).
         /// </param>

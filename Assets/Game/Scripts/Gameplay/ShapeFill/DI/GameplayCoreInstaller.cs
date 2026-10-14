@@ -47,6 +47,9 @@ namespace Gameplay.DI
             // replacing the hardcoded ShapeFillLevelSource (the human's 15:04 "storage system" mandate).
             builder.Register<ILevelStore, StreamingAssetsLevelStore>(Lifetime.Singleton);
             builder.Register<ILevelSource, JsonLevelSource>(Lifetime.Singleton);
+            // TASK-528: the replay circle after the line-up (shapefill_pool.json, ids → line-up indices). Context-free:
+            // prod and bringup both progress through CampaignProgressionController, which takes it.
+            builder.Register<LevelPool>(Lifetime.Singleton);
 
             // ICampaignStore is bound by the hosting scope (TASK-044): prod MetaCampaignStore writes the SDK-canon
             // Data.Meta.CurrentLevel; bringup PrefsCampaignStore owns its own PlayerPrefsInt (needs only Init).
@@ -95,7 +98,7 @@ namespace Gameplay.DI
             // input gate consumed by the input decorator, the real ring/finger overlay view (TutorialView), the
             // tour definition + its composite AssembleInOrderStep, and the runner entry point (registered AFTER
             // CampaignProgressionController so the resumed level is already loaded into GameModel.CurrentLevel by the
-            // time the runner starts — TASK-112 gates the tour on CurrentLevel.LevelId, not on ReadLevelIndex, so the
+            // time the runner starts — TASK-112 gates the tour on CurrentLevel.LevelId, not on the persisted progress, so the
             // ordering requirement stands and is now load-order, not pointer-resume). The context-DEPENDENT seams (progress store / gate /
             // analytics) and the input decorator itself are bound by the hosting scope — exactly like
             // IGameplayInputSource / ICampaignStore (RFC §4). Like the dev cheat, tutorial IMPLEMENTATIONS are

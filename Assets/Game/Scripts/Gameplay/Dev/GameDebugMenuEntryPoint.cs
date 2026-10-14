@@ -29,7 +29,8 @@ namespace Gameplay.Dev
     /// shared with the bringup host via <see cref="DevOverlayUi"/>/<see cref="RestartButtonGuard"/>.
     ///
     /// Two things beyond "just open the menu":
-    ///  1. An always-visible level indicator ("L i/N: levelId") sits under the button, so a developer looking at the
+    ///  1. An always-visible level indicator ("L i/N: levelId"; in the pool "L number · pool k/M: levelId", TASK-528)
+    ///     sits under the button, so a developer looking at the
     ///     new art sees the current level without opening anything.
     ///  2. While the menu is open the RESTART canvas is hidden (<see cref="RestartButtonGuard"/>) — otherwise the
     ///     z-order collision of TASK-117 reproduces on the prod path (RESTART at short.MaxValue-1 swallows the menu's
@@ -47,7 +48,7 @@ namespace Gameplay.Dev
         private Text _indicator;
 
         // Cached indicator inputs so Tick rebuilds the label string only when it actually changes (no per-frame alloc).
-        private int _lastIndex = int.MinValue;
+        private int _lastNumber = int.MinValue;
         private int _lastCount = int.MinValue;
         private string _lastLevelId;
 
@@ -99,16 +100,20 @@ namespace Gameplay.Dev
             if (_indicator == null)
                 return;
 
-            var index = _campaign.DevCampaignIndex;
+            // The shown number keeps growing past the line-up (TASK-528), so it is the cache key next to the id.
+            var number = _campaign.DevProgress.LevelNumber;
             var count = _levelSource.Count;
             var levelId = CurrentLevelId;
-            if (index == _lastIndex && count == _lastCount && levelId == _lastLevelId)
+            if (number == _lastNumber && count == _lastCount && levelId == _lastLevelId)
                 return;
 
-            _lastIndex = index;
+            _lastNumber = number;
             _lastCount = count;
             _lastLevelId = levelId;
-            _indicator.text = $"L {index + 1}/{count}: {levelId}";
+            var position = _campaign.DevPosition;
+            _indicator.text = position.Track == CampaignTrack.Pool
+                ? $"L {number} · pool {position.PoolPlace + 1}/{_campaign.DevPoolCount}: {levelId}"
+                : $"L {position.LineupIndex + 1}/{count}: {levelId}";
         }
 
         // Always-visible overlay label under the DEV button (its own canvas). raycastTarget off so it never steals a
