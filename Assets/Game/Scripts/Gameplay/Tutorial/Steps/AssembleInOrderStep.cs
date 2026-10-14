@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using Game.Services.LogService;
 using Gameplay.Core;
 using R3;
+using UnityEngine;
 
 namespace Gameplay.Tutorial
 {
@@ -10,8 +13,9 @@ namespace Gameplay.Tutorial
     /// blocked, no highlight meanwhile), then highlights it, admits ONLY a tap on it, and waits for its REAL release
     /// before moving on — repeating until every listed piece is assembled. It is level-agnostic: it knows nothing about the
     /// concrete figure, it just reads the loaded <see cref="GameModel"/> and follows the tap order it is handed. The
-    /// order is the INPUT the installer hands it (the campaign's first tutorial level, sailboat at index 0 — see
-    /// <c>GameplayCoreInstaller</c>); the mechanism is not tied to any one level.
+    /// order is the INPUT the installer hands it — either fixed (sailboat's FTUE, see <c>GameplayCoreInstaller</c>) or
+    /// resolved from the loaded level's data at Enter (<see cref="BeforeCoReleaseGroup"/>, the lead-in of a co-release
+    /// tour, TASK-526); the mechanism is not tied to any one level. An empty order completes at once.
     ///
     /// Completion contract with <see cref="TutorialRunner"/>: the returned observable emits exactly ONCE — after
     /// the LAST piece is released — so the runner's Take(1) advances the tour only when assembly is done, not on
@@ -23,10 +27,71 @@ namespace Gameplay.Tutorial
     /// </summary>
     public sealed class AssembleInOrderStep : ITutorialStep
     {
-        private readonly IReadOnlyList<int> _tapOrder;
+        private readonly Func<LevelData, IReadOnlyList<int>> _tapOrder;
 
         /// <param name="tapOrder">Placement indices to tap, in order. Non-Idle / missing entries are skipped.</param>
-        public AssembleInOrderStep(IReadOnlyList<int> tapOrder) => _tapOrder = tapOrder;
+        public AssembleInOrderStep(IReadOnlyList<int> tapOrder) => _tapOrder = _ => tapOrder;
+
+        /// <param name="tapOrder">Order resolved from the LOADED level at <see cref="Enter"/> — so a tour defined once in
+        /// the catalog reads each level's own data (TASK-526) instead of carrying hardcoded indices.</param>
+        public AssembleInOrderStep(Func<LevelData, IReadOnlyList<int>> tapOrder) => _tapOrder = tapOrder;
+
+        /// <summary>
+        /// The pieces a co-release tour must let the player place BEFORE it calls the group (TASK-526): every entry of
+        /// the level's <see cref="LevelData.WinningOrder"/> that precedes the first member of
+        /// <see cref="LevelData.CoReleaseGroups"/>[<paramref name="groupOrdinal"/>]. Composing this step ahead of
+        /// <see cref="SimultaneousTapStep"/> is what keeps the pair tour from locking the base and beam on grand_seesaw —
+        /// and on any level whose taught group is not first in its winning order.
+        /// </summary>
+        public static AssembleInOrderStep BeforeCoReleaseGroup(int groupOrdinal = 0) =>
+            new(level => PredecessorsOfGroup(level, groupOrdinal));
+
+        /// <summary>Pure order query behind <see cref="BeforeCoReleaseGroup"/>. Empty when the level declares no such
+        /// group or bakes no <see cref="LevelData.WinningOrder"/> (the tour then calls the group at once — it never
+        /// guesses an order, same as the Hint booster). The prefix stops before a member of ANOTHER co-release group:
+        /// a single tap cannot release it, so this one-finger step would wait forever on it.</summary>
+        public static IReadOnlyList<int> PredecessorsOfGroup(LevelData level, int groupOrdinal)
+        {
+            var result = new List<int>();
+            var groups = level?.CoReleaseGroups;
+            var order = level?.WinningOrder;
+            if (groups == null || order == null || groupOrdinal < 0 || groupOrdinal >= groups.Count)
+                return result;
+
+            var taught = groups[groupOrdinal];
+            foreach (var placementIndex in order)
+            {
+                if (Contains(taught, placementIndex))
+                    return result;
+                if (InAnyGroup(groups, placementIndex))
+                {
+                    Debug.unityLogger.Log(LogType.Warning, $"[{LogCategory.Tutorial}] Level '{level.LevelId}': winning " +
+                        $"order reaches piece {placementIndex} of another co-release group before group {groupOrdinal}; " +
+                        "the tour calls the group without the rest of its predecessors.");
+                    return result;
+                }
+                result.Add(placementIndex);
+            }
+            return result;
+        }
+
+        private static bool Contains(IReadOnlyList<int> group, int placementIndex)
+        {
+            if (group == null)
+                return false;
+            for (var i = 0; i < group.Count; i++)
+                if (group[i] == placementIndex)
+                    return true;
+            return false;
+        }
+
+        private static bool InAnyGroup(IReadOnlyList<IReadOnlyList<int>> groups, int placementIndex)
+        {
+            foreach (var group in groups)
+                if (Contains(group, placementIndex))
+                    return true;
+            return false;
+        }
 
         // Single funnel key for the whole tour (per-piece granularity is a follow-up, TASK-078 tech-debt).
         public string Id => "assemble";
@@ -35,7 +100,7 @@ namespace Gameplay.Tutorial
         {
             return Observable.Create<Unit>(observer =>
             {
-                var targets = ResolveTargets(context.Model, _tapOrder);
+                var targets = ResolveTargets(context.Model, _tapOrder(context.Model.CurrentLevel));
                 // The active phase: either (rest-wait + input block) or (release-sub + allow-gate) for the current piece.
                 var current = new SerialDisposable();
                 var index = 0;
@@ -108,7 +173,9 @@ namespace Gameplay.Tutorial
         /// cannot be tapped.</summary>
         private static List<PieceInstance> ResolveTargets(GameModel model, IReadOnlyList<int> tapOrder)
         {
-            var targets = new List<PieceInstance>(tapOrder.Count);
+            var targets = new List<PieceInstance>(tapOrder?.Count ?? 0);
+            if (tapOrder == null)
+                return targets;
             foreach (var placementIndex in tapOrder)
             {
                 foreach (var piece in model.Pieces)
