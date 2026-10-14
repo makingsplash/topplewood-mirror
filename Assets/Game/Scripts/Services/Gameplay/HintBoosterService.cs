@@ -2,6 +2,7 @@ using System;
 using DataStorage;
 using Gameplay.Configs;
 using R3;
+using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 
 namespace Services.Gameplay
 {
@@ -57,7 +58,9 @@ namespace Services.Gameplay
 
             _store.Grant(BoosterId.Hint, Cfg.SeedGrant, ChargeSource.FreeGrant, Cfg.StockCap);
             Data.Meta.HintSeeded.Value = true;
-            Data.Meta.HintSeeded.ForceSave();
+            // The Grant above already flushed the charges; the guard must reach disk too, or a kill before the next
+            // flush re-seeds on relaunch (TASK-537 — ForceSave is only SetInt, not durable).
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
         }
 
         /// <summary>Bounded free faucet (balancer §1.3): once per calendar day, top the stock UP TO
@@ -78,7 +81,7 @@ namespace Services.Gameplay
                 _store.Grant(BoosterId.Hint, missing, ChargeSource.FreeGrant, Cfg.StockCap);
 
             Data.Meta.HintLastDailyRefill.Value = now;
-            Data.Meta.HintLastDailyRefill.ForceSave();
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();   // stamp durable with the grant (TASK-537)
         }
 
         public bool HasCharge => _charges.Value > 0;
@@ -120,7 +123,9 @@ namespace Services.Gameplay
         /// <summary>Buy Hint charges for coins (TASK-240, architect §4 — the <see cref="ChargeSource.CoinPurchase"/>
         /// call the seam was built for). ATOMIC and cap-safe: a SKU that would overflow the cap is refused WHOLE
         /// (never a partial grant charged in full), and gold is debited only after the affordability check, so a
-        /// short balance never debits. The wallet write is durable (<c>ForceSave</c>), mirroring the faucet.
+        /// short balance never debits. Debit and grant reach disk together: the store's <c>Grant</c> ends in
+        /// <c>SaveDataIfChanged</c>, and <c>PlayerPrefs.Save()</c> writes EVERY staged key, the gold debit included
+        /// (TASK-537; <c>ForceSave</c> alone is only <c>SetInt</c> and was never durable).
         /// The UI is expected to gate an over-cap or unaffordable SKU up front; this method is the authoritative
         /// backstop.</summary>
         public PurchaseResult TryPurchaseCharges(HintSku sku)
@@ -139,7 +144,6 @@ namespace Services.Gameplay
 
             // Debit first, then grant — both durable. Order matches the atomic-spend contract (never grant unpaid).
             Data.Meta.GoldAmount.Value -= price;
-            Data.Meta.GoldAmount.ForceSave();
             _store.Grant(BoosterId.Hint, count, ChargeSource.CoinPurchase, cfg.StockCap);
             _charges.Value = _store.Get(BoosterId.Hint);
             return PurchaseResult.Ok;

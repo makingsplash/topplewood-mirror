@@ -29,8 +29,13 @@ namespace Services
         private static void CreateServices()
         {
             GlobalServiceContainer.Register(new DebugLogService(new DebugLogLogic(DebugLogType.FromIntMask(Data.Debug.DebugLogType.Value))));
+            // TASK-533: the smoke player has no SayKit Java bridge (SayKitSmokeBuildFixup strips it, SayKitInit skips
+            // init), and ANY bridge call there never returns: it fails with NoClassDefFoundError, SKThreadService.HandleError
+            // reports the failure through the same dead bridge (TrackEvent), which fails again — an endless error loop on
+            // the main thread (measured on device: boot frozen inside InitializeGlobalServices, ~500 errors/s). The template's
+            // own no-SayKit seam is used there instead. Prod player (no define) and the editor keep the real service.
             ISayKitService sayKitService =
-#if SAYKIT
+#if SAYKIT && !(SAYKIT_SMOKE_DISABLE_RUNTIME && !UNITY_EDITOR)
                 new SayKitService();
 #else
                 new EmptySayKitService();

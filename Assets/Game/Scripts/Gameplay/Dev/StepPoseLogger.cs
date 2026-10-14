@@ -21,8 +21,8 @@ namespace Gameplay.Dev
     /// READ-ONLY: it reads the domain model's already-mirrored poses (<see cref="GameModel.Pieces"/>) and
     /// writes only to the Unity log — it never touches the simulation or the model, so physics, the pose
     /// sequence and <c>poseHash</c> are byte-for-byte identical whether or not this logger is attached. It
-    /// hooks in as the (otherwise null) <see cref="GameController.StepObserver"/>, which the production and
-    /// headless paths leave unset.
+    /// hooks in as the (otherwise null) <see cref="GameController.StepObserver"/>. Registered as an entry point
+    /// in both the bringup and the prod (dev-build) scopes; the headless sim attaches its own instance.
     ///
     /// Output is a single line per step tagged <c>[STEPLOG]</c> so it isolates with
     /// <c>adb logcat | grep STEPLOG</c> on Android (Xcode console on iOS, the Console in the Editor). All

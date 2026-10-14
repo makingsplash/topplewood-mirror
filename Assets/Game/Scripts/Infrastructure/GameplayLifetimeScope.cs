@@ -137,6 +137,13 @@ namespace Game.Code.Infrastructure
             // only, same reason as the bridge above: the shared GameplayCoreInstaller would raise a second menu in
             // bringup and needs the prod-only DebugService/SayData graph bringup does not hold.
             builder.RegisterEntryPoint<GameDebugMenuEntryPoint>();
+
+            // TASK-533: per-fixed-step [STEPLOG] pose logger (TASK-070) in the prod graph. The Android dev APK now
+            // boots through Loading.unity, so a bringup-only registration left the device build without the
+            // sim↔device parity log. Read-only (GameController.StepObserver hook) → physics/poseHash unchanged.
+            // Lives in both scopes, never twice at runtime: prod and bringup do not coexist, and the headless sim
+            // news its own logger (SimRun). Deps (GameController, GameModel, ShapeFillTuning) — GameplayCoreInstaller.
+            builder.RegisterEntryPoint<StepPoseLogger>();
 #endif
 
             // Tutorial system prod impls (TASK-049): completion on the SDK-canon Data.Meta.CompletedTutorials,

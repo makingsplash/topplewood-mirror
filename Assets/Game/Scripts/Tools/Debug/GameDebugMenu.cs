@@ -108,9 +108,10 @@ namespace Tools.Debug
                     var current = new Gameplay.Core.CampaignProgress(
                         SayData.Meta.CurrentLevel.Value, Data.Meta.LineupCleared.Value, Data.Meta.PoolCursor.Value);
                     var target = Gameplay.Core.CampaignCursor.GoToLevel(current, _level);
-                    SayData.Meta.CurrentLevel.Value = target.LevelNumber;
-                    Data.Meta.LineupCleared.Value = target.LineupCleared;
-                    Data.Meta.PoolCursor.Value = target.PoolCursor;
+                    // TASK-537 (+ debt TASK-175): the SAME write as the ◀/▶ arrows (DevStepPersisted → store.Write) —
+                    // all keys coherently, the 0-based CurrentLevelIndex mirror included, then a durable flush. The
+                    // old direct Value writes were only staged SetInt, so a kill in focus dropped the jump.
+                    new Gameplay.Adapters.MetaCampaignStore().Write(target);
                     Data.Meta.ClearProgress(_level - 1);
 
                     context.Main.SetRestart();

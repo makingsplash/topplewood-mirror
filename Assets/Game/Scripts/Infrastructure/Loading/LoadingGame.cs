@@ -130,10 +130,18 @@ namespace Infrastructure.Loading
             // TASK-126 (owner 08:39): гасим статический ScreenSpaceOverlay-канвас сцены Loading здесь же,
             // где приложение «показано» — сразу после того, как убран DontDestroyOnLoad-лоадинг-скрин.
             HideLoadingSceneStaticCanvases(sceneCanvasesAtBoot);
+#if SAYKIT_SMOKE_DISABLE_RUNTIME && !UNITY_EDITOR
+            LogSmokeBootMarker("boot finished: gameplay scope raised, loading screen hidden");
+#endif
 
             // app_loaded должен уходить, когда игра полностью загружена
-            // и игрок может взаимодействовать с экраном (см. доку SayKit).
+            // и игрок может взаимодействовать с экраном (см. доку SayKit). TASK-533: в smoke-плеере идёт через
+            // GlobalService.SayKit (там EmptySayKitService) — прямой вызов ушёл бы в мёртвый мост и зациклил ошибки.
+#if SAYKIT_SMOKE_DISABLE_RUNTIME && !UNITY_EDITOR
+            GlobalService.SayKit.TrackApplicationLoaded();
+#else
             SayKit.trackApplicationLoaded();
+#endif
 
             // TASK-153: приёмочная оснастка автопоказа RestartPopup снята (был вызов DevAutoShowRestartPopupAsync
             // под #if GPIE_DEVELOPMENT). Требование владельца: на входе в игру попапов не показывается. Попап
@@ -252,6 +260,14 @@ namespace Infrastructure.Loading
             // предохранитель: если какой-то загрузчик когда-нибудь зависнет, бут не встанет вечно — по
             // таймауту НЕ бросаем, называем зависшие поимённо и продолжаем на уже загруженных конфигах.
             await WaitForResourcesWithEditorTimeoutAsync(tasks, cancellationToken);
+#elif SAYKIT_SMOKE_DISABLE_RUNTIME
+            // TASK-533 (owner decision 2026-10-14, variant B): the smoke player never calls SayKit.init
+            // (SayKitInit.cs, player stub — no own SayKit app/Firebase yet, TASK-064), so GetInitState never moves and
+            // the six waits below would hold the boot on the loading screen forever. Don't wait for states that cannot
+            // come: say it loudly and boot on LOCAL config — the same semantics as the editor fallback (TASK-129).
+            // Not a timeout: there is nothing to wait for. The prod player (no define) keeps the unbounded waits.
+            LogSmokeSayKitSkipped();
+            await tasks.WhenAll(_loadingScreen.Progress, cancellationToken: cancellationToken);
 #else
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Platform, cancellationToken: cancellationToken));
             tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.RemoteConfig, cancellationToken: cancellationToken));
@@ -417,6 +433,29 @@ namespace Infrastructure.Loading
         }
 #endif
 
+#if SAYKIT_SMOKE_DISABLE_RUNTIME && !UNITY_EDITOR
+        // Warning, not Info: it must pass DevelopmentMinLevel=Warning (TASK-134), otherwise the skip is silent.
+        private void LogSmokeSayKitSkipped()
+        {
+            var time = DateTime.Now;
+            _logService.Log(
+                LogLevel.Warning,
+                $"[{time:T}.{time.Millisecond.ToString()}] SAYKIT_SMOKE_DISABLE_RUNTIME: SayKit.init is stubbed " +
+                $"(state {SayKit.GetInitState}), boot does NOT wait for SayKit init states and continues on LOCAL " +
+                "config, without remote. SMOKE PLAYER ONLY — see TASK-064 (own SayKit app + Firebase).",
+                LogCategory.LoadLevel);
+        }
+
+        private void LogSmokeBootMarker(string marker)
+        {
+            var time = DateTime.Now;
+            _logService.Log(
+                LogLevel.Warning,
+                $"[{time:T}.{time.Millisecond.ToString()}] {marker} (smoke player)",
+                LogCategory.LoadLevel);
+        }
+#endif
+
         // Именованный шаг хвоста бута (TASK-134). Пишет маркер входа в фазу в тот же видимый канал
         // (_logService/LogCategory.LoadLevel), что и «Load Configs start/finished», — по отсутствию маркера
         // «finished» после маркера фазы человек/проверка локализует, ГДЕ встал бут. В редакторе фаза обёрнута
@@ -447,7 +486,11 @@ namespace Infrastructure.Loading
                     LogCategory.LoadLevel);
             }
 #else
-            // Устройство: фаза зовётся напрямую, без маркера и без try/catch — поведение плеера не меняется.
+            // Устройство: фаза зовётся напрямую, без try/catch — поведение плеера не меняется. TASK-533: в smoke-плеере
+            // маркер фазы пишется Warning'ом — иначе по logcat нельзя сказать, где встал прод-бут на устройстве.
+#if SAYKIT_SMOKE_DISABLE_RUNTIME
+            LogSmokeBootMarker($"boot step: {stepName}");
+#endif
             step();
 #endif
         }
