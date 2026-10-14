@@ -700,9 +700,7 @@ namespace Gameplay.View
             }
             tex.Apply();
 
-            var shader = Shader.Find("Sprites/Default")
-                         ?? Shader.Find("Universal Render Pipeline/Unlit")
-                         ?? Shader.Find("Unlit/Transparent");
+            var shader = RuntimeShaders.SpritesDefault ?? RuntimeShaders.UrpUnlit;
             _flowMaterial = new Material(shader) { name = "AirFlowParticleMaterial", mainTexture = tex };
             _flowMaterial.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             return _flowMaterial;
@@ -820,14 +818,12 @@ namespace Gameplay.View
         }
 
         // Alpha-blended material for the fill. Sprites/Default blends by default (queue Transparent) and is always
-        // present; the URP-Unlit / Unlit-Color fallbacks mirror BlockMaterial. Colour is set on the instance (few
+        // present (Always Included + serialized in RuntimeShaders); URP/Unlit is the fallback. Colour is set on the instance (few
         // zones per level) so each zone keeps its own alpha. Double-sided: the fan mesh is one-sided and the camera
         // looks along +Z, so cull-off (guarded — a no-op on shaders without _Cull) keeps the face visible.
         private static Material TranslucentMaterial(Color color)
         {
-            var shader = Shader.Find("Sprites/Default")
-                         ?? Shader.Find("Universal Render Pipeline/Unlit")
-                         ?? Shader.Find("Unlit/Color");
+            var shader = RuntimeShaders.SpritesDefault ?? RuntimeShaders.UrpUnlit;
             var mat = new Material(shader) { name = "AirZoneFillMaterial" };
             if (mat.HasProperty(BlockMaterial.ColorProperty))
                 mat.SetColor(BlockMaterial.ColorProperty, color);

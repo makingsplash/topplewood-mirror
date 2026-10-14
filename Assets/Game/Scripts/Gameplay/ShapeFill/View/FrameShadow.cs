@@ -116,7 +116,7 @@ namespace Gameplay.View
             {
                 if (_material == null)
                 {
-                    var shader = Shader.Find("Game/Wood Piece Shadow");
+                    var shader = RuntimeShaders.WoodPieceShadow;   // TASK-554: ссылкой, иначе в плеере тени нет
                     if (shader == null)
                         return null;
                     _material = new Material(shader) { name = "FrameShadowMaterial" };

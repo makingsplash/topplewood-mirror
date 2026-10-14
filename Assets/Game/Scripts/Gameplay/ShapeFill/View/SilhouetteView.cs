@@ -31,9 +31,7 @@ namespace Gameplay.View
             {
                 if (_lineMaterial == null)
                 {
-                    var shader = Shader.Find("Universal Render Pipeline/Unlit")
-                                 ?? Shader.Find("Sprites/Default")
-                                 ?? Shader.Find("Unlit/Color");
+                    var shader = RuntimeShaders.UrpUnlit ?? RuntimeShaders.SpritesDefault;
                     _lineMaterial = new Material(shader) { name = "SilhouetteLineMaterial" };
                 }
                 return _lineMaterial;

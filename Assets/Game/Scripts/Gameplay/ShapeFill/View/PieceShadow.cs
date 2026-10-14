@@ -41,9 +41,11 @@ namespace Gameplay.View
             {
                 if (_shared == null)
                 {
-                    var shader = Shader.Find("Game/Wood Piece Shadow");
+                    // Сериализованная ссылка из RuntimeShaders (TASK-554): строкой шейдер в плеер не попадал,
+                    // и на устройстве теней не было вовсе. Промах реестр пишет ошибкой — деталь без тени.
+                    var shader = RuntimeShaders.WoodPieceShadow;
                     if (shader == null)
-                        return null;   // шейдер вырезан стриппингом — деталь просто останется без тени
+                        return null;
                     _shared = new Material(shader) { name = "PieceShadowMaterial" };
                     _shared.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
 
@@ -66,7 +68,7 @@ namespace Gameplay.View
             {
                 if (_silhouetteShared == null)
                 {
-                    var shader = Shader.Find("Game/Wood Piece Shadow");
+                    var shader = RuntimeShaders.WoodPieceShadow;
                     if (shader == null)
                         return null;
                     _silhouetteShared = new Material(shader) { name = "PieceShadowSilhouetteMaterial" };

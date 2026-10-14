@@ -5,8 +5,9 @@ namespace Gameplay.View
 {
     /// <summary>
     /// Shared unlit material for block/silhouette meshes. Colour is driven per-instance via a
-    /// MaterialPropertyBlock, so one material batches all blocks. Prefers URP/Unlit, falls back to the
-    /// built-in sprite shader.
+    /// MaterialPropertyBlock, so one material batches all blocks. Shader is <c>Game/Wood Block</c> taken from
+    /// <see cref="RuntimeShaders"/> (serialized reference, so it is in the player — TASK-554); URP/Unlit and the
+    /// built-in sprite shader are fallbacks only, and a miss is logged.
     /// </summary>
     public static class BlockMaterial
     {
@@ -63,12 +64,12 @@ namespace Gameplay.View
                 {
                     // Game/Wood Block рисует волокно, фаску и блик процедурно и держит тот же
                     // _BaseColor per-instance, что и URP/Unlit, — покраска деталей не меняется.
-                    // Если шейдер не собрался (не попал в сборку / вырезан стриппингом),
-                    // откатываемся на прежнюю цепочку: деталь станет плоской, но не пропадёт.
-                    var shader = Shader.Find("Game/Wood Block")
-                                 ?? Shader.Find("Universal Render Pipeline/Unlit")
-                                 ?? Shader.Find("Sprites/Default")
-                                 ?? Shader.Find("Unlit/Color");
+                    // Шейдер берётся сериализованной ссылкой из RuntimeShaders, поэтому он в плеере
+                    // (TASK-554: строкой его в сборке не было, и деталь на устройстве была плоской).
+                    // Промах реестр пишет в лог ошибкой; тогда — прежний откат: деталь плоская, но не пропадёт.
+                    var shader = RuntimeShaders.WoodBlock
+                                 ?? RuntimeShaders.UrpUnlit
+                                 ?? RuntimeShaders.SpritesDefault;
                     _shared = new Material(shader) { name = "ShapeFillBlockMaterial" };
 
                     // Blocks are one-sided fan meshes (normal +Z) and tumble under physics, while the
@@ -94,7 +95,7 @@ namespace Gameplay.View
         /// кромки аналитически по полилинии силуэта (в объектном пространстве рендерера), а не по вершинам меша, у
         /// которого внутренние рёбра дали бы шов. Кейворд живёт на МАТЕРИАЛЕ, а не в MaterialPropertyBlock (MPB
         /// кейворды не несёт), поэтому нужен отдельный инстанс материала; контур у каждого рендерера свой — в MPB.
-        /// Откат — как у <see cref="Shared"/>: если <c>Game/Wood Block</c> не собрался, кейворд на fallback-шейдере —
+        /// Откат — как у <see cref="Shared"/>: если <c>Game/Wood Block</c> нет в <see cref="RuntimeShaders"/> (ошибка в лог), кейворд на fallback-шейдере —
         /// no-op, и деталь деградирует в плоскую заливку, а не в пропажу.
         /// </summary>
         public static Material ConcaveShared
@@ -103,10 +104,9 @@ namespace Gameplay.View
             {
                 if (_concaveShared == null)
                 {
-                    var shader = Shader.Find("Game/Wood Block")
-                                 ?? Shader.Find("Universal Render Pipeline/Unlit")
-                                 ?? Shader.Find("Sprites/Default")
-                                 ?? Shader.Find("Unlit/Color");
+                    var shader = RuntimeShaders.WoodBlock
+                                 ?? RuntimeShaders.UrpUnlit
+                                 ?? RuntimeShaders.SpritesDefault;
                     _concaveShared = new Material(shader) { name = "ShapeFillConcaveMaterial" };
                     _concaveShared.EnableKeyword(ConcaveKeyword);
 
