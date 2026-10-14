@@ -113,16 +113,20 @@ namespace Gameplay.DI
             // (TASK-078/079 tech-debt: export a certified order into LevelData.WinningOrder and feed it from there;
             // dormant while winning order == placement order here).
             //
-            // grand_seesaw (campaign "level 5") → the simultaneous co-release tour: SimultaneousTapStep reads the
-            // level's FIRST CoReleaseGroup from data (the pan pair [2,3]) and highlights both members with two
-            // fingers — no per-level index is hardcoded here, so the same step teaches whatever group the level
-            // declares ("class, not case", owner 2026-09-14).
+            // grand_seesaw → the simultaneous co-release tour. It first walks the pieces that come BEFORE the taught
+            // group in the level's WinningOrder (AssembleInOrderStep.BeforeCoReleaseGroup — fulcrum, beam), then
+            // SimultaneousTapStep reads the level's FIRST CoReleaseGroup from data (the pan pair [2,3]) and highlights
+            // both members with two fingers. Before TASK-526 the tour was the pair step alone and locked the base and
+            // beam until the pans were released. No per-level index is hardcoded here: both steps read the loaded
+            // level's data, so the same tour teaches whatever group a level declares ("class, not case", owner
+            // 2026-09-14).
             var catalog = new TutorialCatalog(new Dictionary<string, TutorialDefinition>
             {
                 ["sailboat"] = new TutorialDefinition(
                     "first_tutorial", new ITutorialStep[] { new AssembleInOrderStep(new[] { 0, 1 }) }),
                 ["grand_seesaw"] = new TutorialDefinition(
-                    "simul_release_tutorial", new ITutorialStep[] { new SimultaneousTapStep() }),
+                    "simul_release_tutorial",
+                    new ITutorialStep[] { AssembleInOrderStep.BeforeCoReleaseGroup(), new SimultaneousTapStep() }),
             });
             builder.RegisterInstance(catalog);
             builder.RegisterEntryPoint<TutorialRunner>();
