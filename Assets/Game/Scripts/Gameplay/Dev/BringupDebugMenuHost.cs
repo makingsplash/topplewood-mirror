@@ -37,7 +37,7 @@ namespace Gameplay.Dev
     /// bringup is usually played there. The button lives on its own DontDestroyOnLoad overlay canvas pinned to
     /// a screen corner; gameplay taps ride the raw PointerTapInputSource (not uGUI), an independent pipeline, so
     /// a detail under the button stays tappable. The switch semantics mirror the retired overlay: live
-    /// <see cref="CampaignProgressionController.DevJumpToLevel"/> (0-based, no meta persist), prev/next, and a
+    /// <see cref="CampaignProgressionController.DevGoToLevel"/> (level number, no meta persist), prev/next, and a
     /// visible i/N + level-id label — bringup has no SayData.Meta, so persisting a jump is physically
     /// unavailable there (design-locked, RFC Q2).
     /// </summary>
@@ -54,6 +54,7 @@ namespace Gameplay.Dev
 
         private DebugItemsConfig _config;
         private DDMMain _menu;
+        private DDMInputButton _goToField; // the open menu's "Go to Level" field; destroyed with the menu GO.
         private GameObject _eventSystem;
         private GameObject _buttonCanvas;
 
@@ -161,6 +162,7 @@ namespace Gameplay.Dev
             _menu.Init(_config, BuildContent, _ =>
             {
                 _menu = null;
+                _goToField = null;
                 _restartGuard.Restore();
             });
         }
@@ -173,16 +175,20 @@ namespace Gameplay.Dev
 
             // ◀/▶ move along the current track (TASK-528): clamped on the line-up, around the circle in the pool.
             // Non-persisting, like every bringup jump (RFC Q2).
-            DDMButton.Create(context, "◀ Prev", () => _campaign.DevStep(-1));
-            DDMButton.Create(context, "Next ▶", () => _campaign.DevStep(1));
-            DDMButton.Create(context, "Jump to pool", () => _campaign.DevJumpToPool(0, persist: false));
+            DDMButton.Create(context, "◀ Prev", () => AfterJump(() => _campaign.DevStep(-1)));
+            DDMButton.Create(context, "Next ▶", () => AfterJump(() => _campaign.DevStep(1)));
+            DDMButton.Create(context, "Jump to pool", () => AfterJump(() => _campaign.DevJumpToPool(0, persist: false)));
 
-            DDMInputButton.Create(context, "Go to Level (1-based): ", "Go", InputField.ContentType.IntegerNumber,
-                () => (_campaign.DevCampaignIndex + 1).ToString(),
+            // Prefilled with the shown LEVEL NUMBER, like the prod menu (TASK-534): in the pool that is 81, not the
+            // line-up position of the loaded content. Go on the prefilled number reloads in place; any other number is
+            // a first-pass line-up jump (CampaignCursor.GoToLevel). DDMInputButton reads its init text once, so the
+            // jump buttons re-sync the field themselves (AfterJump).
+            _goToField = DDMInputButton.Create(context, "Go to Level: ", "Go", InputField.ContentType.IntegerNumber,
+                CurrentLevelNumber,
                 stringValue =>
                 {
-                    if (int.TryParse(stringValue, out var oneBased))
-                        Jump(oneBased - 1);
+                    if (int.TryParse(stringValue, out var levelNumber))
+                        AfterJump(() => _campaign.DevGoToLevel(levelNumber));
                 });
 
             // Reset progress reachable through existing seams (owner condition, TASK-047 / fix TASK-109): persist
@@ -205,13 +211,20 @@ namespace Gameplay.Dev
 
                 // Reload level 0 in-place → GameModel.LevelLoaded → TutorialRunner.OnLevelLoaded → ShouldPlay
                 // (now IsCompleted==false, level 0 loaded) → FTUE replays. No relaunch needed.
-                _campaign.DevJumpToLevel(0);
+                AfterJump(() => _campaign.DevJumpToLevel(0));
             });
         }
 
-        // DevJumpToLevel clamps out-of-range to the line-up bounds (a first-pass jump). The dynamic label picks up the
-        // new position on its next Update.
-        private void Jump(int index) => _campaign.DevJumpToLevel(index);
+        private string CurrentLevelNumber() => _campaign.DevProgress.LevelNumber.ToString();
+
+        // Every jump reloads synchronously (CampaignProgressionController.SetProgress), so the progress is already
+        // updated here: re-sync the "Go to Level" field. The dynamic label picks up the new position on its next Update.
+        private void AfterJump(Action jump)
+        {
+            jump();
+            if (_goToField != null)
+                _goToField.InputText = CurrentLevelNumber();
+        }
 
         // "Level N · lineup i/Count: id" or "Level N · pool k/M: id" (TASK-528) — the shown number and the content
         // position diverge after the line-up, so both are visible.

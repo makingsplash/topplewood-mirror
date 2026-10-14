@@ -118,7 +118,7 @@ namespace Gameplay.Dev
 
         // Always-visible overlay label under the DEV button (its own canvas). raycastTarget off so it never steals a
         // tap; an Outline keeps it legible over arbitrary art. Same sources as bringup's in-menu label
-        // (DevCampaignIndex is the authoritative live in-memory index, ILevelSource.Count, GameModel.CurrentLevel).
+        // (DevPosition/DevProgress are the authoritative live in-memory position, ILevelSource.Count, GameModel.CurrentLevel).
         private static Text CreateIndicator(GameObject buttonCanvas)
         {
             var labelGo = new GameObject("[Dev] LevelIndicator", typeof(Text), typeof(Outline));
