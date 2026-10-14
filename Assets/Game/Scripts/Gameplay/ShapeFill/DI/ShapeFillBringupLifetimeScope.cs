@@ -109,9 +109,9 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
         // Per-fixed-step pose logger (TASK-070): a read-only diagnostic that attaches itself as the
         // GameController.StepObserver and emits one [STEPLOG] line per physics step, so the same dev build
         // run in the Editor and on device can be diffed to pin where cross-device physics diverges (ADR-0001
-        // M0.2). Never touches the simulation/model → physics and poseHash are unchanged. Bringup-only, like
-        // the DDM host: prod raises its own graph via LoadingGame, and the headless sim news the domain
-        // directly so it never creates this entry point.
+        // M0.2). Never touches the simulation/model → physics and poseHash are unchanged. Registered in BOTH
+        // scopes (TASK-533: the prod GameplayLifetimeScope too, since the device dev APK boots through Loading);
+        // they never coexist at runtime, and the headless sim news its own logger instead of this entry point.
         builder.RegisterEntryPoint<Gameplay.Dev.StepPoseLogger>();
 #endif
     }
