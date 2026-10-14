@@ -45,8 +45,8 @@ namespace Gameplay.Tutorial
     public sealed class TutorialView : ITutorialView, IDisposable
     {
         // Keyed overlays (TASK-377): one overlay per highlight key so several highlights (each its own contour +
-        // finger, independently re-projected each frame) can be shown at once — the simultaneous-tap tour points two
-        // fingers at a co-release pair. Single-highlight callers (assemble-in-order tour, Hint booster) use key 0 and
+        // finger, independently re-projected each frame) can be shown at once — the simultaneous-tap tour pointed two
+        // fingers at a co-release pair (removed in TASK-549; no multi-key caller remains). Single-highlight callers (assemble-in-order tour, Hint booster) use key 0 and
         // reuse the one overlay exactly as before. Created lazily per key; kept across Clear (hidden, not destroyed)
         // and reused, mirroring the previous single-overlay lifetime.
         private readonly Dictionary<int, Overlay> _overlays = new();
@@ -70,7 +70,7 @@ namespace Gameplay.Tutorial
             }
             overlay.Show(origin, rotation, shape, style);
             // Re-decide finger mirroring across ALL currently-shown highlights (TASK-380). Callers add keys one at a
-            // time in a single synchronous loop (SimultaneousTapStep) BEFORE any frame renders, so recomputing after
+            // time in a single synchronous loop (the removed SimultaneousTapStep did) BEFORE any frame renders, so recomputing after
             // each Show converges to the correct per-member flip by the last call — no frame sees a transient state.
             RefreshGroupMirroring();
         }

@@ -39,7 +39,7 @@ namespace Gameplay.Tutorial
         // level's LevelId via the TutorialCatalog, NOT from a campaign index. Keying on the loaded LevelId keeps the
         // gate coherent with a DEV level-jump (a non-destructive preview that never writes the pointer) and with any
         // re-ordering of the manifest — a jumped-to or moved level plays exactly the tour registered for its id, or
-        // none. sailboat → assemble-in-order FTUE; grand_seesaw → the simultaneous co-release tour.
+        // none. sailboat → assemble-in-order FTUE (the only tour since TASK-549 removed the two-finger one).
         private readonly GameModel _model;
         private readonly ITutorialGate _gate;
         private readonly ITutorialProgressStore _progress;

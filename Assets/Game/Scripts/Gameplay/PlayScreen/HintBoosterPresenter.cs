@@ -130,7 +130,7 @@ namespace Gameplay.PlayScreen
                 // Clear the SHARED overlay only when a hint of ours is actually showing (TASK-382). This presenter
                 // and TutorialRunner share ONE ITutorialView singleton, and both subscribe to LevelLoaded. R3 fans a
                 // Subject out to its subscribers synchronously, in registration order, so a single LevelLoaded reaches
-                // the runner FIRST — it arms the level's tour (grand_seesaw's two fingers) — and then reaches this
+                // the runner FIRST — it arms the level's tour (then grand_seesaw's two fingers) — and then reaches this
                 // handler. TutorialView.Clear() hides EVERY overlay, so an unconditional Clear() here tore the
                 // just-armed tour down inside the same delivery: the player saw a flash, i.e. "no tutorial" on level 5
                 // (owner probe 2026-09-15 proved exactly one LevelLoaded per transition, with the tour's Highlight
@@ -332,7 +332,8 @@ namespace Gameplay.PlayScreen
         // A level is eligible only if a hint can ever be revealed on it: enough tapable pieces (balancer §2.2) AND a
         // baked WinningOrder (TASK-541). Without an order every tap is a no-op, so the button must read ineligible
         // (dimmed, non-interactable) — otherwise at 0 charges it offered a coin purchase the level can never use
-        // (libra_scales: §L20 rule-3, wins only by a paired release, so it carries no flat order).
+        // (a level with no baked order; the case was libra_scales, which won only by a paired release and was removed
+        // in TASK-549).
         private bool LevelEligible()
         {
             var level = _model.CurrentLevel;

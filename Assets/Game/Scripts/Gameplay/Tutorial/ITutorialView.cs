@@ -45,7 +45,8 @@ namespace Gameplay.Tutorial
         /// <summary>Multi-highlight overload (TASK-377): draw attention to a piece under the given
         /// <paramref name="key"/>, so several highlights (each its own contour + finger) can be shown at once — one
         /// per key. A repeat call with the same key replaces that key's highlight; <see cref="Clear"/> clears every
-        /// key. Used by the simultaneous-tap tour to point two fingers at both members of a co-release group. The
+        /// key. Its only multi-key caller was the simultaneous-tap tour, removed in TASK-549; today every caller
+        /// passes key 0 (tech-debt: drop the keyed path and the group mirroring with it). The
         /// key-0 <see cref="Highlight(Vec2,float,Shape,HighlightStyle)"/> overload is the single-highlight case of
         /// this.</summary>
         void Highlight(int key, Vec2 origin, float rotation, Shape shape, HighlightStyle style);

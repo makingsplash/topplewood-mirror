@@ -127,22 +127,6 @@ namespace Gameplay.Tests
             Assert.That(_gate.IsBlocked, Is.False);
         }
 
-        [Test]
-        public void SimultaneousTap_GroupNotArmedUntilFieldAtRest()
-        {
-            _model.LoadLevel(TwoBoxLevel(new List<IReadOnlyList<int>> { new[] { 0, 1 } }));
-            using var sub = new SimultaneousTapStep().Enter(_context).Subscribe();
-
-            Assert.That(_view.Highlights, Is.Empty);
-            Assert.That(_gate.Allows(Tap(BottomPos)), Is.False);
-
-            _model.SetFieldAtRest(true);
-
-            Assert.That(_view.Highlights, Is.EqualTo(new[] { BottomPos, TopPos }));
-            Assert.That(_gate.Allows(Tap(BottomPos)), Is.True);
-            Assert.That(_gate.Allows(Tap(TopPos)), Is.True);
-        }
-
         private void Release(int placementIndex)
         {
             var piece = _model.Pieces[placementIndex];
@@ -152,14 +136,13 @@ namespace Gameplay.Tests
 
         private static InputIntent Tap(Vec2 p) => new(p.X, p.Y);
 
-        private static LevelData TwoBoxLevel(IReadOnlyList<IReadOnlyList<int>> groups = null)
+        private static LevelData TwoBoxLevel()
         {
             var box = new PieceType("box", Shape.Box(1f, 1f), new MaterialProfile(1f, 0.6f, 0.05f));
             return new LevelData
             {
                 LevelId = "two_boxes",
                 Pieces = new List<PiecePlacement> { new(box, BottomPos), new(box, TopPos) },
-                CoReleaseGroups = groups,
             };
         }
 

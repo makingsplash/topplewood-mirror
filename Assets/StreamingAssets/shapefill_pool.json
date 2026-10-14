@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "pool": [
     "chandelier",
-    "libra_scales",
+    "toaster",
     "caterpillar_wind",
     "cargo_truck",
     "bowling_strike",

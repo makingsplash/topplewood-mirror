@@ -132,23 +132,6 @@
             ]
         },
         {
-            "LevelId": "grand_seesaw",
-            "Kinds": [
-                "beam",
-                "pan",
-                "weight",
-                "fulcrum",
-                "cap"
-            ],
-            "Colors": [
-                "#8B5A9E",
-                "#5C8E3E",
-                "#5A55A3",
-                "#2F8C86",
-                "#CBA016"
-            ]
-        },
-        {
             "LevelId": "well",
             "Kinds": [
                 "bucket_bar",
@@ -244,25 +227,6 @@
                 "#B8577A",
                 "#CBA016",
                 "#48699A"
-            ]
-        },
-        {
-            "LevelId": "libra_scales",
-            "Kinds": [
-                "beam",
-                "pan",
-                "weight",
-                "pillar",
-                "cap",
-                "pointer"
-            ],
-            "Colors": [
-                "#B8577A",
-                "#2F8C86",
-                "#CBA016",
-                "#48699A",
-                "#5A55A3",
-                "#5C8E3E"
             ]
         },
         {

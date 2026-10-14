@@ -182,7 +182,8 @@ namespace Gameplay.Core
         [JsonProperty("posTol")] public float PosTol { get; set; }
         [JsonProperty("angTol")] public float AngTol { get; set; }
         // TASK-043: rigidity spread bound. Absent → 0 → the rigidity constraint is OFF (every existing level is
-        // judged byte-for-byte until a level explicitly authors it — currently only grand_seesaw §L9).
+        // judged byte-for-byte until a level explicitly authors it — currently only leaning_pisa; grand_seesaw §L9,
+        // where it was born, was removed in TASK-549).
         [JsonProperty("rigidityTol")] public float RigidityTol { get; set; }
 
         public MatchTolerance ToDomain() => new MatchTolerance(PosTol, AngTol, RigidityTol);
