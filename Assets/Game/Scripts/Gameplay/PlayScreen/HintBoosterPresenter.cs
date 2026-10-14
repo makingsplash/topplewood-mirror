@@ -329,10 +329,16 @@ namespace Gameplay.PlayScreen
             _tooltip.SetActive(false);
         }
 
+        // A level is eligible only if a hint can ever be revealed on it: enough tapable pieces (balancer §2.2) AND a
+        // baked WinningOrder (TASK-541). Without an order every tap is a no-op, so the button must read ineligible
+        // (dimmed, non-interactable) — otherwise at 0 charges it offered a coin purchase the level can never use
+        // (libra_scales: §L20 rule-3, wins only by a paired release, so it carries no flat order).
         private bool LevelEligible()
         {
             var level = _model.CurrentLevel;
-            return level != null && NextHintResolver.TapablePieceCount(level) >= Cfg.MinTapablePieces;
+            return level != null
+                && level.WinningOrder != null && level.WinningOrder.Count > 0
+                && NextHintResolver.TapablePieceCount(level) >= Cfg.MinTapablePieces;
         }
 
         private void RefreshState()
@@ -447,7 +453,9 @@ namespace Gameplay.PlayScreen
             }
 
             // Empty-state tap = buy a charge for coins (owner 19:10, TASK-240). The button is only interactable at 0
-            // charges on an eligible level, so a coin spent here is always usable on this level.
+            // charges on an eligible level — which now includes "has a baked WinningOrder" (TASK-541) — so the bought
+            // charge has an order to reveal from. Not a guarantee of a reveal: the order can already be exhausted
+            // (every listed piece released), and then the next tap is a neutral no-op, still without spending.
             if (_hint.Charges.CurrentValue <= 0)
             {
                 LogHint("buy-charge path (0 charges) — no highlight expected");
