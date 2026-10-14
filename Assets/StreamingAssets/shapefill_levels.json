@@ -3,6 +3,7 @@
   "levels": [
     {
       "levelId": "sailboat",
+      "winningOrder": [0, 1],
       "seed": 16,
       "difficultyTier": 2,
       "matchTolerance": {
@@ -139,6 +140,7 @@
     },
     {
       "levelId": "fan_quilt",
+      "winningOrder": [3, 1, 0, 2],
       "seed": 510,
       "difficultyTier": 2,
       "physicsMode": "assembly",
@@ -3069,6 +3071,7 @@
     },
     {
       "levelId": "shaft_sort",
+      "winningOrder": [2, 0, 1, 5, 3, 4],
       "seed": 359,
       "difficultyTier": 2,
       "physicsMode": "assembly",
