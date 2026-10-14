@@ -181,6 +181,28 @@ namespace Gameplay.Tests
             Assert.AreEqual(new CampaignProgress(3, 0, 0), CampaignCursor.AtLineup(2));
         }
 
+        [Test]
+        public void GoToLevel_PrefilledCurrentNumber_StaysInPool()
+        {
+            // QA Н-1: "Jump to pool" → the menu prefills Count+1 → Ok must reload in place, not land on the final
+            // line-up level with the pool keys dropped (which replays "ALL DONE!").
+            var inPool = CampaignCursor.AtPool(0, LineupCount);
+            var same = CampaignCursor.GoToLevel(inPool, inPool.LevelNumber);
+            Assert.AreEqual(inPool, same);
+            Assert.IsFalse(Resolve(same).IsFinalLineupLevel);
+
+            var catchUp = new CampaignProgress(9, 3, 1);
+            Assert.AreEqual(catchUp, CampaignCursor.GoToLevel(catchUp, 9), "catch-up reloads in place too");
+        }
+
+        [Test]
+        public void GoToLevel_OtherNumber_IsFirstPass()
+        {
+            var inPool = CampaignCursor.AtPool(4, LineupCount);
+            Assert.AreEqual(CampaignCursor.AtLineup(1), CampaignCursor.GoToLevel(inPool, 2), "leaves the pool on purpose");
+            Assert.AreEqual(new CampaignProgress(3, 0, 0), CampaignCursor.GoToLevel(new CampaignProgress(3, 0, 0), 3));
+        }
+
         internal sealed class FakeLineup : ILevelSource
         {
             private readonly List<LevelData> _levels = new();

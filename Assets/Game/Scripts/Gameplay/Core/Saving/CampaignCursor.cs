@@ -120,6 +120,15 @@ namespace Gameplay.Core
         /// <summary>Dev "Go to Level": line-up index <paramref name="index"/> of the first pass (the caller clamps).</summary>
         public static CampaignProgress AtLineup(int index) => new(index + 1, 0, 0);
 
+        /// <summary>
+        /// Prod dev menu "Go to Level N": line-up level N of the first pass — EXCEPT N equal to the current number,
+        /// which keeps the progress as is (reload in place). The menu prefills the current number, and in the pool or
+        /// catch-up that number is not a line-up position: Ok on 81 used to clamp to the final level, drop the pool
+        /// keys and replay "ALL DONE!" (QA TASK-528 Н-1). On the first pass both branches give the same progress.
+        /// </summary>
+        public static CampaignProgress GoToLevel(CampaignProgress p, int levelNumber) =>
+            levelNumber == p.LevelNumber ? p : AtLineup(levelNumber - 1);
+
         /// <summary>Dev "Jump to pool": place <paramref name="cursor"/>, numbered as if reached by playing (Count+1+cursor).</summary>
         public static CampaignProgress AtPool(int cursor, int lineupCount)
         {

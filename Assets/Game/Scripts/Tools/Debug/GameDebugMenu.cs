@@ -102,11 +102,15 @@ namespace Tools.Debug
                         _level = result;
                     }
 
-                    SayData.Meta.CurrentLevel.Value = _level;
-                    // TASK-528: "Go to Level N" means line-up level N (first pass). Without dropping the pool keys a
-                    // player in the pool would see the number change while the content stayed put.
-                    Data.Meta.LineupCleared.Value = 0;
-                    Data.Meta.PoolCursor.Value = 0;
+                    // TASK-528: "Go to Level N" means line-up level N (first pass), pool keys dropped — but Ok on the
+                    // prefilled CURRENT number reloads in place, so it no longer throws a pool player onto the final
+                    // line-up level (QA Н-1). The rule lives in CampaignCursor.GoToLevel (tested in EditMode).
+                    var current = new Gameplay.Core.CampaignProgress(
+                        SayData.Meta.CurrentLevel.Value, Data.Meta.LineupCleared.Value, Data.Meta.PoolCursor.Value);
+                    var target = Gameplay.Core.CampaignCursor.GoToLevel(current, _level);
+                    SayData.Meta.CurrentLevel.Value = target.LevelNumber;
+                    Data.Meta.LineupCleared.Value = target.LineupCleared;
+                    Data.Meta.PoolCursor.Value = target.PoolCursor;
                     Data.Meta.ClearProgress(_level - 1);
 
                     context.Main.SetRestart();
