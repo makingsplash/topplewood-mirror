@@ -213,12 +213,12 @@ namespace Gameplay.Core
         {
             if (level?.Pieces == null || level.Pieces.Count < 2)
                 return new TapSpacingAudit(level?.LevelId, 0f, 0f, 0f, null);
-            if (!CameraFramingMath.TryContentBounds(level, out var min, out var max))
+            // TASK-539: the same frame the live camera applies, hint-button corner reserve included (safe-area zero —
+            // the reference device has no inset to predict).
+            if (!CameraFramingMath.TryFrame(level, _tapZone.ReferenceAspect, _tapZone.RefMargin,
+                    _tapZone.RefPreviewBand, _tapZone.RefMinOrthoSize, HudCornerZone.HintButton, 0f, 0f,
+                    out var orthoSize, out _))
                 return new TapSpacingAudit(level.LevelId, 0f, 0f, 0f, null);
-
-            var orthoSize = CameraFramingMath.ComputeOrthoSize(
-                min, max, _tapZone.ReferenceAspect,
-                _tapZone.RefMargin, _tapZone.RefPreviewBand, _tapZone.RefMinOrthoSize);
             var minWorld = _tapZone.MinTapDp * _tapZone.RefKDevice * orthoSize; // tap-zone DIAMETER in world units
             var spreadWorld = _tapZone.MinCoReleaseSpreadDp * _tapZone.RefKDevice * orthoSize; // two-finger spread
 

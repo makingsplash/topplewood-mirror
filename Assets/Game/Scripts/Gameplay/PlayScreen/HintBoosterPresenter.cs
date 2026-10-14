@@ -50,6 +50,7 @@ namespace Gameplay.PlayScreen
 
         private GameObject _eventSystem;
         private GameObject _canvas;
+        private RectTransform _safeArea;
         private CanvasGroup _group;
         private Button _button;
         private Image _icon;
@@ -180,20 +181,26 @@ namespace Gameplay.PlayScreen
             // Not a lever against UiService screens (Overlay beats their Camera canvas at any order) — see HudCover.
             canvas.sortingOrder = short.MaxValue - 2;
 
+            // Layout is ONE value shared with the camera framing (HudCornerZone.HintButton, TASK-539): the framing keeps
+            // the level's figure and pieces out of this corner, so the numbers must not be retyped here.
+            var zone = HudCornerZone.HintButton;
             var scaler = _canvas.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080f, 1920f);
-            scaler.matchWidthOrHeight = 0.5f;
+            scaler.referenceResolution = new Vector2(zone.RefWidth, zone.RefHeight);
+            scaler.matchWidthOrHeight = zone.Match;
+
+            // Offsets count from the SAFE edges (TASK-539, closes TASK-246): the button rides a safe-area container.
+            _safeArea = SafeAreaFitter.Create(_canvas.transform);
 
             // Root button — bottom-right, thumb reach (ui-composer §2). Both top corners are taken (DEV / RESTART).
             var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
-            buttonGo.transform.SetParent(_canvas.transform, false);
+            buttonGo.transform.SetParent(_safeArea, false);
             var buttonRect = buttonGo.GetComponent<RectTransform>();
             buttonRect.anchorMin = new Vector2(1f, 0f);
             buttonRect.anchorMax = new Vector2(1f, 0f);
             buttonRect.pivot = new Vector2(1f, 0f);
-            buttonRect.anchoredPosition = new Vector2(-40f, 200f);
-            buttonRect.sizeDelta = new Vector2(150f, 150f);
+            buttonRect.anchoredPosition = new Vector2(-zone.SideInset, zone.BottomInset);
+            buttonRect.sizeDelta = new Vector2(zone.Width, zone.Height);
 
             _icon = buttonGo.GetComponent<Image>();
             // Same code-load idiom as WoodArt (Resources.Load, warn-not-crash): code-built HUD has no inspector to
@@ -290,12 +297,13 @@ namespace Gameplay.PlayScreen
         private void BuildTooltip()
         {
             _tooltip = new GameObject("Tooltip", typeof(Image), typeof(CanvasGroup));
-            _tooltip.transform.SetParent(_canvas.transform, false);
+            _tooltip.transform.SetParent(_safeArea, false);
+            var zone = HudCornerZone.HintButton;
             var rect = _tooltip.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(1f, 0f);
             rect.anchorMax = new Vector2(1f, 0f);
             rect.pivot = new Vector2(1f, 0f);
-            rect.anchoredPosition = new Vector2(-40f, 200f + 150f + 16f);
+            rect.anchoredPosition = new Vector2(-zone.SideInset, zone.BottomInset + zone.Height + 16f);
             rect.sizeDelta = new Vector2(380f, 110f);
 
             _tooltip.GetComponent<Image>().color = new Color(0.15f, 0.12f, 0.09f, 0.92f);

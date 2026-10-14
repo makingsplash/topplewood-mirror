@@ -64,22 +64,21 @@ namespace Gameplay.View
                 return;
             }
 
-            if (!CameraFramingMath.TryContentBounds(level, out var min, out var max))
-                return;
-
-            var centerX = (min.X + max.X) * 0.5f;
-            var centerY = (min.Y + max.Y) * 0.5f;
-
             // Framing math lives in Core (CameraFramingMath, TASK-085) so the validator predicts the same orthoSize;
             // the presenter keeps only the Unity contact. Reserve the top PreviewBandFraction for the target preview:
             // content is framed into the lower (1 - band) of the viewport, then the camera is raised by size*band so
-            // the top band stays empty for the preview card.
-            var size = CameraFramingMath.ComputeOrthoSize(
-                min, max, camera.aspect, _config.Margin, _config.PreviewBandFraction, _config.MinOrthoSize);
+            // the top band stays empty for the preview card. TASK-539: the hint button's bottom-right corner is kept
+            // clear of the figure and pieces too, with this device's safe area (the button sits inside it).
+            var safe = Screen.safeArea;
+            var safeRight = Screen.width > 0 ? (Screen.width - safe.xMax) / Screen.width : 0f;
+            var safeBottom = Screen.height > 0 ? safe.yMin / Screen.height : 0f;
+            if (!CameraFramingMath.TryFrame(level, camera.aspect, _config.Margin, _config.PreviewBandFraction,
+                    _config.MinOrthoSize, HudCornerZone.HintButton, safeRight, safeBottom, out var size, out var centre))
+                return;
             camera.orthographicSize = size;
 
             var t = camera.transform;
-            t.position = new Vector3(centerX, centerY + size * _config.PreviewBandFraction, t.position.z);
+            t.position = new Vector3(centre.X, centre.Y, t.position.z);
         }
 
         public void Dispose()

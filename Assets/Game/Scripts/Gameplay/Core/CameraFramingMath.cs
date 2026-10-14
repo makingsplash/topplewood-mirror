@@ -182,6 +182,159 @@ namespace Gameplay.Core
             return MathF.Max(minOrthoSize, MathF.Max(sizeForHeight, sizeForWidth));
         }
 
+        /// <summary>
+        /// The full frame (TASK-539): <see cref="TryContentBounds"/> + <see cref="ComputeOrthoSize"/>, the camera centred
+        /// on the content and raised by size·band for the preview band — and, when <paramref name="hud"/> is given,
+        /// the level's figure (target slots) and pieces (start poses) kept out of that HUD corner. ONE entry point for
+        /// the live presenter, the validator's prediction and the editor capture, so all three frame identically.
+        ///
+        /// The corner is freed with the cheapest move first: the vertical slack a width-bound frame already has
+        /// (content raised, never into the preview band), then zoom-out by the smallest orthoSize that clears.
+        /// A level whose content does not reach the corner gets exactly the frame it had before. Both moves only
+        /// push the corner away from the content, so the smallest clearing size is found by bisection.
+        /// <paramref name="safeSide"/>/<paramref name="safeBottom"/> — safe-area insets as viewport fractions.
+        /// </summary>
+        public static bool TryFrame(LevelData level, float aspect, float margin, float previewBand, float minOrthoSize,
+            HudCornerZone? hud, float safeSide, float safeBottom, out float orthoSize, out Vec2 centre)
+        {
+            orthoSize = 0f;
+            centre = default;
+            if (!TryContentBounds(level, out var min, out var max))
+                return false;
+
+            var size = ComputeOrthoSize(min, max, aspect, margin, previewBand, minOrthoSize);
+            var cx = (min.X + max.X) * 0.5f;
+            var cy = (min.Y + max.Y) * 0.5f;
+            orthoSize = size;
+            centre = new Vec2(cx, cy + size * previewBand);
+            if (hud == null)
+                return true;
+
+            var a = aspect <= 0f ? 1f : aspect;
+            hud.Value.ToViewport(a, safeSide, safeBottom, out var side, out var top);
+            // How fast the zone's inner X / top Y move per unit of orthoSize, relative to the camera centre.
+            var kx = (1f - 2f * side) * a;
+            var ky = 2f * top - 1f + previewBand;
+            // A zone over half the screen cannot be freed by zooming — leave the frame as it was.
+            if (kx <= 0f || ky >= 0f)
+                return true;
+
+            var polys = ContentPolygons(level, hud.Value.Right ? 1f : -1f);
+            var sx = hud.Value.Right ? cx : -cx; // the corner is handled as the right one; the left is mirrored
+            var height = max.Y - min.Y;
+            var usable = Clamp(1f - previewBand, 0.1f, 1f);
+
+            // Solved with a strict world gap on BOTH axes: bisection converges ONTO the boundary — in Y, or in X where the
+            // zone's inner edge passes a content vertex — and a frame that touches the corner exactly is flipped back
+            // into it by float rounding (3 levels at 19.5:9 did: two on the Y boundary, garden_fountain on the X one).
+            const float gap = 1e-3f;
+            float Need(float s) => cy + ky * s + gap - LowestInCorner(polys, sx + kx * s - gap);
+            float Slack(float s) => MathF.Max(0f, s * usable - height * 0.5f - margin);
+
+            var need = Need(size);
+            if (need > Slack(size))
+            {
+                // Past this size the zone's inner edge is right of every content vertex: always clear.
+                var hi = MathF.Max(size, (MaxX(polys) - sx + 2f * gap) / kx);
+                var lo = size;
+                for (var i = 0; i < 40; i++)
+                {
+                    var mid = (lo + hi) * 0.5f;
+                    if (Need(mid) > Slack(mid)) lo = mid;
+                    else hi = mid;
+                }
+                size = hi;
+                need = Need(size);
+            }
+
+            var shift = need > 0f ? MathF.Min(need, Slack(size)) : 0f;
+            orthoSize = size;
+            centre = new Vec2(cx, cy + size * previewBand - shift);
+            return true;
+        }
+
+        // The polygons the HUD corner must stay clear of: every piece at its start pose and every target slot (the
+        // figure). X is multiplied by mirrorX so a left corner is solved as a right one.
+        private static List<Vec2[]> ContentPolygons(LevelData level, float mirrorX)
+        {
+            var polys = new List<Vec2[]>();
+            if (level.Pieces != null)
+            {
+                foreach (var placement in level.Pieces)
+                {
+                    if (placement.Type?.Shape != null)
+                        polys.Add(Mirror(Geometry.WorldVertices(
+                            placement.Type.Shape, placement.StartPosition, placement.StartRotation), mirrorX));
+                }
+            }
+
+            var slots = level.Target?.Slots;
+            if (slots != null)
+            {
+                var kindToShape = BuildKindMap(level);
+                foreach (var slot in slots)
+                {
+                    polys.Add(Mirror(kindToShape.TryGetValue(slot.Kind, out var shape) && shape != null
+                        ? Geometry.WorldVertices(shape, slot.Position, slot.Rotation)
+                        : new[] { slot.Position }, mirrorX));
+                }
+            }
+            return polys;
+        }
+
+        private static Vec2[] Mirror(Vec2[] vertices, float mirrorX)
+        {
+            if (mirrorX > 0f)
+                return vertices;
+            var result = new Vec2[vertices.Length];
+            for (var i = 0; i < vertices.Length; i++)
+                result[i] = new Vec2(-vertices[i].X, vertices[i].Y);
+            return result;
+        }
+
+        // Lowest Y of the content that lies at x ≥ x0 (+∞ when none does) — the edge clip of the static slab, with the
+        // slab open to the right.
+        private static float LowestInCorner(List<Vec2[]> polys, float x0)
+        {
+            var minY = float.MaxValue;
+            var maxY = float.MinValue;
+            foreach (var outline in polys)
+            {
+                if (outline.Length == 1)
+                {
+                    ClipEdgeToSlabY(outline[0], outline[0], x0, float.MaxValue, ref minY, ref maxY);
+                    continue;
+                }
+                for (var i = 0; i < outline.Length; i++)
+                    ClipEdgeToSlabY(outline[i], outline[(i + 1) % outline.Length], x0, float.MaxValue, ref minY, ref maxY);
+            }
+            return minY;
+        }
+
+        private static float MaxX(List<Vec2[]> polys)
+        {
+            var maxX = float.MinValue;
+            foreach (var outline in polys)
+                foreach (var v in outline)
+                    if (v.X > maxX) maxX = v.X;
+            return maxX;
+        }
+
+        /// <summary>
+        /// Does the figure or any piece reach into the HUD corner of the given frame? The measurement behind the
+        /// TASK-539 level list and its tests — the same geometry <see cref="TryFrame"/> clears.
+        /// </summary>
+        public static bool ContentInHudCorner(LevelData level, float orthoSize, Vec2 centre, float aspect,
+            HudCornerZone hud, float safeSide, float safeBottom)
+        {
+            var a = aspect <= 0f ? 1f : aspect;
+            hud.ToViewport(a, safeSide, safeBottom, out var side, out var top);
+            var mirror = hud.Right ? 1f : -1f;
+            var x0 = mirror * centre.X + (1f - 2f * side) * a * orthoSize;
+            var y1 = centre.Y + (2f * top - 1f) * orthoSize;
+            return LowestInCorner(ContentPolygons(level, mirror), x0) < y1;
+        }
+
         private static float Clamp(float v, float lo, float hi) => v < lo ? lo : (v > hi ? hi : v);
 
         private static void Accumulate(Vec2 v, ref float minX, ref float minY, ref float maxX, ref float maxY)

@@ -620,15 +620,12 @@ namespace Game.Editor
             cam.aspect = Width / (float)Height;
 
             var config = new CameraFramingConfig();
-            if (CameraFramingMath.TryContentBounds(level, out var min, out var max))
+            // TASK-539: с резервом угла кнопки подсказки, как в игре (safe-area у снимка нулевая).
+            if (CameraFramingMath.TryFrame(level, cam.aspect, config.Margin, config.PreviewBandFraction,
+                    config.MinOrthoSize, HudCornerZone.HintButton, 0f, 0f, out var size, out var centre))
             {
-                var size = CameraFramingMath.ComputeOrthoSize(min, max, cam.aspect,
-                    config.Margin, config.PreviewBandFraction, config.MinOrthoSize);
                 cam.orthographicSize = size;
-                cam.transform.position = new Vector3(
-                    (min.X + max.X) * 0.5f,
-                    (min.Y + max.Y) * 0.5f + size * config.PreviewBandFraction,
-                    -10f);
+                cam.transform.position = new Vector3(centre.X, centre.Y, -10f);
             }
             else
             {

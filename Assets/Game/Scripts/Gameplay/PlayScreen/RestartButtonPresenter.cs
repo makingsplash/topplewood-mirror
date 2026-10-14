@@ -87,8 +87,9 @@ namespace Gameplay.PlayScreen
             scaler.referenceResolution = new Vector2(1080f, 1920f);
             scaler.matchWidthOrHeight = 0.5f;
 
+            // Offsets count from the SAFE edges (TASK-539, closes TASK-246): under a cutout the button stays tappable.
             var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
-            buttonGo.transform.SetParent(_canvas.transform, false);
+            buttonGo.transform.SetParent(SafeAreaFitter.Create(_canvas.transform), false);
 
             var image = buttonGo.GetComponent<Image>();
             var rect = buttonGo.GetComponent<RectTransform>();
