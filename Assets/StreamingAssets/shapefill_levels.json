@@ -139,209 +139,6 @@
       ]
     },
     {
-      "levelId": "fan_quilt",
-      "winningOrder": [3, 1, 0, 2],
-      "seed": 510,
-      "difficultyTier": 2,
-      "physicsMode": "assembly",
-      "matchTolerance": { "posTol": 0.30, "angTol": 1.5708 },
-      "bounds": { "min": { "x": -7, "y": -1 }, "max": { "x": 7, "y": 14 } },
-      "gravity": { "x": 0, "y": -9.81 },
-      "pieceTypes": [
-        { "kind": "q_red",    "color": "#E23B3B", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.78, "height": 1.78 } },
-        { "kind": "q_yellow", "color": "#F4C20D", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.78, "height": 1.78 } },
-        { "kind": "q_green",  "color": "#4CAF50", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.78, "height": 1.78 } },
-        { "kind": "q_blue",   "color": "#2E7CD6", "symmetryOrder": 4, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.78, "height": 1.78 } }
-      ],
-      "target": {
-        "outline": [ { "x": -1.8, "y": 0.0 }, { "x": 1.8, "y": 0.0 }, { "x": 1.8, "y": 3.57 }, { "x": -1.8, "y": 3.57 } ],
-        "slots": [
-          { "kind": "q_blue",   "position": { "x": -0.9, "y": 0.90 }, "rotation": 0 },
-          { "kind": "q_yellow", "position": { "x": 0.9,  "y": 0.90 }, "rotation": 0 },
-          { "kind": "q_red",    "position": { "x": -0.9, "y": 2.68 }, "rotation": 0 },
-          { "kind": "q_green",  "position": { "x": 0.9,  "y": 2.68 }, "rotation": 0 }
-        ]
-      },
-      "pieces": [
-        { "kind": "q_red",    "startPosition": { "x": -0.9, "y": 6.80 }, "startRotation": 0 },
-        { "kind": "q_yellow", "startPosition": { "x": 0.9,  "y": 6.00 }, "startRotation": 0 },
-        { "kind": "q_green",  "startPosition": { "x": 0.9,  "y": 4.90 }, "startRotation": 0 },
-        { "kind": "q_blue",   "startPosition": { "x": -0.9, "y": 4.20 }, "startRotation": 0 }
-      ],
-      "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -6.0, "y": -0.6 }, { "x": 6.0, "y": -0.6 }, { "x": 6.0, "y": 0.0 }, { "x": -6.0, "y": 0.0 } ] }
-      ],
-      "airZones": []
-    },
-    {
-      "levelId": "table_lamp",
-      "winningOrder": [0, 1, 2],
-      "seed": 205,
-      "difficultyTier": 4,
-      "matchTolerance": {
-        "posTol": 0.28,
-        "angTol": 0.26179939
-      },
-      "bounds": {
-        "min": {
-          "x": -6,
-          "y": -6
-        },
-        "max": {
-          "x": 6,
-          "y": 10
-        }
-      },
-      "gravity": {
-        "x": 0,
-        "y": -9.81
-      },
-      "pieceTypes": [
-        {
-          "color": "#E84B8A",
-          "kind": "base",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 1.2,
-            "height": 0.3
-          }
-        },
-        {
-          "color": "#8D6E4A",
-          "kind": "stem",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "plank",
-            "width": 0.25,
-            "height": 1.3
-          }
-        },
-        {
-          "color": "#E23B3B",
-          "kind": "shade",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "trapezoid",
-            "width": 1.1,
-            "topWidth": 0.5,
-            "height": 0.7
-          }
-        }
-      ],
-      "target": {
-        "outline": [
-          {
-            "x": -0.6,
-            "y": -0.15
-          },
-          {
-            "x": 0.6,
-            "y": -0.15
-          },
-          {
-            "x": 0.6,
-            "y": 2.15
-          },
-          {
-            "x": -0.6,
-            "y": 2.15
-          }
-        ],
-        "slots": [
-          {
-            "kind": "base",
-            "position": {
-              "x": 0,
-              "y": 0
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "stem",
-            "position": {
-              "x": 0,
-              "y": 0.8
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "shade",
-            "position": {
-              "x": 0,
-              "y": 1.8
-            },
-            "rotation": 0
-          }
-        ]
-      },
-      "pieces": [
-        {
-          "kind": "base",
-          "startPosition": {
-            "x": 0,
-            "y": 5.6
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "stem",
-          "startPosition": {
-            "x": 0,
-            "y": 3.0
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "shade",
-          "startPosition": {
-            "x": 0,
-            "y": 4.5
-          },
-          "startRotation": 0
-        }
-      ],
-      "staticGeometry": [
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -0.75,
-              "y": -0.45
-            },
-            {
-              "x": 0.75,
-              "y": -0.45
-            },
-            {
-              "x": 0.75,
-              "y": -0.15
-            },
-            {
-              "x": -0.75,
-              "y": -0.15
-            }
-          ]
-        }
-      ]
-    },
-    {
       "levelId": "video_launcher",
       "winningOrder": [0, 1, 2],
       "seed": 57,
@@ -704,6 +501,174 @@
             {
               "x": -3.5,
               "y": -3.3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "levelId": "table_lamp",
+      "winningOrder": [0, 1, 2],
+      "seed": 205,
+      "difficultyTier": 4,
+      "matchTolerance": {
+        "posTol": 0.28,
+        "angTol": 0.26179939
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -6
+        },
+        "max": {
+          "x": 6,
+          "y": 10
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "color": "#E84B8A",
+          "kind": "base",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 1.2,
+            "height": 0.3
+          }
+        },
+        {
+          "color": "#8D6E4A",
+          "kind": "stem",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 0.25,
+            "height": 1.3
+          }
+        },
+        {
+          "color": "#E23B3B",
+          "kind": "shade",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 1.1,
+            "topWidth": 0.5,
+            "height": 0.7
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -0.6,
+            "y": -0.15
+          },
+          {
+            "x": 0.6,
+            "y": -0.15
+          },
+          {
+            "x": 0.6,
+            "y": 2.15
+          },
+          {
+            "x": -0.6,
+            "y": 2.15
+          }
+        ],
+        "slots": [
+          {
+            "kind": "base",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "stem",
+            "position": {
+              "x": 0,
+              "y": 0.8
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "shade",
+            "position": {
+              "x": 0,
+              "y": 1.8
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "base",
+          "startPosition": {
+            "x": 0,
+            "y": 5.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "stem",
+          "startPosition": {
+            "x": 0,
+            "y": 3.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "shade",
+          "startPosition": {
+            "x": 0,
+            "y": 4.5
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.75,
+              "y": -0.45
+            },
+            {
+              "x": 0.75,
+              "y": -0.45
+            },
+            {
+              "x": 0.75,
+              "y": -0.15
+            },
+            {
+              "x": -0.75,
+              "y": -0.15
             }
           ]
         }
@@ -1257,6 +1222,802 @@
             {
               "x": 0,
               "y": 0.1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "levelId": "toaster",
+      "seed": 463,
+      "difficultyTier": 4,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        3,
+        4,
+        1,
+        2
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -3,
+          "y": -2
+        },
+        "max": {
+          "x": 3,
+          "y": 9
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "body",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 2.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -1.15,
+                "y": -0.825
+              },
+              {
+                "x": -0.85,
+                "y": -0.825
+              },
+              {
+                "x": -0.85,
+                "y": -0.725
+              },
+              {
+                "x": 0.85,
+                "y": -0.725
+              },
+              {
+                "x": 0.85,
+                "y": -0.825
+              },
+              {
+                "x": 1.15,
+                "y": -0.825
+              },
+              {
+                "x": 1.15,
+                "y": -0.725
+              },
+              {
+                "x": 1.27,
+                "y": -0.725
+              },
+              {
+                "x": 1.32,
+                "y": -0.675
+              },
+              {
+                "x": 1.32,
+                "y": -0.425
+              },
+              {
+                "x": 0.62,
+                "y": -0.425
+              },
+              {
+                "x": 0.62,
+                "y": -0.341
+              },
+              {
+                "x": 0.3,
+                "y": -0.225
+              },
+              {
+                "x": 0.3,
+                "y": 0.825
+              },
+              {
+                "x": -0.3,
+                "y": 0.825
+              },
+              {
+                "x": -0.3,
+                "y": -0.225
+              },
+              {
+                "x": -0.62,
+                "y": -0.341
+              },
+              {
+                "x": -0.62,
+                "y": -0.425
+              },
+              {
+                "x": -1.32,
+                "y": -0.425
+              },
+              {
+                "x": -1.32,
+                "y": -0.675
+              },
+              {
+                "x": -1.27,
+                "y": -0.725
+              },
+              {
+                "x": -1.15,
+                "y": -0.725
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -1.27,
+                  "y": -0.725
+                },
+                {
+                  "x": 1.27,
+                  "y": -0.725
+                },
+                {
+                  "x": 1.32,
+                  "y": -0.675
+                },
+                {
+                  "x": 1.32,
+                  "y": -0.425
+                },
+                {
+                  "x": -1.32,
+                  "y": -0.425
+                },
+                {
+                  "x": -1.32,
+                  "y": -0.675
+                }
+              ],
+              [
+                {
+                  "x": -1.15,
+                  "y": -0.825
+                },
+                {
+                  "x": -0.85,
+                  "y": -0.825
+                },
+                {
+                  "x": -0.85,
+                  "y": -0.725
+                },
+                {
+                  "x": -1.15,
+                  "y": -0.725
+                }
+              ],
+              [
+                {
+                  "x": 0.85,
+                  "y": -0.825
+                },
+                {
+                  "x": 1.15,
+                  "y": -0.825
+                },
+                {
+                  "x": 1.15,
+                  "y": -0.725
+                },
+                {
+                  "x": 0.85,
+                  "y": -0.725
+                }
+              ],
+              [
+                {
+                  "x": -0.62,
+                  "y": -0.425
+                },
+                {
+                  "x": 0.62,
+                  "y": -0.425
+                },
+                {
+                  "x": 0.62,
+                  "y": -0.341
+                },
+                {
+                  "x": 0.3,
+                  "y": -0.225
+                },
+                {
+                  "x": -0.3,
+                  "y": -0.225
+                },
+                {
+                  "x": -0.62,
+                  "y": -0.341
+                }
+              ],
+              [
+                {
+                  "x": -0.3,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.3,
+                  "y": -0.225
+                },
+                {
+                  "x": 0.3,
+                  "y": 0.825
+                },
+                {
+                  "x": -0.3,
+                  "y": 0.825
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "slice_light",
+          "color": "#CDB27E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.7,
+                "y": -0.15
+              },
+              {
+                "x": 0.62,
+                "y": -0.15
+              },
+              {
+                "x": 0.677,
+                "y": -0.127
+              },
+              {
+                "x": 0.7,
+                "y": -0.07
+              },
+              {
+                "x": 0.7,
+                "y": 0.07
+              },
+              {
+                "x": 0.677,
+                "y": 0.127
+              },
+              {
+                "x": 0.62,
+                "y": 0.15
+              },
+              {
+                "x": -0.7,
+                "y": 0.15
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.7,
+                  "y": -0.15
+                },
+                {
+                  "x": 0.62,
+                  "y": -0.15
+                },
+                {
+                  "x": 0.677,
+                  "y": -0.127
+                },
+                {
+                  "x": 0.7,
+                  "y": -0.07
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.07
+                },
+                {
+                  "x": 0.677,
+                  "y": 0.127
+                },
+                {
+                  "x": 0.62,
+                  "y": 0.15
+                },
+                {
+                  "x": -0.7,
+                  "y": 0.15
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "slice_gold",
+          "color": "#CBA016",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.62,
+                "y": -0.15
+              },
+              {
+                "x": 0.7,
+                "y": -0.15
+              },
+              {
+                "x": 0.7,
+                "y": 0.15
+              },
+              {
+                "x": -0.62,
+                "y": 0.15
+              },
+              {
+                "x": -0.677,
+                "y": 0.127
+              },
+              {
+                "x": -0.7,
+                "y": 0.07
+              },
+              {
+                "x": -0.7,
+                "y": -0.07
+              },
+              {
+                "x": -0.677,
+                "y": -0.127
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.62,
+                  "y": -0.15
+                },
+                {
+                  "x": 0.7,
+                  "y": -0.15
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.15
+                },
+                {
+                  "x": -0.62,
+                  "y": 0.15
+                },
+                {
+                  "x": -0.677,
+                  "y": 0.127
+                },
+                {
+                  "x": -0.7,
+                  "y": 0.07
+                },
+                {
+                  "x": -0.7,
+                  "y": -0.07
+                },
+                {
+                  "x": -0.677,
+                  "y": -0.127
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "panel_l",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.34,
+                "y": -0.625
+              },
+              {
+                "x": 0.34,
+                "y": -0.625
+              },
+              {
+                "x": 0.34,
+                "y": 0.625
+              },
+              {
+                "x": -0.08,
+                "y": 0.625
+              },
+              {
+                "x": -0.22,
+                "y": 0.585
+              },
+              {
+                "x": -0.31,
+                "y": 0.475
+              },
+              {
+                "x": -0.34,
+                "y": 0.325
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.34,
+                  "y": -0.625
+                },
+                {
+                  "x": 0.34,
+                  "y": -0.625
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.625
+                },
+                {
+                  "x": -0.08,
+                  "y": 0.625
+                },
+                {
+                  "x": -0.22,
+                  "y": 0.585
+                },
+                {
+                  "x": -0.31,
+                  "y": 0.475
+                },
+                {
+                  "x": -0.34,
+                  "y": 0.325
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "panel_r",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.48,
+                "y": -0.625
+              },
+              {
+                "x": 0.2,
+                "y": -0.625
+              },
+              {
+                "x": 0.2,
+                "y": -0.055
+              },
+              {
+                "x": 0.36,
+                "y": -0.055
+              },
+              {
+                "x": 0.36,
+                "y": -0.095
+              },
+              {
+                "x": 0.48,
+                "y": -0.095
+              },
+              {
+                "x": 0.48,
+                "y": 0.105
+              },
+              {
+                "x": 0.36,
+                "y": 0.105
+              },
+              {
+                "x": 0.36,
+                "y": 0.065
+              },
+              {
+                "x": 0.2,
+                "y": 0.065
+              },
+              {
+                "x": 0.2,
+                "y": 0.325
+              },
+              {
+                "x": 0.17,
+                "y": 0.475
+              },
+              {
+                "x": 0.08,
+                "y": 0.585
+              },
+              {
+                "x": -0.06,
+                "y": 0.625
+              },
+              {
+                "x": -0.48,
+                "y": 0.625
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.48,
+                  "y": -0.625
+                },
+                {
+                  "x": 0.2,
+                  "y": -0.625
+                },
+                {
+                  "x": 0.2,
+                  "y": 0.325
+                },
+                {
+                  "x": 0.17,
+                  "y": 0.475
+                },
+                {
+                  "x": 0.08,
+                  "y": 0.585
+                },
+                {
+                  "x": -0.06,
+                  "y": 0.625
+                },
+                {
+                  "x": -0.48,
+                  "y": 0.625
+                }
+              ],
+              [
+                {
+                  "x": 0.2,
+                  "y": -0.055
+                },
+                {
+                  "x": 0.36,
+                  "y": -0.055
+                },
+                {
+                  "x": 0.36,
+                  "y": 0.065
+                },
+                {
+                  "x": 0.2,
+                  "y": 0.065
+                }
+              ],
+              [
+                {
+                  "x": 0.36,
+                  "y": -0.095
+                },
+                {
+                  "x": 0.48,
+                  "y": -0.095
+                },
+                {
+                  "x": 0.48,
+                  "y": 0.105
+                },
+                {
+                  "x": 0.36,
+                  "y": 0.105
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -1.32,
+            "y": 0
+          },
+          {
+            "x": 1.32,
+            "y": 0
+          },
+          {
+            "x": 1.32,
+            "y": 0.93
+          },
+          {
+            "x": 1.6,
+            "y": 0.93
+          },
+          {
+            "x": 1.6,
+            "y": 1.13
+          },
+          {
+            "x": 1.32,
+            "y": 1.13
+          },
+          {
+            "x": 1.32,
+            "y": 1.35
+          },
+          {
+            "x": 1.06,
+            "y": 1.65
+          },
+          {
+            "x": 0.625,
+            "y": 1.65
+          },
+          {
+            "x": 0.625,
+            "y": 1.99
+          },
+          {
+            "x": -0.625,
+            "y": 1.99
+          },
+          {
+            "x": -0.625,
+            "y": 1.65
+          },
+          {
+            "x": -1.06,
+            "y": 1.65
+          },
+          {
+            "x": -1.32,
+            "y": 1.35
+          }
+        ],
+        "slots": [
+          {
+            "kind": "body",
+            "position": {
+              "x": 0,
+              "y": 0.825
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "slice_light",
+            "position": {
+              "x": -0.475,
+              "y": 1.29
+            },
+            "rotation": 1.5707963
+          },
+          {
+            "kind": "slice_gold",
+            "position": {
+              "x": 0.475,
+              "y": 1.29
+            },
+            "rotation": -1.5707963
+          },
+          {
+            "kind": "panel_l",
+            "position": {
+              "x": -0.98,
+              "y": 1.025
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "panel_r",
+            "position": {
+              "x": 1.12,
+              "y": 1.025
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "body",
+          "startPosition": {
+            "x": 0,
+            "y": 5.95
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "slice_light",
+          "startPosition": {
+            "x": -0.475,
+            "y": 2.75
+          },
+          "startRotation": 1.5707963
+        },
+        {
+          "kind": "slice_gold",
+          "startPosition": {
+            "x": 0.475,
+            "y": 4.3
+          },
+          "startRotation": -1.5707963
+        },
+        {
+          "kind": "panel_l",
+          "startPosition": {
+            "x": -0.98,
+            "y": 4.25
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "panel_r",
+          "startPosition": {
+            "x": 1.12,
+            "y": 2.725
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.0,
+              "y": -0.4
+            },
+            {
+              "x": 2.0,
+              "y": -0.4
+            },
+            {
+              "x": 2.0,
+              "y": 0
+            },
+            {
+              "x": -2.0,
+              "y": 0
             }
           ]
         }
@@ -4514,44 +5275,803 @@
       ]
     },
     {
-      "levelId": "fruit_bowl",
-      "winningOrder": [0, 1, 2, 3],
-      "seed": 300,
+      "levelId": "high_striker",
+      "winningOrder": [5, 3, 4, 2, 1],
+      "seed": 254,
       "difficultyTier": 5,
-      "physicsMode": "assembly",
-      "matchTolerance": { "posTol": 0.30, "angTol": 0.34906585 },
-      "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
-      "gravity": { "x": 0, "y": -9.81 },
+      "physicsMode": "catapult",
+      "freezeLoadsAtRest": true,
+      "matchTolerance": {
+        "posTol": 0.32,
+        "angTol": 0.43633
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -6
+        },
+        "max": {
+          "x": 6,
+          "y": 10
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
       "pieceTypes": [
-        { "kind": "base", "color": "#12A5A5", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 3.0, "height": 0.35 } },
-        { "kind": "divider", "color": "#2E7CD6", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.30, "height": 0.75 } },
-        { "kind": "apple", "color": "#F4C20D", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.15, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.34, "segments": 24 } }
+        {
+          "color": "#8D6E4A",
+          "kind": "puck",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.5,
+            "segments": 24
+          }
+        },
+        {
+          "color": "#E23B3B",
+          "kind": "hammer",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 2.6,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.8,
+            "segments": 24
+          }
+        },
+        {
+          "color": "#F2801D",
+          "kind": "stick",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 4.0,
+            "height": 0.4
+          }
+        },
+        {
+          "color": "#F4C20D",
+          "kind": "base",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 1.2,
+            "height": 0.8
+          }
+        },
+        {
+          "color": "#4CAF50",
+          "kind": "column",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.5,
+            "height": 2.6
+          }
+        },
+        {
+          "color": "#12A5A5",
+          "kind": "bell",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 1.1,
+            "height": 0.5
+          }
+        }
       ],
       "target": {
         "outline": [
-          { "x": -1.5, "y": 0 }, { "x": 1.5, "y": 0 }, { "x": 1.5, "y": 0.35 }, { "x": 0.83, "y": 0.35 },
-          { "x": 0.83, "y": 1.03 }, { "x": 0.15, "y": 1.03 }, { "x": 0.15, "y": 1.10 }, { "x": -0.15, "y": 1.10 },
-          { "x": -0.15, "y": 1.03 }, { "x": -0.83, "y": 1.03 }, { "x": -0.83, "y": 0.35 }, { "x": -1.5, "y": 0.35 }
+          {
+            "x": -3.4,
+            "y": 0
+          },
+          {
+            "x": -2.0,
+            "y": 0
+          },
+          {
+            "x": -2.0,
+            "y": 5.0
+          },
+          {
+            "x": -3.4,
+            "y": 5.0
+          }
         ],
         "slots": [
-          { "kind": "base", "position": { "x": 0, "y": 0.175 }, "rotation": 0 },
-          { "kind": "divider", "position": { "x": 0, "y": 0.725 }, "rotation": 0 },
-          { "kind": "apple", "position": { "x": -0.49, "y": 0.69 }, "rotation": 0 },
-          { "kind": "apple", "position": { "x": 0.49, "y": 0.69 }, "rotation": 0 }
+          {
+            "kind": "base",
+            "position": {
+              "x": -2.7,
+              "y": 0.4
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "column",
+            "position": {
+              "x": -2.7,
+              "y": 2.1
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "bell",
+            "position": {
+              "x": -2.7,
+              "y": 3.65
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "puck",
+            "position": {
+              "x": -2.7,
+              "y": 4.4
+            },
+            "rotation": 0
+          }
         ]
       },
       "pieces": [
-        { "kind": "base", "startPosition": { "x": 0, "y": 3.60 }, "startRotation": 0 },
-        { "kind": "divider", "startPosition": { "x": 0, "y": 5.10 }, "startRotation": 0 },
-        { "kind": "apple", "startPosition": { "x": -1.60, "y": 6.20 }, "startRotation": 0 },
-        { "kind": "apple", "startPosition": { "x": 1.60, "y": 6.20 }, "startRotation": 0 }
+        {
+          "kind": "stick",
+          "startPosition": {
+            "x": 1.05,
+            "y": 1.2
+          },
+          "startRotation": 0,
+          "preplaced": true,
+          "expendable": true
+        },
+        {
+          "kind": "hammer",
+          "startPosition": {
+            "x": -0.25,
+            "y": 9.2
+          },
+          "startRotation": 0,
+          "expendable": true
+        },
+        {
+          "kind": "puck",
+          "startPosition": {
+            "x": 2.05,
+            "y": 5.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "column",
+          "startPosition": {
+            "x": -2.7,
+            "y": 3.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "bell",
+          "startPosition": {
+            "x": -2.7,
+            "y": 5.4
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "base",
+          "startPosition": {
+            "x": -2.7,
+            "y": 6.8
+          },
+          "startRotation": 0
+        }
       ],
       "staticGeometry": [
-        { "visible": true, "color": "#B8926B", "outline": [ { "x": -3.5, "y": -0.6 }, { "x": 3.5, "y": -0.6 }, { "x": 3.5, "y": 0 }, { "x": -3.5, "y": 0 } ] }
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.9,
+              "y": -3.0
+            },
+            {
+              "x": 3.5,
+              "y": -3.0
+            },
+            {
+              "x": 3.5,
+              "y": 0.9
+            },
+            {
+              "x": 0.9,
+              "y": 0.9
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.6,
+              "y": -0.3
+            },
+            {
+              "x": -1.95,
+              "y": -0.3
+            },
+            {
+              "x": -1.95,
+              "y": 0
+            },
+            {
+              "x": -3.6,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.6,
+              "y": 3.9
+            },
+            {
+              "x": -3.5,
+              "y": 3.9
+            },
+            {
+              "x": -3.5,
+              "y": 5.6
+            },
+            {
+              "x": -3.6,
+              "y": 5.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.9,
+              "y": 3.9
+            },
+            {
+              "x": -1.8,
+              "y": 3.9
+            },
+            {
+              "x": -1.8,
+              "y": 5.2
+            },
+            {
+              "x": -1.9,
+              "y": 5.2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "levelId": "lever_lid",
+      "winningOrder": [1, 2, 3],
+      "seed": 60,
+      "difficultyTier": 6,
+      "physicsMode": "catapult",
+      "freezeLoadsAtRest": true,
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.43633
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -6
+        },
+        "max": {
+          "x": 6,
+          "y": 10
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "color": "#EFD9A1",
+          "kind": "stem",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.9,
+            "height": 1.1
+          }
+        },
+        {
+          "color": "#D64541",
+          "kind": "cap",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "halfdisc",
+            "radius": 0.7,
+            "segments": 7
+          }
+        },
+        {
+          "color": "#F2801D",
+          "kind": "hexagon",
+          "symmetryOrder": 6,
+          "material": {
+            "density": 2.6,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.6,
+            "segments": 6
+          }
+        },
+        {
+          "color": "#8D6E4A",
+          "kind": "lever",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 4.0,
+            "height": 0.3
+          }
+        }
       ],
-      "airZones": [
-        { "region": { "min": { "x": -3.2, "y": 0.45 }, "max": { "x": -0.20, "y": 7.0 } }, "direction": { "x": 1, "y": 0 }, "acceleration": 3.5, "color": "#CFE8F5" },
-        { "region": { "min": { "x": 0.20, "y": 0.45 }, "max": { "x": 3.2, "y": 7.0 } }, "direction": { "x": -1, "y": 0 }, "acceleration": 3.5, "color": "#CFE8F5" }
+      "target": {
+        "outline": [
+          {
+            "x": 2.45,
+            "y": 1.7
+          },
+          {
+            "x": 2.7,
+            "y": 1.7
+          },
+          {
+            "x": 2.7,
+            "y": 2.05
+          },
+          {
+            "x": 2.35,
+            "y": 2.38
+          },
+          {
+            "x": 2.0,
+            "y": 2.42
+          },
+          {
+            "x": 1.65,
+            "y": 2.38
+          },
+          {
+            "x": 1.3,
+            "y": 2.05
+          },
+          {
+            "x": 1.3,
+            "y": 1.7
+          },
+          {
+            "x": 1.55,
+            "y": 1.7
+          },
+          {
+            "x": 1.55,
+            "y": 0.6
+          },
+          {
+            "x": 2.45,
+            "y": 0.6
+          }
+        ],
+        "slots": [
+          {
+            "kind": "stem",
+            "position": {
+              "x": 2.0,
+              "y": 1.15
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "cap",
+            "position": {
+              "x": 2.0,
+              "y": 1.7
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "lever",
+          "startPosition": {
+            "x": 0.6,
+            "y": 2.3
+          },
+          "startRotation": 0,
+          "preplaced": true
+        },
+        {
+          "kind": "hexagon",
+          "startPosition": {
+            "x": -0.9,
+            "y": 6.0
+          },
+          "startRotation": 0,
+          "expendable": true
+        },
+        {
+          "kind": "stem",
+          "startPosition": {
+            "x": 2.0,
+            "y": 5.5
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "cap",
+          "startPosition": {
+            "x": 2.0,
+            "y": 7.5
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 4.0,
+              "y": -0.2
+            },
+            {
+              "x": -4.0,
+              "y": -0.2
+            },
+            {
+              "x": -4.0,
+              "y": -0.6
+            },
+            {
+              "x": 4.0,
+              "y": -0.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 2.8,
+              "y": 0.6
+            },
+            {
+              "x": 1.2,
+              "y": 0.6
+            },
+            {
+              "x": 1.2,
+              "y": 0.3
+            },
+            {
+              "x": 2.8,
+              "y": 0.3
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 2.8,
+              "y": 1.5
+            },
+            {
+              "x": 2.6,
+              "y": 1.5
+            },
+            {
+              "x": 2.6,
+              "y": 0.6
+            },
+            {
+              "x": 2.8,
+              "y": 0.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.4,
+              "y": 1.5
+            },
+            {
+              "x": 1.2,
+              "y": 1.5
+            },
+            {
+              "x": 1.2,
+              "y": 0.6
+            },
+            {
+              "x": 1.4,
+              "y": 0.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.15,
+              "y": 2.0
+            },
+            {
+              "x": -0.15,
+              "y": 2.0
+            },
+            {
+              "x": -0.15,
+              "y": -0.2
+            },
+            {
+              "x": 0.15,
+              "y": -0.2
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.0,
+              "y": 0.7
+            },
+            {
+              "x": -2.4,
+              "y": 0.7
+            },
+            {
+              "x": -2.4,
+              "y": -0.2
+            },
+            {
+              "x": -1.0,
+              "y": -0.2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "levelId": "toy_pyramid",
+      "winningOrder": [2, 1, 4, 0, 3, 5],
+      "seed": 280,
+      "difficultyTier": 6,
+      "physicsMode": "assembly",
+      "matchTolerance": {
+        "posTol": 0.30,
+        "angTol": 0.43633
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -6
+        },
+        "max": {
+          "x": 6,
+          "y": 10
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "kind": "cell_a",
+          "color": "#B24BD1",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.70,
+            "height": 0.70
+          }
+        },
+        {
+          "kind": "cell_b",
+          "color": "#E84B8A",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.70,
+            "height": 0.70
+          }
+        },
+        {
+          "kind": "cell_c",
+          "color": "#8D6E4A",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.70,
+            "height": 0.70
+          }
+        },
+        {
+          "kind": "cell_d",
+          "color": "#E23B3B",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.70,
+            "height": 0.70
+          }
+        },
+        {
+          "kind": "cell_e",
+          "color": "#F2801D",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.70,
+            "height": 0.70
+          }
+        },
+        {
+          "kind": "cell_f",
+          "color": "#F4C20D",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.70,
+            "height": 0.70
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          { "x": -1.10, "y": 0.00 },
+          { "x": 1.10, "y": 0.00 },
+          { "x": 1.10, "y": 0.70 },
+          { "x": 0.725, "y": 0.70 },
+          { "x": 0.725, "y": 1.40 },
+          { "x": 0.35, "y": 1.40 },
+          { "x": 0.35, "y": 2.10 },
+          { "x": -0.35, "y": 2.10 },
+          { "x": -0.35, "y": 1.40 },
+          { "x": -0.725, "y": 1.40 },
+          { "x": -0.725, "y": 0.70 },
+          { "x": -1.10, "y": 0.70 }
+        ],
+        "slots": [
+          { "kind": "cell_a", "position": { "x": -0.75, "y": 0.35 }, "rotation": 0 },
+          { "kind": "cell_b", "position": { "x": 0.00, "y": 0.35 }, "rotation": 0 },
+          { "kind": "cell_c", "position": { "x": 0.75, "y": 0.35 }, "rotation": 0 },
+          { "kind": "cell_d", "position": { "x": -0.375, "y": 1.05 }, "rotation": 0 },
+          { "kind": "cell_e", "position": { "x": 0.375, "y": 1.05 }, "rotation": 0 },
+          { "kind": "cell_f", "position": { "x": 0.00, "y": 1.75 }, "rotation": 0 }
+        ]
+      },
+      "pieces": [
+        { "kind": "cell_a", "startPosition": { "x": -0.75, "y": 5.70 }, "startRotation": 0 },
+        { "kind": "cell_b", "startPosition": { "x": 0.00, "y": 6.00 }, "startRotation": 0 },
+        { "kind": "cell_c", "startPosition": { "x": 0.75, "y": 5.70 }, "startRotation": 0 },
+        { "kind": "cell_d", "startPosition": { "x": -0.375, "y": 3.30 }, "startRotation": 0 },
+        { "kind": "cell_e", "startPosition": { "x": 0.375, "y": 3.60 }, "startRotation": 0 },
+        { "kind": "cell_f", "startPosition": { "x": 0.00, "y": 4.50 }, "startRotation": 0 }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            { "x": -2.00, "y": -0.60 },
+            { "x": 2.00, "y": -0.60 },
+            { "x": 2.00, "y": 0.00 },
+            { "x": -2.00, "y": 0.00 }
+          ]
+        }
       ]
     },
     {
@@ -5558,963 +7078,6 @@
       ]
     },
     {
-      "levelId": "toy_pyramid",
-      "winningOrder": [2, 1, 4, 0, 3, 5],
-      "seed": 280,
-      "difficultyTier": 6,
-      "physicsMode": "assembly",
-      "matchTolerance": {
-        "posTol": 0.30,
-        "angTol": 0.43633
-      },
-      "bounds": {
-        "min": {
-          "x": -6,
-          "y": -6
-        },
-        "max": {
-          "x": 6,
-          "y": 10
-        }
-      },
-      "gravity": {
-        "x": 0,
-        "y": -9.81
-      },
-      "pieceTypes": [
-        {
-          "kind": "cell_a",
-          "color": "#B24BD1",
-          "symmetryOrder": 4,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.70,
-            "height": 0.70
-          }
-        },
-        {
-          "kind": "cell_b",
-          "color": "#E84B8A",
-          "symmetryOrder": 4,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.70,
-            "height": 0.70
-          }
-        },
-        {
-          "kind": "cell_c",
-          "color": "#8D6E4A",
-          "symmetryOrder": 4,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.70,
-            "height": 0.70
-          }
-        },
-        {
-          "kind": "cell_d",
-          "color": "#E23B3B",
-          "symmetryOrder": 4,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.70,
-            "height": 0.70
-          }
-        },
-        {
-          "kind": "cell_e",
-          "color": "#F2801D",
-          "symmetryOrder": 4,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.70,
-            "height": 0.70
-          }
-        },
-        {
-          "kind": "cell_f",
-          "color": "#F4C20D",
-          "symmetryOrder": 4,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.70,
-            "height": 0.70
-          }
-        }
-      ],
-      "target": {
-        "outline": [
-          { "x": -1.10, "y": 0.00 },
-          { "x": 1.10, "y": 0.00 },
-          { "x": 1.10, "y": 0.70 },
-          { "x": 0.725, "y": 0.70 },
-          { "x": 0.725, "y": 1.40 },
-          { "x": 0.35, "y": 1.40 },
-          { "x": 0.35, "y": 2.10 },
-          { "x": -0.35, "y": 2.10 },
-          { "x": -0.35, "y": 1.40 },
-          { "x": -0.725, "y": 1.40 },
-          { "x": -0.725, "y": 0.70 },
-          { "x": -1.10, "y": 0.70 }
-        ],
-        "slots": [
-          { "kind": "cell_a", "position": { "x": -0.75, "y": 0.35 }, "rotation": 0 },
-          { "kind": "cell_b", "position": { "x": 0.00, "y": 0.35 }, "rotation": 0 },
-          { "kind": "cell_c", "position": { "x": 0.75, "y": 0.35 }, "rotation": 0 },
-          { "kind": "cell_d", "position": { "x": -0.375, "y": 1.05 }, "rotation": 0 },
-          { "kind": "cell_e", "position": { "x": 0.375, "y": 1.05 }, "rotation": 0 },
-          { "kind": "cell_f", "position": { "x": 0.00, "y": 1.75 }, "rotation": 0 }
-        ]
-      },
-      "pieces": [
-        { "kind": "cell_a", "startPosition": { "x": -0.75, "y": 5.70 }, "startRotation": 0 },
-        { "kind": "cell_b", "startPosition": { "x": 0.00, "y": 6.00 }, "startRotation": 0 },
-        { "kind": "cell_c", "startPosition": { "x": 0.75, "y": 5.70 }, "startRotation": 0 },
-        { "kind": "cell_d", "startPosition": { "x": -0.375, "y": 3.30 }, "startRotation": 0 },
-        { "kind": "cell_e", "startPosition": { "x": 0.375, "y": 3.60 }, "startRotation": 0 },
-        { "kind": "cell_f", "startPosition": { "x": 0.00, "y": 4.50 }, "startRotation": 0 }
-      ],
-      "staticGeometry": [
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            { "x": -2.00, "y": -0.60 },
-            { "x": 2.00, "y": -0.60 },
-            { "x": 2.00, "y": 0.00 },
-            { "x": -2.00, "y": 0.00 }
-          ]
-        }
-      ]
-    },
-    {
-      "levelId": "toaster",
-      "seed": 463,
-      "difficultyTier": 4,
-      "physicsMode": "assembly",
-      "winningOrder": [
-        0,
-        3,
-        4,
-        1,
-        2
-      ],
-      "matchTolerance": {
-        "posTol": 0.3,
-        "angTol": 0.34906585
-      },
-      "bounds": {
-        "min": {
-          "x": -3,
-          "y": -2
-        },
-        "max": {
-          "x": 3,
-          "y": 9
-        }
-      },
-      "gravity": {
-        "x": 0,
-        "y": -9.81
-      },
-      "pieceTypes": [
-        {
-          "kind": "body",
-          "color": "#48699A",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 2.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -1.15,
-                "y": -0.825
-              },
-              {
-                "x": -0.85,
-                "y": -0.825
-              },
-              {
-                "x": -0.85,
-                "y": -0.725
-              },
-              {
-                "x": 0.85,
-                "y": -0.725
-              },
-              {
-                "x": 0.85,
-                "y": -0.825
-              },
-              {
-                "x": 1.15,
-                "y": -0.825
-              },
-              {
-                "x": 1.15,
-                "y": -0.725
-              },
-              {
-                "x": 1.27,
-                "y": -0.725
-              },
-              {
-                "x": 1.32,
-                "y": -0.675
-              },
-              {
-                "x": 1.32,
-                "y": -0.425
-              },
-              {
-                "x": 0.62,
-                "y": -0.425
-              },
-              {
-                "x": 0.62,
-                "y": -0.341
-              },
-              {
-                "x": 0.3,
-                "y": -0.225
-              },
-              {
-                "x": 0.3,
-                "y": 0.825
-              },
-              {
-                "x": -0.3,
-                "y": 0.825
-              },
-              {
-                "x": -0.3,
-                "y": -0.225
-              },
-              {
-                "x": -0.62,
-                "y": -0.341
-              },
-              {
-                "x": -0.62,
-                "y": -0.425
-              },
-              {
-                "x": -1.32,
-                "y": -0.425
-              },
-              {
-                "x": -1.32,
-                "y": -0.675
-              },
-              {
-                "x": -1.27,
-                "y": -0.725
-              },
-              {
-                "x": -1.15,
-                "y": -0.725
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -1.27,
-                  "y": -0.725
-                },
-                {
-                  "x": 1.27,
-                  "y": -0.725
-                },
-                {
-                  "x": 1.32,
-                  "y": -0.675
-                },
-                {
-                  "x": 1.32,
-                  "y": -0.425
-                },
-                {
-                  "x": -1.32,
-                  "y": -0.425
-                },
-                {
-                  "x": -1.32,
-                  "y": -0.675
-                }
-              ],
-              [
-                {
-                  "x": -1.15,
-                  "y": -0.825
-                },
-                {
-                  "x": -0.85,
-                  "y": -0.825
-                },
-                {
-                  "x": -0.85,
-                  "y": -0.725
-                },
-                {
-                  "x": -1.15,
-                  "y": -0.725
-                }
-              ],
-              [
-                {
-                  "x": 0.85,
-                  "y": -0.825
-                },
-                {
-                  "x": 1.15,
-                  "y": -0.825
-                },
-                {
-                  "x": 1.15,
-                  "y": -0.725
-                },
-                {
-                  "x": 0.85,
-                  "y": -0.725
-                }
-              ],
-              [
-                {
-                  "x": -0.62,
-                  "y": -0.425
-                },
-                {
-                  "x": 0.62,
-                  "y": -0.425
-                },
-                {
-                  "x": 0.62,
-                  "y": -0.341
-                },
-                {
-                  "x": 0.3,
-                  "y": -0.225
-                },
-                {
-                  "x": -0.3,
-                  "y": -0.225
-                },
-                {
-                  "x": -0.62,
-                  "y": -0.341
-                }
-              ],
-              [
-                {
-                  "x": -0.3,
-                  "y": -0.225
-                },
-                {
-                  "x": 0.3,
-                  "y": -0.225
-                },
-                {
-                  "x": 0.3,
-                  "y": 0.825
-                },
-                {
-                  "x": -0.3,
-                  "y": 0.825
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "slice_light",
-          "color": "#CDB27E",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -0.7,
-                "y": -0.15
-              },
-              {
-                "x": 0.62,
-                "y": -0.15
-              },
-              {
-                "x": 0.677,
-                "y": -0.127
-              },
-              {
-                "x": 0.7,
-                "y": -0.07
-              },
-              {
-                "x": 0.7,
-                "y": 0.07
-              },
-              {
-                "x": 0.677,
-                "y": 0.127
-              },
-              {
-                "x": 0.62,
-                "y": 0.15
-              },
-              {
-                "x": -0.7,
-                "y": 0.15
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -0.7,
-                  "y": -0.15
-                },
-                {
-                  "x": 0.62,
-                  "y": -0.15
-                },
-                {
-                  "x": 0.677,
-                  "y": -0.127
-                },
-                {
-                  "x": 0.7,
-                  "y": -0.07
-                },
-                {
-                  "x": 0.7,
-                  "y": 0.07
-                },
-                {
-                  "x": 0.677,
-                  "y": 0.127
-                },
-                {
-                  "x": 0.62,
-                  "y": 0.15
-                },
-                {
-                  "x": -0.7,
-                  "y": 0.15
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "slice_gold",
-          "color": "#CBA016",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -0.62,
-                "y": -0.15
-              },
-              {
-                "x": 0.7,
-                "y": -0.15
-              },
-              {
-                "x": 0.7,
-                "y": 0.15
-              },
-              {
-                "x": -0.62,
-                "y": 0.15
-              },
-              {
-                "x": -0.677,
-                "y": 0.127
-              },
-              {
-                "x": -0.7,
-                "y": 0.07
-              },
-              {
-                "x": -0.7,
-                "y": -0.07
-              },
-              {
-                "x": -0.677,
-                "y": -0.127
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -0.62,
-                  "y": -0.15
-                },
-                {
-                  "x": 0.7,
-                  "y": -0.15
-                },
-                {
-                  "x": 0.7,
-                  "y": 0.15
-                },
-                {
-                  "x": -0.62,
-                  "y": 0.15
-                },
-                {
-                  "x": -0.677,
-                  "y": 0.127
-                },
-                {
-                  "x": -0.7,
-                  "y": 0.07
-                },
-                {
-                  "x": -0.7,
-                  "y": -0.07
-                },
-                {
-                  "x": -0.677,
-                  "y": -0.127
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "panel_l",
-          "color": "#2F8C86",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -0.34,
-                "y": -0.625
-              },
-              {
-                "x": 0.34,
-                "y": -0.625
-              },
-              {
-                "x": 0.34,
-                "y": 0.625
-              },
-              {
-                "x": -0.08,
-                "y": 0.625
-              },
-              {
-                "x": -0.22,
-                "y": 0.585
-              },
-              {
-                "x": -0.31,
-                "y": 0.475
-              },
-              {
-                "x": -0.34,
-                "y": 0.325
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -0.34,
-                  "y": -0.625
-                },
-                {
-                  "x": 0.34,
-                  "y": -0.625
-                },
-                {
-                  "x": 0.34,
-                  "y": 0.625
-                },
-                {
-                  "x": -0.08,
-                  "y": 0.625
-                },
-                {
-                  "x": -0.22,
-                  "y": 0.585
-                },
-                {
-                  "x": -0.31,
-                  "y": 0.475
-                },
-                {
-                  "x": -0.34,
-                  "y": 0.325
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "panel_r",
-          "color": "#5A55A3",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -0.48,
-                "y": -0.625
-              },
-              {
-                "x": 0.2,
-                "y": -0.625
-              },
-              {
-                "x": 0.2,
-                "y": -0.055
-              },
-              {
-                "x": 0.36,
-                "y": -0.055
-              },
-              {
-                "x": 0.36,
-                "y": -0.095
-              },
-              {
-                "x": 0.48,
-                "y": -0.095
-              },
-              {
-                "x": 0.48,
-                "y": 0.105
-              },
-              {
-                "x": 0.36,
-                "y": 0.105
-              },
-              {
-                "x": 0.36,
-                "y": 0.065
-              },
-              {
-                "x": 0.2,
-                "y": 0.065
-              },
-              {
-                "x": 0.2,
-                "y": 0.325
-              },
-              {
-                "x": 0.17,
-                "y": 0.475
-              },
-              {
-                "x": 0.08,
-                "y": 0.585
-              },
-              {
-                "x": -0.06,
-                "y": 0.625
-              },
-              {
-                "x": -0.48,
-                "y": 0.625
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -0.48,
-                  "y": -0.625
-                },
-                {
-                  "x": 0.2,
-                  "y": -0.625
-                },
-                {
-                  "x": 0.2,
-                  "y": 0.325
-                },
-                {
-                  "x": 0.17,
-                  "y": 0.475
-                },
-                {
-                  "x": 0.08,
-                  "y": 0.585
-                },
-                {
-                  "x": -0.06,
-                  "y": 0.625
-                },
-                {
-                  "x": -0.48,
-                  "y": 0.625
-                }
-              ],
-              [
-                {
-                  "x": 0.2,
-                  "y": -0.055
-                },
-                {
-                  "x": 0.36,
-                  "y": -0.055
-                },
-                {
-                  "x": 0.36,
-                  "y": 0.065
-                },
-                {
-                  "x": 0.2,
-                  "y": 0.065
-                }
-              ],
-              [
-                {
-                  "x": 0.36,
-                  "y": -0.095
-                },
-                {
-                  "x": 0.48,
-                  "y": -0.095
-                },
-                {
-                  "x": 0.48,
-                  "y": 0.105
-                },
-                {
-                  "x": 0.36,
-                  "y": 0.105
-                }
-              ]
-            ]
-          }
-        }
-      ],
-      "target": {
-        "outline": [
-          {
-            "x": -1.32,
-            "y": 0
-          },
-          {
-            "x": 1.32,
-            "y": 0
-          },
-          {
-            "x": 1.32,
-            "y": 0.93
-          },
-          {
-            "x": 1.6,
-            "y": 0.93
-          },
-          {
-            "x": 1.6,
-            "y": 1.13
-          },
-          {
-            "x": 1.32,
-            "y": 1.13
-          },
-          {
-            "x": 1.32,
-            "y": 1.35
-          },
-          {
-            "x": 1.06,
-            "y": 1.65
-          },
-          {
-            "x": 0.625,
-            "y": 1.65
-          },
-          {
-            "x": 0.625,
-            "y": 1.99
-          },
-          {
-            "x": -0.625,
-            "y": 1.99
-          },
-          {
-            "x": -0.625,
-            "y": 1.65
-          },
-          {
-            "x": -1.06,
-            "y": 1.65
-          },
-          {
-            "x": -1.32,
-            "y": 1.35
-          }
-        ],
-        "slots": [
-          {
-            "kind": "body",
-            "position": {
-              "x": 0,
-              "y": 0.825
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "slice_light",
-            "position": {
-              "x": -0.475,
-              "y": 1.29
-            },
-            "rotation": 1.5707963
-          },
-          {
-            "kind": "slice_gold",
-            "position": {
-              "x": 0.475,
-              "y": 1.29
-            },
-            "rotation": -1.5707963
-          },
-          {
-            "kind": "panel_l",
-            "position": {
-              "x": -0.98,
-              "y": 1.025
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "panel_r",
-            "position": {
-              "x": 1.12,
-              "y": 1.025
-            },
-            "rotation": 0
-          }
-        ]
-      },
-      "pieces": [
-        {
-          "kind": "body",
-          "startPosition": {
-            "x": 0,
-            "y": 5.95
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "slice_light",
-          "startPosition": {
-            "x": -0.475,
-            "y": 2.75
-          },
-          "startRotation": 1.5707963
-        },
-        {
-          "kind": "slice_gold",
-          "startPosition": {
-            "x": 0.475,
-            "y": 4.3
-          },
-          "startRotation": -1.5707963
-        },
-        {
-          "kind": "panel_l",
-          "startPosition": {
-            "x": -0.98,
-            "y": 4.25
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "panel_r",
-          "startPosition": {
-            "x": 1.12,
-            "y": 2.725
-          },
-          "startRotation": 0
-        }
-      ],
-      "staticGeometry": [
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -2.0,
-              "y": -0.4
-            },
-            {
-              "x": 2.0,
-              "y": -0.4
-            },
-            {
-              "x": 2.0,
-              "y": 0
-            },
-            {
-              "x": -2.0,
-              "y": 0
-            }
-          ]
-        }
-      ]
-    },
-    {
       "levelId": "balloon_cloud",
       "seed": 431,
       "difficultyTier": 6,
@@ -6999,24 +7562,29 @@
       ]
     },
     {
-      "levelId": "high_striker",
-      "winningOrder": [5, 3, 4, 2, 1],
-      "seed": 254,
-      "difficultyTier": 5,
-      "physicsMode": "catapult",
-      "freezeLoadsAtRest": true,
+      "levelId": "camel_dune",
+      "seed": 433,
+      "difficultyTier": 6,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
       "matchTolerance": {
-        "posTol": 0.32,
-        "angTol": 0.43633
+        "posTol": 0.3,
+        "angTol": 0.34906585
       },
       "bounds": {
         "min": {
-          "x": -6,
-          "y": -6
+          "x": -7,
+          "y": -1
         },
         "max": {
-          "x": 6,
-          "y": 10
+          "x": 7,
+          "y": 9
         }
       },
       "gravity": {
@@ -7025,38 +7593,8 @@
       },
       "pieceTypes": [
         {
-          "color": "#8D6E4A",
-          "kind": "puck",
-          "symmetryOrder": 24,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "circle",
-            "radius": 0.5,
-            "segments": 24
-          }
-        },
-        {
-          "color": "#E23B3B",
-          "kind": "hammer",
-          "symmetryOrder": 24,
-          "material": {
-            "density": 2.6,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "circle",
-            "radius": 0.8,
-            "segments": 24
-          }
-        },
-        {
-          "color": "#F2801D",
-          "kind": "stick",
+          "kind": "body",
+          "color": "#CBA016",
           "symmetryOrder": 2,
           "material": {
             "density": 1.0,
@@ -7070,323 +7608,8 @@
           }
         },
         {
-          "color": "#F4C20D",
-          "kind": "base",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 1.2,
-            "height": 0.8
-          }
-        },
-        {
-          "color": "#4CAF50",
-          "kind": "column",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.5,
-            "height": 2.6
-          }
-        },
-        {
-          "color": "#12A5A5",
-          "kind": "bell",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 1.1,
-            "height": 0.5
-          }
-        }
-      ],
-      "target": {
-        "outline": [
-          {
-            "x": -3.4,
-            "y": 0
-          },
-          {
-            "x": -2.0,
-            "y": 0
-          },
-          {
-            "x": -2.0,
-            "y": 5.0
-          },
-          {
-            "x": -3.4,
-            "y": 5.0
-          }
-        ],
-        "slots": [
-          {
-            "kind": "base",
-            "position": {
-              "x": -2.7,
-              "y": 0.4
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "column",
-            "position": {
-              "x": -2.7,
-              "y": 2.1
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "bell",
-            "position": {
-              "x": -2.7,
-              "y": 3.65
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "puck",
-            "position": {
-              "x": -2.7,
-              "y": 4.4
-            },
-            "rotation": 0
-          }
-        ]
-      },
-      "pieces": [
-        {
-          "kind": "stick",
-          "startPosition": {
-            "x": 1.05,
-            "y": 1.2
-          },
-          "startRotation": 0,
-          "preplaced": true,
-          "expendable": true
-        },
-        {
-          "kind": "hammer",
-          "startPosition": {
-            "x": -0.25,
-            "y": 9.2
-          },
-          "startRotation": 0,
-          "expendable": true
-        },
-        {
-          "kind": "puck",
-          "startPosition": {
-            "x": 2.05,
-            "y": 5.0
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "column",
-          "startPosition": {
-            "x": -2.7,
-            "y": 3.9
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "bell",
-          "startPosition": {
-            "x": -2.7,
-            "y": 5.4
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "base",
-          "startPosition": {
-            "x": -2.7,
-            "y": 6.8
-          },
-          "startRotation": 0
-        }
-      ],
-      "staticGeometry": [
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 0.9,
-              "y": -3.0
-            },
-            {
-              "x": 3.5,
-              "y": -3.0
-            },
-            {
-              "x": 3.5,
-              "y": 0.9
-            },
-            {
-              "x": 0.9,
-              "y": 0.9
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -3.6,
-              "y": -0.3
-            },
-            {
-              "x": -1.95,
-              "y": -0.3
-            },
-            {
-              "x": -1.95,
-              "y": 0
-            },
-            {
-              "x": -3.6,
-              "y": 0
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -3.6,
-              "y": 3.9
-            },
-            {
-              "x": -3.5,
-              "y": 3.9
-            },
-            {
-              "x": -3.5,
-              "y": 5.6
-            },
-            {
-              "x": -3.6,
-              "y": 5.6
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -1.9,
-              "y": 3.9
-            },
-            {
-              "x": -1.8,
-              "y": 3.9
-            },
-            {
-              "x": -1.8,
-              "y": 5.2
-            },
-            {
-              "x": -1.9,
-              "y": 5.2
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "levelId": "lever_lid",
-      "winningOrder": [1, 2, 3],
-      "seed": 60,
-      "difficultyTier": 6,
-      "physicsMode": "catapult",
-      "freezeLoadsAtRest": true,
-      "matchTolerance": {
-        "posTol": 0.3,
-        "angTol": 0.43633
-      },
-      "bounds": {
-        "min": {
-          "x": -6,
-          "y": -6
-        },
-        "max": {
-          "x": 6,
-          "y": 10
-        }
-      },
-      "gravity": {
-        "x": 0,
-        "y": -9.81
-      },
-      "pieceTypes": [
-        {
-          "color": "#EFD9A1",
-          "kind": "stem",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.9,
-            "height": 1.1
-          }
-        },
-        {
-          "color": "#D64541",
-          "kind": "cap",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "halfdisc",
-            "radius": 0.7,
-            "segments": 7
-          }
-        },
-        {
-          "color": "#F2801D",
-          "kind": "hexagon",
-          "symmetryOrder": 6,
-          "material": {
-            "density": 2.6,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "circle",
-            "radius": 0.6,
-            "segments": 6
-          }
-        },
-        {
-          "color": "#8D6E4A",
-          "kind": "lever",
+          "kind": "blanket",
+          "color": "#B8577A",
           "symmetryOrder": 2,
           "material": {
             "density": 1.0,
@@ -7395,133 +7618,427 @@
           },
           "shape": {
             "primitive": "plank",
-            "width": 4.0,
-            "height": 0.3
+            "width": 2.0,
+            "height": 0.15
+          }
+        },
+        {
+          "kind": "humps",
+          "color": "#2F8C86",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 2.1,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.6,
+                "y": -0.3
+              },
+              {
+                "x": 0.6,
+                "y": -0.3
+              },
+              {
+                "x": 0.58,
+                "y": -0.1
+              },
+              {
+                "x": 0.5,
+                "y": 0.04
+              },
+              {
+                "x": 0.38,
+                "y": 0.12
+              },
+              {
+                "x": 0.24,
+                "y": 0.14
+              },
+              {
+                "x": 0.1,
+                "y": 0.08
+              },
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": -0.1,
+                "y": 0.12
+              },
+              {
+                "x": -0.24,
+                "y": 0.24
+              },
+              {
+                "x": -0.38,
+                "y": 0.3
+              },
+              {
+                "x": -0.5,
+                "y": 0.24
+              },
+              {
+                "x": -0.58,
+                "y": 0.06
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.6,
+                  "y": -0.3
+                },
+                {
+                  "x": 0.0,
+                  "y": -0.3
+                },
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": -0.1,
+                  "y": 0.12
+                },
+                {
+                  "x": -0.24,
+                  "y": 0.24
+                },
+                {
+                  "x": -0.38,
+                  "y": 0.3
+                },
+                {
+                  "x": -0.5,
+                  "y": 0.24
+                },
+                {
+                  "x": -0.58,
+                  "y": 0.06
+                }
+              ],
+              [
+                {
+                  "x": 0.0,
+                  "y": -0.3
+                },
+                {
+                  "x": 0.6,
+                  "y": -0.3
+                },
+                {
+                  "x": 0.58,
+                  "y": -0.1
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.04
+                },
+                {
+                  "x": 0.38,
+                  "y": 0.12
+                },
+                {
+                  "x": 0.24,
+                  "y": 0.14
+                },
+                {
+                  "x": 0.1,
+                  "y": 0.08
+                },
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "saddlebag",
+          "color": "#48699A",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.25,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.5,
+            "height": 0.8
+          }
+        },
+        {
+          "kind": "neck",
+          "color": "#5C8E3E",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.07,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "parallelogram",
+            "width": 0.8,
+            "height": 0.9,
+            "skew": 0.25
+          }
+        },
+        {
+          "kind": "head",
+          "color": "#5A55A3",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.65,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.7,
+            "height": 0.42
           }
         }
       ],
-      "target": {
-        "outline": [
-          {
-            "x": -2.45,
-            "y": 0.6
-          },
-          {
-            "x": -1.55,
-            "y": 0.6
-          },
-          {
-            "x": -1.55,
-            "y": 1.7
-          },
-          {
-            "x": -1.3,
-            "y": 1.7
-          },
-          {
-            "x": -1.3,
-            "y": 2.05
-          },
-          {
-            "x": -1.65,
-            "y": 2.38
-          },
-          {
-            "x": -2.0,
-            "y": 2.42
-          },
-          {
-            "x": -2.35,
-            "y": 2.38
-          },
-          {
-            "x": -2.7,
-            "y": 2.05
-          },
-          {
-            "x": -2.7,
-            "y": 1.7
-          },
-          {
-            "x": -2.45,
-            "y": 1.7
-          }
-        ],
-        "slots": [
-          {
-            "kind": "stem",
-            "position": {
-              "x": -2.0,
-              "y": 1.15
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "cap",
-            "position": {
-              "x": -2.0,
-              "y": 1.7
-            },
-            "rotation": 0
-          }
-        ]
-      },
       "pieces": [
         {
-          "kind": "lever",
+          "kind": "body",
           "startPosition": {
-            "x": -0.6,
-            "y": 2.3
+            "x": -0.25,
+            "y": 2.2
           },
           "startRotation": 0,
           "preplaced": true
         },
         {
-          "kind": "hexagon",
+          "kind": "blanket",
           "startPosition": {
-            "x": 0.9,
-            "y": 6.0
-          },
-          "startRotation": 0,
-          "expendable": true
-        },
-        {
-          "kind": "stem",
-          "startPosition": {
-            "x": -2.0,
-            "y": 5.5
+            "x": -1.2,
+            "y": 5.8
           },
           "startRotation": 0
         },
         {
-          "kind": "cap",
+          "kind": "humps",
           "startPosition": {
-            "x": -2.0,
-            "y": 7.5
+            "x": -0.85,
+            "y": 6.85
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "saddlebag",
+          "startPosition": {
+            "x": -1.85,
+            "y": 4.8
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "neck",
+          "startPosition": {
+            "x": 1.35,
+            "y": 4.2
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "head",
+          "startPosition": {
+            "x": 1.75,
+            "y": 6.3
           },
           "startRotation": 0
         }
       ],
+      "target": {
+        "outline": [
+          {
+            "x": -2.25,
+            "y": 2.0
+          },
+          {
+            "x": 1.75,
+            "y": 2.0
+          },
+          {
+            "x": 1.75,
+            "y": 2.4
+          },
+          {
+            "x": 2.0,
+            "y": 3.3
+          },
+          {
+            "x": 2.1,
+            "y": 3.3
+          },
+          {
+            "x": 2.1,
+            "y": 3.72
+          },
+          {
+            "x": 1.4,
+            "y": 3.72
+          },
+          {
+            "x": 1.4,
+            "y": 3.3
+          },
+          {
+            "x": 1.2,
+            "y": 3.3
+          },
+          {
+            "x": 0.95,
+            "y": 2.4
+          },
+          {
+            "x": -0.2,
+            "y": 2.4
+          },
+          {
+            "x": -0.2,
+            "y": 2.55
+          },
+          {
+            "x": -0.25,
+            "y": 2.55
+          },
+          {
+            "x": -0.27,
+            "y": 2.75
+          },
+          {
+            "x": -0.61,
+            "y": 2.99
+          },
+          {
+            "x": -0.85,
+            "y": 2.85
+          },
+          {
+            "x": -1.09,
+            "y": 3.09
+          },
+          {
+            "x": -1.23,
+            "y": 3.15
+          },
+          {
+            "x": -1.45,
+            "y": 2.91
+          },
+          {
+            "x": -1.45,
+            "y": 2.55
+          },
+          {
+            "x": -1.6,
+            "y": 2.55
+          },
+          {
+            "x": -1.6,
+            "y": 3.35
+          },
+          {
+            "x": -2.1,
+            "y": 3.35
+          },
+          {
+            "x": -2.1,
+            "y": 2.55
+          },
+          {
+            "x": -2.2,
+            "y": 2.55
+          },
+          {
+            "x": -2.2,
+            "y": 2.4
+          },
+          {
+            "x": -2.25,
+            "y": 2.4
+          }
+        ],
+        "slots": [
+          {
+            "kind": "body",
+            "position": {
+              "x": -0.25,
+              "y": 2.2
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "blanket",
+            "position": {
+              "x": -1.2,
+              "y": 2.475
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "humps",
+            "position": {
+              "x": -0.85,
+              "y": 2.85
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "saddlebag",
+            "position": {
+              "x": -1.85,
+              "y": 2.95
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "neck",
+            "position": {
+              "x": 1.35,
+              "y": 2.85
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "head",
+            "position": {
+              "x": 1.75,
+              "y": 3.51
+            },
+            "rotation": 0
+          }
+        ]
+      },
       "staticGeometry": [
         {
           "visible": true,
           "color": "#B8926B",
           "outline": [
             {
-              "x": -4.0,
+              "x": -7,
               "y": -0.6
             },
             {
-              "x": 4.0,
+              "x": 7,
               "y": -0.6
             },
             {
-              "x": 4.0,
-              "y": -0.2
+              "x": 7,
+              "y": 0
             },
             {
-              "x": -4.0,
-              "y": -0.2
+              "x": -7,
+              "y": 0
             }
           ]
         },
@@ -7530,108 +8047,20 @@
           "color": "#B8926B",
           "outline": [
             {
-              "x": -2.8,
-              "y": 0.3
+              "x": -4.5,
+              "y": 0.0
             },
             {
-              "x": -1.2,
-              "y": 0.3
+              "x": 2.0,
+              "y": 0.0
             },
             {
-              "x": -1.2,
-              "y": 0.6
-            },
-            {
-              "x": -2.8,
-              "y": 0.6
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -2.8,
-              "y": 0.6
-            },
-            {
-              "x": -2.6,
-              "y": 0.6
-            },
-            {
-              "x": -2.6,
-              "y": 1.5
-            },
-            {
-              "x": -2.8,
-              "y": 1.5
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -1.4,
-              "y": 0.6
-            },
-            {
-              "x": -1.2,
-              "y": 0.6
-            },
-            {
-              "x": -1.2,
-              "y": 1.5
-            },
-            {
-              "x": -1.4,
-              "y": 1.5
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -0.15,
-              "y": -0.2
-            },
-            {
-              "x": 0.15,
-              "y": -0.2
-            },
-            {
-              "x": 0.15,
+              "x": 0.0,
               "y": 2.0
             },
             {
-              "x": -0.15,
+              "x": -3.0,
               "y": 2.0
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 1.0,
-              "y": -0.2
-            },
-            {
-              "x": 2.4,
-              "y": -0.2
-            },
-            {
-              "x": 2.4,
-              "y": 0.7
-            },
-            {
-              "x": 1.0,
-              "y": 0.7
             }
           ]
         }
@@ -9172,511 +9601,6 @@
       ]
     },
     {
-      "levelId": "camel_dune",
-      "seed": 433,
-      "difficultyTier": 6,
-      "physicsMode": "assembly",
-      "winningOrder": [
-        1,
-        2,
-        3,
-        4,
-        5
-      ],
-      "matchTolerance": {
-        "posTol": 0.3,
-        "angTol": 0.34906585
-      },
-      "bounds": {
-        "min": {
-          "x": -7,
-          "y": -1
-        },
-        "max": {
-          "x": 7,
-          "y": 9
-        }
-      },
-      "gravity": {
-        "x": 0,
-        "y": -9.81
-      },
-      "pieceTypes": [
-        {
-          "kind": "body",
-          "color": "#CBA016",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "plank",
-            "width": 4.0,
-            "height": 0.4
-          }
-        },
-        {
-          "kind": "blanket",
-          "color": "#B8577A",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "plank",
-            "width": 2.0,
-            "height": 0.15
-          }
-        },
-        {
-          "kind": "humps",
-          "color": "#2F8C86",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 2.1,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -0.6,
-                "y": -0.3
-              },
-              {
-                "x": 0.6,
-                "y": -0.3
-              },
-              {
-                "x": 0.58,
-                "y": -0.1
-              },
-              {
-                "x": 0.5,
-                "y": 0.04
-              },
-              {
-                "x": 0.38,
-                "y": 0.12
-              },
-              {
-                "x": 0.24,
-                "y": 0.14
-              },
-              {
-                "x": 0.1,
-                "y": 0.08
-              },
-              {
-                "x": 0.0,
-                "y": 0.0
-              },
-              {
-                "x": -0.1,
-                "y": 0.12
-              },
-              {
-                "x": -0.24,
-                "y": 0.24
-              },
-              {
-                "x": -0.38,
-                "y": 0.3
-              },
-              {
-                "x": -0.5,
-                "y": 0.24
-              },
-              {
-                "x": -0.58,
-                "y": 0.06
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -0.6,
-                  "y": -0.3
-                },
-                {
-                  "x": 0.0,
-                  "y": -0.3
-                },
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": -0.1,
-                  "y": 0.12
-                },
-                {
-                  "x": -0.24,
-                  "y": 0.24
-                },
-                {
-                  "x": -0.38,
-                  "y": 0.3
-                },
-                {
-                  "x": -0.5,
-                  "y": 0.24
-                },
-                {
-                  "x": -0.58,
-                  "y": 0.06
-                }
-              ],
-              [
-                {
-                  "x": 0.0,
-                  "y": -0.3
-                },
-                {
-                  "x": 0.6,
-                  "y": -0.3
-                },
-                {
-                  "x": 0.58,
-                  "y": -0.1
-                },
-                {
-                  "x": 0.5,
-                  "y": 0.04
-                },
-                {
-                  "x": 0.38,
-                  "y": 0.12
-                },
-                {
-                  "x": 0.24,
-                  "y": 0.14
-                },
-                {
-                  "x": 0.1,
-                  "y": 0.08
-                },
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "saddlebag",
-          "color": "#48699A",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.25,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.5,
-            "height": 0.8
-          }
-        },
-        {
-          "kind": "neck",
-          "color": "#5C8E3E",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.07,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "parallelogram",
-            "width": 0.8,
-            "height": 0.9,
-            "skew": 0.25
-          }
-        },
-        {
-          "kind": "head",
-          "color": "#5A55A3",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.65,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.7,
-            "height": 0.42
-          }
-        }
-      ],
-      "pieces": [
-        {
-          "kind": "body",
-          "startPosition": {
-            "x": -0.25,
-            "y": 2.2
-          },
-          "startRotation": 0,
-          "preplaced": true
-        },
-        {
-          "kind": "blanket",
-          "startPosition": {
-            "x": -1.2,
-            "y": 5.8
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "humps",
-          "startPosition": {
-            "x": -0.85,
-            "y": 6.85
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "saddlebag",
-          "startPosition": {
-            "x": -1.85,
-            "y": 4.8
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "neck",
-          "startPosition": {
-            "x": 1.35,
-            "y": 4.2
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "head",
-          "startPosition": {
-            "x": 1.75,
-            "y": 6.3
-          },
-          "startRotation": 0
-        }
-      ],
-      "target": {
-        "outline": [
-          {
-            "x": -2.25,
-            "y": 2.0
-          },
-          {
-            "x": 1.75,
-            "y": 2.0
-          },
-          {
-            "x": 1.75,
-            "y": 2.4
-          },
-          {
-            "x": 2.0,
-            "y": 3.3
-          },
-          {
-            "x": 2.1,
-            "y": 3.3
-          },
-          {
-            "x": 2.1,
-            "y": 3.72
-          },
-          {
-            "x": 1.4,
-            "y": 3.72
-          },
-          {
-            "x": 1.4,
-            "y": 3.3
-          },
-          {
-            "x": 1.2,
-            "y": 3.3
-          },
-          {
-            "x": 0.95,
-            "y": 2.4
-          },
-          {
-            "x": -0.2,
-            "y": 2.4
-          },
-          {
-            "x": -0.2,
-            "y": 2.55
-          },
-          {
-            "x": -0.25,
-            "y": 2.55
-          },
-          {
-            "x": -0.27,
-            "y": 2.75
-          },
-          {
-            "x": -0.61,
-            "y": 2.99
-          },
-          {
-            "x": -0.85,
-            "y": 2.85
-          },
-          {
-            "x": -1.09,
-            "y": 3.09
-          },
-          {
-            "x": -1.23,
-            "y": 3.15
-          },
-          {
-            "x": -1.45,
-            "y": 2.91
-          },
-          {
-            "x": -1.45,
-            "y": 2.55
-          },
-          {
-            "x": -1.6,
-            "y": 2.55
-          },
-          {
-            "x": -1.6,
-            "y": 3.35
-          },
-          {
-            "x": -2.1,
-            "y": 3.35
-          },
-          {
-            "x": -2.1,
-            "y": 2.55
-          },
-          {
-            "x": -2.2,
-            "y": 2.55
-          },
-          {
-            "x": -2.2,
-            "y": 2.4
-          },
-          {
-            "x": -2.25,
-            "y": 2.4
-          }
-        ],
-        "slots": [
-          {
-            "kind": "body",
-            "position": {
-              "x": -0.25,
-              "y": 2.2
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "blanket",
-            "position": {
-              "x": -1.2,
-              "y": 2.475
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "humps",
-            "position": {
-              "x": -0.85,
-              "y": 2.85
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "saddlebag",
-            "position": {
-              "x": -1.85,
-              "y": 2.95
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "neck",
-            "position": {
-              "x": 1.35,
-              "y": 2.85
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "head",
-            "position": {
-              "x": 1.75,
-              "y": 3.51
-            },
-            "rotation": 0
-          }
-        ]
-      },
-      "staticGeometry": [
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -7,
-              "y": -0.6
-            },
-            {
-              "x": 7,
-              "y": -0.6
-            },
-            {
-              "x": 7,
-              "y": 0
-            },
-            {
-              "x": -7,
-              "y": 0
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -4.5,
-              "y": 0.0
-            },
-            {
-              "x": 2.0,
-              "y": 0.0
-            },
-            {
-              "x": 0.0,
-              "y": 2.0
-            },
-            {
-              "x": -3.0,
-              "y": 2.0
-            }
-          ]
-        }
-      ]
-    },
-    {
       "levelId": "pagoda",
       "winningOrder": [0, 1, 2, 3, 4, 5],
       "seed": 149,
@@ -10957,350 +10881,6 @@
       ]
     },
     {
-      "levelId": "mosaic_brick",
-      "winningOrder": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ],
-      "seed": 71,
-      "difficultyTier": 6,
-      "physicsMode": "assembly",
-      "matchTolerance": {
-        "posTol": 0.3,
-        "angTol": 0.26179939
-      },
-      "bounds": {
-        "min": {
-          "x": -6,
-          "y": -1
-        },
-        "max": {
-          "x": 6,
-          "y": 9
-        }
-      },
-      "gravity": {
-        "x": 0,
-        "y": -9.81
-      },
-      "pieceTypes": [
-        {
-          "color": "#8D6E4A",
-          "kind": "sand_bar",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.0
-          },
-          "shape": {
-            "primitive": "plank",
-            "width": 2.55,
-            "height": 0.85
-          }
-        },
-        {
-          "color": "#E23B3B",
-          "kind": "amber_box",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.0
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 2.55,
-            "height": 1.7
-          }
-        },
-        {
-          "color": "#F2801D",
-          "kind": "sky_bar",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.0
-          },
-          "shape": {
-            "primitive": "plank",
-            "width": 2.55,
-            "height": 0.85
-          }
-        },
-        {
-          "color": "#F4C20D",
-          "kind": "rose_bar",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.0
-          },
-          "shape": {
-            "primitive": "plank",
-            "width": 1.7,
-            "height": 0.85
-          }
-        },
-        {
-          "color": "#4CAF50",
-          "kind": "mint_bar",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.0
-          },
-          "shape": {
-            "primitive": "plank",
-            "width": 2.55,
-            "height": 0.85
-          }
-        },
-        {
-          "color": "#12A5A5",
-          "kind": "jade_bar",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.0
-          },
-          "shape": {
-            "primitive": "plank",
-            "width": 2.55,
-            "height": 0.85
-          }
-        },
-        {
-          "color": "#2E7CD6",
-          "kind": "lime_j",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.0
-          },
-          "shape": {
-            "primitive": "j_tetromino",
-            "cell": 0.85
-          }
-        }
-      ],
-      "target": {
-        "outline": [
-          {
-            "x": -2.55,
-            "y": 0.0
-          },
-          {
-            "x": 2.55,
-            "y": 0.0
-          },
-          {
-            "x": 2.55,
-            "y": 3.4
-          },
-          {
-            "x": -2.55,
-            "y": 3.4
-          }
-        ],
-        "slots": [
-          {
-            "kind": "lime_j",
-            "position": {
-              "x": -1.275,
-              "y": 0.85
-            },
-            "rotation": -1.5707963
-          },
-          {
-            "kind": "amber_box",
-            "position": {
-              "x": 1.275,
-              "y": 0.85
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "rose_bar",
-            "position": {
-              "x": -0.85,
-              "y": 1.275
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "mint_bar",
-            "position": {
-              "x": -1.275,
-              "y": 2.125
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "sky_bar",
-            "position": {
-              "x": 1.275,
-              "y": 2.125
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "jade_bar",
-            "position": {
-              "x": -1.275,
-              "y": 2.975
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "sand_bar",
-            "position": {
-              "x": 1.275,
-              "y": 2.975
-            },
-            "rotation": 0
-          }
-        ]
-      },
-      "pieces": [
-        {
-          "kind": "lime_j",
-          "startPosition": {
-            "x": -1.275,
-            "y": 6.425
-          },
-          "startRotation": -1.5707963
-        },
-        {
-          "kind": "amber_box",
-          "startPosition": {
-            "x": 1.275,
-            "y": 5.51
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "rose_bar",
-          "startPosition": {
-            "x": -0.85,
-            "y": 7.0
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "mint_bar",
-          "startPosition": {
-            "x": -1.275,
-            "y": 3.875
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "sky_bar",
-          "startPosition": {
-            "x": 1.275,
-            "y": 6.975
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "jade_bar",
-          "startPosition": {
-            "x": -1.275,
-            "y": 4.96
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "sand_bar",
-          "startPosition": {
-            "x": 1.275,
-            "y": 4.0
-          },
-          "startRotation": 0
-        }
-      ],
-      "staticGeometry": [
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -6.0,
-              "y": -0.6
-            },
-            {
-              "x": 6.0,
-              "y": -0.6
-            },
-            {
-              "x": 6.0,
-              "y": 0.0
-            },
-            {
-              "x": -6.0,
-              "y": 0.0
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -2.775,
-              "y": 0.0
-            },
-            {
-              "x": -2.6,
-              "y": 0.0
-            },
-            {
-              "x": -2.6,
-              "y": 3.4
-            },
-            {
-              "x": -2.775,
-              "y": 3.4
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 2.6,
-              "y": 0.0
-            },
-            {
-              "x": 2.775,
-              "y": 0.0
-            },
-            {
-              "x": 2.775,
-              "y": 3.4
-            },
-            {
-              "x": 2.6,
-              "y": 3.4
-            }
-          ]
-        }
-      ],
-      "airZones": []
-    },
-    {
       "levelId": "crows_nest",
       "winningOrder": [5, 3, 4, 2, 1],
       "seed": 307,
@@ -11340,6 +10920,795 @@
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 3.4, "y": -0.3 }, { "x": 5.1, "y": -0.3 }, { "x": 5.1, "y": 0 }, { "x": 3.4, "y": 0 } ] },
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 5.0, "y": 3.9 }, { "x": 5.1, "y": 3.9 }, { "x": 5.1, "y": 5.6 }, { "x": 5.0, "y": 5.6 } ] },
         { "visible": true, "color": "#B8926B", "outline": [ { "x": 3.3, "y": 3.9 }, { "x": 3.4, "y": 3.9 }, { "x": 3.4, "y": 5.2 }, { "x": 3.3, "y": 5.2 } ] }
+      ]
+    },
+    {
+      "levelId": "storm_traffic_light",
+      "seed": 4883,
+      "difficultyTier": 6,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        4,
+        1,
+        5,
+        2,
+        6,
+        3
+      ],
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.34906585
+      },
+      "bounds": {
+        "min": {
+          "x": -4.8,
+          "y": -2.0
+        },
+        "max": {
+          "x": 2.6,
+          "y": 9.2
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -4.6,
+              "y": 0
+            },
+            "max": {
+              "x": 2.4,
+              "y": 9.0
+            }
+          },
+          "direction": {
+            "x": 1,
+            "y": 0
+          },
+          "acceleration": 3.6,
+          "color": "#CFE8F5"
+        }
+      ],
+      "pieceTypes": [
+        {
+          "kind": "box_low",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 5.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": 0.3679,
+                "y": 0.36
+              },
+              {
+                "x": 0.2679,
+                "y": 0.36
+              },
+              {
+                "x": 0.4954,
+                "y": -0.26
+              },
+              {
+                "x": -0.3046,
+                "y": -0.26
+              },
+              {
+                "x": -0.5321,
+                "y": 0.36
+              },
+              {
+                "x": -0.6321,
+                "y": 0.36
+              },
+              {
+                "x": -0.3679,
+                "y": -0.36
+              },
+              {
+                "x": 0.6321,
+                "y": -0.36
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0.5954,
+                  "y": -0.26
+                },
+                {
+                  "x": -0.4046,
+                  "y": -0.26
+                },
+                {
+                  "x": -0.3679,
+                  "y": -0.36
+                },
+                {
+                  "x": 0.6321,
+                  "y": -0.36
+                }
+              ],
+              [
+                {
+                  "x": -0.5321,
+                  "y": 0.36
+                },
+                {
+                  "x": -0.6321,
+                  "y": 0.36
+                },
+                {
+                  "x": -0.4046,
+                  "y": -0.26
+                },
+                {
+                  "x": -0.3046,
+                  "y": -0.26
+                }
+              ],
+              [
+                {
+                  "x": 0.3679,
+                  "y": 0.36
+                },
+                {
+                  "x": 0.2679,
+                  "y": 0.36
+                },
+                {
+                  "x": 0.4954,
+                  "y": -0.26
+                },
+                {
+                  "x": 0.5954,
+                  "y": -0.26
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "box_mid",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 5.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": 0.3679,
+                "y": 0.36
+              },
+              {
+                "x": 0.2679,
+                "y": 0.36
+              },
+              {
+                "x": 0.4954,
+                "y": -0.26
+              },
+              {
+                "x": -0.3046,
+                "y": -0.26
+              },
+              {
+                "x": -0.5321,
+                "y": 0.36
+              },
+              {
+                "x": -0.6321,
+                "y": 0.36
+              },
+              {
+                "x": -0.3679,
+                "y": -0.36
+              },
+              {
+                "x": 0.6321,
+                "y": -0.36
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0.5954,
+                  "y": -0.26
+                },
+                {
+                  "x": -0.4046,
+                  "y": -0.26
+                },
+                {
+                  "x": -0.3679,
+                  "y": -0.36
+                },
+                {
+                  "x": 0.6321,
+                  "y": -0.36
+                }
+              ],
+              [
+                {
+                  "x": -0.5321,
+                  "y": 0.36
+                },
+                {
+                  "x": -0.6321,
+                  "y": 0.36
+                },
+                {
+                  "x": -0.4046,
+                  "y": -0.26
+                },
+                {
+                  "x": -0.3046,
+                  "y": -0.26
+                }
+              ],
+              [
+                {
+                  "x": 0.3679,
+                  "y": 0.36
+                },
+                {
+                  "x": 0.2679,
+                  "y": 0.36
+                },
+                {
+                  "x": 0.4954,
+                  "y": -0.26
+                },
+                {
+                  "x": 0.5954,
+                  "y": -0.26
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "box_top",
+          "color": "#8B5A9E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 5.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": 0.3679,
+                "y": 0.36
+              },
+              {
+                "x": 0.2679,
+                "y": 0.36
+              },
+              {
+                "x": 0.4954,
+                "y": -0.26
+              },
+              {
+                "x": -0.3046,
+                "y": -0.26
+              },
+              {
+                "x": -0.5321,
+                "y": 0.36
+              },
+              {
+                "x": -0.6321,
+                "y": 0.36
+              },
+              {
+                "x": -0.3679,
+                "y": -0.36
+              },
+              {
+                "x": 0.6321,
+                "y": -0.36
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0.5954,
+                  "y": -0.26
+                },
+                {
+                  "x": -0.4046,
+                  "y": -0.26
+                },
+                {
+                  "x": -0.3679,
+                  "y": -0.36
+                },
+                {
+                  "x": 0.6321,
+                  "y": -0.36
+                }
+              ],
+              [
+                {
+                  "x": -0.5321,
+                  "y": 0.36
+                },
+                {
+                  "x": -0.6321,
+                  "y": 0.36
+                },
+                {
+                  "x": -0.4046,
+                  "y": -0.26
+                },
+                {
+                  "x": -0.3046,
+                  "y": -0.26
+                }
+              ],
+              [
+                {
+                  "x": 0.3679,
+                  "y": 0.36
+                },
+                {
+                  "x": 0.2679,
+                  "y": 0.36
+                },
+                {
+                  "x": 0.4954,
+                  "y": -0.26
+                },
+                {
+                  "x": 0.5954,
+                  "y": -0.26
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "visor",
+          "color": "#CDB27E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": 0.2839,
+                "y": 0.09
+              },
+              {
+                "x": -0.4161,
+                "y": 0.09
+              },
+              {
+                "x": -0.525,
+                "y": -0.09
+              },
+              {
+                "x": 0.525,
+                "y": -0.09
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": 0.2839,
+                  "y": 0.09
+                },
+                {
+                  "x": -0.4161,
+                  "y": 0.09
+                },
+                {
+                  "x": -0.525,
+                  "y": -0.09
+                },
+                {
+                  "x": 0.525,
+                  "y": -0.09
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "light_green",
+          "color": "#5C8E3E",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.26,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "light_gold",
+          "color": "#CBA016",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.26,
+            "segments": 24
+          }
+        },
+        {
+          "kind": "light_rose",
+          "color": "#B8577A",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.26,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -0.8236,
+            "y": 1.0196
+          },
+          {
+            "x": 0.1764,
+            "y": 1.0196
+          },
+          {
+            "x": -0.0878,
+            "y": 1.7396
+          },
+          {
+            "x": -0.0298,
+            "y": 1.7563
+          },
+          {
+            "x": -0.294,
+            "y": 2.4763
+          },
+          {
+            "x": -0.3197,
+            "y": 2.4907
+          },
+          {
+            "x": -0.5839,
+            "y": 3.2107
+          },
+          {
+            "x": -0.6378,
+            "y": 3.2252
+          },
+          {
+            "x": -0.8789,
+            "y": 3.4052
+          },
+          {
+            "x": -1.5789,
+            "y": 3.4052
+          },
+          {
+            "x": -1.6878,
+            "y": 3.2252
+          },
+          {
+            "x": -1.5839,
+            "y": 3.2107
+          },
+          {
+            "x": -1.3197,
+            "y": 2.4907
+          },
+          {
+            "x": -1.0878,
+            "y": 1.7396
+          }
+        ],
+        "slots": [
+          {
+            "kind": "box_low",
+            "position": {
+              "x": -0.4557,
+              "y": 1.3796
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "box_mid",
+            "position": {
+              "x": -0.6619,
+              "y": 2.1163
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "box_top",
+            "position": {
+              "x": -0.9518,
+              "y": 2.8507
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "visor",
+            "position": {
+              "x": -1.1628,
+              "y": 3.3152
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "light_green",
+            "position": {
+              "x": -0.3405,
+              "y": 1.3858
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "light_gold",
+            "position": {
+              "x": -0.5471,
+              "y": 2.1247
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "light_rose",
+            "position": {
+              "x": -0.8368,
+              "y": 2.8584
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "box_low",
+          "startPosition": {
+            "x": -2.0917,
+            "y": 5.7
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "box_mid",
+          "startPosition": {
+            "x": -1.4532,
+            "y": 3.96
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "box_top",
+          "startPosition": {
+            "x": -1.7725,
+            "y": 4.83
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "visor",
+          "startPosition": {
+            "x": -2.2789,
+            "y": 6.3
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "light_green",
+          "startPosition": {
+            "x": -2.7913,
+            "y": 7.47
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "light_gold",
+          "startPosition": {
+            "x": -3.0371,
+            "y": 8.14
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "light_rose",
+          "startPosition": {
+            "x": -2.5454,
+            "y": 6.8
+          },
+          "startRotation": 0
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 2.0,
+              "y": 0
+            },
+            {
+              "x": -3.6,
+              "y": 0
+            },
+            {
+              "x": -3.6,
+              "y": -0.4
+            },
+            {
+              "x": 2.0,
+              "y": -0.4
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "collider": false,
+          "outline": [
+            {
+              "x": 0.5,
+              "y": 0
+            },
+            {
+              "x": 0.4266,
+              "y": 0.2
+            },
+            {
+              "x": 0.0266,
+              "y": 0.2
+            },
+            {
+              "x": -0.2229,
+              "y": 0.88
+            },
+            {
+              "x": -0.0229,
+              "y": 0.88
+            },
+            {
+              "x": -0.067,
+              "y": 1.0
+            },
+            {
+              "x": -0.667,
+              "y": 1.0
+            },
+            {
+              "x": -0.6229,
+              "y": 0.88
+            },
+            {
+              "x": -0.4229,
+              "y": 0.88
+            },
+            {
+              "x": -0.1734,
+              "y": 0.2
+            },
+            {
+              "x": -0.5734,
+              "y": 0.2
+            },
+            {
+              "x": -0.5,
+              "y": 0
+            },
+            {
+              "x": -0.5,
+              "y": -0.2
+            },
+            {
+              "x": 0.5,
+              "y": -0.2
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.4266,
+              "y": 0.2
+            },
+            {
+              "x": -0.5734,
+              "y": 0.2
+            },
+            {
+              "x": -0.5,
+              "y": 0
+            },
+            {
+              "x": 0.5,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.2229,
+              "y": 0.88
+            },
+            {
+              "x": -0.4229,
+              "y": 0.88
+            },
+            {
+              "x": -0.1734,
+              "y": 0.2
+            },
+            {
+              "x": 0.0266,
+              "y": 0.2
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.067,
+              "y": 1.0
+            },
+            {
+              "x": -0.667,
+              "y": 1.0
+            },
+            {
+              "x": -0.6229,
+              "y": 0.88
+            },
+            {
+              "x": -0.0229,
+              "y": 0.88
+            }
+          ]
+        }
       ]
     },
     {
@@ -20510,795 +20879,6 @@
       ]
     },
     {
-      "levelId": "storm_traffic_light",
-      "seed": 4883,
-      "difficultyTier": 6,
-      "physicsMode": "assembly",
-      "winningOrder": [
-        0,
-        4,
-        1,
-        5,
-        2,
-        6,
-        3
-      ],
-      "matchTolerance": {
-        "posTol": 0.3,
-        "angTol": 0.34906585
-      },
-      "bounds": {
-        "min": {
-          "x": -4.8,
-          "y": -2.0
-        },
-        "max": {
-          "x": 2.6,
-          "y": 9.2
-        }
-      },
-      "gravity": {
-        "x": 0,
-        "y": -9.81
-      },
-      "airZones": [
-        {
-          "region": {
-            "min": {
-              "x": -4.6,
-              "y": 0
-            },
-            "max": {
-              "x": 2.4,
-              "y": 9.0
-            }
-          },
-          "direction": {
-            "x": 1,
-            "y": 0
-          },
-          "acceleration": 3.6,
-          "color": "#CFE8F5"
-        }
-      ],
-      "pieceTypes": [
-        {
-          "kind": "box_low",
-          "color": "#48699A",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 5.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": 0.3679,
-                "y": 0.36
-              },
-              {
-                "x": 0.2679,
-                "y": 0.36
-              },
-              {
-                "x": 0.4954,
-                "y": -0.26
-              },
-              {
-                "x": -0.3046,
-                "y": -0.26
-              },
-              {
-                "x": -0.5321,
-                "y": 0.36
-              },
-              {
-                "x": -0.6321,
-                "y": 0.36
-              },
-              {
-                "x": -0.3679,
-                "y": -0.36
-              },
-              {
-                "x": 0.6321,
-                "y": -0.36
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": 0.5954,
-                  "y": -0.26
-                },
-                {
-                  "x": -0.4046,
-                  "y": -0.26
-                },
-                {
-                  "x": -0.3679,
-                  "y": -0.36
-                },
-                {
-                  "x": 0.6321,
-                  "y": -0.36
-                }
-              ],
-              [
-                {
-                  "x": -0.5321,
-                  "y": 0.36
-                },
-                {
-                  "x": -0.6321,
-                  "y": 0.36
-                },
-                {
-                  "x": -0.4046,
-                  "y": -0.26
-                },
-                {
-                  "x": -0.3046,
-                  "y": -0.26
-                }
-              ],
-              [
-                {
-                  "x": 0.3679,
-                  "y": 0.36
-                },
-                {
-                  "x": 0.2679,
-                  "y": 0.36
-                },
-                {
-                  "x": 0.4954,
-                  "y": -0.26
-                },
-                {
-                  "x": 0.5954,
-                  "y": -0.26
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "box_mid",
-          "color": "#5A55A3",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 5.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": 0.3679,
-                "y": 0.36
-              },
-              {
-                "x": 0.2679,
-                "y": 0.36
-              },
-              {
-                "x": 0.4954,
-                "y": -0.26
-              },
-              {
-                "x": -0.3046,
-                "y": -0.26
-              },
-              {
-                "x": -0.5321,
-                "y": 0.36
-              },
-              {
-                "x": -0.6321,
-                "y": 0.36
-              },
-              {
-                "x": -0.3679,
-                "y": -0.36
-              },
-              {
-                "x": 0.6321,
-                "y": -0.36
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": 0.5954,
-                  "y": -0.26
-                },
-                {
-                  "x": -0.4046,
-                  "y": -0.26
-                },
-                {
-                  "x": -0.3679,
-                  "y": -0.36
-                },
-                {
-                  "x": 0.6321,
-                  "y": -0.36
-                }
-              ],
-              [
-                {
-                  "x": -0.5321,
-                  "y": 0.36
-                },
-                {
-                  "x": -0.6321,
-                  "y": 0.36
-                },
-                {
-                  "x": -0.4046,
-                  "y": -0.26
-                },
-                {
-                  "x": -0.3046,
-                  "y": -0.26
-                }
-              ],
-              [
-                {
-                  "x": 0.3679,
-                  "y": 0.36
-                },
-                {
-                  "x": 0.2679,
-                  "y": 0.36
-                },
-                {
-                  "x": 0.4954,
-                  "y": -0.26
-                },
-                {
-                  "x": 0.5954,
-                  "y": -0.26
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "box_top",
-          "color": "#8B5A9E",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 5.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": 0.3679,
-                "y": 0.36
-              },
-              {
-                "x": 0.2679,
-                "y": 0.36
-              },
-              {
-                "x": 0.4954,
-                "y": -0.26
-              },
-              {
-                "x": -0.3046,
-                "y": -0.26
-              },
-              {
-                "x": -0.5321,
-                "y": 0.36
-              },
-              {
-                "x": -0.6321,
-                "y": 0.36
-              },
-              {
-                "x": -0.3679,
-                "y": -0.36
-              },
-              {
-                "x": 0.6321,
-                "y": -0.36
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": 0.5954,
-                  "y": -0.26
-                },
-                {
-                  "x": -0.4046,
-                  "y": -0.26
-                },
-                {
-                  "x": -0.3679,
-                  "y": -0.36
-                },
-                {
-                  "x": 0.6321,
-                  "y": -0.36
-                }
-              ],
-              [
-                {
-                  "x": -0.5321,
-                  "y": 0.36
-                },
-                {
-                  "x": -0.6321,
-                  "y": 0.36
-                },
-                {
-                  "x": -0.4046,
-                  "y": -0.26
-                },
-                {
-                  "x": -0.3046,
-                  "y": -0.26
-                }
-              ],
-              [
-                {
-                  "x": 0.3679,
-                  "y": 0.36
-                },
-                {
-                  "x": 0.2679,
-                  "y": 0.36
-                },
-                {
-                  "x": 0.4954,
-                  "y": -0.26
-                },
-                {
-                  "x": 0.5954,
-                  "y": -0.26
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "visor",
-          "color": "#CDB27E",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": 0.2839,
-                "y": 0.09
-              },
-              {
-                "x": -0.4161,
-                "y": 0.09
-              },
-              {
-                "x": -0.525,
-                "y": -0.09
-              },
-              {
-                "x": 0.525,
-                "y": -0.09
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": 0.2839,
-                  "y": 0.09
-                },
-                {
-                  "x": -0.4161,
-                  "y": 0.09
-                },
-                {
-                  "x": -0.525,
-                  "y": -0.09
-                },
-                {
-                  "x": 0.525,
-                  "y": -0.09
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "light_green",
-          "color": "#5C8E3E",
-          "symmetryOrder": 24,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "circle",
-            "radius": 0.26,
-            "segments": 24
-          }
-        },
-        {
-          "kind": "light_gold",
-          "color": "#CBA016",
-          "symmetryOrder": 24,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "circle",
-            "radius": 0.26,
-            "segments": 24
-          }
-        },
-        {
-          "kind": "light_rose",
-          "color": "#B8577A",
-          "symmetryOrder": 24,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "circle",
-            "radius": 0.26,
-            "segments": 24
-          }
-        }
-      ],
-      "target": {
-        "outline": [
-          {
-            "x": -0.8236,
-            "y": 1.0196
-          },
-          {
-            "x": 0.1764,
-            "y": 1.0196
-          },
-          {
-            "x": -0.0878,
-            "y": 1.7396
-          },
-          {
-            "x": -0.0298,
-            "y": 1.7563
-          },
-          {
-            "x": -0.294,
-            "y": 2.4763
-          },
-          {
-            "x": -0.3197,
-            "y": 2.4907
-          },
-          {
-            "x": -0.5839,
-            "y": 3.2107
-          },
-          {
-            "x": -0.6378,
-            "y": 3.2252
-          },
-          {
-            "x": -0.8789,
-            "y": 3.4052
-          },
-          {
-            "x": -1.5789,
-            "y": 3.4052
-          },
-          {
-            "x": -1.6878,
-            "y": 3.2252
-          },
-          {
-            "x": -1.5839,
-            "y": 3.2107
-          },
-          {
-            "x": -1.3197,
-            "y": 2.4907
-          },
-          {
-            "x": -1.0878,
-            "y": 1.7396
-          }
-        ],
-        "slots": [
-          {
-            "kind": "box_low",
-            "position": {
-              "x": -0.4557,
-              "y": 1.3796
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "box_mid",
-            "position": {
-              "x": -0.6619,
-              "y": 2.1163
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "box_top",
-            "position": {
-              "x": -0.9518,
-              "y": 2.8507
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "visor",
-            "position": {
-              "x": -1.1628,
-              "y": 3.3152
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "light_green",
-            "position": {
-              "x": -0.3405,
-              "y": 1.3858
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "light_gold",
-            "position": {
-              "x": -0.5471,
-              "y": 2.1247
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "light_rose",
-            "position": {
-              "x": -0.8368,
-              "y": 2.8584
-            },
-            "rotation": 0
-          }
-        ]
-      },
-      "pieces": [
-        {
-          "kind": "box_low",
-          "startPosition": {
-            "x": -2.0917,
-            "y": 5.7
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "box_mid",
-          "startPosition": {
-            "x": -1.4532,
-            "y": 3.96
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "box_top",
-          "startPosition": {
-            "x": -1.7725,
-            "y": 4.83
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "visor",
-          "startPosition": {
-            "x": -2.2789,
-            "y": 6.3
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "light_green",
-          "startPosition": {
-            "x": -2.7913,
-            "y": 7.47
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "light_gold",
-          "startPosition": {
-            "x": -3.0371,
-            "y": 8.14
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "light_rose",
-          "startPosition": {
-            "x": -2.5454,
-            "y": 6.8
-          },
-          "startRotation": 0
-        }
-      ],
-      "staticGeometry": [
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 2.0,
-              "y": 0
-            },
-            {
-              "x": -3.6,
-              "y": 0
-            },
-            {
-              "x": -3.6,
-              "y": -0.4
-            },
-            {
-              "x": 2.0,
-              "y": -0.4
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "collider": false,
-          "outline": [
-            {
-              "x": 0.5,
-              "y": 0
-            },
-            {
-              "x": 0.4266,
-              "y": 0.2
-            },
-            {
-              "x": 0.0266,
-              "y": 0.2
-            },
-            {
-              "x": -0.2229,
-              "y": 0.88
-            },
-            {
-              "x": -0.0229,
-              "y": 0.88
-            },
-            {
-              "x": -0.067,
-              "y": 1.0
-            },
-            {
-              "x": -0.667,
-              "y": 1.0
-            },
-            {
-              "x": -0.6229,
-              "y": 0.88
-            },
-            {
-              "x": -0.4229,
-              "y": 0.88
-            },
-            {
-              "x": -0.1734,
-              "y": 0.2
-            },
-            {
-              "x": -0.5734,
-              "y": 0.2
-            },
-            {
-              "x": -0.5,
-              "y": 0
-            },
-            {
-              "x": -0.5,
-              "y": -0.2
-            },
-            {
-              "x": 0.5,
-              "y": -0.2
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 0.4266,
-              "y": 0.2
-            },
-            {
-              "x": -0.5734,
-              "y": 0.2
-            },
-            {
-              "x": -0.5,
-              "y": 0
-            },
-            {
-              "x": 0.5,
-              "y": 0
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -0.2229,
-              "y": 0.88
-            },
-            {
-              "x": -0.4229,
-              "y": 0.88
-            },
-            {
-              "x": -0.1734,
-              "y": 0.2
-            },
-            {
-              "x": 0.0266,
-              "y": 0.2
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -0.067,
-              "y": 1.0
-            },
-            {
-              "x": -0.667,
-              "y": 1.0
-            },
-            {
-              "x": -0.6229,
-              "y": 0.88
-            },
-            {
-              "x": -0.0229,
-              "y": 0.88
-            }
-          ]
-        }
-      ]
-    },
-    {
       "levelId": "bead_necklace",
       "seed": 478,
       "difficultyTier": 8,
@@ -24977,14 +24557,6 @@
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.1,
-                "y": -0.5
-              },
-              {
-                "x": 0.1,
-                "y": -0.5
-              },
-              {
                 "x": 0.21,
                 "y": -0.32
               },
@@ -25047,10 +24619,30 @@
               {
                 "x": -0.21,
                 "y": -0.32
+              },
+              {
+                "x": -0.1,
+                "y": -0.5
+              },
+              {
+                "x": 0.1,
+                "y": -0.5
               }
             ],
             "parts": [
               [
+                {
+                  "x": -0.09,
+                  "y": 0.15
+                },
+                {
+                  "x": -0.17,
+                  "y": -0.02
+                },
+                {
+                  "x": -0.22,
+                  "y": -0.2
+                },
                 {
                   "x": -0.21,
                   "y": -0.32
@@ -25066,25 +24658,39 @@
                 {
                   "x": 0.21,
                   "y": -0.32
-                },
-                {
-                  "x": 0.22,
-                  "y": -0.2
-                },
-                {
-                  "x": 0.17,
-                  "y": -0.02
-                },
-                {
-                  "x": 0.09,
-                  "y": 0.15
                 }
               ],
               [
                 {
-                  "x": -0.21,
-                  "y": -0.32
+                  "x": 0.09,
+                  "y": 0.15
                 },
+                {
+                  "x": -0.04,
+                  "y": 0.5
+                },
+                {
+                  "x": -0.1,
+                  "y": 0.44
+                },
+                {
+                  "x": -0.13,
+                  "y": 0.34
+                },
+                {
+                  "x": -0.12,
+                  "y": 0.26
+                },
+                {
+                  "x": -0.09,
+                  "y": 0.15
+                },
+                {
+                  "x": 0.21,
+                  "y": -0.32
+                }
+              ],
+              [
                 {
                   "x": 0.09,
                   "y": 0.15
@@ -25106,52 +24712,26 @@
                   "y": 0.5
                 },
                 {
-                  "x": -0.09,
-                  "y": 0.15
-                }
-              ],
-              [
-                {
-                  "x": 0.04,
-                  "y": 0.5
-                },
-                {
                   "x": -0.04,
                   "y": 0.5
-                },
-                {
-                  "x": -0.1,
-                  "y": 0.44
-                },
-                {
-                  "x": -0.13,
-                  "y": 0.34
-                },
-                {
-                  "x": -0.12,
-                  "y": 0.26
-                },
-                {
-                  "x": -0.09,
-                  "y": 0.15
                 }
               ],
               [
                 {
-                  "x": -0.21,
-                  "y": -0.32
+                  "x": 0.22,
+                  "y": -0.2
                 },
                 {
-                  "x": -0.09,
-                  "y": 0.15
-                },
-                {
-                  "x": -0.17,
+                  "x": 0.17,
                   "y": -0.02
                 },
                 {
-                  "x": -0.22,
-                  "y": -0.2
+                  "x": 0.09,
+                  "y": 0.15
+                },
+                {
+                  "x": 0.21,
+                  "y": -0.32
                 }
               ]
             ]
@@ -25170,14 +24750,6 @@
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.1,
-                "y": -0.5
-              },
-              {
-                "x": 0.1,
-                "y": -0.5
-              },
-              {
                 "x": 0.21,
                 "y": -0.32
               },
@@ -25240,10 +24812,30 @@
               {
                 "x": -0.21,
                 "y": -0.32
+              },
+              {
+                "x": -0.1,
+                "y": -0.5
+              },
+              {
+                "x": 0.1,
+                "y": -0.5
               }
             ],
             "parts": [
               [
+                {
+                  "x": -0.09,
+                  "y": 0.15
+                },
+                {
+                  "x": -0.17,
+                  "y": -0.02
+                },
+                {
+                  "x": -0.22,
+                  "y": -0.2
+                },
                 {
                   "x": -0.21,
                   "y": -0.32
@@ -25259,25 +24851,39 @@
                 {
                   "x": 0.21,
                   "y": -0.32
-                },
-                {
-                  "x": 0.22,
-                  "y": -0.2
-                },
-                {
-                  "x": 0.17,
-                  "y": -0.02
-                },
-                {
-                  "x": 0.09,
-                  "y": 0.15
                 }
               ],
               [
                 {
-                  "x": -0.21,
-                  "y": -0.32
+                  "x": 0.09,
+                  "y": 0.15
                 },
+                {
+                  "x": -0.04,
+                  "y": 0.5
+                },
+                {
+                  "x": -0.1,
+                  "y": 0.44
+                },
+                {
+                  "x": -0.13,
+                  "y": 0.34
+                },
+                {
+                  "x": -0.12,
+                  "y": 0.26
+                },
+                {
+                  "x": -0.09,
+                  "y": 0.15
+                },
+                {
+                  "x": 0.21,
+                  "y": -0.32
+                }
+              ],
+              [
                 {
                   "x": 0.09,
                   "y": 0.15
@@ -25299,52 +24905,26 @@
                   "y": 0.5
                 },
                 {
-                  "x": -0.09,
-                  "y": 0.15
-                }
-              ],
-              [
-                {
-                  "x": 0.04,
-                  "y": 0.5
-                },
-                {
                   "x": -0.04,
                   "y": 0.5
-                },
-                {
-                  "x": -0.1,
-                  "y": 0.44
-                },
-                {
-                  "x": -0.13,
-                  "y": 0.34
-                },
-                {
-                  "x": -0.12,
-                  "y": 0.26
-                },
-                {
-                  "x": -0.09,
-                  "y": 0.15
                 }
               ],
               [
                 {
-                  "x": -0.21,
-                  "y": -0.32
+                  "x": 0.22,
+                  "y": -0.2
                 },
                 {
-                  "x": -0.09,
-                  "y": 0.15
-                },
-                {
-                  "x": -0.17,
+                  "x": 0.17,
                   "y": -0.02
                 },
                 {
-                  "x": -0.22,
-                  "y": -0.2
+                  "x": 0.09,
+                  "y": 0.15
+                },
+                {
+                  "x": 0.21,
+                  "y": -0.32
                 }
               ]
             ]
@@ -25363,14 +24943,6 @@
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.1,
-                "y": -0.5
-              },
-              {
-                "x": 0.1,
-                "y": -0.5
-              },
-              {
                 "x": 0.21,
                 "y": -0.32
               },
@@ -25433,10 +25005,30 @@
               {
                 "x": -0.21,
                 "y": -0.32
+              },
+              {
+                "x": -0.1,
+                "y": -0.5
+              },
+              {
+                "x": 0.1,
+                "y": -0.5
               }
             ],
             "parts": [
               [
+                {
+                  "x": -0.09,
+                  "y": 0.15
+                },
+                {
+                  "x": -0.17,
+                  "y": -0.02
+                },
+                {
+                  "x": -0.22,
+                  "y": -0.2
+                },
                 {
                   "x": -0.21,
                   "y": -0.32
@@ -25452,25 +25044,39 @@
                 {
                   "x": 0.21,
                   "y": -0.32
-                },
-                {
-                  "x": 0.22,
-                  "y": -0.2
-                },
-                {
-                  "x": 0.17,
-                  "y": -0.02
-                },
-                {
-                  "x": 0.09,
-                  "y": 0.15
                 }
               ],
               [
                 {
-                  "x": -0.21,
-                  "y": -0.32
+                  "x": 0.09,
+                  "y": 0.15
                 },
+                {
+                  "x": -0.04,
+                  "y": 0.5
+                },
+                {
+                  "x": -0.1,
+                  "y": 0.44
+                },
+                {
+                  "x": -0.13,
+                  "y": 0.34
+                },
+                {
+                  "x": -0.12,
+                  "y": 0.26
+                },
+                {
+                  "x": -0.09,
+                  "y": 0.15
+                },
+                {
+                  "x": 0.21,
+                  "y": -0.32
+                }
+              ],
+              [
                 {
                   "x": 0.09,
                   "y": 0.15
@@ -25492,52 +25098,26 @@
                   "y": 0.5
                 },
                 {
-                  "x": -0.09,
-                  "y": 0.15
-                }
-              ],
-              [
-                {
-                  "x": 0.04,
-                  "y": 0.5
-                },
-                {
                   "x": -0.04,
                   "y": 0.5
-                },
-                {
-                  "x": -0.1,
-                  "y": 0.44
-                },
-                {
-                  "x": -0.13,
-                  "y": 0.34
-                },
-                {
-                  "x": -0.12,
-                  "y": 0.26
-                },
-                {
-                  "x": -0.09,
-                  "y": 0.15
                 }
               ],
               [
                 {
-                  "x": -0.21,
-                  "y": -0.32
+                  "x": 0.22,
+                  "y": -0.2
                 },
                 {
-                  "x": -0.09,
-                  "y": 0.15
-                },
-                {
-                  "x": -0.17,
+                  "x": 0.17,
                   "y": -0.02
                 },
                 {
-                  "x": -0.22,
-                  "y": -0.2
+                  "x": 0.09,
+                  "y": 0.15
+                },
+                {
+                  "x": 0.21,
+                  "y": -0.32
                 }
               ]
             ]
@@ -25562,175 +25142,175 @@
       "target": {
         "outline": [
           {
-            "x": 1.0,
-            "y": 0.015
+            "x": -1.0,
+            "y": 0.215
           },
           {
-            "x": 3.75,
-            "y": 0.015
-          },
-          {
-            "x": 3.75,
-            "y": 1.617
-          },
-          {
-            "x": 3.35,
-            "y": 1.617
-          },
-          {
-            "x": 3.35,
-            "y": 1.06
-          },
-          {
-            "x": 3.313,
-            "y": 1.123
-          },
-          {
-            "x": 3.244,
-            "y": 1.164
-          },
-          {
-            "x": 3.162,
-            "y": 1.142
-          },
-          {
-            "x": 3.086,
-            "y": 1.071
-          },
-          {
-            "x": 3.054,
-            "y": 0.997
-          },
-          {
-            "x": 3.024,
-            "y": 0.887
-          },
-          {
-            "x": 2.869,
-            "y": 0.781
-          },
-          {
-            "x": 2.819,
-            "y": 0.956
-          },
-          {
-            "x": 2.84,
-            "y": 1.058
-          },
-          {
-            "x": 2.816,
-            "y": 1.14
-          },
-          {
-            "x": 2.746,
-            "y": 1.178
-          },
-          {
-            "x": 2.664,
-            "y": 1.154
-          },
-          {
-            "x": 2.591,
-            "y": 1.08
-          },
-          {
-            "x": 2.561,
-            "y": 1.005
-          },
-          {
-            "x": 2.535,
-            "y": 0.894
-          },
-          {
-            "x": 2.384,
-            "y": 0.782
-          },
-          {
-            "x": 2.362,
-            "y": 0.933
-          },
-          {
-            "x": 2.389,
-            "y": 1.034
-          },
-          {
-            "x": 2.369,
-            "y": 1.116
-          },
-          {
-            "x": 2.301,
-            "y": 1.158
-          },
-          {
-            "x": 2.218,
-            "y": 1.138
-          },
-          {
-            "x": 2.14,
-            "y": 1.069
-          },
-          {
-            "x": 2.107,
-            "y": 0.995
-          },
-          {
-            "x": 2.075,
-            "y": 0.886
-          },
-          {
-            "x": 1.918,
-            "y": 0.783
-          },
-          {
-            "x": 1.781,
-            "y": 0.656
-          },
-          {
-            "x": 1.727,
-            "y": 0.548
-          },
-          {
-            "x": 1.667,
-            "y": 0.669
-          },
-          {
-            "x": 1.557,
-            "y": 0.779
-          },
-          {
-            "x": 1.407,
-            "y": 0.819
-          },
-          {
-            "x": 1.257,
-            "y": 0.779
-          },
-          {
-            "x": 1.147,
-            "y": 0.669
-          },
-          {
-            "x": 1.107,
-            "y": 0.519
-          },
-          {
-            "x": 1.147,
-            "y": 0.369
-          },
-          {
-            "x": 1.195,
+            "x": -1.195,
             "y": 0.307
           },
           {
-            "x": 1.0,
-            "y": 0.215
+            "x": -1.147,
+            "y": 0.369
+          },
+          {
+            "x": -1.107,
+            "y": 0.519
+          },
+          {
+            "x": -1.147,
+            "y": 0.669
+          },
+          {
+            "x": -1.257,
+            "y": 0.779
+          },
+          {
+            "x": -1.407,
+            "y": 0.819
+          },
+          {
+            "x": -1.557,
+            "y": 0.779
+          },
+          {
+            "x": -1.667,
+            "y": 0.669
+          },
+          {
+            "x": -1.727,
+            "y": 0.548
+          },
+          {
+            "x": -1.781,
+            "y": 0.656
+          },
+          {
+            "x": -1.918,
+            "y": 0.783
+          },
+          {
+            "x": -2.075,
+            "y": 0.886
+          },
+          {
+            "x": -2.107,
+            "y": 0.995
+          },
+          {
+            "x": -2.14,
+            "y": 1.069
+          },
+          {
+            "x": -2.218,
+            "y": 1.138
+          },
+          {
+            "x": -2.301,
+            "y": 1.158
+          },
+          {
+            "x": -2.369,
+            "y": 1.116
+          },
+          {
+            "x": -2.389,
+            "y": 1.034
+          },
+          {
+            "x": -2.362,
+            "y": 0.933
+          },
+          {
+            "x": -2.384,
+            "y": 0.782
+          },
+          {
+            "x": -2.535,
+            "y": 0.894
+          },
+          {
+            "x": -2.561,
+            "y": 1.005
+          },
+          {
+            "x": -2.591,
+            "y": 1.08
+          },
+          {
+            "x": -2.664,
+            "y": 1.154
+          },
+          {
+            "x": -2.746,
+            "y": 1.178
+          },
+          {
+            "x": -2.816,
+            "y": 1.14
+          },
+          {
+            "x": -2.84,
+            "y": 1.058
+          },
+          {
+            "x": -2.819,
+            "y": 0.956
+          },
+          {
+            "x": -2.869,
+            "y": 0.781
+          },
+          {
+            "x": -3.024,
+            "y": 0.887
+          },
+          {
+            "x": -3.054,
+            "y": 0.997
+          },
+          {
+            "x": -3.086,
+            "y": 1.071
+          },
+          {
+            "x": -3.162,
+            "y": 1.142
+          },
+          {
+            "x": -3.244,
+            "y": 1.164
+          },
+          {
+            "x": -3.313,
+            "y": 1.123
+          },
+          {
+            "x": -3.35,
+            "y": 1.06
+          },
+          {
+            "x": -3.35,
+            "y": 1.617
+          },
+          {
+            "x": -3.75,
+            "y": 1.617
+          },
+          {
+            "x": -3.75,
+            "y": 0.015
+          },
+          {
+            "x": -1.0,
+            "y": 0.015
           }
         ],
         "slots": [
           {
             "kind": "deck",
             "position": {
-              "x": 2.05,
+              "x": -2.05,
               "y": 0.115
             },
             "rotation": 0
@@ -25738,7 +25318,7 @@
           {
             "kind": "board",
             "position": {
-              "x": 3.55,
+              "x": -3.55,
               "y": 0.817
             },
             "rotation": 0
@@ -25746,31 +25326,31 @@
           {
             "kind": "pin_rose",
             "position": {
-              "x": 2.073,
+              "x": -2.073,
               "y": 0.711
             },
-            "rotation": -0.551
+            "rotation": 0.551
           },
           {
             "kind": "pin_gold",
             "position": {
-              "x": 2.543,
+              "x": -2.543,
               "y": 0.719
             },
-            "rotation": -0.496
+            "rotation": 0.496
           },
           {
             "kind": "pin_teal",
             "position": {
-              "x": 3.026,
+              "x": -3.026,
               "y": 0.712
             },
-            "rotation": -0.53
+            "rotation": 0.53
           },
           {
             "kind": "ball",
             "position": {
-              "x": 1.407,
+              "x": -1.407,
               "y": 0.519
             },
             "rotation": 0
@@ -25781,7 +25361,7 @@
         {
           "kind": "deck",
           "startPosition": {
-            "x": 2.05,
+            "x": -2.05,
             "y": 5.6
           },
           "startRotation": 0
@@ -25789,7 +25369,7 @@
         {
           "kind": "board",
           "startPosition": {
-            "x": 3.55,
+            "x": -3.55,
             "y": 4.3
           },
           "startRotation": 0
@@ -25797,7 +25377,7 @@
         {
           "kind": "pin_rose",
           "startPosition": {
-            "x": 1.25,
+            "x": -1.25,
             "y": 2.0
           },
           "startRotation": 0
@@ -25805,7 +25385,7 @@
         {
           "kind": "pin_gold",
           "startPosition": {
-            "x": 2.0,
+            "x": -2.0,
             "y": 3.3
           },
           "startRotation": 0
@@ -25813,7 +25393,7 @@
         {
           "kind": "pin_teal",
           "startPosition": {
-            "x": 2.75,
+            "x": -2.75,
             "y": 2.5
           },
           "startRotation": 0
@@ -25821,7 +25401,7 @@
         {
           "kind": "ball",
           "startPosition": {
-            "x": -3.95,
+            "x": 3.95,
             "y": 3.85
           },
           "startRotation": 0
@@ -25833,20 +25413,20 @@
           "color": "#B8926B",
           "outline": [
             {
-              "x": -6.5,
-              "y": -0.5
-            },
-            {
-              "x": 0.3,
-              "y": -0.5
-            },
-            {
-              "x": 0.3,
+              "x": 6.5,
               "y": 0.0
             },
             {
-              "x": -6.5,
+              "x": -0.3,
               "y": 0.0
+            },
+            {
+              "x": -0.3,
+              "y": -0.5
+            },
+            {
+              "x": 6.5,
+              "y": -0.5
             }
           ]
         },
@@ -25855,20 +25435,20 @@
           "color": "#B8926B",
           "outline": [
             {
-              "x": 0.3,
-              "y": -0.6
-            },
-            {
-              "x": 1.0,
-              "y": -0.6
-            },
-            {
-              "x": 1.0,
+              "x": -0.3,
               "y": -0.4
             },
             {
-              "x": 0.3,
+              "x": -1.0,
               "y": -0.4
+            },
+            {
+              "x": -1.0,
+              "y": -0.6
+            },
+            {
+              "x": -0.3,
+              "y": -0.6
             }
           ]
         },
@@ -25877,20 +25457,20 @@
           "color": "#B8926B",
           "outline": [
             {
-              "x": 1.0,
-              "y": -0.5
-            },
-            {
-              "x": 6.0,
-              "y": -0.5
-            },
-            {
-              "x": 6.0,
+              "x": -1.0,
               "y": 0.0
             },
             {
-              "x": 1.0,
+              "x": -6.0,
               "y": 0.0
+            },
+            {
+              "x": -6.0,
+              "y": -0.5
+            },
+            {
+              "x": -1.0,
+              "y": -0.5
             }
           ]
         },
@@ -25901,60 +25481,60 @@
           "thickness": 0.2,
           "outline": [
             {
-              "x": -4.2468,
-              "y": 3.564
-            },
-            {
-              "x": -1.7013,
-              "y": 1.0184
-            },
-            {
-              "x": -1.6048,
-              "y": 0.93
-            },
-            {
-              "x": -1.501,
-              "y": 0.8504
-            },
-            {
-              "x": -1.3906,
-              "y": 0.7801
-            },
-            {
-              "x": -1.2745,
-              "y": 0.7196
-            },
-            {
-              "x": -1.1536,
-              "y": 0.6696
-            },
-            {
-              "x": -1.0288,
+              "x": 0.2524,
               "y": 0.6302
             },
             {
-              "x": -0.9011,
+              "x": 0.3801,
               "y": 0.6019
             },
             {
-              "x": -0.7713,
+              "x": 0.5099,
               "y": 0.5848
             },
             {
-              "x": -0.6406,
+              "x": 0.6406,
               "y": 0.5791
             },
             {
-              "x": -0.5099,
+              "x": 0.7713,
               "y": 0.5848
             },
             {
-              "x": -0.3801,
+              "x": 0.9011,
               "y": 0.6019
             },
             {
-              "x": -0.2524,
+              "x": 1.0288,
               "y": 0.6302
+            },
+            {
+              "x": 1.1536,
+              "y": 0.6696
+            },
+            {
+              "x": 1.2745,
+              "y": 0.7196
+            },
+            {
+              "x": 1.3906,
+              "y": 0.7801
+            },
+            {
+              "x": 1.501,
+              "y": 0.8504
+            },
+            {
+              "x": 1.6048,
+              "y": 0.93
+            },
+            {
+              "x": 1.7013,
+              "y": 1.0184
+            },
+            {
+              "x": 4.2468,
+              "y": 3.564
             }
           ]
         },
@@ -25964,36 +25544,36 @@
           "collider": false,
           "outline": [
             {
-              "x": -4.2468,
-              "y": 3.564
+              "x": 1.7013,
+              "y": 1.0184
             },
             {
-              "x": -4.5,
-              "y": 0.0
-            },
-            {
-              "x": -0.2524,
-              "y": 0.0
-            },
-            {
-              "x": -0.2524,
-              "y": 0.6302
-            },
-            {
-              "x": -0.6406,
-              "y": 0.5791
-            },
-            {
-              "x": -1.0288,
-              "y": 0.6302
-            },
-            {
-              "x": -1.3906,
+              "x": 1.3906,
               "y": 0.7801
             },
             {
-              "x": -1.7013,
-              "y": 1.0184
+              "x": 1.0288,
+              "y": 0.6302
+            },
+            {
+              "x": 0.6406,
+              "y": 0.5791
+            },
+            {
+              "x": 0.2524,
+              "y": 0.6302
+            },
+            {
+              "x": 0.2524,
+              "y": 0.0
+            },
+            {
+              "x": 4.5,
+              "y": 0.0
+            },
+            {
+              "x": 4.2468,
+              "y": 3.564
             }
           ]
         }
@@ -30757,24 +30337,32 @@
             "primitive": "freeform",
             "outline": [
               {
+                "x": 0.44,
+                "y": 0.35
+              },
+              {
+                "x": 0.06,
+                "y": 0.35
+              },
+              {
                 "x": -0.44,
                 "y": -0.35
               },
               {
                 "x": 0.44,
                 "y": -0.35
-              },
-              {
-                "x": -0.06,
-                "y": 0.35
-              },
-              {
-                "x": -0.44,
-                "y": 0.35
               }
             ],
             "parts": [
               [
+                {
+                  "x": 0.44,
+                  "y": 0.35
+                },
+                {
+                  "x": 0.06,
+                  "y": 0.35
+                },
                 {
                   "x": -0.44,
                   "y": -0.35
@@ -30782,14 +30370,6 @@
                 {
                   "x": 0.44,
                   "y": -0.35
-                },
-                {
-                  "x": -0.06,
-                  "y": 0.35
-                },
-                {
-                  "x": -0.44,
-                  "y": 0.35
                 }
               ]
             ]
@@ -30808,39 +30388,39 @@
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.42,
-                "y": -0.35
-              },
-              {
                 "x": 0.92,
-                "y": -0.35
+                "y": 0.35
               },
               {
-                "x": 0.42,
+                "x": -0.42,
                 "y": 0.35
               },
               {
                 "x": -0.92,
-                "y": 0.35
+                "y": -0.35
+              },
+              {
+                "x": 0.42,
+                "y": -0.35
               }
             ],
             "parts": [
               [
                 {
-                  "x": -0.42,
-                  "y": -0.35
-                },
-                {
                   "x": 0.92,
-                  "y": -0.35
+                  "y": 0.35
                 },
                 {
-                  "x": 0.42,
+                  "x": -0.42,
                   "y": 0.35
                 },
                 {
                   "x": -0.92,
-                  "y": 0.35
+                  "y": -0.35
+                },
+                {
+                  "x": 0.42,
+                  "y": -0.35
                 }
               ]
             ]
@@ -30859,24 +30439,32 @@
             "primitive": "freeform",
             "outline": [
               {
+                "x": -0.18,
+                "y": 0.7
+              },
+              {
+                "x": -0.82,
+                "y": 0.7
+              },
+              {
                 "x": -0.82,
                 "y": -0.7
               },
               {
                 "x": 0.82,
                 "y": -0.7
-              },
-              {
-                "x": 0.82,
-                "y": 0.7
-              },
-              {
-                "x": 0.18,
-                "y": 0.7
               }
             ],
             "parts": [
               [
+                {
+                  "x": -0.18,
+                  "y": 0.7
+                },
+                {
+                  "x": -0.82,
+                  "y": 0.7
+                },
                 {
                   "x": -0.82,
                   "y": -0.7
@@ -30884,14 +30472,6 @@
                 {
                   "x": 0.82,
                   "y": -0.7
-                },
-                {
-                  "x": 0.82,
-                  "y": 0.7
-                },
-                {
-                  "x": 0.18,
-                  "y": 0.7
                 }
               ]
             ]
@@ -30941,32 +30521,24 @@
             "primitive": "freeform",
             "outline": [
               {
-                "x": -1.05,
-                "y": -0.35
-              },
-              {
-                "x": 0.55,
-                "y": -0.35
-              },
-              {
                 "x": 1.05,
                 "y": 0.35
               },
               {
                 "x": -1.05,
                 "y": 0.35
+              },
+              {
+                "x": -0.55,
+                "y": -0.35
+              },
+              {
+                "x": 1.05,
+                "y": -0.35
               }
             ],
             "parts": [
               [
-                {
-                  "x": -1.05,
-                  "y": -0.35
-                },
-                {
-                  "x": 0.55,
-                  "y": -0.35
-                },
                 {
                   "x": 1.05,
                   "y": 0.35
@@ -30974,6 +30546,14 @@
                 {
                   "x": -1.05,
                   "y": 0.35
+                },
+                {
+                  "x": -0.55,
+                  "y": -0.35
+                },
+                {
+                  "x": 1.05,
+                  "y": -0.35
                 }
               ]
             ]
@@ -30993,19 +30573,23 @@
             "outline": [
               {
                 "x": -0.88,
-                "y": -0.35
-              },
-              {
-                "x": 0.88,
-                "y": -0.35
-              },
-              {
-                "x": 0.88,
                 "y": 0.35
+              },
+              {
+                "x": -0.88,
+                "y": -0.35
+              },
+              {
+                "x": 0.88,
+                "y": -0.35
               }
             ],
             "parts": [
               [
+                {
+                  "x": -0.88,
+                  "y": 0.35
+                },
                 {
                   "x": -0.88,
                   "y": -0.35
@@ -31013,10 +30597,6 @@
                 {
                   "x": 0.88,
                   "y": -0.35
-                },
-                {
-                  "x": 0.88,
-                  "y": 0.35
                 }
               ]
             ]
@@ -31036,19 +30616,23 @@
             "outline": [
               {
                 "x": -0.83,
-                "y": -0.35
-              },
-              {
-                "x": 0.83,
-                "y": -0.35
-              },
-              {
-                "x": 0.83,
                 "y": 0.35
+              },
+              {
+                "x": -0.83,
+                "y": -0.35
+              },
+              {
+                "x": 0.83,
+                "y": -0.35
               }
             ],
             "parts": [
               [
+                {
+                  "x": -0.83,
+                  "y": 0.35
+                },
                 {
                   "x": -0.83,
                   "y": -0.35
@@ -31056,10 +30640,6 @@
                 {
                   "x": 0.83,
                   "y": -0.35
-                },
-                {
-                  "x": 0.83,
-                  "y": 0.35
                 }
               ]
             ]
@@ -31078,24 +30658,32 @@
             "primitive": "freeform",
             "outline": [
               {
+                "x": 0.44,
+                "y": 0.35
+              },
+              {
+                "x": 0.06,
+                "y": 0.35
+              },
+              {
                 "x": -0.44,
                 "y": -0.35
               },
               {
                 "x": 0.44,
                 "y": -0.35
-              },
-              {
-                "x": -0.06,
-                "y": 0.35
-              },
-              {
-                "x": -0.44,
-                "y": 0.35
               }
             ],
             "parts": [
               [
+                {
+                  "x": 0.44,
+                  "y": 0.35
+                },
+                {
+                  "x": 0.06,
+                  "y": 0.35
+                },
                 {
                   "x": -0.44,
                   "y": -0.35
@@ -31103,14 +30691,6 @@
                 {
                   "x": 0.44,
                   "y": -0.35
-                },
-                {
-                  "x": -0.06,
-                  "y": 0.35
-                },
-                {
-                  "x": -0.44,
-                  "y": 0.35
                 }
               ]
             ]
@@ -31129,32 +30709,24 @@
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.14,
-                "y": -0.35
-              },
-              {
-                "x": 0.64,
-                "y": -0.35
-              },
-              {
                 "x": 0.64,
                 "y": 0.35
               },
               {
                 "x": -0.64,
                 "y": 0.35
+              },
+              {
+                "x": -0.64,
+                "y": -0.35
+              },
+              {
+                "x": 0.14,
+                "y": -0.35
               }
             ],
             "parts": [
               [
-                {
-                  "x": -0.14,
-                  "y": -0.35
-                },
-                {
-                  "x": 0.64,
-                  "y": -0.35
-                },
                 {
                   "x": 0.64,
                   "y": 0.35
@@ -31162,6 +30734,14 @@
                 {
                   "x": -0.64,
                   "y": 0.35
+                },
+                {
+                  "x": -0.64,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.14,
+                  "y": -0.35
                 }
               ]
             ]
@@ -31181,19 +30761,23 @@
             "outline": [
               {
                 "x": -0.85,
-                "y": -0.35
-              },
-              {
-                "x": 0.85,
-                "y": -0.35
-              },
-              {
-                "x": 0.85,
                 "y": 0.35
+              },
+              {
+                "x": -0.85,
+                "y": -0.35
+              },
+              {
+                "x": 0.85,
+                "y": -0.35
               }
             ],
             "parts": [
               [
+                {
+                  "x": -0.85,
+                  "y": 0.35
+                },
                 {
                   "x": -0.85,
                   "y": -0.35
@@ -31201,10 +30785,6 @@
                 {
                   "x": 0.85,
                   "y": -0.35
-                },
-                {
-                  "x": 0.85,
-                  "y": 0.35
                 }
               ]
             ]
@@ -31214,43 +30794,43 @@
       "target": {
         "outline": [
           {
+            "x": 2.6,
+            "y": 0.7
+          },
+          {
+            "x": 0.84,
+            "y": 1.4
+          },
+          {
+            "x": 0.8,
+            "y": 1.4
+          },
+          {
+            "x": -0.86,
+            "y": 2.1
+          },
+          {
+            "x": -0.9,
+            "y": 2.1
+          },
+          {
             "x": -2.6,
-            "y": 0.0
-          },
-          {
-            "x": 2.6,
-            "y": 0.0
-          },
-          {
-            "x": 2.6,
             "y": 2.8
           },
           {
-            "x": 0.9,
-            "y": 2.1
-          },
-          {
-            "x": 0.86,
-            "y": 2.1
-          },
-          {
-            "x": -0.8,
-            "y": 1.4
-          },
-          {
-            "x": -0.84,
-            "y": 1.4
-          },
-          {
             "x": -2.6,
-            "y": 0.7
+            "y": 0.0
+          },
+          {
+            "x": 2.6,
+            "y": 0.0
           }
         ],
         "slots": [
           {
             "kind": "heel",
             "position": {
-              "x": -2.16,
+              "x": 2.16,
               "y": 0.35
             },
             "rotation": 0
@@ -31258,7 +30838,7 @@
           {
             "kind": "foot",
             "position": {
-              "x": -1.26,
+              "x": 1.26,
               "y": 0.35
             },
             "rotation": 0
@@ -31266,7 +30846,7 @@
           {
             "kind": "post_r",
             "position": {
-              "x": 1.16,
+              "x": -1.16,
               "y": 0.7
             },
             "rotation": 0
@@ -31274,7 +30854,7 @@
           {
             "kind": "back",
             "position": {
-              "x": 2.31,
+              "x": -2.31,
               "y": 0.7
             },
             "rotation": 0
@@ -31290,7 +30870,7 @@
           {
             "kind": "deck",
             "position": {
-              "x": 0.25,
+              "x": -0.25,
               "y": 1.05
             },
             "rotation": 0
@@ -31298,7 +30878,7 @@
           {
             "kind": "ramp_1",
             "position": {
-              "x": -1.72,
+              "x": 1.72,
               "y": 1.05
             },
             "rotation": 0
@@ -31306,7 +30886,7 @@
           {
             "kind": "ramp_2",
             "position": {
-              "x": 0.03,
+              "x": -0.03,
               "y": 1.75
             },
             "rotation": 0
@@ -31314,7 +30894,7 @@
           {
             "kind": "step_a",
             "position": {
-              "x": 1.34,
+              "x": -1.34,
               "y": 1.75
             },
             "rotation": 0
@@ -31322,7 +30902,7 @@
           {
             "kind": "step_b",
             "position": {
-              "x": 1.96,
+              "x": -1.96,
               "y": 1.75
             },
             "rotation": 0
@@ -31330,7 +30910,7 @@
           {
             "kind": "ramp_3",
             "position": {
-              "x": 1.75,
+              "x": -1.75,
               "y": 2.45
             },
             "rotation": 0
@@ -31341,7 +30921,7 @@
         {
           "kind": "heel",
           "startPosition": {
-            "x": -2.16,
+            "x": 2.16,
             "y": 1.76
           },
           "startRotation": 0
@@ -31349,7 +30929,7 @@
         {
           "kind": "foot",
           "startPosition": {
-            "x": -1.26,
+            "x": 1.26,
             "y": 5.45
           },
           "startRotation": 0
@@ -31357,7 +30937,7 @@
         {
           "kind": "post_r",
           "startPosition": {
-            "x": 1.16,
+            "x": -1.16,
             "y": 6.49
           },
           "startRotation": 0
@@ -31365,7 +30945,7 @@
         {
           "kind": "back",
           "startPosition": {
-            "x": 2.31,
+            "x": -2.31,
             "y": 4.44
           },
           "startRotation": 0
@@ -31381,7 +30961,7 @@
         {
           "kind": "deck",
           "startPosition": {
-            "x": 0.25,
+            "x": -0.25,
             "y": 4.71
           },
           "startRotation": 0
@@ -31389,7 +30969,7 @@
         {
           "kind": "ramp_1",
           "startPosition": {
-            "x": -1.72,
+            "x": 1.72,
             "y": 6.56
           },
           "startRotation": 0
@@ -31397,7 +30977,7 @@
         {
           "kind": "ramp_2",
           "startPosition": {
-            "x": 0.03,
+            "x": -0.03,
             "y": 2.65
           },
           "startRotation": 0
@@ -31405,7 +30985,7 @@
         {
           "kind": "step_a",
           "startPosition": {
-            "x": 1.34,
+            "x": -1.34,
             "y": 4.09
           },
           "startRotation": 0
@@ -31413,7 +30993,7 @@
         {
           "kind": "step_b",
           "startPosition": {
-            "x": 1.96,
+            "x": -1.96,
             "y": 3.35
           },
           "startRotation": 0
@@ -31421,7 +31001,7 @@
         {
           "kind": "ramp_3",
           "startPosition": {
-            "x": 1.75,
+            "x": -1.75,
             "y": 5.66
           },
           "startRotation": 0
@@ -31433,20 +31013,20 @@
           "color": "#B8926B",
           "outline": [
             {
-              "x": -4.0,
-              "y": -0.5
-            },
-            {
-              "x": 4.0,
-              "y": -0.5
-            },
-            {
               "x": 4.0,
               "y": 0.0
             },
             {
               "x": -4.0,
               "y": 0.0
+            },
+            {
+              "x": -4.0,
+              "y": -0.5
+            },
+            {
+              "x": 4.0,
+              "y": -0.5
             }
           ]
         }
