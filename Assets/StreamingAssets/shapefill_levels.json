@@ -26211,9 +26211,9 @@
     {
       "levelId": "chute_cross",
       "seed": 511,
-      "difficultyTier": 7,
+      "difficultyTier": 1,
       "physicsMode": "assembly",
-      "winningOrder": [1, 0],
+      "winningOrder": [0, 1],
       "matchTolerance": { "posTol": 0.34, "angTol": 0.43633 },
       "bounds": { "min": { "x": -7, "y": -1 }, "max": { "x": 7, "y": 23 } },
       "gravity": { "x": 0, "y": -43.0 },
@@ -26229,7 +26229,7 @@
         ]
       },
       "pieces": [
-        { "kind": "cross",    "startPosition": { "x": 3.370, "y": 9.090 }, "startRotation": 0 },
+        { "kind": "cross",    "startPosition": { "x": 4.500, "y": 9.090 }, "startRotation": -0.7854 },
         { "kind": "red_ball", "startPosition": { "x": 1.860, "y": 5.650 }, "startRotation": 0 }
       ],
       "staticGeometry": [
