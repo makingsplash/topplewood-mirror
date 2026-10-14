@@ -136,12 +136,6 @@ namespace Gameplay.Adapters
         }
 
 #if GPIE_DEVELOPMENT
-        /// <summary>
-        /// Dev/QA cheat hook (TASK-011; consumed by the DDM hosts): the line-up index of the loaded level — on the
-        /// pool track too, where it differs from <c>LevelNumber − 1</c>. Editor/dev builds only.
-        /// </summary>
-        public int DevCampaignIndex => _position.LineupIndex;
-
         /// <summary>Dev/QA (TASK-528): the in-memory progress, for "Level N · pool k/M" labels. Editor/dev only.</summary>
         public CampaignProgress DevProgress => _progress;
 
@@ -161,6 +155,22 @@ namespace Gameplay.Adapters
         public void DevJumpToLevel(int index)
         {
             SetProgress(CampaignCursor.AtLineup(ClampToLineup(index)));
+        }
+
+        /// <summary>
+        /// Dev/QA (TASK-534): bringup "Go to Level N" WITHOUT persist (RFC Q2) — the prod rule
+        /// <see cref="CampaignCursor.GoToLevel"/>: N equal to the current number reloads in place (keeps the pool /
+        /// catch-up position), any other N is line-up level N of the first pass, clamped like
+        /// <see cref="DevJumpToLevel"/>. Before this, bringup prefilled the line-up position and Go always jumped
+        /// along the line-up, throwing a pool player out of the pool (QA TASK-531 Н-1). Editor/dev only.
+        /// </summary>
+        public void DevGoToLevel(int levelNumber)
+        {
+            var target = CampaignCursor.GoToLevel(_progress, levelNumber);
+            if (target.Equals(_progress))
+                SetProgress(_progress);
+            else
+                DevJumpToLevel(levelNumber - 1);
         }
 
         /// <summary>
