@@ -11,18 +11,19 @@ namespace Game.Editor
     // no batch build path: JenkinsBuildWindow is an interactive [MenuItem], and nothing calls
     // BuildPipeline.BuildPlayer. Driven by .studio/tools/build-android.sh (TASK-063).
     //
-    // Scope is deliberately narrow — this only proves the app compiles under IL2CPP/Android and boots
-    // on a device. It does NOT touch EditorBuildSettings (scenes are passed as an explicit array so the
-    // unfinished production boot path via Loading.unity is never silently overridden), and it does NOT
-    // create signing keys: the build is a development build, which Unity signs with the auto-generated
-    // debug keystore.
+    // The APK is the PRODUCTION game: it boots through Loading.unity, which raises the gameplay session as a
+    // child scope (TASK-138, ADR-0004) — the same path the owner plays in the editor. What stays dev-only is
+    // the packaging: Development build, ARM64 only, debug signing, a single .apk. It does NOT touch
+    // EditorBuildSettings (scenes are passed as an explicit array), and it does NOT create signing keys:
+    // the build is a development build, which Unity signs with the auto-generated debug keystore.
     public static class AndroidDevBuild
     {
-        // Playable bring-up slice. Loading.unity (the production boot) is intentionally excluded — it is
-        // an unfinished boot with open TECH_DEBT (see docs/architecture/overview.md), not a target here.
+        // The production boot (TASK-533). Until then this was ShapeFillBringup.unity with the note "Loading.unity
+        // is an unfinished boot" — stale since TASK-138, and the bringup APK lacked the prod graph (WinScreen,
+        // hint booster, prod DEV menu), so a device check of it was not a check of the game.
         private static readonly string[] Scenes =
         {
-            "Assets/Scenes/ShapeFillBringup.unity",
+            "Assets/Scenes/Loading.unity",
         };
 
         private const string OutputDir = "Artifacts/android";
