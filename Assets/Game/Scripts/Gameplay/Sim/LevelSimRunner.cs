@@ -44,6 +44,13 @@ namespace Gameplay.Sim
         // batch probe needs no scene edit.
         [SerializeField] private bool _runImpatientPass = false;   // OFF by default → gated corpus sweep unchanged
         [SerializeField] private int _impatientGapSteps = 20;      // fixed steps between fast taps (~0.33s @60fps)
+        // TASK-553: a timing WINDOW is an interval of gaps, so SIM_TIMING_GAP may carry a comma-separated LIST
+        // (run-sim.sh --timing 20,100,225,600 / --timing-sweep a:b:step). Every gap runs in THIS Unity session and
+        // writes its OWN timing report (level-sim-timing_<ts>_gap<N>), each byte-shaped exactly like a single-gap
+        // report, so every consumer of the single report reads a sweep report unchanged. null → the one
+        // _impatientGapSteps above (a single gap writes the unsuffixed name, byte-for-byte as before).
+        private int[] _impatientGapList;
+        private float _timingClockStart;   // TASK-553: each gap gets its own watchdog budget (see TimingWatchdogExpired)
         // TASK-067: the timing pass ALSO replays each rest-gated POLICY's winning sequence (slot-ascending /
         // pair-release) at a human tempo — the coverage the enumerated-order impatient pass above misses for
         // levels solved by a POLICY, not a listed single order. These gaps are the acceptance table columns:
@@ -97,11 +104,13 @@ namespace Gameplay.Sim
 
             // TASK-060: a headless timing probe flips the opt-in impatient pass on via env (no scene edit needed),
             // so the committed scene keeps the pass OFF and the gated sweep stays default. SIM_TIMING_GAP=<int>.
+            // TASK-553: the value may be a comma-separated list of gaps (a timing-window sweep in one session).
             var gapEnv = Environment.GetEnvironmentVariable("SIM_TIMING_GAP");
-            if (Application.isBatchMode && int.TryParse(gapEnv, out var gap) && gap > 0)
+            if (Application.isBatchMode && TryParseGapList(gapEnv, out var gaps))
             {
                 _runImpatientPass = true;
-                _impatientGapSteps = gap;
+                _impatientGapSteps = gaps[0];
+                _impatientGapList = gaps.Length > 1 ? gaps : null;
             }
 
             // TASK-179: headless opt-in for the targeted sweep (no scene edit; committed scene stays default),
@@ -435,10 +444,16 @@ namespace Gameplay.Sim
         // there) that replays each rest-gated policy's WINNING sequence — slot-ascending / pair-release — fast, at
         // every gap in _policyScriptGaps. That is the coverage the enumerated loop misses for levels whose solution
         // is a policy, not a listed order; both sub-passes write into the same (non-gated) timing report.
+        // TASK-553: with a gap LIST the enumerated loop runs once per gap and each gap writes its OWN report
+        // (impatient runs of that gap + the policy-scripted runs, which do not depend on the gap and are simulated
+        // once). So every per-gap report holds exactly the runs a single `--timing <gap>` session would write.
         private IEnumerator RunTimingPass(IReadOnlyList<LevelData> levels, IReadOnlyList<SimRunResult> patientRuns)
         {
-            var gap = _impatientGapSteps;
-            Debug.Log($"[level-sim] TIMING PASS (impatient, gapSteps={gap}) — SEPARATE report, not gated.");
+            var gaps = _impatientGapList ?? new[] { _impatientGapSteps };
+            var sweep = gaps.Length > 1;
+            if (sweep)
+                Debug.Log($"[level-sim] TIMING SWEEP gaps=[{string.Join(",", gaps)}] — one SEPARATE report per gap " +
+                          "(level-sim-timing_<ts>_gap<N>), not gated.");
 
             // Patient poseHash sets by (levelId, orderKey), from the release-order sweep already run.
             var patientHashes = new Dictionary<string, HashSet<long>>();
@@ -469,8 +484,139 @@ namespace Gameplay.Sim
                 }
             }
 
-            var timingRuns = new List<SimRunResult>();
-            var divergentLevels = new List<string>();
+            var impatientByGap = new List<SimRunResult>[gaps.Length];
+            var divergentByGap = new List<string>[gaps.Length];
+            for (var g = 0; g < gaps.Length; g++)
+            {
+                impatientByGap[g] = new List<SimRunResult>();
+                divergentByGap[g] = new List<string>();
+                yield return StartCoroutine(RunImpatientGap(levels, gaps[g], patientHashes, patientSolved,
+                    impatientByGap[g], divergentByGap[g]));
+            }
+
+            // TASK-067: POLICY-SCRIPTED sub-pass — the coverage the enumerated loop above misses. A level solved
+            // by a POLICY (slot-ascending assembly / pair-release balance) rather than a listed single order was
+            // never measured fast: the loop above re-runs only SolveSweepPlan's orders, which for a seeded-sampled
+            // figure or a seesaw are NOT the policy's sequence. Here we replay the EXACT sequence each rest-gated
+            // policy chooses (PolicyScriptPlan mirrors the policy) but at a human tempo — a fixed gap between
+            // releases instead of waiting for global rest — over every gap in _policyScriptGaps, so one sweep
+            // yields the whole acceptance table (patient vs 8/20/32). Balance → scripted pair-release (pairs stay
+            // synchronous, groups go back-to-back — never split); every other mode → scripted slot-ascending.
+            // Catapult is INCLUDED under slot-ascending only for parity with its patient slot-ascending smoke; its
+            // real solution is a bespoke charge chain, so a loss there is expected and not a regression signal.
+            var policyRegressions = new List<string>();
+            var policyRuns = new List<SimRunResult>();
+            _timingClockStart = Time.realtimeSinceStartup; // TASK-553: own watchdog budget, like each impatient gap
+            Debug.Log($"[level-sim] TIMING POLICY-SCRIPTED pass gaps=[{string.Join(",", _policyScriptGaps)}] " +
+                      "— SEPARATE report, not gated.");
+            foreach (var level in levels)
+            {
+                var balance = level.PhysicsMode == PhysicsMode.Balance;
+                var patientPolicyId = balance ? "pair-release" : "slot-ascending";
+                var fastPolicyId = balance ? "fast-pair" : "fast-slot-asc";
+                var pKey = patientPolicyId + "|" + level.LevelId;
+                patientPolicyHashes.TryGetValue(pKey, out var pHashes);
+                var pSolved = patientPolicySolved.TryGetValue(pKey, out var ps) ? ps : 0;
+
+                foreach (var policyGap in _policyScriptGaps)
+                {
+                    if (policyGap <= 0)
+                        continue;
+
+                    var script = balance
+                        ? PolicyScriptPlan.PairRelease(level, policyGap)
+                        : PolicyScriptPlan.SlotAscending(level, policyGap);
+                    var orderKey = "gap-" + policyGap;
+                    var fastHashes = new HashSet<long>();
+                    var fastSolved = 0;
+                    for (var r = 0; r < _repeats; r++)
+                    {
+                        var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world per run
+                        try
+                        {
+                            var res = SimRun.Run(level, sim, new ScriptedReleasePolicy(script),
+                                fastPolicyId, orderKey, r, _maxSteps);
+                            policyRuns.Add(res);
+                            fastHashes.Add(res.PoseHash);
+                            if (res.Solved)
+                                fastSolved++;
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError($"[level-sim] timing-policy {level.LevelId} {fastPolicyId} {orderKey} " +
+                                           $"run {r} threw: {e}");
+                        }
+
+                        yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null)
+                        if (TimingWatchdogExpired())
+                            break;
+                    }
+
+                    var deterministic = fastHashes.Count == 1;
+                    var posesDiffer = pHashes != null && !pHashes.SetEquals(fastHashes);
+                    // A regression is losing winnability the patient policy HAD (pSolved>0 → fastSolved==0). A level
+                    // the patient policy never solved (pSolved==0) is "still not covered", not "broke" — the caller
+                    // separates the two in the artifact table.
+                    if (pSolved > 0 && fastSolved == 0)
+                        policyRegressions.Add(level.LevelId + "@" + policyGap);
+
+                    Debug.Log($"[level-sim] TIMING-POLICY {level.LevelId} policy={fastPolicyId} gap={policyGap}: " +
+                              $"fast solved {fastSolved}/{_repeats} (patient {patientPolicyId} {pSolved}/{_repeats}), " +
+                              $"deterministic={deterministic} fastHashes={fastHashes.Count} " +
+                              $"patientHashes={pHashes?.Count ?? 0} posesDiffer={posesDiffer}");
+
+                    if (TimingWatchdogExpired())
+                        break;
+                }
+
+                if (TimingWatchdogExpired())
+                    break;
+            }
+            Debug.Log($"[level-sim] TIMING POLICY SUMMARY gaps=[{string.Join(",", _policyScriptGaps)}] " +
+                      $"lost-winnability={policyRegressions.Count} {string.Join(",", policyRegressions)}");
+
+            for (var g = 0; g < gaps.Length; g++)
+            {
+                // Same run order a single-gap session produced: that gap's impatient runs, then the policy runs.
+                // A fresh list per gap — ApplyTouchingRestFloor rewrites entries in place, and the policy runs must
+                // enter every gap's floor raw.
+                var timingRuns = new List<SimRunResult>(impatientByGap[g]);
+                timingRuns.AddRange(policyRuns);
+
+                // TASK-075: apply the same reference-rest floor to the timing runs so their honesty FYI is measured on
+                // the right baseline too (its floor is MIN over the timing pass's OWN honest wins — a fast run is not a
+                // reference for the gated sweep and vice-versa). Still FYI-only: the timing report is never gated.
+                ApplyTouchingRestFloor(timingRuns);
+
+                // Honesty of the fast game is DATA, not a gate: report int/pen counts so a finding is visible.
+                // TASK-343: the unsup-won count was removed with the UnsupportedPlaced metric (a directional rudiment
+                // post-TASK-305).
+                var timingInt = 0;
+                var timingPenWon = 0;
+                foreach (var r in timingRuns)
+                {
+                    if (r.IntersectingPairs > 0) timingInt++;
+                    if (r.Solved && r.MaxPenetration > 1e-4f) timingPenWon++;
+                }
+                var divergentLevels = divergentByGap[g];
+                Debug.Log($"[level-sim] TIMING SUMMARY gap={gaps[g]} runs={timingRuns.Count} " +
+                          $"divergent-levels={divergentLevels.Count} {string.Join(",", divergentLevels)} " +
+                          $"| fast-honesty(FYI, NOT gated): int={timingInt} pen-won={timingPenWon}");
+
+                WriteTimingReport(timingRuns, sweep ? "_gap" + gaps[g] : string.Empty);
+            }
+        }
+
+        // TASK-060 enumerated impatient loop for ONE gap (TASK-553 lifted it out of RunTimingPass so a gap list runs
+        // it once per gap): every non-Balance level's sweep orders released through ScriptedReleasePolicy.Impatient,
+        // compared against the patient release-order runs. Fills <paramref name="timingRuns"/> and
+        // <paramref name="divergentLevels"/>; logs one TIMING line per order, as before.
+        private IEnumerator RunImpatientGap(IReadOnlyList<LevelData> levels, int gap,
+            Dictionary<string, HashSet<long>> patientHashes, Dictionary<string, int> patientSolved,
+            List<SimRunResult> timingRuns, List<string> divergentLevels)
+        {
+            _timingClockStart = Time.realtimeSinceStartup;
+            Debug.Log($"[level-sim] TIMING PASS (impatient, gapSteps={gap}) — SEPARATE report, not gated.");
 
             foreach (var level in levels)
             {
@@ -512,7 +658,7 @@ namespace Gameplay.Sim
                         }
 
                         yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null)
-                        if (WatchdogExpired())
+                        if (TimingWatchdogExpired())
                             break;
                     }
 
@@ -532,119 +678,60 @@ namespace Gameplay.Sim
                               $"impatientHashes={impatientHashes.Count} patientHashes={pHashes?.Count ?? 0} " +
                               $"outcomeDiffers={outcomeDiffers} posesDiffer={posesDiffer}");
 
-                    if (WatchdogExpired())
+                    if (TimingWatchdogExpired())
                         break;
                 }
 
                 if (levelDiverged)
                     divergentLevels.Add(level.LevelId);
-                if (WatchdogExpired())
+                if (TimingWatchdogExpired())
                     break;
             }
+        }
 
-            // TASK-067: POLICY-SCRIPTED sub-pass — the coverage the enumerated loop above misses. A level solved
-            // by a POLICY (slot-ascending assembly / pair-release balance) rather than a listed single order was
-            // never measured fast: the loop above re-runs only SolveSweepPlan's orders, which for a seeded-sampled
-            // figure or a seesaw are NOT the policy's sequence. Here we replay the EXACT sequence each rest-gated
-            // policy chooses (PolicyScriptPlan mirrors the policy) but at a human tempo — a fixed gap between
-            // releases instead of waiting for global rest — over every gap in _policyScriptGaps, so one sweep
-            // yields the whole acceptance table (patient vs 8/20/32). Balance → scripted pair-release (pairs stay
-            // synchronous, groups go back-to-back — never split); every other mode → scripted slot-ascending.
-            // Catapult is INCLUDED under slot-ascending only for parity with its patient slot-ascending smoke; its
-            // real solution is a bespoke charge chain, so a loss there is expected and not a regression signal.
-            var policyRegressions = new List<string>();
-            Debug.Log($"[level-sim] TIMING POLICY-SCRIPTED pass gaps=[{string.Join(",", _policyScriptGaps)}] " +
-                      "— SEPARATE report, not gated.");
-            foreach (var level in levels)
+        // TASK-553: SIM_TIMING_GAP → gap list. Accepts "20" (one gap, the TASK-060 form) or "20,100,225,600".
+        // Every entry must be a positive integer; duplicates are dropped (two reports under one `_gap<N>` name would
+        // overwrite each other). A malformed value is a LOUD error and leaves the pass OFF — never a silent partial
+        // list. run-sim.sh validates the same thing before Unity starts; this is the second line.
+        private static bool TryParseGapList(string raw, out int[] gaps)
+        {
+            gaps = null;
+            if (string.IsNullOrEmpty(raw))
+                return false;
+
+            var list = new List<int>();
+            foreach (var token in raw.Split(','))
             {
-                var balance = level.PhysicsMode == PhysicsMode.Balance;
-                var patientPolicyId = balance ? "pair-release" : "slot-ascending";
-                var fastPolicyId = balance ? "fast-pair" : "fast-slot-asc";
-                var pKey = patientPolicyId + "|" + level.LevelId;
-                patientPolicyHashes.TryGetValue(pKey, out var pHashes);
-                var pSolved = patientPolicySolved.TryGetValue(pKey, out var ps) ? ps : 0;
-
-                foreach (var policyGap in _policyScriptGaps)
+                if (!int.TryParse(token.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var gap) || gap <= 0)
                 {
-                    if (policyGap <= 0)
-                        continue;
-
-                    var script = balance
-                        ? PolicyScriptPlan.PairRelease(level, policyGap)
-                        : PolicyScriptPlan.SlotAscending(level, policyGap);
-                    var orderKey = "gap-" + policyGap;
-                    var fastHashes = new HashSet<long>();
-                    var fastSolved = 0;
-                    for (var r = 0; r < _repeats; r++)
-                    {
-                        var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world per run
-                        try
-                        {
-                            var res = SimRun.Run(level, sim, new ScriptedReleasePolicy(script),
-                                fastPolicyId, orderKey, r, _maxSteps);
-                            timingRuns.Add(res);
-                            fastHashes.Add(res.PoseHash);
-                            if (res.Solved)
-                                fastSolved++;
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.LogError($"[level-sim] timing-policy {level.LevelId} {fastPolicyId} {orderKey} " +
-                                           $"run {r} threw: {e}");
-                        }
-
-                        yield return UnloadIsolatedSim(physicsScene); // TASK-379 (was yield return null)
-                        if (WatchdogExpired())
-                            break;
-                    }
-
-                    var deterministic = fastHashes.Count == 1;
-                    var posesDiffer = pHashes != null && !pHashes.SetEquals(fastHashes);
-                    // A regression is losing winnability the patient policy HAD (pSolved>0 → fastSolved==0). A level
-                    // the patient policy never solved (pSolved==0) is "still not covered", not "broke" — the caller
-                    // separates the two in the artifact table.
-                    if (pSolved > 0 && fastSolved == 0)
-                        policyRegressions.Add(level.LevelId + "@" + policyGap);
-
-                    Debug.Log($"[level-sim] TIMING-POLICY {level.LevelId} policy={fastPolicyId} gap={policyGap}: " +
-                              $"fast solved {fastSolved}/{_repeats} (patient {patientPolicyId} {pSolved}/{_repeats}), " +
-                              $"deterministic={deterministic} fastHashes={fastHashes.Count} " +
-                              $"patientHashes={pHashes?.Count ?? 0} posesDiffer={posesDiffer}");
-
-                    if (WatchdogExpired())
-                        break;
+                    Debug.LogError($"[level-sim] SIM_TIMING_GAP='{raw}': '{token}' is not a positive integer step " +
+                                   "count — timing pass NOT run.");
+                    return false;
                 }
-
-                if (WatchdogExpired())
-                    break;
+                if (!list.Contains(gap))
+                    list.Add(gap);
             }
-            Debug.Log($"[level-sim] TIMING POLICY SUMMARY gaps=[{string.Join(",", _policyScriptGaps)}] " +
-                      $"lost-winnability={policyRegressions.Count} {string.Join(",", policyRegressions)}");
+            gaps = list.ToArray();
+            return true;
+        }
 
-            // TASK-075: apply the same reference-rest floor to the timing runs so their honesty FYI is measured on the
-            // right baseline too (its floor is MIN over the timing pass's OWN honest wins — a fast run is not a
-            // reference for the gated sweep and vice-versa). Still FYI-only: the timing report is never gated.
-            ApplyTouchingRestFloor(timingRuns);
-
-            // Honesty of the fast game is DATA, not a gate: report int/pen counts so a finding is visible. TASK-343:
-            // the unsup-won count was removed with the UnsupportedPlaced metric (a directional rudiment post-TASK-305).
-            var timingInt = 0;
-            var timingPenWon = 0;
-            foreach (var r in timingRuns)
-            {
-                if (r.IntersectingPairs > 0) timingInt++;
-                if (r.Solved && r.MaxPenetration > 1e-4f) timingPenWon++;
-            }
-            Debug.Log($"[level-sim] TIMING SUMMARY gap={gap} runs={timingRuns.Count} " +
-                      $"divergent-levels={divergentLevels.Count} {string.Join(",", divergentLevels)} " +
-                      $"| fast-honesty(FYI, NOT gated): int={timingInt} pen-won={timingPenWon}");
-
-            WriteTimingReport(timingRuns);
+        // TASK-553: the timing pass measures its watchdog from the start of the CURRENT gap (and of the policy-scripted
+        // sub-pass), not from the sweep start: with a gap list the pass is N times longer, and a shared budget would
+        // cut the later gaps short. Each sub-pass gets the same _batchTimeoutSeconds the gated sweep gets.
+        private bool TimingWatchdogExpired()
+        {
+            if (Time.realtimeSinceStartup - _timingClockStart <= _batchTimeoutSeconds)
+                return false;
+            Debug.LogError($"[level-sim] watchdog: timing sub-pass exceeded {_batchTimeoutSeconds}s — aborting it " +
+                           "(its report is PARTIAL).");
+            return true;
         }
 
         // Writes the timing pass to its OWN report file so it never mixes into the gated report. Reuses the shared
         // writer/aggregator; failure to write is logged and does not affect the gate (already on disk).
-        private void WriteTimingReport(IReadOnlyList<SimRunResult> timingRuns)
+        // TASK-553: <paramref name="suffix"/> is "_gap<N>" in a gap-list sweep (several reports in the same second
+        // must not share a name) and empty for a single gap — the unsuffixed name, as before.
+        private void WriteTimingReport(IReadOnlyList<SimRunResult> timingRuns, string suffix)
         {
             if (timingRuns.Count == 0)
             {
@@ -659,7 +746,7 @@ namespace Gameplay.Sim
                 var dir = ResolveOutputDir();
                 var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
                 Directory.CreateDirectory(dir);
-                var path = Path.Combine(dir, $"level-sim-timing_{stamp}.json");
+                var path = Path.Combine(dir, $"level-sim-timing_{stamp}{suffix}.json");
                 File.WriteAllText(path, json);
                 Debug.Log($"[level-sim] wrote TIMING report to {path}");
             }
