@@ -1,4 +1,5 @@
 using DataStorage;
+using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 using VContainer.Unity;
 
 namespace Services.Gameplay
@@ -29,9 +30,9 @@ namespace Services.Gameplay
             var seed = start != null ? start.StartGoldAmount : 0;
 
             Data.Meta.GoldAmount.Value += seed;
-            Data.Meta.GoldAmount.ForceSave();
             Data.Meta.StartGoldSeeded.Value = true;
-            Data.Meta.StartGoldSeeded.ForceSave();
+            // Bank and guard reach disk together (TASK-537): the setters only stage PlayerPrefs.SetInt.
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
         }
     }
 }
