@@ -1,4 +1,6 @@
 using DataStorage;
+using SGS.Infrastructure.Tools.PlayerPrefsWrapper;
+using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 using Services;
 using TMPro;
 using Ui.Components.Settings;
@@ -89,12 +91,23 @@ namespace Ui.Popups
 
         public void OnBackButton() => Close();
 
-        private static void OnSoundChanged(bool value) => Data.Settings.SoundEnabled.Value = value;
+        private static void OnSoundChanged(bool value) => WriteFlag(Data.Settings.SoundEnabled, value);
 
-        private static void OnMusicChanged(bool value) => Data.Settings.MusicEnabled.Value = value;
+        private static void OnMusicChanged(bool value) => WriteFlag(Data.Settings.MusicEnabled, value);
 
         // The vibration tile writes HapticEnabled; VibrationEnabled is a separate legacy flag left alone (designer §4).
-        private static void OnHapticChanged(bool value) => Data.Settings.HapticEnabled.Value = value;
+        private static void OnHapticChanged(bool value) => WriteFlag(Data.Settings.HapticEnabled, value);
+
+        /// <summary>
+        /// Writes a tile's flag and flushes it to disk at once. The setter only hands the value to the PlayerPrefs backend;
+        /// the prod scope flushes on pause/focus/quit, so a kill while the popup has focus (crash, OOM, force-stop) lost
+        /// the flag (TASK-566 QA S3(б)). Same explicit flush as the hint/campaign writes (TASK-537).
+        /// </summary>
+        public static void WriteFlag(PlayerPrefsBool flag, bool value)
+        {
+            flag.Value = value;
+            PlayerPrefsCollection.Instance?.SaveDataIfChanged();
+        }
 
         private static void OnPrivacyPolicy()
         {
