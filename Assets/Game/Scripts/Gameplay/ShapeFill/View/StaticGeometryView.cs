@@ -214,6 +214,10 @@ namespace Gameplay.View
             _mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
             tuning.ApplyPieceStyle(_mpb, _styleKey);
 
+            // TASK-559: статика всегда на спокойной доске (прямослой), фаза — от уровня и формы. Окружение не спорит
+            // с фигурой; разнообразие несут детали.
+            WoodTuning.SetGrainPick(_mpb, tuning.GrainPickStatic(_styleKey));
+
             // TASK-353: on the analytic-SDF mass path the shader reads the silhouette polyline from a per-renderer
             // uniform. Clear() above wiped it, so re-upload here — otherwise a live re-colour (WoodTuning.Changed)
             // would leave the mass with an empty outline and no edge band.

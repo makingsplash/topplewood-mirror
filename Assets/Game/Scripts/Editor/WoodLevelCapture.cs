@@ -467,7 +467,8 @@ namespace Game.Editor
             // Цветовая схема ищется по текущему уровню. Без этой строки кадр красился ПРЕЖНЕЙ общей
             // палитрой, и уровень на снимке отличался от того же уровня в каталоге — я на этом
             // чуть не сделал вывод, что схема не доехала до превью.
-            WoodTuning.CurrentLevelId = level.LevelId;
+            // TASK-559: уровень целиком — по нему же раздаются доски волокна, как в игре.
+            WoodTuning.SetCurrentLevel(level);
 
             var cam = BuildCamera(level, out var shortest);
             Backdrop(cam);
@@ -713,8 +714,9 @@ namespace Game.Editor
                 return;
 
             var root = new GameObject("ShapeFillPieces").transform;
-            foreach (var placement in level.Pieces)
+            for (var index = 0; index < level.Pieces.Count; index++)
             {
+                var placement = level.Pieces[index];
                 var type = placement.Type;
                 if (type?.Shape == null)
                     continue;
@@ -725,7 +727,8 @@ namespace Game.Editor
                 // ВИД обязателен: цветовая схема уровня раздаёт оттенки по видам. Без него деталь на
                 // поле красилась прежней палитрой, а карточка-превью — новой схемой, и кадр показывал
                 // расхождение, которого в игре нет (там вид передаёт PieceViewFactory).
-                view.Initialize(type.Shape, type.Color, type.Kind);
+                // Номер — индекс размещения, как у PieceViewFactory в игре: фаза волокна та же, что на поле (TASK-559).
+                view.Initialize(type.Shape, type.Color, type.Kind, index);
                 view.Sync(placement.StartPosition, placement.StartRotation);
             }
         }
@@ -752,6 +755,7 @@ namespace Game.Editor
             }
 
             var root = new GameObject("TargetPosePieces").transform;
+            var ordinal = 0;
             foreach (var slot in level.Target.Slots)
             {
                 if (!kinds.TryGetValue(slot.Kind, out var type) || type?.Shape == null)
@@ -761,7 +765,9 @@ namespace Game.Editor
                 go.transform.SetParent(root, false);
                 var view = go.AddComponent<PieceView>();
                 // ВИД обязателен: палитра уровня раздаёт оттенки по видам (как в BuildPieces 494–497).
-                view.Initialize(type.Shape, type.Color, slot.Kind);
+                // Номер — индекс слота (как у превью): какая деталь ляжет в какой слот, заранее неизвестно, а детали
+                // одного вида в собранной фигуре обязаны различаться фазой (TASK-559).
+                view.Initialize(type.Shape, type.Color, slot.Kind, ordinal++);
                 // ЦЕЛЕВАЯ поза вместо старта. slot.Rotation — РАДИАНЫ (как в TargetPreviewView: slot.Rotation·Rad2Deg);
                 // PieceView.Sync принимает ту же единицу, что StartRotation в BuildPieces (внутри умножает на Rad2Deg).
                 view.Sync(slot.Position, slot.Rotation);

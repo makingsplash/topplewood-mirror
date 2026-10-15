@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Gameplay.Core;
 using UnityEngine;
 
 namespace Gameplay.View
@@ -199,6 +200,47 @@ namespace Gameplay.View
 
         /// <summary>0 — у каждой детали своя доска, 1 — фигура выпилена из одной.</summary>
         public float GrainSpace;
+
+        // ------------------------------------------------------- варианты волокна
+
+        // TASK-559. Владелец: «у нас у фигур текстура дерева везде +- одинаковая, давай сделаем несколько
+        // разных». Одинаковость складывалась из двух причин: числа волокна общие на материал, и у одной формы
+        // одна фаза (волокно в координатах детали). Варианты лечат первое, сдвиг фазы — второе.
+        //
+        // ПОКА ТУМБЛЕР ВКЛЮЧЁН, ОДИНОЧНЫЕ Grain* ВЫШЕ ДЕТАЛЯМ И СТАТИКЕ НЕ ВИДНЫ (кроме угла разворота, AlignLong и
+        // Space): каждая деталь берёт строку таблицы. Одиночные остаются запасом для чужих мешей без _GrainPick
+        // (квард зоны воздуха, силуэт) и для выключенного тумблера — то есть для честного сравнения «до/после».
+
+        /// <summary>Раздавать деталям разные доски из <see cref="GrainVariants"/>. Выключено — как до TASK-559:
+        /// одно волокно на всех и без сдвига фазы.</summary>
+        public bool GrainVariety = true;
+
+        /// <summary>
+        /// Таблица досок — выбор владельца по листу образцов 2026-10-15 («берём все 5»), числа —
+        /// <c>TASK-559/01-art-director.md</c> §2. Не больше <see cref="MaxGrainVariants"/>: столько строк держит
+        /// uniform-массив шейдера. Угол хранится модулем, знак даёт сид вида.
+        /// </summary>
+        public List<WoodGrainVariant> GrainVariants = new List<WoodGrainVariant>
+        {
+            new WoodGrainVariant { Name = "V1 прямослой", GrainScale = 4.0f, GrainWarp = 0.06f, GrainSharp = 3.8f, GrainVary = 0.35f, GrainStrength = 0.085f, GrainEmboss = 0.028f, GrainNoise = 0.05f, GrainAngle = 0f },
+            new WoodGrainVariant { Name = "V2 волнистый", GrainScale = 2.6f, GrainWarp = 0.65f, GrainSharp = 2.4f, GrainVary = 0.60f, GrainStrength = 0.095f, GrainEmboss = 0.032f, GrainNoise = 0.06f, GrainAngle = 0f },
+            new WoodGrainVariant { Name = "V3 плотный", GrainScale = 4.5f, GrainWarp = 0.20f, GrainSharp = 4.5f, GrainVary = 0.45f, GrainStrength = 0.075f, GrainEmboss = 0.020f, GrainNoise = 0.04f, GrainAngle = 0f },
+            new WoodGrainVariant { Name = "V4 редкий", GrainScale = 1.7f, GrainWarp = 0.35f, GrainSharp = 1.8f, GrainVary = 0.75f, GrainStrength = 0.100f, GrainEmboss = 0.035f, GrainNoise = 0.07f, GrainAngle = 0f },
+            new WoodGrainVariant { Name = "V5 косой", GrainScale = 2.957f, GrainWarp = 0.275f, GrainSharp = 2.6f, GrainVary = 0.60f, GrainStrength = 0.085f, GrainEmboss = 0.028f, GrainNoise = 0.07f, GrainAngle = 14f },
+        };
+
+        /// <summary>Сколько досок достаётся одному уровню (2–3: «одна мастерская, несколько досок»).</summary>
+        public int GrainVariantsPerLevel = 3;
+
+        /// <summary>Строка таблицы для статики — пол, стены, колонны, штыри. Спокойный прямослой (0 = V1).</summary>
+        public int StaticGrainVariant;
+
+        /// <summary>Разброс сдвига фазы, в опорных единицах волокна (после поджатия на масштаб). Десятка с запасом
+        /// перекрывает период шума волны, поэтому две детали одной формы не совпадают ни линиями, ни волной.</summary>
+        public float GrainPhaseRange = 10f;
+
+        /// <summary>Потолок строк таблицы — длина uniform-массива <c>_GrainVariants</c> в шейдере пополам.</summary>
+        public const int MaxGrainVariants = 6;
 
         // ------------------------------------------------------------ свет и кромка
 
@@ -560,12 +602,88 @@ namespace Gameplay.View
         }
 
         /// <summary>
-        /// Какой уровень сейчас на экране. Ставится <see cref="WoodLevelPalettePresenter"/> по
-        /// событию загрузки уровня, а в каталоге — при листании страниц. Статика, а не поле вью:
+        /// Какой уровень сейчас на экране. Ставится через <see cref="SetCurrentLevel"/>: в игре —
+        /// <see cref="WoodLevelPalettePresenter"/> по событию загрузки уровня, в каталоге — при листании
+        /// страниц, на кадре приёмки — перед сборкой сцены. Статика, а не поле вью:
         /// цвет спрашивает <see cref="PieceView"/>, у которого никакой ссылки на уровень нет и не
         /// должно быть — вью детали не обязан знать про кампанию.
         /// </summary>
         public static string CurrentLevelId;
+
+        /// <summary>Уровень целиком — нужен раздаче досок (<see cref="WoodGrainAssignment"/>): ей нужен граф соседства
+        /// собранной фигуры, а не только id. Ставится вместе с <see cref="CurrentLevelId"/> через <see cref="SetCurrentLevel"/>.</summary>
+        private static LevelData _currentLevel;
+
+        /// <summary>Раздача досок текущего уровня. Ленивая: сбрасывается сменой уровня и любым <see cref="Apply"/>
+        /// (крутили таблицу или число досок на уровень — раздача обязана пересчитаться).</summary>
+        private static WoodGrainAssignment _grain;
+
+        /// <summary>
+        /// Объявить уровень на экране: id (цветовая схема) и сам уровень (раздача досок, TASK-559). Единая точка для
+        /// игры (<see cref="WoodLevelPalettePresenter"/>), каталога и кадра приёмки — чтобы ни один из трёх не
+        /// показывал уровень с чужой раздачей.
+        /// </summary>
+        public static void SetCurrentLevel(LevelData level)
+        {
+            CurrentLevelId = level?.LevelId;
+            _currentLevel = level;
+            _grain = null;
+        }
+
+        private WoodGrainAssignment Grain
+        {
+            get
+            {
+                var levelId = _currentLevel?.LevelId;
+                if (_grain != null && _grain.LevelId == (levelId ?? string.Empty))
+                    return _grain;
+
+                var count = GrainVariety && GrainVariants != null ? Mathf.Min(GrainVariants.Count, MaxGrainVariants) : 0;
+                _grain = WoodGrainAssignment.Build(_currentLevel, count, GrainVariantsPerLevel, StaticGrainVariant,
+                    GrainPhaseRange);
+                LogGrain(_grain);
+                return _grain;
+            }
+        }
+
+        /// <summary>Инстанс-поле <c>_GrainPick</c> детали: доска её вида и фаза её экземпляра. Ноль — «общие числа».</summary>
+        public Vector4 GrainPick(string kind, int ordinal) => Grain.PickFor(kind, ordinal);
+
+        /// <summary>То же для статики: всегда спокойная доска, фаза от <paramref name="salt"/>.</summary>
+        public Vector4 GrainPickStatic(string salt) => Grain.PickForStatic(salt);
+
+        /// <summary>Положить выбор доски в блок свойств рендерера. Звать ПОСЛЕ <c>mpb.Clear()</c>.</summary>
+        public static void SetGrainPick(MaterialPropertyBlock mpb, Vector4 pick)
+        {
+            if (mpb != null)
+                mpb.SetVector(GrainPickId, pick);
+        }
+
+        // Раздачу печатаем один раз на уровень — без неё «почему у этих двух соседей одна доска» пришлось бы
+        // выяснять на глаз, как когда-то со схлопыванием палитры.
+        private void LogGrain(WoodGrainAssignment grain)
+        {
+            if (grain.LevelSet.Count == 0 || string.IsNullOrEmpty(grain.LevelId))
+                return;
+            var sb = new System.Text.StringBuilder();
+            sb.Append("[wood] волокно ").Append(grain.LevelId).Append(": набор ");
+            for (var i = 0; i < grain.LevelSet.Count; i++)
+                sb.Append(i > 0 ? ", " : string.Empty).Append(GrainVariantName(grain.LevelSet[i]));
+            sb.Append(" — ");
+            var first = true;
+            foreach (var pair in grain.VariantByKind)
+            {
+                sb.Append(first ? string.Empty : ", ").Append(pair.Key).Append('=').Append(GrainVariantName(pair.Value));
+                first = false;
+            }
+            sb.Append("; соседей с одной доской: ").Append(grain.SameVariantNeighbourPairs);
+            Debug.Log(sb.ToString());
+        }
+
+        private string GrainVariantName(int row) =>
+            GrainVariants != null && row >= 0 && row < GrainVariants.Count && !string.IsNullOrEmpty(GrainVariants[row].Name)
+                ? GrainVariants[row].Name
+                : $"#{row}";
 
         private WoodLevelPalette FindLevelPalette(string levelId)
         {
@@ -838,6 +956,12 @@ namespace Gameplay.View
         private static readonly int BrightnessId = Shader.PropertyToID("_Brightness");
         private static readonly int ShadowAlphaId = Shader.PropertyToID("_Alpha");
         private static readonly int ShadowSoftId = Shader.PropertyToID("_Soft");
+        private static readonly int GrainVariantsId = Shader.PropertyToID("_GrainVariants");
+        private static readonly int GrainPickId = Shader.PropertyToID("_GrainPick");
+
+        // Буфер таблицы — ВСЕГДА полной длины: Unity фиксирует длину массива при первом SetVectorArray и молча
+        // обрезает более длинный позже (тот же капкан, что у контура силуэта, BlockMaterial.PackSilhouette).
+        [NonSerialized] private readonly Vector4[] _grainTable = new Vector4[MaxGrainVariants * 2];
 
         /// <summary>
         /// Разложить числа по материалам и геометрии. <paramref name="rebuildMeshes"/> выключают,
@@ -846,6 +970,8 @@ namespace Gameplay.View
         /// </summary>
         public void Apply(bool rebuildMeshes = true)
         {
+            // Таблицу досок или число досок на уровень могли покрутить — раздача пересчитается при первом запросе.
+            _grain = null;
             ApplyToBlock(BlockMaterial.Shared);
             // TASK-353/368: у вогнутой массы и freeform-деталей свой материал (кейворд _CONCAVE_SDF на нём), но числа
             // стиля те же — живой тюнинг обязан доезжать и до него, иначе они разъедутся с остальными деталями.
@@ -898,7 +1024,25 @@ namespace Gameplay.View
                 block.SetFloat(AoWidthId, AoWidth);
                 block.SetFloat(SaturationId, Saturation);
                 block.SetFloat(BrightnessId, Brightness);
+                block.SetVectorArray(GrainVariantsId, PackGrainTable());
             }
+        }
+
+        /// <summary>Таблица досок для шейдера: две строки на вариант — (Scale, Warp, Sharp, Vary) и
+        /// (Strength, Emboss, Noise, Angle). Хвост нулями: строку за пределами набора деталь не выберет.</summary>
+        private Vector4[] PackGrainTable()
+        {
+            Array.Clear(_grainTable, 0, _grainTable.Length);
+            var count = GrainVariants == null ? 0 : Mathf.Min(GrainVariants.Count, MaxGrainVariants);
+            for (var i = 0; i < count; i++)
+            {
+                var v = GrainVariants[i];
+                if (v == null)
+                    continue;
+                _grainTable[i * 2] = new Vector4(v.GrainScale, v.GrainWarp, v.GrainSharp, v.GrainVary);
+                _grainTable[i * 2 + 1] = new Vector4(v.GrainStrength, v.GrainEmboss, v.GrainNoise, v.GrainAngle);
+            }
+            return _grainTable;
         }
 
         /// <summary>Числа тени — в её материал. Отдельно от <see cref="ApplyToBlock"/> по той же
@@ -964,6 +1108,10 @@ namespace Gameplay.View
             // Палитра могла не попасть в файл (старый формат) — без неё песочница осталась бы без цветов.
             if (result.Palette == null || result.Palette.Count == 0)
                 result.Palette = new WoodTuning().Palette;
+
+            // То же для досок (TASK-559): файл старого формата их не знает. Именно null, а не «пусто»: пустой список
+            // в файле — осознанное «вариантов нет», его не перетираем.
+            result.GrainVariants ??= new WoodTuning().GrainVariants;
             return true;
         }
 

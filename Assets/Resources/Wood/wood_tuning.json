@@ -14,6 +14,67 @@
     "GrainAngle": 0.0,
     "GrainAlignLong": 1.0,
     "GrainSpace": 0.0,
+    "GrainVariety": true,
+    "GrainVariants": [
+        {
+            "Name": "V1 прямослой",
+            "GrainScale": 4.0,
+            "GrainWarp": 0.06,
+            "GrainSharp": 3.8,
+            "GrainVary": 0.35,
+            "GrainStrength": 0.085,
+            "GrainEmboss": 0.028,
+            "GrainNoise": 0.05,
+            "GrainAngle": 0.0
+        },
+        {
+            "Name": "V2 волнистый",
+            "GrainScale": 2.6,
+            "GrainWarp": 0.65,
+            "GrainSharp": 2.4,
+            "GrainVary": 0.6,
+            "GrainStrength": 0.095,
+            "GrainEmboss": 0.032,
+            "GrainNoise": 0.06,
+            "GrainAngle": 0.0
+        },
+        {
+            "Name": "V3 плотный",
+            "GrainScale": 4.5,
+            "GrainWarp": 0.2,
+            "GrainSharp": 4.5,
+            "GrainVary": 0.45,
+            "GrainStrength": 0.075,
+            "GrainEmboss": 0.02,
+            "GrainNoise": 0.04,
+            "GrainAngle": 0.0
+        },
+        {
+            "Name": "V4 редкий",
+            "GrainScale": 1.7,
+            "GrainWarp": 0.35,
+            "GrainSharp": 1.8,
+            "GrainVary": 0.75,
+            "GrainStrength": 0.1,
+            "GrainEmboss": 0.035,
+            "GrainNoise": 0.07,
+            "GrainAngle": 0.0
+        },
+        {
+            "Name": "V5 косой",
+            "GrainScale": 2.957,
+            "GrainWarp": 0.275,
+            "GrainSharp": 2.6,
+            "GrainVary": 0.6,
+            "GrainStrength": 0.085,
+            "GrainEmboss": 0.028,
+            "GrainNoise": 0.07,
+            "GrainAngle": 14.0
+        }
+    ],
+    "GrainVariantsPerLevel": 3,
+    "StaticGrainVariant": 0,
+    "GrainPhaseRange": 10.0,
     "LightAngle": 80.54622650146484,
     "BevelWidth": 0.0670674741268158,
     "BevelLight": 0.3155897259712219,

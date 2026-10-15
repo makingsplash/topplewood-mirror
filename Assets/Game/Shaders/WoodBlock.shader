@@ -26,6 +26,10 @@
 // MaterialPropertyBlock по _BaseColor (и легаси _Color), а меши деталей — односторонние веера
 // с нормалью +Z, поэтому Cull держим выключенным и свойство _Cull обязано существовать.
 //
+// ДОСКИ (TASK-559): числа волокна у детали — не одиночные _Grain*, а строка таблицы _GrainVariants, выбранная её
+// инстанс-полем _GrainPick (WoodTuning.GrainPick → WoodGrainAssignment). Одиночные _Grain* — запас для мешей без
+// _GrainPick и для выключенного WoodTuning.GrainVariety. _GrainAlignLong и _GrainSpace у досок общие.
+//
 // Unlit намеренно: камера смотрит вдоль +Z, детали кувыркаются под физикой, и «свет»
 // надёжнее нарисовать самим, чем гонять его через нормали вееров.
 //
@@ -154,14 +158,26 @@ Shader "Game/Wood Block"
                 float2 edgeN      : TEXCOORD3;
                 float3 positionOS : TEXCOORD4;
                 float3 positionWS : TEXCOORD5;
+                // TASK-559: доска детали — строка таблицы _GrainVariants, выбранная в ВЕРШИННОМ шейдере. Одна на
+                // всю деталь, поэтому без интерполяции: в фрагменте нет ни динамического индекса, ни лишней ALU.
+                nointerpolation float4 grainA     : TEXCOORD6;   // Scale, Warp, Sharp, Vary
+                nointerpolation float4 grainB     : TEXCOORD7;   // Strength, Emboss, Noise, Angle (со знаком)
+                nointerpolation float2 grainPhase : TEXCOORD8;   // сдвиг фазы экземпляра (опорные ед. волокна)
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            // Per-instance: цвет приходит из MaterialPropertyBlock на каждую деталь.
+            // Per-instance: цвет и выбор доски приходят из MaterialPropertyBlock на каждую деталь.
+            // _GrainPick (TASK-559): x — строка таблицы + 1 (0 = «таблицы нет, общие числа»), yz — сдвиг фазы,
+            // w — знак угла косого варианта. Инстансное, как цвет: выбор доски не выбивает деталь из батча.
             UNITY_INSTANCING_BUFFER_START(Props)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _Color)
+                UNITY_DEFINE_INSTANCED_PROP(float4, _GrainPick)
             UNITY_INSTANCING_BUFFER_END(Props)
+
+            // TASK-559: таблица досок — uniform МАТЕРИАЛА (WoodTuning.ApplyToBlock), две строки на вариант, ≤6 вариантов.
+            // Материалов по-прежнему два (Shared, ConcaveShared), новых кейвордов нет.
+            float4 _GrainVariants[12];
 
             float _StyleScale, _DetailRef, _DetailScale;
             float _GrainScale, _GrainStrength, _GrainWarp, _GrainSharp, _GrainVary, _GrainEmboss, _GrainNoise;
@@ -202,25 +218,26 @@ Shader "Game/Wood Block"
 
             /// across — координата ПОПЕРЁК волокна, along — вдоль. Обе в мировых единицах,
             /// поэтому плотность линий одинакова у большой и маленькой детали.
-            float woodGrain(float across, float along)
+            /// g — доска (Scale, Warp, Sharp, Vary), noise — шероховатость: приходят из строки таблицы (TASK-559).
+            float woodGrain(float across, float along, float4 g, float noise)
             {
                 // Волна: медленный шум сдвигает линии поперёк. Без него линии — прямая зебра.
                 float wave = (fbm(float2(along * 0.75, across * 0.5)) - 0.5) * 2.0;
-                float lines = across * _GrainScale + wave * _GrainWarp * _GrainScale;
+                float lines = across * g.x + wave * g.y * g.x;
 
                 // Гребень: |sin| в степени даёт тонкую тёмную прожилку с мягкими краями.
-                float ridge = pow(saturate(1.0 - abs(sin(3.14159 * lines))), _GrainSharp);
+                float ridge = pow(saturate(1.0 - abs(sin(3.14159 * lines))), g.z);
 
                 // Разброс: часть прожилок глубже, часть почти не видна — ровные линии выдают процедурность.
                 float vary = fbm(float2(across * 1.7, along * 0.4));
-                ridge *= lerp(1.0, vary * 1.9, _GrainVary);
+                ridge *= lerp(1.0, vary * 1.9, g.w);
 
                 // Мелкая шероховатость поверх — дерево не бывает идеально гладким между линиями.
                 // Частота у неё в ДЕВЯТЬ раз выше прожилки, то есть период около полутора пикселей:
                 // на мелкой детали это незаметно, а на крупной статике (плита 2.60×3.90) читается
                 // как песок — владелец назвал это «мелкий патерн шумный». Амплитуда вынесена в
                 // ползунок: 0 — гладко между прожилками, 0.35 — как было.
-                float fine = (fbm(float2(across * 9.0, along * 3.0)) - 0.5) * _GrainNoise;
+                float fine = (fbm(float2(across * 9.0, along * 3.0)) - 0.5) * noise;
                 return saturate(ridge + fine);
             }
 
@@ -229,6 +246,19 @@ Shader "Game/Wood Block"
                 Varyings OUT;
                 UNITY_SETUP_INSTANCE_ID(IN);
                 UNITY_TRANSFER_INSTANCE_ID(IN, OUT);
+
+                // TASK-559: доска детали. Без _GrainPick (чужой меш, выключенный тумблер) x = 0 и берутся общие числа
+                // материала — фрагмент тогда байт-в-байт прежний. Без ветвления: lerp по маске дешевле развилки.
+                float4 pick = UNITY_ACCESS_INSTANCED_PROP(Props, _GrainPick);
+                float useRow = step(0.5, pick.x);
+                int row = (int)max(pick.x - 0.5, 0.0) * 2;
+                row = min(row, 10);
+                float4 rowB = _GrainVariants[row + 1];
+                rowB.w *= (pick.w < 0.0) ? -1.0 : 1.0;
+                OUT.grainA = lerp(float4(_GrainScale, _GrainWarp, _GrainSharp, _GrainVary), _GrainVariants[row], useRow);
+                OUT.grainB = lerp(float4(_GrainStrength, _GrainEmboss, _GrainNoise, _GrainAngle), rowB, useRow);
+                OUT.grainPhase = pick.yz;
+
                 VertexPositionInputs p = GetVertexPositionInputs(IN.positionOS.xyz);
                 OUT.positionCS = p.positionCS;
                 OUT.positionWS = p.positionWS;
@@ -270,28 +300,31 @@ Shader "Game/Wood Block"
                 // Порог 1.1, а не «что больше»: у КВАДРАТНОЙ детали микроскопический перевес по высоте
                 // разворачивал бы волокно вертикально. Работает только если разворот включён.
                 float longIsY = step(sz.x * 1.1, sz.y) * saturate(_GrainAlignLong);
-                float ang = radians(_GrainAngle) + longIsY * 1.5707963;
+                // Угол — из доски детали (TASK-559): у косого варианта он не ноль и со знаком от сида вида.
+                float ang = radians(IN.grainB.w) + longIsY * 1.5707963;
                 float sa, ca;
                 sincos(ang, sa, ca);
                 // Координаты волокна поджимаются под размер детали ДО woodGrain: так вместе с
                 // частотой линий сжимаются и волна, и разброс, и мелкая шероховатость — иначе на
                 // мелкой детали частые линии плавали бы в крупной волне и читались рябью.
-                float along  = ( gp.x * ca + gp.y * sa) / k;
-                float across = (-gp.x * sa + gp.y * ca) / k;
+                // Сдвиг фазы экземпляра (TASK-559) — после поджатия: волокно в координатах детали, и без
+                // него две детали одной формы несли побайтно одинаковый рисунок.
+                float along  = ( gp.x * ca + gp.y * sa) / k + IN.grainPhase.x;
+                float across = (-gp.x * sa + gp.y * ca) / k + IN.grainPhase.y;
 
-                float grain = woodGrain(across, along);
+                float grain = woodGrain(across, along, IN.grainA, IN.grainB.z);
 
                 // Волокно тянем по тону: тёмные прожилки уходят в глубину, светлые промежутки
                 // чуть теплее базы. Плоское умножение на серый делает дерево грязным.
                 float3 rgb = baseCol.rgb * _Brightness;
                 float3 deep = rgb * float3(0.66, 0.55, 0.47);
                 float3 lightWood = rgb * float3(1.07, 1.04, 0.96);
-                float3 col = lerp(lightWood, deep, saturate(grain) * _GrainStrength);
+                float3 col = lerp(lightWood, deep, saturate(grain) * IN.grainB.x);
 
                 // Рельеф прожилки: разница волокна на шаг поперёк себя. Шаг задан в УЖЕ поджатых
                 // координатах, то есть он постоянная доля прожилки на детали любого размера.
-                float grainShifted = woodGrain(across + 0.035, along);
-                col = saturate(col + (grainShifted - grain) * _GrainEmboss);
+                float grainShifted = woodGrain(across + 0.035, along, IN.grainA, IN.grainB.z);
+                col = saturate(col + (grainShifted - grain) * IN.grainB.y);
 
                 // ------------------------------------------------- кромка: сколько и куда
 #ifdef _CONCAVE_SDF

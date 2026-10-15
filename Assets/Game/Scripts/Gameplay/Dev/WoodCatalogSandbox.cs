@@ -218,7 +218,8 @@ namespace Gameplay.Dev
 
             // Схема цвета ищется по текущему уровню — каталог обязан его объявить, иначе
             // страницы красились бы схемой того уровня, который остался от прошлого показа.
-            WoodTuning.CurrentLevelId = _pages[_page].LevelId;
+            // TASK-559: уровнем целиком — по нему же раздаются доски волокна.
+            WoodTuning.SetCurrentLevel(_pages[_page].Level);
 
             if (Assembled)
                 LayoutAssembled(_pages[_page]);

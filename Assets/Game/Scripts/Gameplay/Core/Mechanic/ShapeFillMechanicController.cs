@@ -567,7 +567,7 @@ namespace Gameplay.Core.Mechanic
             _bodyByInstance[piece.InstanceId] = bodyId;
             _typeByInstance[piece.InstanceId] = type;
 
-            var view = _viewFactory.Create(type);
+            var view = _viewFactory.Create(type, piece.PlacementIndex);
             view.SetState(PieceLifecycle.Idle);
             view.Sync(piece.Position, piece.Rotation);
             _viewByInstance[piece.InstanceId] = view;
@@ -593,7 +593,7 @@ namespace Gameplay.Core.Mechanic
             piece.State = PieceLifecycle.Falling;
             piece.RestTimer = 0f;
 
-            var view = _viewFactory.Create(type);
+            var view = _viewFactory.Create(type, piece.PlacementIndex);
             view.SetState(PieceLifecycle.Falling);
             view.Sync(piece.Position, piece.Rotation);
             _viewByInstance[piece.InstanceId] = view;
