@@ -69,16 +69,13 @@ namespace Gameplay.View
             // content is framed into the lower (1 - band) of the viewport, then the camera is raised by size*band so
             // the top band stays empty for the preview card. TASK-539: the hint button's bottom-right corner is kept
             // clear of the figure and pieces too, with this device's safe area (the button sits inside it). TASK-563:
-            // so are the top corners of RESTART and the settings gear.
-            var safe = Screen.safeArea;
-            var safeLeft = Screen.width > 0 ? safe.xMin / Screen.width : 0f;
-            var safeRight = Screen.width > 0 ? (Screen.width - safe.xMax) / Screen.width : 0f;
-            var safeBottom = Screen.height > 0 ? safe.yMin / Screen.height : 0f;
-            var safeTop = Screen.height > 0 ? (Screen.height - safe.yMax) / Screen.height : 0f;
+            // so are the top corners of RESTART and the settings gear. TASK-576: the band hangs under the safe top (a
+            // notch / status bar), so the frame reserves band + safeTop and is raised by size*(band + safeTop); the card
+            // reads the SAME insets (ScreenSafeInsets) and sits in that band, in line with the top buttons.
+            var safe = ScreenSafeInsets.Current();
             if (!CameraFramingMath.TryFrame(level, camera.aspect, _config.Margin, _config.PreviewBandFraction,
-                    _config.MinOrthoSize, HudCornerZone.HintButton, safeRight, safeBottom, HudCornerZone.TopButtons,
-                    new CameraFramingMath.SafeInsets(safeLeft, safeRight, safeBottom, safeTop),
-                    out var size, out var centre))
+                    _config.MinOrthoSize, HudCornerZone.HintButton, safe.Right, safe.Bottom, HudCornerZone.TopButtons,
+                    safe, out var size, out var centre))
                 return;
             camera.orthographicSize = size;
 

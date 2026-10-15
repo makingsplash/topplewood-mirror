@@ -15,8 +15,9 @@ namespace Gameplay.View
 
         /// <summary>
         /// Fraction (0..1) of the viewport height reserved at the TOP for the target-preview overlay
-        /// (TASK-033). Content is framed into the lower <c>(1 − PreviewBandFraction)</c> and the camera is
-        /// raised so the top band stays empty for the preview card, which auto-fits into it
+        /// (TASK-033), hung under the safe top (TASK-576). Content is framed into the lower
+        /// <c>(1 − PreviewBandFraction − safeTop)</c> and the camera is raised so the band under the safe top
+        /// stays empty for the preview card, which auto-fits into it
         /// (<see cref="TargetPreviewView"/>). Single source of truth for the band — the preview reads it too.
         /// Owner reference: portrait 1080×1920, ~15–20% (UNVERIFIED — tuned after playtest).
         /// </summary>

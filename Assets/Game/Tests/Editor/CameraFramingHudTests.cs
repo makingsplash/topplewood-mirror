@@ -195,7 +195,8 @@ namespace Gameplay.Tests
         /// The before/after proof for TASK-563: on every level of the real line-up, at phone and tablet aspects and
         /// with and without a cutout's safe top, the frame WITH the top-corner reserve is bit-identical to the frame
         /// without it — the buttons live inside the preview band, which content never enters. Writes the comparison
-        /// to <c>Logs/TASK-563-top-corners.txt</c>.
+        /// to <c>Logs/TASK-563-top-corners.txt</c>. TASK-576: the band hangs under the safe top, so the base frame is
+        /// the one without the reserve but with the band shifted by the same safe top (Band + safeTop).
         /// </summary>
         [Test]
         public void RealLineup_TopCornerReserve_LeavesFrameUnchanged()
@@ -204,7 +205,8 @@ namespace Gameplay.Tests
             var aspects = Phones.Concat(new[] { ("21:9", 1080f / 2520f), ("3:4", 0.75f) }).ToArray();
             var safeTops = new[] { 0f, 0.05f };
             var report = new StringBuilder();
-            report.AppendLine("TASK-563 — кадр с резервом верхних углов против кадра без него, CameraFramingMath");
+            report.AppendLine("TASK-563 — кадр с резервом верхних углов против кадра без него (полоса под safe-top, " +
+                              "TASK-576), CameraFramingMath");
             var changed = new List<string>();
             var frames = 0;
 
@@ -217,7 +219,7 @@ namespace Gameplay.Tests
                     var level = source.Load(i);
                     if (level == null)
                         continue;
-                    CameraFramingMath.TryFrame(level, aspect, Margin, Band, MinOrtho, Hint, 0f, 0f,
+                    CameraFramingMath.TryFrame(level, aspect, Margin, Band + safeTop, MinOrtho, Hint, 0f, 0f,
                         out var oldSize, out var oldCentre);
                     CameraFramingMath.TryFrame(level, aspect, Margin, Band, MinOrtho, Hint, 0f, 0f, Top,
                         new CameraFramingMath.SafeInsets(0f, 0f, 0f, safeTop), out var size, out var centre);
@@ -233,7 +235,8 @@ namespace Gameplay.Tests
                 }
                 HudCornerZone.RestartButton.ToViewport(aspect, 0f, safeTop, out var side, out var depth);
                 report.AppendLine($"{name} (aspect {aspect:0.####}), safeTop {safeTop:0.##}: угол {side:P1} ширины × " +
-                                  $"{depth:P1} высоты (полоса превью {Band:P0}); кадр совпал у {same} из {source.Count}");
+                                  $"{depth:P1} высоты (полоса превью {safeTop:P0}…{safeTop + Band:P0}); " +
+                                  $"кадр совпал у {same} из {source.Count}");
             }
             report.AppendLine($"\nвсего кадров: {frames}, изменилось: {changed.Count}");
             foreach (var line in changed)
@@ -245,6 +248,87 @@ namespace Gameplay.Tests
 
             Assert.That(source.Count, Is.GreaterThan(0));
             Assert.That(changed, Is.Empty, string.Join("\n", changed));
+        }
+
+        // ---------------------------------------------------------------- TASK-576: the band under the safe top
+
+        /// <summary>
+        /// TASK-576: the preview band hangs under the safe top. On every level of the real line-up, at five aspects and
+        /// three safe tops (none, the owner's phone 100/2400, 0.05): (a) with no cutout the live frame is bit-identical
+        /// to the plain frame — the acceptance "no notch ⇒ nothing changes"; (b) the content stays below the SHIFTED
+        /// band; (c) the top buttons shift with the safe top and end inside that band, and so does the card's anchor.
+        /// Writes <c>Logs/TASK-576-band-under-safe-top.txt</c>: how many frames moved at safeTop &gt; 0 and the largest
+        /// orthoSize growth (the price of the notch).
+        /// </summary>
+        [Test]
+        public void RealLineup_PreviewBandUnderSafeTop()
+        {
+            var source = new JsonLevelSource(new FileStore(), new LevelDataValidator());
+            var aspects = Phones.Concat(new[] { ("21:9", 1080f / 2520f), ("3:4", 0.75f) }).ToArray();
+            var safeTops = new[] { 0f, 100f / 2400f, 0.05f };
+            var report = new StringBuilder();
+            report.AppendLine("TASK-576 — полоса превью под safe-top: живой кадр против кадра без выреза, CameraFramingMath");
+            var failures = new List<string>();
+
+            foreach (var (name, aspect) in aspects)
+            foreach (var safeTop in safeTops)
+            {
+                var moved = 0;
+                var maxGrowth = 1f;
+                for (var i = 0; i < source.Count; i++)
+                {
+                    var level = source.Load(i);
+                    if (level == null)
+                        continue;
+                    CameraFramingMath.TryFrame(level, aspect, Margin, Band, MinOrtho, Hint, 0f, 0f,
+                        out var plainSize, out var plainCentre);
+                    CameraFramingMath.TryFrame(level, aspect, Margin, Band, MinOrtho, Hint, 0f, 0f, Top,
+                        new CameraFramingMath.SafeInsets(0f, 0f, 0f, safeTop), out var size, out var centre);
+
+                    var same = size == plainSize && centre.X == plainCentre.X && centre.Y == plainCentre.Y;
+                    if (safeTop == 0f && !same)
+                        failures.Add($"(a) {name} #{i + 1} {level.LevelId}: без выреза кадр изменился — " +
+                                     $"orthoSize {plainSize} → {size}, centre.Y {plainCentre.Y} → {centre.Y}");
+                    if (!same)
+                    {
+                        moved++;
+                        maxGrowth = System.MathF.Max(maxGrowth, size / plainSize);
+                    }
+
+                    CameraFramingMath.TryContentBounds(level, out _, out var max);
+                    var usableTop = centre.Y + size - 2f * size * (Band + safeTop);
+                    if (max.Y + Margin > usableTop + Eps)
+                        failures.Add($"(b) {name} safeTop {safeTop} #{i + 1} {level.LevelId}: поле под полосой — " +
+                                     $"верх {max.Y + Margin} > {usableTop}");
+                }
+
+                foreach (var zone in Top)
+                {
+                    zone.ToViewport(aspect, 0f, 0f, out _, out var depth0);
+                    zone.ToViewport(aspect, 0f, safeTop, out _, out var depth);
+                    if (System.MathF.Abs(depth - safeTop - depth0) > Eps || depth >= safeTop + Band)
+                        failures.Add($"(c) {name} safeTop {safeTop}: кнопка {(zone.Right ? "справа" : "слева")} " +
+                                     $"до {depth:P1} — вне полосы {safeTop:P1}…{safeTop + Band:P1}");
+                }
+
+                var anchorDepth = 1f - CameraFramingMath.PreviewBandCentreViewportY(Band, safeTop);
+                if (anchorDepth <= safeTop || anchorDepth >= safeTop + Band)
+                    failures.Add($"(c) {name} safeTop {safeTop}: якорь карточки {anchorDepth:P1} вне полосы");
+
+                report.AppendLine($"{name} (aspect {aspect:0.####}), safeTop {safeTop:0.####}: полоса " +
+                                  $"{safeTop:P1}…{safeTop + Band:P1}; кадр сдвинулся у {moved} из {source.Count}, " +
+                                  $"рост orthoSize до ×{maxGrowth:0.###}");
+            }
+            report.AppendLine($"\nнарушений: {failures.Count}");
+            foreach (var line in failures)
+                report.AppendLine(line);
+
+            Directory.CreateDirectory("Logs");
+            File.WriteAllText("Logs/TASK-576-band-under-safe-top.txt", report.ToString());
+            TestContext.Out.WriteLine(report.ToString());
+
+            Assert.That(source.Count, Is.GreaterThan(0));
+            Assert.That(failures, Is.Empty, string.Join("\n", failures));
         }
 
         // ---------------------------------------------------------------- helpers
