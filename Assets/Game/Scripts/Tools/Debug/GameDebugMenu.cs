@@ -23,8 +23,10 @@ namespace Tools.Debug
 
 #if GPIE_DEVELOPMENT
             // TASK-562: the level line heads the menu (it left the HUD). Dynamic: DDMLabel re-reads it every frame, so it
-            // follows ◀ Prev / Next ▶ / Jump to pool, which change the level without closing the menu.
-            DDMLabel.CreateDynamic(context, PositionLabel);
+            // follows ◀ Prev / Next ▶ / Jump to pool, which change the level without closing the menu. DDMMain puts its own
+            // "Console" button ahead of our content (DDMMain.MainMenuContent), so lift the line above it: page elements are
+            // plain siblings under the page's layout parent.
+            DDMLabel.CreateDynamic(context, PositionLabel).transform.SetAsFirstSibling();
 #endif
 
             CreateApplicationFlow(context);

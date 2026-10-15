@@ -145,8 +145,9 @@ namespace Gameplay.Dev
             // is open we HIDE the RESTART canvas (HideRestartButtonWhileMenuOpen, below), so X has no competitor in
             // the top-right AND the menu no longer needs the top slot — it sits at short.MaxValue-1, STRICTLY below
             // the DEV toggle (short.MaxValue), which makes the toggle emergency-exit win its corner deterministically.
-            // Resulting order:
-            //   menu open:   DEV toggle (32767) > menu scrim (32766) > [RESTART hidden]
+            // Resulting order (since TASK-562 the toggle is hidden while the menu is open — it covered the level line; the
+            // order is kept so that dropping the hide never makes the menu an undefined raycast winner again):
+            //   menu open:   [DEV toggle hidden] > menu scrim (32766) > [RESTART hidden]
             //   menu closed: DEV toggle (32767) > RESTART (32766) > banner (31000) > gameplay
             // The whole host is #if GPIE_DEVELOPMENT, so player builds and the product play-screen layout are
             // untouched regardless.
@@ -158,20 +159,27 @@ namespace Gameplay.Dev
             // the menu GO, and OnDestroy invokes the callback).
             _restartGuard.Hide();
 
+            // TASK-562 (QA D1): since the chip moved under the gear it lands on the menu's first row and, being the top
+            // canvas, covers the level line. Hide it while the menu is open, same as the prod entry point; the menu
+            // closes by its "X" (no competitor there — RESTART is hidden above) or the backquote key.
+            SetToggleVisible(false);
+
             _menu = go.GetComponent<DDMMain>();
             _menu.Init(_config, BuildContent, _ =>
             {
                 _menu = null;
                 _goToField = null;
                 _restartGuard.Restore();
+                SetToggleVisible(true);
             });
         }
 
         // Content generator handed the live DDMContext by DDMMain — mirrors the retired overlay's UX.
         private void BuildContent(DDMContext context)
         {
-            // Live number + track position + current level id; DDMLabel.CreateDynamic re-reads this every frame.
-            DDMLabel.CreateDynamic(context, PositionLabel);
+            // Live number + track position + current level id; DDMLabel.CreateDynamic re-reads this every frame. Lifted
+            // above DDMMain's own "Console" button so it heads the menu, like the prod menu (TASK-562).
+            DDMLabel.CreateDynamic(context, PositionLabel).transform.SetAsFirstSibling();
 
             // ◀/▶ move along the current track (TASK-528): clamped on the line-up, around the circle in the pool.
             // Non-persisting, like every bringup jump (RFC Q2).
@@ -213,6 +221,13 @@ namespace Gameplay.Dev
                 // (now IsCompleted==false, level 0 loaded) → FTUE replays. No relaunch needed.
                 AfterJump(() => _campaign.DevJumpToLevel(0));
             });
+        }
+
+        // Null-safe: on Dispose the menu's close callback fires a frame later, after the canvas is already gone.
+        private void SetToggleVisible(bool visible)
+        {
+            if (_buttonCanvas != null)
+                _buttonCanvas.SetActive(visible);
         }
 
         private string CurrentLevelNumber() => _campaign.DevProgress.LevelNumber.ToString();

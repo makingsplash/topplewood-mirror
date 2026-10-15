@@ -35,6 +35,7 @@ namespace Gameplay.Dev
     ///  2. While the menu is open the RESTART canvas is hidden (<see cref="RestartButtonGuard"/>) — otherwise the
     ///     z-order collision of TASK-117 reproduces on the prod path (RESTART at short.MaxValue-1 swallows the menu's
     ///     close "X"). The hook is on <c>DebugMenuShown.OnChanged</c>, so it also fixes the collision for shake-opens.
+    ///     The same hook hides the DEV chip itself while the menu is open (TASK-562 QA D1: it sat on the level line).
     /// </summary>
     public sealed class GameDebugMenuEntryPoint : IStartable, ITickable, IDisposable
     {
@@ -91,6 +92,12 @@ namespace Gameplay.Dev
                 _restartGuard.Hide();
             else
                 _restartGuard.Restore();
+
+            // TASK-562 (QA D1): the chip's canvas is the top one and the chip sits on the menu's first row, so it covered the
+            // level line. Hide it while the menu is open — the menu closes by its own "X", and drawing the chip under the
+            // menu instead would let the menu cover the button that opened it.
+            if (_buttonCanvas != null)
+                _buttonCanvas.SetActive(!shown);
         }
 
         // Same sources as bringup's in-menu label (DevPosition/DevProgress are the authoritative live in-memory
