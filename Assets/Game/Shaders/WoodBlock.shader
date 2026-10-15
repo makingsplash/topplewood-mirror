@@ -1,6 +1,11 @@
 // Дерево для деталей и подставки. Волокно, фаска и контур считаются в шейдере —
 // текстур под каждый оттенок кубика в проекте нет.
 //
+// ЦЕНА ПИКСЕЛЯ (TASK-557): это самый дорогой пиксель сцены, и на mid-range телефоне он один ронял игру до 30 FPS.
+// Две вещи поэтому сделаны выборками, а не арифметикой: шум волокна — из запечённой текстуры (WoodGrainNoise.cs),
+// кромка силуэта под _CONCAVE_SDF — из запечённого поля расстояний (SilhouetteField.cs). Прежде чем добавлять
+// сюда шум, цикл или ещё один вызов woodGrain — замер на устройстве (метод: docs/architecture/android-runtime.md).
+//
 // ГЛАВНОЕ ПРАВИЛО ЭТОГО ФАЙЛА: ничего не считать в нормализованных uv.
 // Владелец забраковал прежнюю версию словами «на всех кусках смотрится по-разному», и причина была
 // ровно в этом: uv нормализованы по габариту детали, поэтому один и тот же градиент давал на широком
@@ -39,7 +44,8 @@
 // силуэте, и линейная интерполяция рисовала вдоль них фаску и контур — шов. Под кейвордом расстояние `edge`
 // и нормаль ближнего ребра считаются per-fragment по CCW-полилинии контура (_ConcaveOutline, ≤64 узлов,
 // SilhouetteSdf.hlsl) в ОБЪЕКТНОМ пространстве: у массы оно совпадает с мировым, у детали кувыркается вместе
-// с ней. Прежний путь массы строил контур ПЛОТНЫМ SDF-мешем (100k+ треуг., фриз 4.7 с). Кейворд включён на
+// с ней. С TASK-557 цикл — запасной путь: в объектном пространстве контур неподвижен, и SilhouetteField.cs
+// запекает поле один раз на рендерер (_SilhouetteField, _SilhouetteFieldRect). Прежний путь массы строил контур ПЛОТНЫМ SDF-мешем (100k+ треуг., фриз 4.7 с). Кейворд включён на
 // материале BlockMaterial.ConcaveShared; без кейворда (выпуклые детали, полимино, статика) фрагмент
 // байт-в-байт прежний. multi_compile, а не shader_feature: материалы создаются в рантайме, и shader_feature
 // вырезал бы вариант из player-сборки.
@@ -108,6 +114,11 @@ Shader "Game/Wood Block"
         [Header(Cvet)]
         _Saturation ("Насыщенность", Range(0.5, 2)) = 1
         _Brightness ("Яркость", Range(0.5, 1.5)) = 1
+
+        // TASK-557: запечённый fbm волокна (WoodGrainNoise.cs кладёт его в материал при создании). Серый по умолчанию —
+        // fbm 0.5, то есть ровные линии без волны: материал без текстуры остаётся деревом, а не чёрным.
+        [HideInInspector][NoScaleOffset] _WoodNoiseTex ("Шум волокна (код)", 2D) = "gray" {}
+        [HideInInspector] _WoodNoiseScale ("1 / период шума (код)", Float) = 0.03125
 
         // Меши деталей — односторонние веера, и BlockMaterial.cs гасит отсечение в рантайме.
         // Свойство обязано быть объявлено здесь, иначе Cull [_Cull] в SubShader не к чему привязать.
@@ -194,26 +205,37 @@ Shader "Game/Wood Block"
             // per-renderer через MaterialPropertyBlock — поэтому вне инстанс-буфера и вне UnityPerMaterial
             // (этот шейдер и без того несёт цвет инстанс-буфером, SRP-батчинг ему не положен).
 
-            // --- шум: хеш + сглаженная интерполяция, дальше три октавы ---
-            float hash21(float2 p)
-            {
-                p = frac(p * float2(127.1, 311.7));
-                p += dot(p, p + 34.23);
-                return frac(p.x * p.y);
-            }
-            float vnoise(float2 p)
-            {
-                float2 i = floor(p), f = frac(p);
-                f = f * f * (3.0 - 2.0 * f);                 // сглаживание, иначе волокно рябит
-                float a = hash21(i), b = hash21(i + float2(1, 0));
-                float c = hash21(i + float2(0, 1)), d = hash21(i + float2(1, 1));
-                return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
-            }
+            // --- шум: ОДНА выборка запечённого fbm (TASK-557) ---
+            // Был хеш + сглаженная интерполяция × три октавы прямо в пикселе: 12 хешей на fbm, шесть fbm на пиксель,
+            // и на телефоне владельца (Adreno 619) одно волокно стоило 16–17 мс GPU — весь кадр 60 FPS. Тот же value-noise
+            // (сглаживание f·f·(3−2f), октавы 0.5/0.25/0.125, диапазон [0, 0.875]) запечён тайловой текстурой
+            // (WoodGrainNoise.cs); билинейная выборка по p·_WoodNoiseScale возвращает его значение. Mip'ов нет
+            // намеренно: процедура тоже бралась в точке пикселя, и мелкая шероховатость осталась той же «рябью».
+            TEXTURE2D(_WoodNoiseTex);
+            SAMPLER(sampler_WoodNoiseTex);
+            float _WoodNoiseScale;
+
             float fbm(float2 p)
             {
-                float s = 0.0, a = 0.5;
-                for (int i = 0; i < 3; i++) { s += vnoise(p) * a; p *= 2.03; a *= 0.5; }
-                return s;
+                return SAMPLE_TEXTURE2D_LOD(_WoodNoiseTex, sampler_WoodNoiseTex, p * _WoodNoiseScale, 0).r;
+            }
+
+            // --- кромка силуэта: ОДНА выборка запечённого поля (TASK-557) ---
+            // SilhouetteField.cs запекает расстояние СО ЗНАКОМ и наружную нормаль по тому же правилу, что SilhouetteEdge,
+            // в объектном пространстве рендерера. _SilhouetteFieldRect.z = 0 — поля нет (не запеклось), и вызывающий
+            // остаётся на цикле по рёбрам. Ветка по uniform'у: у всех пикселей рендерера она одна, расхождения нет.
+            TEXTURE2D(_SilhouetteField);
+            SAMPLER(sampler_SilhouetteField);
+            float4 _SilhouetteFieldRect;
+
+            float SilhouetteFieldEdge(float2 p, out float2 n)
+            {
+                float4 s = SAMPLE_TEXTURE2D_LOD(_SilhouetteField, sampler_SilhouetteField, (p - _SilhouetteFieldRect.xy) * _SilhouetteFieldRect.zw, 0);
+                // Нормали соседних текселей по разные стороны биссектрисы смешиваются билинейно; в узкой перемычке
+                // встречные нормали гасят друг друга — тогда запасная (0,1), как у SilhouetteEdge на вырожденном ребре.
+                float nn = dot(s.yz, s.yz);
+                n = (nn < 1e-6) ? float2(0.0, 1.0) : s.yz * rsqrt(nn);
+                return max(s.x, 0.0);
             }
 
             /// across — координата ПОПЕРЁК волокна, along — вдоль. Обе в мировых единицах,
@@ -335,8 +357,14 @@ Shader "Game/Wood Block"
                 // Контур в ОБЪЕКТНОМ пространстве: у массы оно совпадает с мировым (меш собран в мире,
                 // трансформ — сдвиг по Z без поворота), у детали кувыркается вместе с ней. Поэтому нормаль, как
                 // и в per-vertex пути, переводится в мир — свет один на всю сцену.
+                // TASK-557: обычно — запечённое поле (одна выборка); цикл по рёбрам остался запасным путём.
                 float2 nSil;
-                float edge = SilhouetteEdge(IN.positionOS.xy, nSil);
+                float edge;
+                UNITY_BRANCH
+                if (_SilhouetteFieldRect.z > 0.0)
+                    edge = SilhouetteFieldEdge(IN.positionOS.xy, nSil);
+                else
+                    edge = SilhouetteEdge(IN.positionOS.xy, nSil);
                 float3 nSilW = TransformObjectToWorldDir(float3(nSil, 0.0), false);
                 float2 n = nSilW.xy;
                 n = (dot(n, n) < 1e-8) ? float2(0.0, 1.0) : normalize(n);

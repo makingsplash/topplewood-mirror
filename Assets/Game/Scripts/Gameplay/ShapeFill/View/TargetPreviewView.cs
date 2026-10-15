@@ -146,6 +146,7 @@ namespace Gameplay.View
                     Ordinal = _slots.Count,
                     Silhouette = packed,
                     SilhouetteCount = packed == null ? 0 : silhouette.Length,
+                    SilhouetteField = packed == null ? null : SilhouetteField.Bake(silhouette),
                 });
             }
 
@@ -158,7 +159,12 @@ namespace Gameplay.View
             WoodTuning.Changed += Repaint;
         }
 
-        private void OnDestroy() => WoodTuning.Changed -= Repaint;
+        private void OnDestroy()
+        {
+            WoodTuning.Changed -= Repaint;
+            foreach (var slot in _slots)
+                slot.SilhouetteField?.Dispose();
+        }
 
         private struct Slot
         {
@@ -172,6 +178,9 @@ namespace Gameplay.View
             /// <summary>TASK-368: упакованный силуэт freeform-детали (null у остальных форм).</summary>
             public Vector4[] Silhouette;
             public int SilhouetteCount;
+
+            /// <summary>TASK-557: поле расстояний того же силуэта (кромка одной выборкой); null — цикл по рёбрам.</summary>
+            public SilhouetteField SilhouetteField;
         }
 
         private readonly List<Slot> _slots = new List<Slot>();
@@ -195,7 +204,7 @@ namespace Gameplay.View
                 // TASK-559: превью несёт те же доски, что детали на поле, — иначе оно читалось бы другой фигурой.
                 WoodTuning.SetGrainPick(mpb, tuning.GrainPick(slot.Kind, slot.Ordinal));
                 if (slot.Silhouette != null)
-                    BlockMaterial.SetSilhouette(mpb, slot.Silhouette, slot.SilhouetteCount);
+                    BlockMaterial.SetSilhouette(mpb, slot.Silhouette, slot.SilhouetteCount, slot.SilhouetteField);
                 slot.Renderer.SetPropertyBlock(mpb);
             }
         }

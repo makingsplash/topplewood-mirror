@@ -38,6 +38,10 @@ namespace Gameplay.View
         private Vector4[] _silhouette;
         private int _silhouetteCount;
 
+        /// <summary>TASK-557: тот же силуэт, запечённый в поле расстояний (<see cref="SilhouetteField"/>): шейдер берёт
+        /// кромку одной выборкой, а не циклом по рёбрам. Принадлежит детали — освобождается в OnDestroy.</summary>
+        private SilhouetteField _silhouetteField;
+
         public string StyleKey => _styleKey;
 
         public void Initialize(Shape shape, string colorHex) => Initialize(shape, colorHex, null);
@@ -62,6 +66,7 @@ namespace Gameplay.View
             var silhouette = PieceMeshBuilder.SeamlessSilhouette(shape);
             _silhouette = silhouette == null ? null : BlockMaterial.PackSilhouette(silhouette);
             _silhouetteCount = _silhouette == null ? 0 : silhouette.Length;
+            _silhouetteField = _silhouette == null ? null : SilhouetteField.Bake(silhouette);
 
             _renderer = gameObject.AddComponent<MeshRenderer>();
             _renderer.sharedMaterial = _silhouette != null ? BlockMaterial.ConcaveShared : BlockMaterial.Shared;
@@ -79,7 +84,12 @@ namespace Gameplay.View
             WoodTuning.Changed += RefreshColor;
         }
 
-        private void OnDestroy() => WoodTuning.Changed -= RefreshColor;
+        private void OnDestroy()
+        {
+            WoodTuning.Changed -= RefreshColor;
+            _silhouetteField?.Dispose();
+            _silhouetteField = null;
+        }
 
         public void Sync(Vec2 position, float rotation)
         {
@@ -145,7 +155,7 @@ namespace Gameplay.View
             // TASK-368: Clear выше стёр и силуэт — без повторной загрузки живое перекрашивание (стейт, ползунок)
             // оставило бы freeform-деталь с пустым контуром, то есть без фаски и канта.
             if (_silhouette != null)
-                BlockMaterial.SetSilhouette(_mpb, _silhouette, _silhouetteCount);
+                BlockMaterial.SetSilhouette(_mpb, _silhouette, _silhouetteCount, _silhouetteField);
 
             _renderer.SetPropertyBlock(_mpb);
         }

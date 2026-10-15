@@ -46,11 +46,18 @@ namespace Gameplay.View
         /// <summary>Положить упакованный контур (<see cref="PackSilhouette"/>) и число его узлов в блок. Звать ПОСЛЕ
         /// каждого <c>mpb.Clear()</c> — Clear стирает и контур.</summary>
         public static void SetSilhouette(MaterialPropertyBlock mpb, Vector4[] packed, int count)
+            => SetSilhouette(mpb, packed, count, null);
+
+        /// <summary>TASK-557: то же плюс запечённое поле силуэта (<see cref="SilhouetteField"/>) — с ним шейдер дерева
+        /// берёт кромку одной выборкой вместо цикла по рёбрам. Без поля (<c>null</c>) — прежний цикл. Контур кладётся
+        /// в обоих случаях: тень детали (Game/Wood Piece Shadow) считает размытие по нему.</summary>
+        public static void SetSilhouette(MaterialPropertyBlock mpb, Vector4[] packed, int count, SilhouetteField field)
         {
             if (mpb == null || packed == null)
                 return;
             mpb.SetVectorArray(ConcaveOutlineProperty, packed);
             mpb.SetFloat(ConcaveOutlineCountProperty, count);
+            field?.Apply(mpb);
         }
 
         private static Material _shared;
@@ -62,7 +69,8 @@ namespace Gameplay.View
             {
                 if (_shared == null)
                 {
-                    // Game/Wood Block рисует волокно, фаску и блик процедурно и держит тот же
+                    // Game/Wood Block рисует фаску и блик процедурно, волокно — по шумовой текстуре
+                    // (WoodGrainNoise, TASK-557), и держит тот же
                     // _BaseColor per-instance, что и URP/Unlit, — покраска деталей не меняется.
                     // Шейдер берётся сериализованной ссылкой из RuntimeShaders, поэтому он в плеере
                     // (TASK-554: строкой его в сборке не было, и деталь на устройстве была плоской).
@@ -84,6 +92,9 @@ namespace Gameplay.View
                     // отличалась бы от той, что владелец настроил в песочнице.
                     // Именно ApplyToBlock, а не Apply: Apply сам берёт Shared и получилось бы кольцо.
                     WoodTuning.Current.ApplyToBlock(_shared);
+
+                    // TASK-557: шум волокна — тайловая текстура, а не процедура в пикселе.
+                    WoodGrainNoise.ApplyTo(_shared);
                 }
                 return _shared;
             }
@@ -114,6 +125,7 @@ namespace Gameplay.View
                         _concaveShared.SetFloat(CullProperty, (float)UnityEngine.Rendering.CullMode.Off);
 
                     WoodTuning.Current.ApplyToBlock(_concaveShared);
+                    WoodGrainNoise.ApplyTo(_concaveShared);
                 }
                 return _concaveShared;
             }

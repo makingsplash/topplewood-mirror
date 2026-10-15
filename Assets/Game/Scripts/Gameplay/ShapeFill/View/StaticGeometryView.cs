@@ -37,6 +37,11 @@ namespace Gameplay.View
         private Vector4[] _concaveOutline;
         private int _concaveOutlineCount;
 
+        // TASK-557: the same outline baked once into a distance-field texture — the mass is the largest wood area on its
+        // level, and the per-pixel edge loop over its outline was measured at 8.6 ms GPU on carrot_bed. Owned here,
+        // released in OnDestroy. null → the shader keeps the per-pixel loop (same look).
+        private SilhouetteField _concaveField;
+
         /// <summary>Полка рисуется под тенями деталей, но над фоном.</summary>
         private const int ShelfSortingOrder = -100;
 
@@ -96,6 +101,7 @@ namespace Gameplay.View
                 _renderer.sharedMaterial = BlockMaterial.ConcaveShared;
                 _concaveOutline = BlockMaterial.PackSilhouette(boundary);
                 _concaveOutlineCount = boundary.Length;
+                _concaveField = SilhouetteField.Bake(boundary);
             }
             else
             {
@@ -186,7 +192,12 @@ namespace Gameplay.View
             WoodTuning.Changed += RefreshColor;
         }
 
-        private void OnDestroy() => WoodTuning.Changed -= RefreshColor;
+        private void OnDestroy()
+        {
+            WoodTuning.Changed -= RefreshColor;
+            _concaveField?.Dispose();
+            _concaveField = null;
+        }
 
         /// <summary>
         /// Цвет статики — АВТОРСКИЙ, мимо палитры. Пробовал прогнать через неё, как детали, — вышло
@@ -222,7 +233,7 @@ namespace Gameplay.View
             // uniform. Clear() above wiped it, so re-upload here — otherwise a live re-colour (WoodTuning.Changed)
             // would leave the mass with an empty outline and no edge band.
             if (_concaveOutline != null)
-                BlockMaterial.SetSilhouette(_mpb, _concaveOutline, _concaveOutlineCount);
+                BlockMaterial.SetSilhouette(_mpb, _concaveOutline, _concaveOutlineCount, _concaveField);
 
             _renderer.SetPropertyBlock(_mpb);
         }
