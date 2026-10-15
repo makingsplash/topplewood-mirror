@@ -1,5 +1,6 @@
 #if GPIE_DEVELOPMENT
 using System;
+using Gameplay.PlayScreen;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -37,8 +38,13 @@ namespace Gameplay.Dev
         // asset was cut from the repo. Rebuild the affordance in code — no prefab asset, so nothing for the Unity
         // bridge's missing prefab-save op to author. A small corner button on its own DontDestroyOnLoad overlay canvas
         // keeps the play field clear; gameplay taps ride the raw PointerTapInputSource (not uGUI), so anything under the
-        // button is still reachable. Returns the canvas GO so the caller owns its teardown (and can hang extra overlay
-        // widgets, e.g. the prod level indicator, on it). <paramref name="onClick"/> is invoked on tap.
+        // button is still reachable. Returns the canvas GO so the caller owns its teardown. <paramref name="onClick"/> is invoked on tap.
+        //
+        // Look (TASK-562, ui-composer §3.2): a SERVICE chip, deliberately outside the game's style so it never reads as
+        // a player button — flat translucent black, no sprite/outline/shadow, square corners, the built-in font, half
+        // the height of a game button (52 vs 150). The visible chip sits inside a larger invisible hit zone (≈57×50 dp)
+        // so it stays easy to hit. It sits UNDER the top-left settings slot (HudTopButtons), which keeps that slot free
+        // for the gear; the chip and the gear hit zones do not overlap.
         public static GameObject CreateToggleButton(Action onClick)
         {
             var buttonCanvas = new GameObject("[Dev] DebugMenuButton",
@@ -49,49 +55,45 @@ namespace Gameplay.Dev
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = short.MaxValue; // above any gameplay/UI so it is never occluded.
 
-            var scaler = buttonCanvas.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080f, 1920f);
-            scaler.matchWidthOrHeight = 0.5f;
+            HudTopButtons.ConfigureScaler(buttonCanvas.GetComponent<CanvasScaler>());
 
-            var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
-            buttonGo.transform.SetParent(buttonCanvas.transform, false);
+            // Offsets count from the SAFE edges, like every other HUD button (TASK-539): before TASK-562 the DEV button
+            // hung from the raw screen edge and sat under a cutout.
+            var hitGo = new GameObject("DevHit", typeof(Image), typeof(Button));
+            hitGo.transform.SetParent(SafeAreaFitter.Create(buttonCanvas.transform), false);
 
-            var image = buttonGo.GetComponent<Image>();
-            var rect = buttonGo.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0f, 1f); // top-left corner, away from the play field's centre.
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(28f, -28f);
+            var hitRect = hitGo.GetComponent<RectTransform>();
+            hitRect.anchorMin = hitRect.anchorMax = hitRect.pivot = new Vector2(0f, 1f);
+            hitRect.anchoredPosition = new Vector2(HitInset, -(HudTopButtons.TopInset + HudTopButtons.Size));
+            hitRect.sizeDelta = new Vector2(136f, 120f);
 
-            buttonGo.GetComponent<Button>().onClick.AddListener(() => onClick());
+            // Alpha-0 image is the raycast target: the hit zone is invisible but tappable.
+            hitGo.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+            hitGo.GetComponent<Button>().onClick.AddListener(() => onClick());
 
-            // Деревянная кнопка от владельца: надпись «DEV ≡» в спрайте запечена, отдельной подписи нет.
-            var sprite = Gameplay.View.WoodArt.ButtonDev;
-            if (sprite != null)
-            {
-                image.sprite = sprite;
-                image.color = Color.white;
-                // Высота ОБЩАЯ для DEV и RESTART и лежит в настройках: владелец просил
-                // уменьшить их в полтора раза (116 → 77) и держать одинаковыми.
-                var height = Gameplay.View.WoodTuning.Current.UiButtonHeight;
-                rect.sizeDelta = new Vector2(height * sprite.rect.width / sprite.rect.height, height);
-                return buttonCanvas;
-            }
+            var chipGo = new GameObject("DevChip", typeof(Image));
+            chipGo.transform.SetParent(hitGo.transform, false);
+            var chipRect = chipGo.GetComponent<RectTransform>();
+            chipRect.anchorMin = chipRect.anchorMax = chipRect.pivot = new Vector2(0f, 1f);
+            // Visible chip at the same 40-unit side inset as the top-corner buttons.
+            chipRect.anchoredPosition = new Vector2(HudTopButtons.SideInset - HitInset, -ChipTopInHit);
+            chipRect.sizeDelta = new Vector2(104f, 52f);
 
-            image.color = new Color(0.12f, 0.12f, 0.12f, 0.7f);
-            rect.sizeDelta = new Vector2(170f, 96f);
+            var chip = chipGo.GetComponent<Image>();
+            chip.color = new Color(0f, 0f, 0f, 0.45f); // dev-chip-bg
+            chip.raycastTarget = false;
 
-            var labelGo = new GameObject("Label", typeof(Text));
-            labelGo.transform.SetParent(buttonGo.transform, false);
+            var labelGo = new GameObject("DevLabel", typeof(Text));
+            labelGo.transform.SetParent(chipGo.transform, false);
 
             var label = labelGo.GetComponent<Text>();
-            label.text = "DEV ≡";
+            label.text = "DEV";
             label.alignment = TextAnchor.MiddleCenter;
-            label.color = Color.white;
-            label.fontSize = 40;
-            // Built-in font of Unity 6 (renamed from Arial.ttf pre-2022). If unavailable the glyphs just do not
-            // draw — the button image and its click still work, so this is a cosmetic best-effort, not a gate.
+            label.color = new Color(1f, 1f, 1f, 0.8f); // dev-chip-ink
+            label.fontSize = 28;
+            label.raycastTarget = false;
+            // Built-in font of Unity 6 (renamed from Arial.ttf pre-2022) — the system look IS the point here. If
+            // unavailable the glyphs just do not draw; the chip and its click still work.
             label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             var labelRect = labelGo.GetComponent<RectTransform>();
@@ -102,6 +104,11 @@ namespace Gameplay.Dev
 
             return buttonCanvas;
         }
+
+        // Hit zone's left edge from the safe edge, and the chip's top inside the zone (ui-composer §3.2: zone at
+        // (24, −190), chip at (16, −16) inside it ⇒ chip at (40, −206), a 16-unit gap under the 150 slot above).
+        private const float HitInset = 24f;
+        private const float ChipTopInHit = 16f;
     }
 }
 #endif

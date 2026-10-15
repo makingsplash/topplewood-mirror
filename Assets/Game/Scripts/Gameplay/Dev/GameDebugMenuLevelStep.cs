@@ -23,6 +23,11 @@ namespace Gameplay.Dev
         /// <summary>TASK-528: "Jump to pool" — enter the pool circle at its first place (in-scope: persist + reload).</summary>
         public static event Action PoolJumpRequested;
 
+        /// <summary>TASK-562: the level line that heads the menu ("L i/N: id"), supplied by the in-scope
+        /// <c>GameDebugMenuEntryPoint</c> — the static menu cannot compute it (no N, no pool). Null outside a gameplay
+        /// scope; the menu then shows a placeholder.</summary>
+        public static Func<string> PositionLabel;
+
         public static void Request(int delta) => Requested?.Invoke(delta);
 
         public static void RequestPoolJump() => PoolJumpRequested?.Invoke();

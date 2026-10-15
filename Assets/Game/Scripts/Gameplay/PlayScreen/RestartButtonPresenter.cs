@@ -30,6 +30,8 @@ namespace Gameplay.PlayScreen
     /// </summary>
     public sealed class RestartButtonPresenter : IStartable, IDisposable
     {
+        private const string SpritePath = "Hud/restart_button";
+
         private readonly ICampaignRestart _restart;
         private readonly PlayScreenInteraction _interaction;
 
@@ -82,10 +84,7 @@ namespace Gameplay.PlayScreen
             // draws above their Screen Space Camera canvas whatever this number is — hence HudCover (TASK-398).
             canvas.sortingOrder = short.MaxValue - 1;
 
-            var scaler = _canvas.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080f, 1920f);
-            scaler.matchWidthOrHeight = 0.5f;
+            HudTopButtons.ConfigureScaler(_canvas.GetComponent<CanvasScaler>());
 
             // Offsets count from the SAFE edges (TASK-539, closes TASK-246): under a cutout the button stays tappable.
             var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
@@ -93,28 +92,25 @@ namespace Gameplay.PlayScreen
 
             var image = buttonGo.GetComponent<Image>();
             var rect = buttonGo.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(1f, 1f); // top-right corner (owner requirement).
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-28f, -28f);
+            // Top-right, 150-unit square — the layout is shared with the settings gear (HudTopButtons, TASK-562).
+            HudTopButtons.Place(rect, right: true);
 
-            // Деревянная кнопка от владельца. Текст «RESTART» в спрайте ЗАПЕЧЁН, поэтому подписи
-            // рядом нет и растягивать спрайт по частям (9-slice) нельзя — только целиком, в пропорции.
-            var sprite = Gameplay.View.WoodArt.ButtonRestart;
+            // Кремовый die-cut стикер семейства подсказки (TASK-562, вариант B; STYLE_LOCK §hud-accent). Глиф ↺ —
+            // часть арта, текста в спрайте нет. Квадратный спрайт целиком, в пропорции: 9-slice не нужен.
+            var sprite = Resources.Load<Sprite>(SpritePath);
             if (sprite != null)
             {
                 image.sprite = sprite;
                 image.color = Color.white;
-                // Высота ОБЩАЯ для DEV и RESTART и лежит в настройках: владелец просил
-                // уменьшить их в полтора раза (116 → 77) и держать одинаковыми.
-                var height = Gameplay.View.WoodTuning.Current.UiButtonHeight;
-                rect.sizeDelta = new Vector2(height * sprite.rect.width / sprite.rect.height, height);
+                image.preserveAspect = true;
             }
             else
             {
-                // Прежний вид: тёмная плашка с подписью (спрайт не найден — но кнопка обязана быть).
+                // Спрайт не найден — но кнопка обязана быть: тёмная плашка с подписью. Текстом, а не глифом ↺:
+                // во встроенном шрифте его может не оказаться (ui-composer §3.1).
+                Debug.unityLogger.Log(LogType.Warning,
+                    $"[hud] спрайт '{SpritePath}' не найден — RESTART рисуется плашкой с подписью");
                 image.color = new Color(0.12f, 0.12f, 0.12f, 0.7f);
-                rect.sizeDelta = new Vector2(230f, 96f);
 
                 var labelGo = new GameObject("Label", typeof(Text));
                 labelGo.transform.SetParent(buttonGo.transform, false);
@@ -123,7 +119,7 @@ namespace Gameplay.PlayScreen
                 label.text = "RESTART";
                 label.alignment = TextAnchor.MiddleCenter;
                 label.color = Color.white;
-                label.fontSize = 34;
+                label.fontSize = 30;
                 label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
                 var labelRect = (RectTransform)labelGo.transform;

@@ -21,6 +21,12 @@ namespace Tools.Debug
         {
             _level = SayData.Meta.CurrentLevel.Value;
 
+#if GPIE_DEVELOPMENT
+            // TASK-562: the level line heads the menu (it left the HUD). Dynamic: DDMLabel re-reads it every frame, so it
+            // follows ◀ Prev / Next ▶ / Jump to pool, which change the level without closing the menu.
+            DDMLabel.CreateDynamic(context, PositionLabel);
+#endif
+
             CreateApplicationFlow(context);
             CreateGoToLevel(context);
             CreateResources(context);
@@ -133,6 +139,9 @@ namespace Tools.Debug
         }
 
 #if GPIE_DEVELOPMENT
+        private static string PositionLabel() =>
+            Gameplay.Dev.GameDebugMenuLevelStep.PositionLabel?.Invoke() ?? "L —: no gameplay scope";
+
         private static void StepLevel(int delta)
         {
             Gameplay.Dev.GameDebugMenuLevelStep.Request(delta);   // in-scope: step + persist + reload, SYNCHRONOUS

@@ -5,7 +5,6 @@ using Gameplay.Core;
 using SGS.Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 using VContainer.Unity;
 
 namespace Gameplay.Dev
@@ -29,9 +28,10 @@ namespace Gameplay.Dev
     /// shared with the bringup host via <see cref="DevOverlayUi"/>/<see cref="RestartButtonGuard"/>.
     ///
     /// Two things beyond "just open the menu":
-    ///  1. An always-visible level indicator ("L i/N: levelId"; in the pool "L number · pool k/M: levelId", TASK-528)
-    ///     sits under the button, so a developer looking at the
-    ///     new art sees the current level without opening anything.
+    ///  1. The level line ("L i/N: levelId"; in the pool "L number · pool k/M: levelId", TASK-528) heads the menu
+    ///     (<see cref="PositionLabel"/>, published through <see cref="GameDebugMenuLevelStep.PositionLabel"/>). Until
+    ///     TASK-562 it was a white label always on screen under the button; the owner took it off the HUD, and QA
+    ///     reads it in the menu instead. The menu label re-reads it every frame, so it follows ◀/▶ while the menu stays open.
     ///  2. While the menu is open the RESTART canvas is hidden (<see cref="RestartButtonGuard"/>) — otherwise the
     ///     z-order collision of TASK-117 reproduces on the prod path (RESTART at short.MaxValue-1 swallows the menu's
     ///     close "X"). The hook is on <c>DebugMenuShown.OnChanged</c>, so it also fixes the collision for shake-opens.
@@ -45,12 +45,12 @@ namespace Gameplay.Dev
 
         private GameObject _eventSystem;
         private GameObject _buttonCanvas;
-        private Text _indicator;
 
-        // Cached indicator inputs so Tick rebuilds the label string only when it actually changes (no per-frame alloc).
+        // Cached label inputs: DDMLabel polls PositionLabel every frame, so the string is rebuilt only when it changes.
         private int _lastNumber = int.MinValue;
         private int _lastCount = int.MinValue;
         private string _lastLevelId;
+        private string _label = string.Empty;
 
         public GameDebugMenuEntryPoint(CampaignProgressionController campaign, ILevelSource levelSource, GameModel model)
         {
@@ -65,7 +65,7 @@ namespace Gameplay.Dev
         {
             DevOverlayUi.EnsureEventSystem(out _eventSystem);
             _buttonCanvas = DevOverlayUi.CreateToggleButton(OpenMenu);
-            _indicator = CreateIndicator(_buttonCanvas);
+            GameDebugMenuLevelStep.PositionLabel = PositionLabel;
 
             // DebugService (app-lifetime) outlives this scope, so the -= in Dispose is a hard requirement — a leaked
             // delegate would fire into a destroyed guard/GO after the scope tears down (same discipline as TASK-113).
@@ -77,8 +77,6 @@ namespace Gameplay.Dev
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.backquoteKey.wasPressedThisFrame)
                 OpenMenu();
-
-            UpdateIndicator();
         }
 
         // Flip the observable to true; if the menu is already open this is a no-op (Observable fires only on a value
@@ -95,64 +93,41 @@ namespace Gameplay.Dev
                 _restartGuard.Restore();
         }
 
-        private void UpdateIndicator()
+        // Same sources as bringup's in-menu label (DevPosition/DevProgress are the authoritative live in-memory
+        // position, ILevelSource.Count, GameModel.CurrentLevel); same format the on-screen indicator had, so QA reads
+        // one shape of line before and after TASK-562.
+        private string PositionLabel()
         {
-            if (_indicator == null)
-                return;
-
             // The shown number keeps growing past the line-up (TASK-528), so it is the cache key next to the id.
             var number = _campaign.DevProgress.LevelNumber;
             var count = _levelSource.Count;
             var levelId = CurrentLevelId;
             if (number == _lastNumber && count == _lastCount && levelId == _lastLevelId)
-                return;
+                return _label;
 
             _lastNumber = number;
             _lastCount = count;
             _lastLevelId = levelId;
             var position = _campaign.DevPosition;
-            _indicator.text = position.Track == CampaignTrack.Pool
+            _label = position.Track == CampaignTrack.Pool
                 ? $"L {number} · pool {position.PoolPlace + 1}/{_campaign.DevPoolCount}: {levelId}"
                 : $"L {position.LineupIndex + 1}/{count}: {levelId}";
-        }
-
-        // Always-visible overlay label under the DEV button (its own canvas). raycastTarget off so it never steals a
-        // tap; an Outline keeps it legible over arbitrary art. Same sources as bringup's in-menu label
-        // (DevPosition/DevProgress are the authoritative live in-memory position, ILevelSource.Count, GameModel.CurrentLevel).
-        private static Text CreateIndicator(GameObject buttonCanvas)
-        {
-            var labelGo = new GameObject("[Dev] LevelIndicator", typeof(Text), typeof(Outline));
-            labelGo.transform.SetParent(buttonCanvas.transform, false);
-
-            var text = labelGo.GetComponent<Text>();
-            text.alignment = TextAnchor.UpperLeft;
-            text.color = Color.white;
-            text.fontSize = 34;
-            text.horizontalOverflow = HorizontalWrapMode.Overflow;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
-            text.raycastTarget = false;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-
-            var rect = labelGo.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0f, 1f); // top-left, directly below the DEV button.
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(28f, -120f);
-            rect.sizeDelta = new Vector2(700f, 56f);
-
-            return text;
+            return _label;
         }
 
         public void Dispose()
         {
             SayData.Debug.DebugMenuShown.OnChanged -= OnMenuVisibilityChanged;
 
+            // The static menu outlives this scope: drop our provider so an open menu never reads a disposed model.
+            if (GameDebugMenuLevelStep.PositionLabel == PositionLabel)
+                GameDebugMenuLevelStep.PositionLabel = null;
+
             // Safety net: if the scope tears down while the menu is open, put RESTART back to the state we found it in
             // (no-op if we never hid it).
             _restartGuard.Restore();
 
-            // Our overlay canvas is DontDestroyOnLoad, so tear it down explicitly (the indicator is its child and dies
-            // with it). The EventSystem is destroyed ONLY when we created it ourselves (EnsureEventSystem left it null
+            // Our overlay canvas is DontDestroyOnLoad, so tear it down explicitly. The EventSystem is destroyed ONLY when we created it ourselves (EnsureEventSystem left it null
             // if a pre-existing one was found — never destroy someone else's).
             if (_buttonCanvas != null)
                 UnityEngine.Object.Destroy(_buttonCanvas);
