@@ -234,12 +234,13 @@ namespace Gameplay.Tests
         {
             var level = LoadAll()["video_launcher"];
             var groups = StaticMassUnion.Group(level.StaticGeometry, level.StaticVisuals);
-            Assert.That(groups, Is.EqualTo(new[] { new[] { 0, 1, 2, 6, 7, 8 } }),
-                "левый узел (стенка, дно чаши, бортик и начинка тумбы) — одна масса; планка снята, блок 3 одиночка");
+            Assert.That(groups, Is.EqualTo(new[] { new[] { 0, 1, 2, 3, 4, 6, 7, 8 } }),
+                "левый узел, дно ямы (3) и правая тумба (4) — одна масса: низ стен опущен до y −3.3, 3 сидит на ребре; " +
+                "планка снята, верхний упор 5 одиночка");
 
             var outlines = groups[0].Select(i => level.StaticGeometry[i].Outline).ToArray();
             Assert.That(StaticMassUnion.Boundary(outlines).Length, Is.GreaterThanOrEqualTo(8),
-                "U-контур из 8 вершин — не меньше 8 отрезков (коллинеарные куски одного ребра идут отдельно)");
+                "U-контур — не меньше 8 отрезков (коллинеарные куски одного ребра идут отдельно)");
         }
 
         [Test]
