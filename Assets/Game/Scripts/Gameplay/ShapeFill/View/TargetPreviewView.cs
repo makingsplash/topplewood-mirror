@@ -143,6 +143,7 @@ namespace Gameplay.View
                     Renderer = renderer,
                     LevelColor = color,
                     Kind = slot.Kind,
+                    Ordinal = _slots.Count,
                     Silhouette = packed,
                     SilhouetteCount = packed == null ? 0 : silhouette.Length,
                 });
@@ -164,6 +165,9 @@ namespace Gameplay.View
             public MeshRenderer Renderer;
             public Color LevelColor;
             public string Kind;
+
+            /// <summary>TASK-559: номер слота — фаза волокна этой детали превью (доска — по виду, как на поле).</summary>
+            public int Ordinal;
 
             /// <summary>TASK-368: упакованный силуэт freeform-детали (null у остальных форм).</summary>
             public Vector4[] Silhouette;
@@ -188,6 +192,8 @@ namespace Gameplay.View
                 mpb.Clear();
                 mpb.SetColor(BlockMaterial.ColorProperty, color);
                 mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
+                // TASK-559: превью несёт те же доски, что детали на поле, — иначе оно читалось бы другой фигурой.
+                WoodTuning.SetGrainPick(mpb, tuning.GrainPick(slot.Kind, slot.Ordinal));
                 if (slot.Silhouette != null)
                     BlockMaterial.SetSilhouette(mpb, slot.Silhouette, slot.SilhouetteCount);
                 slot.Renderer.SetPropertyBlock(mpb);

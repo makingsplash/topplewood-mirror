@@ -361,8 +361,53 @@ namespace Gameplay.Dev
             c |= Row("Угол (град.)", ref t.GrainAngle, -180f, 180f);
             c |= Row("Вдоль длинной стороны", ref t.GrainAlignLong, 0f, 1f);
             c |= Row("Деталь → фигура", ref t.GrainSpace, 0f, 1f);
+
+            // TASK-559: доски. Пока тумблер включён, ползунки выше деталям НЕ видны (кроме разворота и «деталь →
+            // фигура») — каждая деталь берёт строку таблицы. Без этой подписи ползунки выглядели бы сломанными.
+            GUILayout.Space(8f);
+            var variety = GUILayout.Toggle(t.GrainVariety, " разные доски у деталей (варианты волокна)");
+            if (variety != t.GrainVariety)
+            {
+                t.GrainVariety = variety;
+                c = true;
+            }
+
+            if (!t.GrainVariety || t.GrainVariants == null || t.GrainVariants.Count == 0)
+                return c;
+
+            Hint("Доски включены: числа волокна выше деталям не видны — крутить строку доски ниже.");
+            c |= RowInt("Досок на уровень", ref t.GrainVariantsPerLevel, 1,
+                Mathf.Min(t.GrainVariants.Count, WoodTuning.MaxGrainVariants));
+            c |= RowInt("Доска статики", ref t.StaticGrainVariant, 0, t.GrainVariants.Count - 1);
+            c |= Row("Разброс фазы", ref t.GrainPhaseRange, 0f, 20f);
+
+            GUILayout.BeginHorizontal();
+            for (var i = 0; i < t.GrainVariants.Count; i++)
+            {
+                var on = _grainVariant == i;
+                if (GUILayout.Toggle(on, $"V{i + 1}", GUI.skin.button) && !on)
+                    _grainVariant = i;
+            }
+            GUILayout.EndHorizontal();
+
+            _grainVariant = Mathf.Clamp(_grainVariant, 0, t.GrainVariants.Count - 1);
+            var v = t.GrainVariants[_grainVariant];
+            if (v == null)
+                return c;
+            GUILayout.Label(v.Name ?? $"V{_grainVariant + 1}", _small);
+            c |= Row("Линий на единицу", ref v.GrainScale, 1f, 12f);
+            c |= Row("Сила", ref v.GrainStrength, 0f, 1f);
+            c |= Row("Волнистость", ref v.GrainWarp, 0f, 1f);
+            c |= Row("Резкость", ref v.GrainSharp, 1f, 12f);
+            c |= Row("Разброс", ref v.GrainVary, 0f, 1f);
+            c |= Row("Рельеф", ref v.GrainEmboss, 0f, 0.5f);
+            c |= Row("Шероховатость", ref v.GrainNoise, 0f, 0.5f);
+            c |= Row("Угол, модуль (град.)", ref v.GrainAngle, 0f, 15f);
             return c;
         }
+
+        /// <summary>Какую доску сейчас крутят ползунками (TASK-559).</summary>
+        private int _grainVariant;
 
         private bool DrawLight(WoodTuning t)
         {

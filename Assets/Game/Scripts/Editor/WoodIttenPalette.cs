@@ -39,9 +39,6 @@ namespace Game.Editor
     {
         private const string LevelsPath = "Assets/StreamingAssets/shapefill_levels.json";
 
-        /// <summary>Зазор, при котором две детали считаются соседями (мировые единицы).</summary>
-        private const float TouchEpsilon = 0.06f;
-
         /// <summary>
         /// ПАЛИТРА ВЛАДЕЛЬЦА — та самая, что лежит в <c>wood_tuning.json</c> и настроена им вручную.
         ///
@@ -123,21 +120,14 @@ namespace Game.Editor
         {
             minNeighbourGap = 360f;
 
-            var shapes = new Dictionary<string, Shape>();
-            if (level.Pieces != null)
-            {
-                foreach (var placement in level.Pieces)
-                {
-                    var type = placement.Type;
-                    if (type?.Shape != null && !shapes.ContainsKey(type.Kind))
-                        shapes[type.Kind] = type.Shape;
-                }
-            }
+            // Граф соседства общий с раздачей волокна (TASK-559, WoodGrainAssignment): один граф — одна правда о
+            // том, кто с кем стоит вплотную.
+            var shapes = WoodKindNeighbours.ShapesByKind(level);
             if (shapes.Count == 0)
                 return null;
 
-            var masses = Masses(level, shapes);
-            var neighbours = Neighbours(level, shapes);
+            var masses = WoodKindNeighbours.Masses(level, shapes);
+            var neighbours = WoodKindNeighbours.Build(level, shapes);
 
             // Порядок обхода: сперва самые «связные» виды — у них больше всего ограничений, и если
             // красить их последними, свободных далёких тонов уже не остаётся. При равной связности
@@ -249,139 +239,7 @@ namespace Game.Editor
             return d > 180f ? 360f - d : d;
         }
 
-        // ------------------------------------------------------------- геометрия
-
-        /// <summary>
-        /// Кто с кем соприкасается в СОБРАННОЙ фигуре. Именно в ней: игрок судит о цвете по
-        /// финальной картинке, а на старте детали висят порознь и соседей там нет вовсе.
-        /// </summary>
-        private static Dictionary<string, List<string>> Neighbours(LevelData level, Dictionary<string, Shape> shapes)
-        {
-            var result = new Dictionary<string, List<string>>();
-            var slots = level.Target?.Slots;
-            if (slots == null)
-                return result;
-
-            var posed = new List<(string kind, Vector2[] poly)>();
-            foreach (var slot in slots)
-            {
-                if (!shapes.TryGetValue(slot.Kind, out var shape))
-                    continue;
-                posed.Add((slot.Kind, Pose(shape, slot.Position, slot.Rotation)));
-            }
-
-            for (var i = 0; i < posed.Count; i++)
-            {
-                for (var j = i + 1; j < posed.Count; j++)
-                {
-                    if (posed[i].kind == posed[j].kind)
-                        continue;
-                    if (Separation(posed[i].poly, posed[j].poly) > TouchEpsilon)
-                        continue;
-                    Link(result, posed[i].kind, posed[j].kind);
-                    Link(result, posed[j].kind, posed[i].kind);
-                }
-            }
-            return result;
-        }
-
-        private static void Link(Dictionary<string, List<string>> map, string a, string b)
-        {
-            if (!map.TryGetValue(a, out var list))
-                map[a] = list = new List<string>();
-            if (!list.Contains(b))
-                list.Add(b);
-        }
-
-        private static Vector2[] Pose(Shape shape, Vec2 position, float rotation)
-        {
-            var c = Mathf.Cos(rotation);
-            var s = Mathf.Sin(rotation);
-            var v = shape.Vertices;
-            var result = new Vector2[v.Length];
-            for (var i = 0; i < v.Length; i++)
-                result[i] = new Vector2(
-                    v[i].X * c - v[i].Y * s + position.X,
-                    v[i].X * s + v[i].Y * c + position.Y);
-            return result;
-        }
-
-        /// <summary>
-        /// Зазор между двумя ВЫПУКЛЫМИ многоугольниками по теореме о разделяющей оси: положительное
-        /// число — расстояние, отрицательное — глубина пересечения. Годится ровно потому, что все
-        /// формы кампании выпуклые (это гарантирует домен: веер-меш и один PolygonCollider2D).
-        /// </summary>
-        private static float Separation(Vector2[] a, Vector2[] b)
-        {
-            var best = float.MinValue;
-            foreach (var axis in Axes(a).Concat(Axes(b)))
-            {
-                Project(a, axis, out var a0, out var a1);
-                Project(b, axis, out var b0, out var b1);
-                var gap = Mathf.Max(b0 - a1, a0 - b1);
-                if (gap > best)
-                    best = gap;
-            }
-            return best;
-        }
-
-        private static IEnumerable<Vector2> Axes(Vector2[] poly)
-        {
-            for (var i = 0; i < poly.Length; i++)
-            {
-                var edge = poly[(i + 1) % poly.Length] - poly[i];
-                var len = edge.magnitude;
-                if (len > 1e-6f)
-                    yield return new Vector2(-edge.y / len, edge.x / len);
-            }
-        }
-
-        private static void Project(Vector2[] poly, Vector2 axis, out float min, out float max)
-        {
-            min = float.MaxValue;
-            max = float.MinValue;
-            foreach (var p in poly)
-            {
-                var d = Vector2.Dot(p, axis);
-                if (d < min) min = d;
-                if (d > max) max = d;
-            }
-        }
-
-        /// <summary>Площадь вида в собранной фигуре — только чтобы разрулить ничью по связности.</summary>
-        private static Dictionary<string, float> Masses(LevelData level, Dictionary<string, Shape> shapes)
-        {
-            var result = new Dictionary<string, float>();
-            var slots = level.Target?.Slots;
-            if (slots != null)
-            {
-                foreach (var slot in slots)
-                {
-                    if (!shapes.TryGetValue(slot.Kind, out var shape))
-                        continue;
-                    result.TryGetValue(slot.Kind, out var acc);
-                    result[slot.Kind] = acc + Area(shape);
-                }
-            }
-            foreach (var kind in shapes.Keys)
-                if (!result.ContainsKey(kind))
-                    result[kind] = Area(shapes[kind]);
-            return result;
-        }
-
-        private static float Area(Shape shape)
-        {
-            var v = shape.Vertices;
-            if (v == null || v.Length < 3)
-                return 0f;
-            var sum = 0f;
-            for (var i = 0; i < v.Length; i++)
-            {
-                var a = v[i];
-                var b = v[(i + 1) % v.Length];
-                sum += a.X * b.Y - b.X * a.Y;
-            }
-            return Mathf.Abs(sum) * 0.5f;
-        }
+        // Геометрия соседства (граф касаний, площади) переехала в Gameplay.View.WoodKindNeighbours (TASK-559):
+        // по тому же графу рантайм раздаёт варианты волокна.
     }
 }

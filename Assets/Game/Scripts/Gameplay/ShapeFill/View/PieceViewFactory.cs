@@ -19,12 +19,12 @@ namespace Gameplay.View
             }
         }
 
-        public IPieceView Create(PieceType type)
+        public IPieceView Create(PieceType type, int placementIndex)
         {
             var go = new GameObject($"PieceView_{type.Kind}");
             go.transform.SetParent(Root, false);
             var view = go.AddComponent<PieceView>();
-            view.Initialize(type.Shape, type.Color, type.Kind);
+            view.Initialize(type.Shape, type.Color, type.Kind, placementIndex);
             return view;
         }
     }

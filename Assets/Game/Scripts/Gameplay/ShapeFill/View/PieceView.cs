@@ -28,6 +28,10 @@ namespace Gameplay.View
         /// потому что масса детали в фигуре — свойство вида, а не формы.</summary>
         private string _kind;
 
+        /// <summary>TASK-559: номер экземпляра — от него сдвиг фазы волокна (<see cref="WoodTuning.GrainPick"/>). На поле —
+        /// индекс размещения в уровне, в собранной позе кадра приёмки — индекс слота.</summary>
+        private int _ordinal;
+
         /// <summary>TASK-368: упакованный силуэт freeform-детали для шейдера (<see cref="BlockMaterial.PackSilhouette"/>);
         /// <c>null</c> у всех остальных форм. Полем, а не разово: <see cref="ApplyColor"/> собирает блок заново
         /// (Clear) на каждом перекрашивании, и контур обязан класться туда каждый раз.</summary>
@@ -38,9 +42,12 @@ namespace Gameplay.View
 
         public void Initialize(Shape shape, string colorHex) => Initialize(shape, colorHex, null);
 
-        public void Initialize(Shape shape, string colorHex, string kind)
+        public void Initialize(Shape shape, string colorHex, string kind) => Initialize(shape, colorHex, kind, 0);
+
+        public void Initialize(Shape shape, string colorHex, string kind, int ordinal)
         {
             _kind = kind;
+            _ordinal = ordinal;
             if (!string.IsNullOrEmpty(colorHex) && ColorUtility.TryParseHtmlString(colorHex, out var parsed))
                 _baseColor = parsed;
 
@@ -130,6 +137,10 @@ namespace Gameplay.View
             _mpb.SetColor(BlockMaterial.ColorProperty, color);
             _mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
             WoodTuning.Current.ApplyPieceStyle(_mpb, _styleKey);
+
+            // TASK-559: доска вида и фаза экземпляра. Спрашиваем на КАЖДОЙ перекраске: уровень мог объявиться после
+            // рождения детали, а его объявление приходит сюда событием Changed.
+            WoodTuning.SetGrainPick(_mpb, WoodTuning.Current.GrainPick(_kind, _ordinal));
 
             // TASK-368: Clear выше стёр и силуэт — без повторной загрузки живое перекрашивание (стейт, ползунок)
             // оставило бы freeform-деталь с пустым контуром, то есть без фаски и канта.
