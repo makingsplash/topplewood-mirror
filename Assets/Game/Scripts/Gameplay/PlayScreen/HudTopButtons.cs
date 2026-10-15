@@ -9,8 +9,8 @@ namespace Gameplay.PlayScreen
     /// variant B). The numbers are NOT here: they are <see cref="HudCornerZone.RestartButton"/> /
     /// <see cref="HudCornerZone.SettingsButton"/>, the same values the camera framing and the target preview keep
     /// clear (TASK-563), so the reserve cannot drift from where the buttons actually are. Size and insets follow the
-    /// owner-approved mockup <c>hudtop-B-prod-01</c> (200-unit slot, 28 from the side, 30 from the top) — larger than
-    /// the hint button (150/40), which the mockup did not show and stays as it was.
+    /// owner-approved mockup <c>mock-A-cream-M120</c> (TASK-584: a 120-unit round slot, 28 from the side, 30 from the
+    /// top) — smaller than the hint button (150) and round, so the system buttons do not read as boosters.
     /// Units are canvas units of the shared HUD scaler (ref 1080×1920, match 0.5), measured from the SAFE top/side edge.
     /// </summary>
     public static class HudTopButtons

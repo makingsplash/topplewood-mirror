@@ -92,12 +92,13 @@ namespace Gameplay.PlayScreen
 
             var image = buttonGo.GetComponent<Image>();
             var rect = buttonGo.GetComponent<RectTransform>();
-            // Top-right, 200-unit square per the approved mockup — ONE layout value with the settings gear and the
-            // camera framing's top-corner reserve (HudCornerZone.RestartButton via HudTopButtons, TASK-562/563).
+            // Top-right, 120-unit round slot per the approved mockup — ONE layout value with the settings gear and the
+            // camera framing's top-corner reserve (HudCornerZone.RestartButton via HudTopButtons, TASK-562/563/584).
             HudTopButtons.Place(rect, right: true);
 
-            // Кремовый die-cut стикер семейства подсказки (TASK-562, вариант B; STYLE_LOCK §hud-accent). Глиф ↺ —
-            // часть арта, текста в спрайте нет. Квадратный спрайт целиком, в пропорции: 9-slice не нужен.
+            // Кремовый die-cut стикер семейства подсказки, но КРУГЛЫЙ (TASK-584, вариант A; STYLE_LOCK §hud-accent):
+            // форма отличает системную кнопку от бустера. Глиф ↺ — часть арта, текста в спрайте нет. Спрайт целиком,
+            // в пропорции: 9-slice не нужен. Тап ловит весь квадрат слота — альфа-хит-тест не включать.
             var sprite = Resources.Load<Sprite>(SpritePath);
             if (sprite != null)
             {
@@ -120,7 +121,7 @@ namespace Gameplay.PlayScreen
                 label.text = "RESTART";
                 label.alignment = TextAnchor.MiddleCenter;
                 label.color = Color.white;
-                label.fontSize = 30;
+                label.fontSize = 20; // fits the 120-unit slot (TASK-584)
                 label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
                 var labelRect = (RectTransform)labelGo.transform;

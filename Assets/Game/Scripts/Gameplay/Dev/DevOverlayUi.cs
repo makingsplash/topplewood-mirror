@@ -107,7 +107,7 @@ namespace Gameplay.Dev
 
         // The chip's offset inside its hit zone (ui-composer §3.2: chip at (16, −16) in the zone). The zone starts at the
         // gear slot's bottom, so the chip keeps the spec's 16-unit gap under the gear and its left edge on the gear's
-        // side inset — after TASK-562's mockup rework that is (28, −246) for the 200-unit slot at (28, −30).
+        // side inset — after TASK-584's round buttons that is (28, −166) for the 120-unit slot at (28, −30).
         private const float ChipInHit = 16f;
     }
 }

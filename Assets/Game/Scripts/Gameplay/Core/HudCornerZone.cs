@@ -75,17 +75,19 @@ namespace Gameplay.Core
             right: true, top: false, sideInset: 40f, edgeInset: 200f, width: 150f, height: 150f, pad: 25f,
             refWidth: 1080f, refHeight: 1920f, match: 0.5f);
 
-        /// <summary>RESTART (TASK-562, variant B), top-right. <c>RestartButtonPresenter</c> builds it from these
-        /// numbers via <c>HudTopButtons</c>. Size and insets are measured on the owner-approved mockup
-        /// <c>hudtop-B-prod-01</c>: sticker contour 199 px at 1 cu = 1.104 px, 232/256 of the sprite ⇒ a 200-unit slot,
-        /// ≈28 units from the side and ≈30 from the top. No glow or badge ⇒ no pad.</summary>
+        /// <summary>RESTART (TASK-562; round since TASK-584, owner's variant A-cream M120), top-right.
+        /// <c>RestartButtonPresenter</c> builds it from these numbers via <c>HudTopButtons</c>. A 120-unit round slot —
+        /// 0.8 of the hint button, so a system button reads smaller than a booster — 28 units from the side and 30 from
+        /// the top: the inset keeps the buttons' top on one line with the target card's top edge (the mockup
+        /// <c>mock-A-cream-M120</c>). The whole square slot is the tap target (≈51 dp on a 1080×2400 phone), not just
+        /// the disc. No glow or badge ⇒ no pad.</summary>
         public static readonly HudCornerZone RestartButton = new(
-            right: true, top: true, sideInset: 28f, edgeInset: 30f, width: 200f, height: 200f, pad: 0f,
+            right: true, top: true, sideInset: 28f, edgeInset: 30f, width: 120f, height: 120f, pad: 0f,
             refWidth: 1080f, refHeight: 1920f, match: 0.5f);
 
-        /// <summary>The settings gear (TASK-562, variant B), top-left — the mirror twin of <see cref="RestartButton"/>.</summary>
+        /// <summary>The settings gear (TASK-562/584), top-left — the mirror twin of <see cref="RestartButton"/>.</summary>
         public static readonly HudCornerZone SettingsButton = new(
-            right: false, top: true, sideInset: 28f, edgeInset: 30f, width: 200f, height: 200f, pad: 0f,
+            right: false, top: true, sideInset: 28f, edgeInset: 30f, width: 120f, height: 120f, pad: 0f,
             refWidth: 1080f, refHeight: 1920f, match: 0.5f);
 
         /// <summary>The two top corners the framing and the preview card keep clear (TASK-563).</summary>

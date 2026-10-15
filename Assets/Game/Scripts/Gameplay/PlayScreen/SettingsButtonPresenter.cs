@@ -90,7 +90,7 @@ namespace Gameplay.PlayScreen
                 label.text = "SETTINGS";
                 label.alignment = TextAnchor.MiddleCenter;
                 label.color = Color.white;
-                label.fontSize = 26;
+                label.fontSize = 18; // fits the 120-unit slot (TASK-584)
                 label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
                 var labelRect = (RectTransform)labelGo.transform;
