@@ -42,7 +42,7 @@ namespace Gameplay.Dev
         //
         // Look (TASK-562, ui-composer §3.2): a SERVICE chip, deliberately outside the game's style so it never reads as
         // a player button — flat translucent black, no sprite/outline/shadow, square corners, the built-in font, half
-        // the height of a game button (52 vs 150). The visible chip sits inside a larger invisible hit zone (≈57×50 dp)
+        // a fraction of the height of a game button (52 vs 200). The visible chip sits inside a larger invisible hit zone (≈57×50 dp)
         // so it stays easy to hit. It sits UNDER the top-left settings slot (HudTopButtons), which keeps that slot free
         // for the gear; the chip and the gear hit zones do not overlap.
         public static GameObject CreateToggleButton(Action onClick)
@@ -64,7 +64,7 @@ namespace Gameplay.Dev
 
             var hitRect = hitGo.GetComponent<RectTransform>();
             hitRect.anchorMin = hitRect.anchorMax = hitRect.pivot = new Vector2(0f, 1f);
-            hitRect.anchoredPosition = new Vector2(HitInset, -(HudTopButtons.TopInset + HudTopButtons.Size));
+            hitRect.anchoredPosition = new Vector2(HudTopButtons.LeftSideInset - ChipInHit, -HudTopButtons.LeftSlotBottom);
             hitRect.sizeDelta = new Vector2(136f, 120f);
 
             // Alpha-0 image is the raycast target: the hit zone is invisible but tappable.
@@ -75,8 +75,8 @@ namespace Gameplay.Dev
             chipGo.transform.SetParent(hitGo.transform, false);
             var chipRect = chipGo.GetComponent<RectTransform>();
             chipRect.anchorMin = chipRect.anchorMax = chipRect.pivot = new Vector2(0f, 1f);
-            // Visible chip at the same 40-unit side inset as the top-corner buttons.
-            chipRect.anchoredPosition = new Vector2(HudTopButtons.SideInset - HitInset, -ChipTopInHit);
+            // Visible chip on the gear's side edge, 16 units under its slot.
+            chipRect.anchoredPosition = new Vector2(ChipInHit, -ChipInHit);
             chipRect.sizeDelta = new Vector2(104f, 52f);
 
             var chip = chipGo.GetComponent<Image>();
@@ -105,10 +105,10 @@ namespace Gameplay.Dev
             return buttonCanvas;
         }
 
-        // Hit zone's left edge from the safe edge, and the chip's top inside the zone (ui-composer §3.2: zone at
-        // (24, −190), chip at (16, −16) inside it ⇒ chip at (40, −206), a 16-unit gap under the 150 slot above).
-        private const float HitInset = 24f;
-        private const float ChipTopInHit = 16f;
+        // The chip's offset inside its hit zone (ui-composer §3.2: chip at (16, −16) in the zone). The zone starts at the
+        // gear slot's bottom, so the chip keeps the spec's 16-unit gap under the gear and its left edge on the gear's
+        // side inset — after TASK-562's mockup rework that is (28, −246) for the 200-unit slot at (28, −30).
+        private const float ChipInHit = 16f;
     }
 }
 #endif

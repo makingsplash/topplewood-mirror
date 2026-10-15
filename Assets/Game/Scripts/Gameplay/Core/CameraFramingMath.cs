@@ -196,6 +196,102 @@ namespace Gameplay.Core
         /// </summary>
         public static bool TryFrame(LevelData level, float aspect, float margin, float previewBand, float minOrthoSize,
             HudCornerZone? hud, float safeSide, float safeBottom, out float orthoSize, out Vec2 centre)
+            => TryFrame(level, aspect, margin, previewBand, minOrthoSize, hud, safeSide, safeBottom,
+                null, default, out orthoSize, out centre);
+
+        /// <summary>
+        /// <see cref="TryFrame(LevelData,float,float,float,float,HudCornerZone?,float,float,out float,out Vec2)"/> plus
+        /// the TOP-corner buttons (TASK-563): the figure and pieces are also kept out of every <paramref name="topZones"/>
+        /// quadrant. The top zones normally live inside the preview band, which content never enters, so the frame is
+        /// left exactly as the bottom-corner pass made it; only a zone that reaches below the band edge (a deep cutout,
+        /// a bigger button) and actually covers content makes the camera zoom out — by the smallest size at which
+        /// every zone, bottom and top, is clear. <paramref name="topSafe"/> are this device's safe-area insets as
+        /// viewport fractions (left/right for the zone's side, top for its edge).
+        /// </summary>
+        public static bool TryFrame(LevelData level, float aspect, float margin, float previewBand, float minOrthoSize,
+            HudCornerZone? hud, float safeSide, float safeBottom, IReadOnlyList<HudCornerZone> topZones,
+            SafeInsets topSafe, out float orthoSize, out Vec2 centre)
+        {
+            if (!TryFrameBottom(level, aspect, margin, previewBand, minOrthoSize, hud, safeSide, safeBottom,
+                    out orthoSize, out centre))
+                return false;
+            if (topZones == null || topZones.Count == 0)
+                return true;
+
+            var a = aspect <= 0f ? 1f : aspect;
+            if (TopZonesClear(level, orthoSize, centre, a, topZones, topSafe, out var hi))
+                return true;
+
+            // Zooming out moves every zone's inner X edge outward (and its bottom up, while the band rule keeps the
+            // content below the band): past `hi` all zones are clear of all content, so the smallest clearing size is
+            // found by bisection over the full frame — the bottom-corner pass re-run at each size, so its corner stays
+            // clear too.
+            var lo = orthoSize;
+            hi = MathF.Max(hi, lo);
+            for (var i = 0; i < 40; i++)
+            {
+                var mid = (lo + hi) * 0.5f;
+                TryFrameBottom(level, aspect, margin, previewBand, mid, hud, safeSide, safeBottom, out var s, out var c);
+                if (TopZonesClear(level, s, c, a, topZones, topSafe, out _)) hi = mid;
+                else lo = mid;
+            }
+            return TryFrameBottom(level, aspect, margin, previewBand, hi, hud, safeSide, safeBottom,
+                out orthoSize, out centre);
+        }
+
+        /// <summary>Safe-area insets as viewport fractions of each screen edge.</summary>
+        public readonly struct SafeInsets
+        {
+            public readonly float Left, Right, Bottom, Top;
+
+            public SafeInsets(float left, float right, float bottom, float top)
+            {
+                Left = left;
+                Right = right;
+                Bottom = bottom;
+                Top = top;
+            }
+
+            public float Side(HudCornerZone zone) => zone.Right ? Right : Left;
+            public float Edge(HudCornerZone zone) => zone.Top ? Top : Bottom;
+        }
+
+        // True when no top zone covers content in this frame. `clearAt` is an orthoSize past which every zone's inner
+        // X edge lies beyond all content — the bisection's upper bound.
+        private static bool TopZonesClear(LevelData level, float size, Vec2 centre, float aspect,
+            IReadOnlyList<HudCornerZone> zones, SafeInsets safe, out float clearAt)
+        {
+            var clear = true;
+            clearAt = size;
+            foreach (var zone in zones)
+            {
+                zone.ToViewport(aspect, safe.Side(zone), safe.Edge(zone), out var side, out var depth);
+                var kx = (1f - 2f * side) * aspect;
+                if (kx <= 0f)
+                    continue; // a zone over half the screen cannot be freed by zooming
+                var mirror = zone.Right ? 1f : -1f;
+                var polys = ContentPolygons(level, mirror);
+                if (ContentInTopCorner(polys, size, centre, aspect, mirror, side, depth))
+                    clear = false;
+                // Inner edge x0 = mirror·cx + kx·s, and the centre X is the content centre at every size, so the edge
+                // passes the content's far X at s = (MaxX − mirror·cx)/kx.
+                clearAt = MathF.Max(clearAt, (MaxX(polys) - mirror * centre.X + 2e-3f) / kx);
+            }
+            return clear;
+        }
+
+        private static bool ContentInTopCorner(List<Vec2[]> polys, float size, Vec2 centre, float aspect,
+            float mirror, float side, float depth)
+        {
+            var x0 = mirror * centre.X + (1f - 2f * side) * aspect * size;
+            var y0 = centre.Y + (1f - 2f * depth) * size;
+            return HighestInCorner(polys, x0) > y0;
+        }
+
+        // The TASK-539 bottom-corner frame; `minOrthoSize` doubles as the zoom floor the top pass bisects on.
+        private static bool TryFrameBottom(LevelData level, float aspect, float margin, float previewBand,
+            float minOrthoSize, HudCornerZone? hud, float safeSide, float safeBottom, out float orthoSize,
+            out Vec2 centre)
         {
             orthoSize = 0f;
             centre = default;
@@ -296,8 +392,21 @@ namespace Gameplay.Core
         // slab open to the right.
         private static float LowestInCorner(List<Vec2[]> polys, float x0)
         {
-            var minY = float.MaxValue;
-            var maxY = float.MinValue;
+            CornerYRange(polys, x0, out var minY, out _);
+            return minY;
+        }
+
+        // Highest Y of the content that lies at x ≥ x0 (−∞ when none does) — the top-corner twin.
+        private static float HighestInCorner(List<Vec2[]> polys, float x0)
+        {
+            CornerYRange(polys, x0, out _, out var maxY);
+            return maxY;
+        }
+
+        private static void CornerYRange(List<Vec2[]> polys, float x0, out float minY, out float maxY)
+        {
+            minY = float.MaxValue;
+            maxY = float.MinValue;
             foreach (var outline in polys)
             {
                 if (outline.Length == 1)
@@ -308,7 +417,6 @@ namespace Gameplay.Core
                 for (var i = 0; i < outline.Length; i++)
                     ClipEdgeToSlabY(outline[i], outline[(i + 1) % outline.Length], x0, float.MaxValue, ref minY, ref maxY);
             }
-            return minY;
         }
 
         private static float MaxX(List<Vec2[]> polys)
@@ -322,17 +430,21 @@ namespace Gameplay.Core
 
         /// <summary>
         /// Does the figure or any piece reach into the HUD corner of the given frame? The measurement behind the
-        /// TASK-539 level list and its tests — the same geometry <see cref="TryFrame"/> clears.
+        /// TASK-539 level list and its tests — the same geometry <see cref="TryFrame"/> clears. Bottom and top
+        /// (TASK-563) corners alike; <paramref name="safeEdge"/> is the safe inset of the zone's own top/bottom edge.
         /// </summary>
         public static bool ContentInHudCorner(LevelData level, float orthoSize, Vec2 centre, float aspect,
-            HudCornerZone hud, float safeSide, float safeBottom)
+            HudCornerZone hud, float safeSide, float safeEdge)
         {
             var a = aspect <= 0f ? 1f : aspect;
-            hud.ToViewport(a, safeSide, safeBottom, out var side, out var top);
+            hud.ToViewport(a, safeSide, safeEdge, out var side, out var depth);
             var mirror = hud.Right ? 1f : -1f;
+            var polys = ContentPolygons(level, mirror);
+            if (hud.Top)
+                return ContentInTopCorner(polys, orthoSize, centre, a, mirror, side, depth);
             var x0 = mirror * centre.X + (1f - 2f * side) * a * orthoSize;
-            var y1 = centre.Y + (2f * top - 1f) * orthoSize;
-            return LowestInCorner(ContentPolygons(level, mirror), x0) < y1;
+            var y1 = centre.Y + (2f * depth - 1f) * orthoSize;
+            return LowestInCorner(polys, x0) < y1;
         }
 
         private static float Clamp(float v, float lo, float hi) => v < lo ? lo : (v > hi ? hi : v);

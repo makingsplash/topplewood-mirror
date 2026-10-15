@@ -92,7 +92,8 @@ namespace Gameplay.PlayScreen
 
             var image = buttonGo.GetComponent<Image>();
             var rect = buttonGo.GetComponent<RectTransform>();
-            // Top-right, 150-unit square — the layout is shared with the settings gear (HudTopButtons, TASK-562).
+            // Top-right, 200-unit square per the approved mockup — ONE layout value with the settings gear and the
+            // camera framing's top-corner reserve (HudCornerZone.RestartButton via HudTopButtons, TASK-562/563).
             HudTopButtons.Place(rect, right: true);
 
             // Кремовый die-cut стикер семейства подсказки (TASK-562, вариант B; STYLE_LOCK §hud-accent). Глиф ↺ —
