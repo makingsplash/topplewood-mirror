@@ -172,6 +172,23 @@ namespace Gameplay.Tests
             }
         }
 
+        [Test]
+        public void PreviewBandCentre_FollowsSafeTop()
+        {
+            // TASK-576: no notch ⇒ exactly the legacy anchor 1 − band/2.
+            Assert.That(CameraFramingMath.PreviewBandCentreViewportY(0.2f, 0f), Is.EqualTo(1f - 0.2f * 0.5f));
+            Assert.That(CameraFramingMath.PreviewBandCentreViewportY(0.2f, 0.05f), Is.EqualTo(0.85f).Within(Eps));
+
+            // The card fills at most band·0.85 of the band (TargetPreviewView's pad), so its top edge stays below the
+            // safe top on every inset — the card can never slide under a notch / status bar.
+            foreach (var safeTop in new[] { 0f, 100f / 2400f, 0.05f, 0.1f })
+            {
+                var centre = CameraFramingMath.PreviewBandCentreViewportY(0.2f, safeTop);
+                var cardTop = centre + 0.2f * 0.85f * 0.5f;
+                Assert.That(cardTop, Is.LessThan(1f - safeTop), $"safeTop {safeTop}");
+            }
+        }
+
         // ---------------------------------------------------------------- helpers
 
         private static IEnumerable<LevelData> Fixtures()

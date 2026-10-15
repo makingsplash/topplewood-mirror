@@ -24,8 +24,8 @@ namespace Gameplay.View
 
         /// <summary>
         /// Vertical viewport anchor of the preview frame (0..1). The view DERIVES the anchor from the reserved
-        /// band centre (<c>1 − PreviewBandFraction/2</c>, TASK-033); at band=0.20 that is 0.90, identical to
-        /// this legacy default — kept as a fine-tune fallback only.
+        /// band centre (<c>1 − safeTop − PreviewBandFraction/2</c>, TASK-033/576); at band=0.20 and no notch that
+        /// is 0.90, identical to this legacy default — kept as a fine-tune fallback only.
         /// </summary>
         public float AnchorViewportY = 0.9f;
 

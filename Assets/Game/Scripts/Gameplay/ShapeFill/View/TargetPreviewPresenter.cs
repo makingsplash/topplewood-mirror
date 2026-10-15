@@ -51,7 +51,7 @@ namespace Gameplay.View
             _preview = new GameObject("TargetPreview");
             _preview.AddComponent<TargetPreviewView>()
                 .Initialize(level.Target, BuildKindMap(level), _config, UnityEngine.Camera.main,
-                    _framingConfig.PreviewBandFraction);
+                    _framingConfig.PreviewBandFraction, ScreenSafeInsets.Current());
         }
 
         // The preview shows the target only, so map from the pieces the player is given (Decoys are not

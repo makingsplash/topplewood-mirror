@@ -206,13 +206,17 @@ namespace Gameplay.Core
         /// left exactly as the bottom-corner pass made it; only a zone that reaches below the band edge (a deep cutout,
         /// a bigger button) and actually covers content makes the camera zoom out — by the smallest size at which
         /// every zone, bottom and top, is clear. <paramref name="topSafe"/> are this device's safe-area insets as
-        /// viewport fractions (left/right for the zone's side, top for its edge).
+        /// viewport fractions (left/right for the zone's side, top for its edge). <c>topSafe.Top</c> also moves the
+        /// preview band down under the safe top (TASK-576): the frame reserves band + safeTop, so the target card
+        /// (<see cref="PreviewBandCentreViewportY"/>) sits below a notch/status bar, in line with the top buttons.
+        /// With topSafe.Top = 0 the frame is bit-for-bit the short overload's.
         /// </summary>
         public static bool TryFrame(LevelData level, float aspect, float margin, float previewBand, float minOrthoSize,
             HudCornerZone? hud, float safeSide, float safeBottom, IReadOnlyList<HudCornerZone> topZones,
             SafeInsets topSafe, out float orthoSize, out Vec2 centre)
         {
-            if (!TryFrameBottom(level, aspect, margin, previewBand, minOrthoSize, hud, safeSide, safeBottom,
+            var band = previewBand + topSafe.Top;
+            if (!TryFrameBottom(level, aspect, margin, band, minOrthoSize, hud, safeSide, safeBottom,
                     out orthoSize, out centre))
                 return false;
             if (topZones == null || topZones.Count == 0)
@@ -231,15 +235,23 @@ namespace Gameplay.Core
             for (var i = 0; i < 40; i++)
             {
                 var mid = (lo + hi) * 0.5f;
-                TryFrameBottom(level, aspect, margin, previewBand, mid, hud, safeSide, safeBottom, out var s, out var c);
+                TryFrameBottom(level, aspect, margin, band, mid, hud, safeSide, safeBottom, out var s, out var c);
                 if (TopZonesClear(level, s, c, a, topZones, topSafe, out _)) hi = mid;
                 else lo = mid;
             }
-            return TryFrameBottom(level, aspect, margin, previewBand, hi, hud, safeSide, safeBottom,
+            return TryFrameBottom(level, aspect, margin, band, hi, hud, safeSide, safeBottom,
                 out orthoSize, out centre);
         }
 
-        /// <summary>Safe-area insets as viewport fractions of each screen edge.</summary>
+        /// <summary>
+        /// Viewport Y of the preview band's centre — where the target card is anchored (TASK-576): the band hangs
+        /// under the safe top, so its centre is 1 − safeTop − band/2. The one home of that formula: the view and the
+        /// tests read it here, so the card can never drift from the band the frame reserves.
+        /// </summary>
+        public static float PreviewBandCentreViewportY(float previewBand, float safeTop) => 1f - safeTop - previewBand * 0.5f;
+
+        /// <summary>Safe-area insets as viewport fractions of each screen edge. <see cref="Top"/> also shifts the
+        /// preview band down under the safe top (TASK-576).</summary>
         public readonly struct SafeInsets
         {
             public readonly float Left, Right, Bottom, Top;

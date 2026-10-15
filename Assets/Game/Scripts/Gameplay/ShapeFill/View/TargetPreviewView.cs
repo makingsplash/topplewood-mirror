@@ -7,7 +7,8 @@ namespace Gameplay.View
     /// <summary>
     /// Renders the target as a small "picture-on-the-box" preview overlay (RFC §4.2, GAME_RULES §7): the same
     /// pieces the player drops, drawn in their target poses in real shape+colour, centred, uniformly scaled
-    /// (<see cref="TargetPreviewConfig.Scale"/>) and anchored to a camera viewport point above the field.
+    /// (<see cref="TargetPreviewConfig.Scale"/>) and anchored to the centre of the preview band above the field —
+    /// the band hangs under the safe top (TASK-576), so the card stays clear of a notch / status bar.
     /// Pure static reference — no collisions, no physics tick, not in the save snapshot. The domain never
     /// references it, so headless simulation is unaffected.
     /// A canvas backdrop (TASK-110/238/267, <see cref="TargetPreviewConfig.BackdropEnabled"/>) is drawn behind
@@ -37,7 +38,8 @@ namespace Gameplay.View
             IReadOnlyDictionary<string, PieceType> kinds,
             TargetPreviewConfig config,
             UnityEngine.Camera camera,
-            float previewBandFraction)
+            float previewBandFraction,
+            CameraFramingMath.SafeInsets safe)
         {
             if (target?.Slots == null || kinds == null || config == null)
                 return;
@@ -52,11 +54,12 @@ namespace Gameplay.View
             var t = transform;
             if (camera != null)
             {
-                // Anchor to the CENTRE of the reserved top band (TASK-033): the framing presenter keeps the
-                // top PreviewBandFraction of the viewport empty for this card. band=0.20 ⇒ viewportY=0.90
-                // (identical to the legacy default, so no positional regression).
+                // Anchor to the CENTRE of the reserved top band (TASK-033): the framing presenter keeps a
+                // PreviewBandFraction band of the viewport empty for this card, hung under the safe top (TASK-576:
+                // a notch / status bar pushed the card under it, while the top buttons already sat in the safe area).
+                // band=0.20, safeTop=0 ⇒ viewportY=0.90 (the legacy value, bit for bit).
                 var band = Mathf.Clamp01(previewBandFraction);
-                var anchorViewportY = 1f - band * 0.5f;
+                var anchorViewportY = CameraFramingMath.PreviewBandCentreViewportY(band, safe.Top);
                 var anchor = camera.ViewportToWorldPoint(
                     new Vector3(config.AnchorViewportX, anchorViewportY, config.CameraDistance));
                 anchor.z = config.ZPlane;
@@ -86,7 +89,7 @@ namespace Gameplay.View
                 // between their inner edges. The zones reach well past the band's middle, where the card is anchored,
                 // so the clamp is horizontal only. On today's phones the band height binds first (the card spans
                 // ~31–69 % of the width at 21:9, the corners end at ~24 %), so this changes nothing until a wider card.
-                var halfRoom = TopCornerHalfRoom(aspect, config.AnchorViewportX);
+                var halfRoom = TopCornerHalfRoom(aspect, config.AnchorViewportX, safe);
                 fit = Mathf.Min(fit, 2f * halfRoom * bandWorldW / Mathf.Max(fitExtentX, 1e-3f));
                 // Потолок размера — из настроек стиля, а не из конфига: владелец крутит его
                 // ползунком в Play вместе с остальным деревом. Конфиг остаётся запасным значением.
@@ -364,20 +367,17 @@ namespace Gameplay.View
 
         /// <summary>
         /// TASK-563: the widest half-width (viewport fraction) the card may take around <paramref name="anchorX"/>
-        /// without entering a top-corner button's quadrant (<see cref="HudCornerZone.TopButtons"/>, this device's safe
-        /// area), less a small gap. ONE layout value with the buttons themselves, so the reserve cannot drift.
+        /// without entering a top-corner button's quadrant (<see cref="HudCornerZone.TopButtons"/>, the given safe
+        /// insets), less a small gap. ONE layout value with the buttons themselves, so the reserve cannot drift. The
+        /// insets come in as an argument (TASK-576) — the batch capture passes zero, so its card ignores the window.
         /// </summary>
-        private static float TopCornerHalfRoom(float aspect, float anchorX)
+        private static float TopCornerHalfRoom(float aspect, float anchorX, CameraFramingMath.SafeInsets safe)
         {
             const float gap = 0.01f;
-            var safe = Screen.safeArea;
-            var safeLeft = Screen.width > 0 ? safe.xMin / Screen.width : 0f;
-            var safeRight = Screen.width > 0 ? (Screen.width - safe.xMax) / Screen.width : 0f;
-            var safeTop = Screen.height > 0 ? (Screen.height - safe.yMax) / Screen.height : 0f;
             var room = Mathf.Min(anchorX, 1f - anchorX);
             foreach (var zone in HudCornerZone.TopButtons)
             {
-                zone.ToViewport(aspect, zone.Right ? safeRight : safeLeft, safeTop, out var side, out _);
+                zone.ToViewport(aspect, safe.Side(zone), safe.Top, out var side, out _);
                 room = Mathf.Min(room, zone.Right ? 1f - side - anchorX : anchorX - side);
             }
             return Mathf.Max(room - gap, 0f);

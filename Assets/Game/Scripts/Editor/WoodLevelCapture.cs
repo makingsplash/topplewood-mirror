@@ -796,10 +796,11 @@ namespace Game.Editor
                     kinds[type.Kind] = type;
             }
 
+            // Нулевые вставки — снимок без выреза, как его TryFrame выше (TASK-576): кадр не зависит от окна батча.
             new GameObject("TargetPreview")
                 .AddComponent<TargetPreviewView>()
                 .Initialize(level.Target, kinds, new TargetPreviewConfig(), cam,
-                    new CameraFramingConfig().PreviewBandFraction);
+                    new CameraFramingConfig().PreviewBandFraction, default);
         }
 
         /// <summary>
