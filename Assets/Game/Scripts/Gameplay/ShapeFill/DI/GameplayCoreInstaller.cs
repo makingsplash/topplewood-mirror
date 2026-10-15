@@ -68,6 +68,10 @@ namespace Gameplay.DI
 
             builder.Register<GameController>(Lifetime.Singleton);
 
+            // TASK-566: the runner's pause gate. Shared by prod and bringup; only the prod GameplayInputScreenBlocker
+            // takes it (settings popup), so bringup ticks exactly as before. The sim news GameController itself and
+            // never builds the runner — poseHash is untouched by construction.
+            builder.Register<GameplayPause>(Lifetime.Singleton);
             builder.RegisterEntryPoint<GameControllerRunner>();
             // After the runner loads level 0, this resumes the persisted campaign index and drives WIN→next /
             // LOSS→retry reloads (TASK-009). Registered before the presenters so they render the resumed level.

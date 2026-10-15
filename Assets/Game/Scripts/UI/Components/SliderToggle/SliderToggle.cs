@@ -96,9 +96,13 @@ namespace Ui.Components.SliderToggle
 
         private void UpdateHandlePosition(float normalizedPosition)
         {
-            if (_handle == null || _handle.parent == null)
+            // The knob is optional: a tile toggle (TASK-566) shows its state by view swap only and has no handle.
+            if (_handle == null)
+                return;
+
+            if (_handle.parent == null)
             {
-                Debug.unityLogger.Log(LogType.Warning, $"[{LogCategory.UI}] RectTransform или его родитель равен null");
+                Debug.unityLogger.Log(LogType.Warning, $"[{LogCategory.UI}] у ручки переключателя нет родителя-рельса");
                 return;
             }
 

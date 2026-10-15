@@ -12,37 +12,52 @@ namespace Ui.Components.Settings
     {
         [SerializeField] private TMP_Text _label;
         [SerializeField] private string _prefix;
-        
+
 
         private void OnEnable()
         {
-            if (!Data.IsReady())
+            if (_label == null)
             {
-                if (_label != null)
-                {
-                    _label.text = _prefix + Application.version;
-                }
                 return;
             }
-            
-            string appVersion = Data.App.Version;
+
+            if (!ReadVersion(out var version, out var buildNum, out var shortHash))
+            {
+                _label.text = _prefix + Application.version;
+                return;
+            }
+
+            _label.text = _prefix + string.Format("{0}({1})[{2}]", version, buildNum, shortHash);
+        }
+
+        /// <summary>
+        /// The parts of the version line: SayKit's version when the SDK is compiled in (else <c>Data.App.Version</c>),
+        /// build number and 7-char commit hash. False when Data is not ready yet — then only
+        /// <see cref="Application.version"/> is known. Shared with the settings popup (TASK-566), which formats the same
+        /// parts its own way (its label is wired by the UI compiler and cannot carry this component).
+        /// </summary>
+        internal static bool ReadVersion(out string version, out string buildNum, out string shortHash)
+        {
+            if (!Data.IsReady())
+            {
+                version = Application.version;
+                buildNum = string.Empty;
+                shortHash = string.Empty;
+                return false;
+            }
+
+            version = Data.App.Version;
 #if SAYKIT
             if (GlobalService.SayKit != null)
             {
-                appVersion = GlobalService.SayKit.GetAppVersion();
+                version = GlobalService.SayKit.GetAppVersion();
             }
 #endif
-            
-            SetupLabel(appVersion, Data.App.BuildNumber, Data.App.GitCommit);
-        }
 
-        private void SetupLabel(string version, string buildNum, string gitCommit)
-        {
-            if (_label != null)
-            {
-                var shortHash = gitCommit.Length > 7 ? gitCommit.Substring(0, 7) : gitCommit;
-                _label.text = _prefix + string.Format("{0}({1})[{2}]", version, buildNum, shortHash);
-            }
+            buildNum = Data.App.BuildNumber;
+            var gitCommit = Data.App.GitCommit ?? string.Empty;
+            shortHash = gitCommit.Length > 7 ? gitCommit.Substring(0, 7) : gitCommit;
+            return true;
         }
 
         private void OnValidate()

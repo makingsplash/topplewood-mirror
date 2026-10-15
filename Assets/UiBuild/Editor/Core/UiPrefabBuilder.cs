@@ -224,8 +224,13 @@ namespace Iliai.UiBuild
                 ctx.Report.Error(node.Where, $"anchor '{node.Anchor}' внутри layout-группы родителя: позицию и размер здесь задаёт группа. Убери anchor и задай size/height (или поставь ignoreLayout: true)");
             }
 
-            bool anchored = !inLayoutGroup && UiAnchor.Apply(rect, node, ctx.Report);
-            if (!anchored) ApplyDefaultRect(node, ctx, rect, inLayoutGroup);
+            // Узел с ignoreLayout группа не раскладывает (LayoutElement.ignoreLayout) — значит, его место задаёт
+            // он сам: свой anchor/offset/size, как вне группы. Раньше анкер ему не применялся НИКОГДА, а size
+            // уходил в LayoutElement.preferred*, который группа для него же игнорирует: ошибка выше советовала
+            // ignoreLayout, а узел молча оставался с дефолтным rect (шапка/крестик поверх авто-высотной карточки).
+            bool placedByGroup = inLayoutGroup && !node.IgnoreLayout;
+            bool anchored = !placedByGroup && UiAnchor.Apply(rect, node, ctx.Report);
+            if (!anchored) ApplyDefaultRect(node, ctx, rect, placedByGroup);
 
             if (Mathf.Abs(node.Rotation) > 0.001f)
                 rect.localRotation = Quaternion.Euler(0f, 0f, node.Rotation);

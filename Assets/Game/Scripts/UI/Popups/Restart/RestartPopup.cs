@@ -7,7 +7,7 @@ using UnityEngine.Scripting.APIUpdating;
 namespace Ui.Popups
 {
     [MovedFrom(sourceNamespace: "UI.Popups")]
-    public class RestartPopup : BaseScreen
+    public class RestartPopup : BaseScreen, IBackButtonHandler
     {
         [SerializeField] private Button _cancelButton;
         [SerializeField] private Button _submitButton;
@@ -37,6 +37,9 @@ namespace Ui.Popups
             ClickCancel = onClickCancelRestart;
             ClickSubmit = onClickConfirmRestart;
         }
+
+        // System back = cancel, the same as ✕ and the dim (TASK-580).
+        public void OnBackButton() => OnClickCancel();
 
         private void OnClickCancel()
         {

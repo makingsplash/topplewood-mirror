@@ -50,6 +50,11 @@ namespace SGS.Services.SayKit
             global::SayKit.revokeGdprConsent();
         }
 
+        public string GetPrivacyPolicyLink()
+        {
+            return global::SayKit.GetPrivacyPolicyLink();
+        }
+
         public bool IsInitialized()
         {
             return global::SayKit.initializedProgress > 0.75f;

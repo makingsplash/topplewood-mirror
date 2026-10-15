@@ -41,6 +41,11 @@ namespace SGS.Services.SayKit
         {
         }
 
+        public string GetPrivacyPolicyLink()
+        {
+            return string.Empty;
+        }
+
         public bool IsInitialized()
         {
             return true;

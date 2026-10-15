@@ -12,9 +12,9 @@ namespace Gameplay.PlayScreen
     /// layout (<see cref="HudTopButtons"/>), the same cream die-cut sticker of the hint family, hidden while a UiService
     /// screen is up (<see cref="HudCover"/>) and while a dev menu is open (<c>RestartButtonGuard</c> finds it by name).
     ///
-    /// The settings screen does not exist yet (TASK-566). A button that opens nothing is a dead button, so the gear is
-    /// fully built but stays HIDDEN until someone hands it its action through <see cref="Bind"/>; TASK-566 binds it
-    /// to its screen and nothing else here has to change. The EventSystem is raised by the other HUD presenters; this
+    /// A button that opens nothing is a dead button, so the gear is fully built but stays HIDDEN until someone hands it
+    /// its action through <see cref="Bind"/>; <see cref="SettingsGearBinder"/> (TASK-566) binds it to the settings
+    /// popup. The EventSystem is raised by the other HUD presenters; this
     /// one is registered next to them in the prod scope only.
     /// </summary>
     public sealed class SettingsButtonPresenter : IStartable, IDisposable

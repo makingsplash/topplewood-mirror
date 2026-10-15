@@ -32,6 +32,8 @@ namespace SGS.Services.SayKit
 
         bool IsGdprApplicable();
         void RevokeGdpr();
+        // Empty in the editor (SDK editor bridge) and on smoke builds — callers must not hide UI on it.
+        string GetPrivacyPolicyLink();
 
         #endregion
 

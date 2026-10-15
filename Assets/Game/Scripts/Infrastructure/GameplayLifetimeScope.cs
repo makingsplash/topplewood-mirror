@@ -86,9 +86,11 @@ namespace Game.Code.Infrastructure
             // the win/lose screens are.
             builder.Register<PlayScreenInteraction>(Lifetime.Singleton);
             builder.RegisterEntryPoint<RestartButtonPresenter>();
-            // TASK-562: the settings gear, top-left. Built but hidden until its screen binds it (TASK-566) — .AsSelf()
-            // so that binder can inject it. Prod scope only: bringup has no settings screen.
+            // TASK-562: the settings gear, top-left. Built hidden; SettingsGearBinder (TASK-566) hands it the action that
+            // opens the settings popup and so shows it — .AsSelf() so the binder can inject it. Order-free: Bind before
+            // CreateButton only stores the action. Prod scope only: bringup has no settings screen.
             builder.RegisterEntryPoint<SettingsButtonPresenter>().AsSelf();
+            builder.RegisterEntryPoint<SettingsGearBinder>();
             // TASK-398: the HUD buttons are Overlay canvases and draw ABOVE every UiService screen whatever their
             // sortingOrder, so they hide themselves while a screen is up. This bridge feeds that flag
             // (PlayScreenInteraction.IsCoveredByScreen) from the UiService show/hide events; UiService is bound below
@@ -182,6 +184,9 @@ namespace Game.Code.Infrastructure
             // штатный громкий контракт, а не тихий null). Сейчас порядок соблюдён в LoadingGame.StartAsync.
             builder.RegisterInstance(Service.UI);
             builder.RegisterEntryPoint<GameplayInputScreenBlocker>();
+            // TASK-580 (built in TASK-566): one system-"back" handler for all popups — closes the top screen if it opts
+            // in through IBackButtonHandler.
+            builder.RegisterEntryPoint<ScreenBackButtonHandler>();
 
             builder.RegisterEntryPoint<TimeScale>();
             builder.RegisterEntryPoint<PauseService>();
