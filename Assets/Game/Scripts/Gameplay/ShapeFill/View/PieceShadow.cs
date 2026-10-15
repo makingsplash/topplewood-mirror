@@ -92,8 +92,23 @@ namespace Gameplay.View
         /// MaterialPropertyBlock. Кладётся один раз: <see cref="ApplySoft"/> блок дописывает, а не очищает.
         /// </summary>
         public static Transform Attach(Transform owner, Mesh mesh, Vector4[] silhouette, int silhouetteCount)
+            => Attach(owner, mesh, silhouette, silhouetteCount, null);
+
+        /// <summary>
+        /// TASK-567 (долг TASK-472): тень МАССЫ статики по запечённому полю силуэта. Шейдер тени под <c>_CONCAVE_SDF</c>
+        /// с полем берёт ЗНАКОВОЕ расстояние (снаружи силуэта альфа 0), поэтому меш тени может быть квадом габарита —
+        /// а у слитой массы и обязан им быть: веера членов перекрываются, и полупрозрачная тень потемнела бы дважды.
+        /// Без этого пути вогнутая масса оставалась без тени: её uv2.x = 0, то есть альфа 0 по всей площади.
+        /// </summary>
+        public static Transform Attach(Transform owner, Mesh mesh, SilhouetteField field)
+            => Attach(owner, mesh, null, 0, field);
+
+        /// <summary>Общий путь: контур (цикл по рёбрам) и/или поле. Есть хоть одно — материал силуэта; поле кладётся
+        /// ДО <see cref="ApplySoft"/> (тот блок дописывает, а не очищает).</summary>
+        public static Transform Attach(Transform owner, Mesh mesh, Vector4[] silhouette, int silhouetteCount,
+            SilhouetteField field)
         {
-            var material = silhouette != null ? SilhouetteShared : Shared;
+            var material = silhouette != null || field != null ? SilhouetteShared : Shared;
             if (material == null || owner == null || mesh == null)
                 return null;
 
@@ -108,10 +123,13 @@ namespace Gameplay.View
             renderer.sharedMaterial = material;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
-            if (silhouette != null)
+            if (silhouette != null || field != null)
             {
                 var mpb = new MaterialPropertyBlock();
-                BlockMaterial.SetSilhouette(mpb, silhouette, silhouetteCount);
+                if (silhouette != null)
+                    BlockMaterial.SetSilhouette(mpb, silhouette, silhouetteCount, field);
+                else
+                    field.Apply(mpb);
                 renderer.SetPropertyBlock(mpb);
             }
             ApplySoft(renderer, mesh);

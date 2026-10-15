@@ -155,6 +155,83 @@ namespace Gameplay.View
         }
 
         /// <summary>
+        /// TASK-567: покрытие СЛИТОЙ МАССЫ статики — склейка треугольников членов в один меш: выпуклый член — веер от
+        /// первой вершины (без скругления углов — оно прорезало бы выемки по стыку), вогнутый — ear-clip
+        /// (<see cref="Geometry.TriangulateConcave"/>). Объединение полигонов НЕ строится: у непрозрачного меша перекрытие
+        /// треугольников безвредно (глубина одна, цвет фрагмента — функция мировой позиции и поля, то есть одинаковый),
+        /// а кромку и фаску рисует поле по отрезкам (<see cref="SilhouetteField"/>, путь массы <c>_CONCAVE_SDF</c>).
+        /// Каналы — как у <see cref="FillRawMass"/>, но габарит (uv0, uv3) — ГРУППЫ у всех вершин: <c>k</c>, <c>longIsY</c>
+        /// и разворот волокна шейдер читает per-vertex, и разный габарит у членов дал бы шов по волокну.
+        /// <c>null</c> — ни один член не триангулировался. Без регистрации в <see cref="RebuildAll"/> (от радиуса не зависит).
+        /// </summary>
+        public static Mesh BuildMassCoverage(Vec2[][] members)
+        {
+            if (members == null || members.Length == 0)
+                return null;
+
+            var verts = new List<Vec2>();
+            var tris = new List<int>();
+            foreach (var member in members)
+            {
+                if (member == null || member.Length < 3)
+                    continue;
+                if (!Geometry.TriangulateConcave(member, out var ccw, out var memberTris))
+                {
+                    // Выпуклый контур с коллинеарными вершинами ear-clip может не разрезать — веер его не боится.
+                    if (!Geometry.IsConvex(member))
+                        continue;
+                    ccw = CcwOf(member);
+                    memberTris = new int[(ccw.Length - 2) * 3];
+                    for (var i = 1; i < ccw.Length - 1; i++)
+                    {
+                        memberTris[(i - 1) * 3] = 0;
+                        memberTris[(i - 1) * 3 + 1] = i;
+                        memberTris[(i - 1) * 3 + 2] = i + 1;
+                    }
+                }
+                var offset = verts.Count;
+                verts.AddRange(ccw);
+                foreach (var t in memberTris)
+                    tris.Add(offset + t);
+            }
+            if (tris.Count == 0)
+                return null;
+
+            var mesh = new Mesh { name = "StaticMassUnionMesh" };
+            if (verts.Count > 65535)
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            FillRawMass(mesh, verts.ToArray(), tris.ToArray());
+            return mesh;
+        }
+
+        /// <summary>TASK-567: прямоугольник габарита — меш тени слитой массы. Тень полупрозрачная, и перекрытие вееров
+        /// членов дало бы на стыках двойное затемнение; квад рисуется одним слоем, а форму тени вырезает знаковое поле
+        /// (снаружи силуэта альфа 0). Канал uv2 = (0, 1) — тот же маркер, что у массы.</summary>
+        public static Mesh BuildQuad(float minX, float minY, float maxX, float maxY)
+        {
+            var quad = new[]
+            {
+                new Vec2(minX, minY), new Vec2(maxX, minY), new Vec2(maxX, maxY), new Vec2(minX, maxY),
+            };
+            var mesh = new Mesh { name = "StaticMassShadowQuad" };
+            FillRawMass(mesh, quad, new[] { 0, 1, 2, 0, 2, 3 });
+            return mesh;
+        }
+
+        private static Vec2[] CcwOf(Vec2[] outline)
+        {
+            var area = 0f;
+            for (int i = 0, j = outline.Length - 1; i < outline.Length; j = i++)
+                area += outline[j].X * outline[i].Y - outline[i].X * outline[j].Y;
+            if (area >= 0f)
+                return (Vec2[])outline.Clone();
+            var reversed = new Vec2[outline.Length];
+            for (var i = 0; i < outline.Length; i++)
+                reversed[i] = outline[outline.Length - 1 - i];
+            return reversed;
+        }
+
+        /// <summary>
         /// TASK-346/349: fill a CONCAVE simple outline with a DENSE per-vertex SDF mesh. FALLBACK path since TASK-353 —
         /// the main path (<see cref="BuildConcaveMass"/>) is a raw ear-clip + analytic SDF in the shader; this dense mesh
         /// only runs when the outline exceeds the shader's <c>_ConcaveOutline</c> uniform limit (&gt;64 verts) or its

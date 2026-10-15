@@ -681,27 +681,10 @@ namespace Game.Editor
             go.AddComponent<WoodBackdropFit>().Bind(cam, sr);
         }
 
-        /// <summary>Видимая статика (полка, ложе) — тем же вью, что в игре. StaticVisual — СТРУКТУРА,
-        /// поэтому наличие проверяем длиной списка, а не сравнением с null.</summary>
+        /// <summary>Видимая статика (полка, ложе) — тем же спаунером, что в игре (TASK-567): слитые массы и поблочный
+        /// путь один в один с полем, иначе кадр владельцу показывал бы не то, что видит игрок.</summary>
         private static void BuildStatics(LevelData level)
-        {
-            if (level.StaticGeometry == null)
-                return;
-
-            var visuals = level.StaticVisuals;
-            for (var i = 0; i < level.StaticGeometry.Length; i++)
-            {
-                var poly = level.StaticGeometry[i];
-                if (poly?.Outline == null)
-                    continue;
-                if (visuals == null || i >= visuals.Count || !visuals[i].Visible)
-                    continue;
-
-                new GameObject($"Static_{i}")
-                    .AddComponent<StaticGeometryView>()
-                    .Initialize(poly, visuals[i].Color); // TASK-325: Polygon overload — a surface captures as a ribbon
-            }
-        }
+            => StaticGeometrySpawner.Spawn(level, "Static");
 
         /// <summary>
         /// Детали — на СТАРТОВЫХ позициях и в состоянии Idle: именно так игрок видит уровень до

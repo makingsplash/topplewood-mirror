@@ -78,8 +78,18 @@ Shader "Game/Wood Piece Shadow"
             half4 frag(Varyings IN) : SV_Target
             {
 #ifdef _CONCAVE_SDF
-                float2 nUnused;
-                float edge = SilhouetteEdge(IN.positionOS, nUnused);
+                // TASK-567: есть запечённое поле (масса статики) — знаковое расстояние из него; меш тени массы — квад
+                // габарита, и форму вырезает знак (снаружи силуэта альфа 0). Без поля — прежний цикл по контуру
+                // (тень freeform-детали): её меш целиком внутри силуэта, беззнакового расстояния хватает.
+                float edge;
+                UNITY_BRANCH
+                if (_SilhouetteFieldRect.z > 0.0)
+                    edge = SilhouetteFieldSigned(IN.positionOS);
+                else
+                {
+                    float2 nUnused;
+                    edge = SilhouetteEdge(IN.positionOS, nUnused);
+                }
 #else
                 float2 q = abs(IN.uv - 0.5) * 2.0;
                 float edgeBox = (1.0 - max(q.x, q.y)) * 0.5;

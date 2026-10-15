@@ -260,39 +260,27 @@ namespace Gameplay.Dev
                 kinds[kind] = (shape, color);
 
             // Видимая статика — часть композиции (полка, ложе), без неё фигура висит в пустоте.
-            if (level.StaticGeometry != null)
+            // TASK-567: тем же спаунером, что игра и тула кадров, — слитая масса здесь одна запись, как и на поле.
+            foreach (var spawned in StaticGeometrySpawner.Spawn(level, "Static"))
             {
-                var visuals = level.StaticVisuals;
-                for (var i = 0; i < level.StaticGeometry.Length; i++)
+                _spawned.Add(spawned.Go);
+
+                // Статику тоже надо уметь выбрать и настроить: пол, стена и колонна — такое же
+                // дерево в кадре, как детали, а крутить их до сих пор было нечем.
+                var renderer = spawned.Go.GetComponent<Renderer>();
+                if (renderer == null || spawned.View.StyleKey == null)
+                    continue;
+                var b = renderer.bounds;
+                _entries.Add(new Entry
                 {
-                    var poly = level.StaticGeometry[i];
-                    if (poly?.Outline == null)
-                        continue;
-                    if (visuals == null || i >= visuals.Count || !visuals[i].Visible)
-                        continue;
-
-                    var go = new GameObject($"Static_{i}");
-                    var view = go.AddComponent<StaticGeometryView>();
-                    view.Initialize(poly, visuals[i].Color); // TASK-325: Polygon overload — a surface renders as a ribbon
-                    _spawned.Add(go);
-
-                    // Статику тоже надо уметь выбрать и настроить: пол, стена и колонна — такое же
-                    // дерево в кадре, как детали, а крутить их до сих пор было нечем.
-                    var renderer = go.GetComponent<Renderer>();
-                    if (renderer == null || view.StyleKey == null)
-                        continue;
-                    var b = renderer.bounds;
-                    _entries.Add(new Entry
-                    {
-                        Kind = StaticName(b.size),
-                        Key = view.StyleKey,
-                        ColorHex = visuals[i].Color,
-                        Renderer = renderer,
-                        Center = b.center,
-                        Size = b.size,
-                        IsStatic = true,
-                    });
-                }
+                    Kind = StaticName(b.size),
+                    Key = spawned.View.StyleKey,
+                    ColorHex = spawned.ColorHex,
+                    Renderer = renderer,
+                    Center = b.center,
+                    Size = b.size,
+                    IsStatic = true,
+                });
             }
 
             foreach (var slot in level.Target.Slots)

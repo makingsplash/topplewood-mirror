@@ -60,4 +60,37 @@ float SilhouetteEdge(float2 p, out float2 n)
     return sqrt(bestSq);
 }
 
+// --- кромка силуэта: ОДНА выборка запечённого поля (TASK-557) ---
+// SilhouetteField.cs запекает расстояние СО ЗНАКОМ и наружную нормаль по тому же правилу, что SilhouetteEdge,
+// в объектном пространстве рендерера. _SilhouetteFieldRect.z = 0 — поля нет (не запеклось), и вызывающий
+// остаётся на цикле по рёбрам. Ветка по uniform'у: у всех пикселей рендерера она одна, расхождения нет.
+// TASK-567: объявления переехали сюда из Game/Wood Block — поле читает и тень (Game/Wood Piece Shadow).
+// Требует Core.hlsl (макросы TEXTURE2D/SAMPLER) до себя — оба шейдера включают его первым.
+TEXTURE2D(_SilhouetteField);
+SAMPLER(sampler_SilhouetteField);
+float4 _SilhouetteFieldRect;
+
+float4 SilhouetteFieldSample(float2 p)
+{
+    return SAMPLE_TEXTURE2D_LOD(_SilhouetteField, sampler_SilhouetteField, (p - _SilhouetteFieldRect.xy) * _SilhouetteFieldRect.zw, 0);
+}
+
+float SilhouetteFieldEdge(float2 p, out float2 n)
+{
+    float4 s = SilhouetteFieldSample(p);
+    // Нормали соседних текселей по разные стороны биссектрисы смешиваются билинейно; в узкой перемычке
+    // встречные нормали гасят друг друга — тогда запасная (0,1), как у SilhouetteEdge на вырожденном ребре.
+    float nn = dot(s.yz, s.yz);
+    n = (nn < 1e-6) ? float2(0.0, 1.0) : s.yz * rsqrt(nn);
+    return max(s.x, 0.0);
+}
+
+/// TASK-567: расстояние СО ЗНАКОМ (внутри +, снаружи −) — для тени массы. Её меш — квад габарита, и форму тени
+/// вырезает именно знак: снаружи силуэта smoothstep от отрицательного расстояния даёт альфу 0. Выборка за краем
+/// текстуры зажимается на крайний тексел, а он снаружи кромки (SilhouetteField.Pad), то есть тоже альфа 0.
+float SilhouetteFieldSigned(float2 p)
+{
+    return SilhouetteFieldSample(p).x;
+}
+
 #endif

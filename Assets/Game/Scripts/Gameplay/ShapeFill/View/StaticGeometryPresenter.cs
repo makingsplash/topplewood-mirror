@@ -40,29 +40,10 @@ namespace Gameplay.View
         {
             Clear();
 
-            var level = _model.CurrentLevel;
-            var statics = level?.StaticGeometry;
-            var visuals = level?.StaticVisuals;
-            if (statics == null || visuals == null)
-                return;
-
-            var count = Mathf.Min(statics.Length, visuals.Count);
-            for (var i = 0; i < count; i++)
-            {
-                if (!visuals[i].Visible)
-                    continue;
-
-                // TASK-325: a SURFACE (open edge-chain chute) is a valid 2-point polyline; a filled block needs ≥3.
-                var poly = statics[i];
-                var outline = poly?.Outline;
-                var minVerts = poly != null && poly.IsSurface ? 2 : 3;
-                if (outline == null || outline.Length < minVerts)
-                    continue;
-
-                var go = new GameObject($"StaticGeometry_{i}");
-                go.AddComponent<StaticGeometryView>().Initialize(poly, visuals[i].Color);
-                _views.Add(go);
-            }
+            // TASK-567: один спаунер на игру, тулу кадров и песочницу — слияние блоков в массу и прежний поблочный путь
+            // живут там, а не в трёх копиях цикла.
+            foreach (var spawned in StaticGeometrySpawner.Spawn(_model.CurrentLevel, "StaticGeometry"))
+                _views.Add(spawned.Go);
         }
 
         private void Clear()

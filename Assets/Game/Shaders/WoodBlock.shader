@@ -220,23 +220,8 @@ Shader "Game/Wood Block"
                 return SAMPLE_TEXTURE2D_LOD(_WoodNoiseTex, sampler_WoodNoiseTex, p * _WoodNoiseScale, 0).r;
             }
 
-            // --- кромка силуэта: ОДНА выборка запечённого поля (TASK-557) ---
-            // SilhouetteField.cs запекает расстояние СО ЗНАКОМ и наружную нормаль по тому же правилу, что SilhouetteEdge,
-            // в объектном пространстве рендерера. _SilhouetteFieldRect.z = 0 — поля нет (не запеклось), и вызывающий
-            // остаётся на цикле по рёбрам. Ветка по uniform'у: у всех пикселей рендерера она одна, расхождения нет.
-            TEXTURE2D(_SilhouetteField);
-            SAMPLER(sampler_SilhouetteField);
-            float4 _SilhouetteFieldRect;
-
-            float SilhouetteFieldEdge(float2 p, out float2 n)
-            {
-                float4 s = SAMPLE_TEXTURE2D_LOD(_SilhouetteField, sampler_SilhouetteField, (p - _SilhouetteFieldRect.xy) * _SilhouetteFieldRect.zw, 0);
-                // Нормали соседних текселей по разные стороны биссектрисы смешиваются билинейно; в узкой перемычке
-                // встречные нормали гасят друг друга — тогда запасная (0,1), как у SilhouetteEdge на вырожденном ребре.
-                float nn = dot(s.yz, s.yz);
-                n = (nn < 1e-6) ? float2(0.0, 1.0) : s.yz * rsqrt(nn);
-                return max(s.x, 0.0);
-            }
+            // Кромка силуэта из запечённого поля (_SilhouetteField, SilhouetteFieldEdge) объявлена в SilhouetteSdf.hlsl
+            // (TASK-567: её читает и тень массы).
 
             /// across — координата ПОПЕРЁК волокна, along — вдоль. Обе в мировых единицах,
             /// поэтому плотность линий одинакова у большой и маленькой детали.

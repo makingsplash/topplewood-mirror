@@ -140,7 +140,11 @@
     },
     {
       "levelId": "video_launcher",
-      "winningOrder": [0, 1, 2],
+      "winningOrder": [
+        0,
+        1,
+        2
+      ],
       "seed": 57,
       "difficultyTier": 1,
       "physicsMode": "catapult",
@@ -479,28 +483,6 @@
             {
               "x": -3.5,
               "y": 0
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -3.5,
-              "y": -3.6
-            },
-            {
-              "x": 3.5,
-              "y": -3.6
-            },
-            {
-              "x": 3.5,
-              "y": -3.3
-            },
-            {
-              "x": -3.5,
-              "y": -3.3
             }
           ]
         }

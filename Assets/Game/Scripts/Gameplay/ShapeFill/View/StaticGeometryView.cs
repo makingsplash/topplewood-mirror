@@ -9,6 +9,8 @@ namespace Gameplay.View
     /// as a flat convex-fan mesh (same builder + shared double-sided material as <see cref="PieceView"/>). The
     /// outline is authored in WORLD space, so the mesh is built from it directly and the transform sits at the
     /// origin, nudged slightly behind the pieces on Z so falling pieces read in front.
+    /// TASK-567: несколько блоков одного цвета в контакте рисуются ОДНИМ таким вью (<see cref="InitializeMass"/>);
+    /// кто чем рисуется, решает <see cref="StaticGeometrySpawner"/>, а не вызывающие.
     /// </summary>
     public sealed class StaticGeometryView : MonoBehaviour
     {
@@ -20,7 +22,14 @@ namespace Gameplay.View
         // but makes the depth test deterministic (RFC §3.4). Applied on the concave-fill path only; if the frame ever
         // shows the mass IN FRONT of the ribbon at the tuck-under, the camera sign is flipped — the invariant is "mass
         // furthest from camera among the left-chute statics", not the exact value.
+        // TASK-567: на этой же глубине стоят и СЛИТЫЕ массы (InitializeMass) — все за плоской статикой.
         private const float ZMassBehind = 0.55f;
+
+        /// <summary>TASK-567: плотность поля слитой массы — 32, вдвое реже, чем у деталей (рычаг §5.4 плана). На 64 поле
+        /// крупнейших масс не влезло в бюджет «≤ 30 мс и ≤ 4 МБ на уровень» (shaft_sort 6.4 МБ, chute_cross ~1 с CPU).
+        /// У статики рёбра прямые: знаковое расстояние до прямого ребра линейно, и билинейная выборка держит его нулевую
+        /// линию точно на любом шаге — смягчаются только углы, на тексель (~0.03 ед.).</summary>
+        public const float MassTexelsPerUnit = 32f;
 
         private static readonly Color DefaultColor = new Color(0.72f, 0.57f, 0.42f); // neutral block brown
 
@@ -120,11 +129,100 @@ namespace Gameplay.View
             // TASK-349: the mass overlaps the floor (tucks under it) and sits behind the ribbon — put it strictly
             // furthest from the camera so those overlaps resolve deterministically (§3.4).
             transform.position = new Vector3(0f, 0f, ZMassBehind);
-            PieceShadow.Attach(transform, mesh);
+
+            // TASK-567 (долг TASK-472): тень массы — по силуэту (поле, без поля — цикл по контуру). Прежний
+            // PieceShadow.Attach(transform, mesh) брал uv2.x меша массы, а он 0 по всей площади: альфа 0, тени не было.
+            // Плотный запасной меш (BuildConcaveFill) несёт настоящий uv2.x — он остаётся на прежней тени.
+            if (_concaveOutline != null)
+                PieceShadow.Attach(transform, mesh, _concaveOutline, _concaveOutlineCount, _concaveField);
+            else
+                PieceShadow.Attach(transform, mesh);
 
             _mpb = new MaterialPropertyBlock();
             RefreshColor();
             WoodTuning.Changed += RefreshColor;
+        }
+
+        /// <summary>
+        /// TASK-567: СЛИТАЯ ВИЗУАЛЬНАЯ МАССА — несколько видимых блоков одного цвета в контакте
+        /// (<see cref="StaticMassUnion.Group"/>) одним рендерером. Меш — склейка треугольников членов
+        /// (<see cref="PieceMeshBuilder.BuildMassCoverage"/>), кромка и фаска — поле расстояний по отрезкам границы союза
+        /// (<see cref="SilhouetteField.Bake(StaticMassUnion.BoundarySegment[], Vec2[][], float)"/>), поэтому по бывшим
+        /// стыкам ни фаски, ни контура нет. Тень — квад габарита, вырезанный знаковым полем.
+        /// <para>
+        /// Возвращает <c>false</c>, НИЧЕГО не добавив на объект, если массу честно нарисовать нечем: поле не запеклось
+        /// (нет RGBAHalf), граница вырождена или меш пуст. Вызывающий тогда рисует членов поштучно прежним путём — со
+        /// швами, но без обрезанной или ложной кромки. Цикла по контуру у массы нет: несколько колец и дырки он не выражает.
+        /// </para>
+        /// </summary>
+        public bool InitializeMass(Polygon[] members, string colorHex)
+        {
+            if (members == null || members.Length < 2)
+                return false;
+
+            var outlines = new Vec2[members.Length][];
+            var total = 0;
+            for (var i = 0; i < members.Length; i++)
+            {
+                outlines[i] = members[i]?.Outline;
+                if (outlines[i] == null || outlines[i].Length < 3)
+                    return false;
+                total += outlines[i].Length;
+            }
+
+            var boundary = StaticMassUnion.Boundary(outlines);
+            if (boundary.Length == 0)
+            {
+                Debug.LogWarning("StaticGeometryView: слитая масса без отрезков границы — рисую блоки поштучно.");
+                return false;
+            }
+
+            var field = SilhouetteField.Bake(boundary, outlines, MassTexelsPerUnit);
+            if (field == null)
+            {
+                Debug.LogWarning("StaticGeometryView: поле массы не запеклось (нет RGBAHalf) — рисую блоки поштучно, со швами.");
+                return false;
+            }
+
+            var mesh = PieceMeshBuilder.BuildMassCoverage(outlines);
+            if (mesh == null)
+            {
+                field.Dispose();
+                Debug.LogWarning("StaticGeometryView: меш слитой массы пуст — рисую блоки поштучно.");
+                return false;
+            }
+
+            var all = new Vec2[total];
+            var k = 0;
+            foreach (var outline in outlines)
+            foreach (var v in outline)
+                all[k++] = v;
+
+            _colorHex = colorHex;
+            _styleKey = WoodPieceKey.OfStatic(all);   // ключ — габарит группы, как у одного блока такого размера
+            _concaveField = field;
+            // Пустой контур (count 0): при наличии поля шейдер цикл не исполняет. Массив нужен самим RefreshColor —
+            // по нему он понимает, что блок свойств надо дополнить силуэтом после Clear().
+            _concaveOutline = BlockMaterial.PackSilhouette(System.Array.Empty<Vec2>());
+            _concaveOutlineCount = 0;
+
+            gameObject.AddComponent<MeshFilter>().mesh = mesh;
+            _renderer = gameObject.AddComponent<MeshRenderer>();
+            _renderer.sharedMaterial = BlockMaterial.ConcaveShared;
+            _renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _renderer.receiveShadows = false;
+
+            // Все массы — за плоской статикой: лента (surface) и одиночные блоки на ZBehindPieces остаются перед массой,
+            // как у ручной массы chute_cross (TASK-349 §3.4).
+            transform.position = new Vector3(0f, 0f, ZMassBehind);
+
+            var b = mesh.bounds;
+            PieceShadow.Attach(transform, PieceMeshBuilder.BuildQuad(b.min.x, b.min.y, b.max.x, b.max.y), field);
+
+            _mpb = new MaterialPropertyBlock();
+            RefreshColor();
+            WoodTuning.Changed += RefreshColor;
+            return true;
         }
 
         /// <summary>TASK-325/349: a curved static SURFACE is a thin wooden RIBBON traced along the authored polyline. The
