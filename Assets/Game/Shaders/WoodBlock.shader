@@ -173,6 +173,7 @@ Shader "Game/Wood Block"
             float _Ao, _AoWidth;
             float _Saturation, _Brightness;
             float _Cull;
+            float _WoodProbe;   // PROBE TASK-557 (временно)
 
             // Контур силуэта (_ConcaveOutline/_ConcaveOutlineCount) объявлен в SilhouetteSdf.hlsl. Заполняется
             // per-renderer через MaterialPropertyBlock — поэтому вне инстанс-буфера и вне UnityPerMaterial
@@ -279,7 +280,22 @@ Shader "Game/Wood Block"
                 float along  = ( gp.x * ca + gp.y * sa) / k;
                 float across = (-gp.x * sa + gp.y * ca) / k;
 
-                float grain = woodGrain(across, along);
+                // PROBE TASK-557 (временно)
+                [branch] if (_WoodProbe > 2.5 && _WoodProbe < 3.5) return half4(saturate(baseCol.rgb), baseCol.a);
+                float grain = 0.0, grainShifted = 0.0;
+                [branch] if (_WoodProbe > 5.5)
+                {
+                    float wave6 = (fbm(float2(along * 0.75, across * 0.5)) - 0.5) * 2.0;
+                    float lines6 = across * _GrainScale + wave6 * _GrainWarp * _GrainScale;
+                    float r6 = pow(saturate(1.0 - abs(sin(3.14159 * lines6))), _GrainSharp);
+                    r6 *= lerp(1.0, fbm(float2(across * 1.7, along * 0.4)) * 1.9, _GrainVary);
+                    grain = saturate(r6); grainShifted = grain;
+                }
+                else [branch] if (_WoodProbe < 1.5 || _WoodProbe > 3.5)
+                {
+                    grain = woodGrain(across, along);
+                    grainShifted = (_WoodProbe > 0.5 && _WoodProbe < 1.5) ? grain : woodGrain(across + 0.035, along);
+                }
 
                 // Волокно тянем по тону: тёмные прожилки уходят в глубину, светлые промежутки
                 // чуть теплее базы. Плоское умножение на серый делает дерево грязным.
@@ -290,7 +306,6 @@ Shader "Game/Wood Block"
 
                 // Рельеф прожилки: разница волокна на шаг поперёк себя. Шаг задан в УЖЕ поджатых
                 // координатах, то есть он постоянная доля прожилки на детали любого размера.
-                float grainShifted = woodGrain(across + 0.035, along);
                 col = saturate(col + (grainShifted - grain) * _GrainEmboss);
 
                 // ------------------------------------------------- кромка: сколько и куда
@@ -302,8 +317,9 @@ Shader "Game/Wood Block"
                 // Контур в ОБЪЕКТНОМ пространстве: у массы оно совпадает с мировым (меш собран в мире,
                 // трансформ — сдвиг по Z без поворота), у детали кувыркается вместе с ней. Поэтому нормаль, как
                 // и в per-vertex пути, переводится в мир — свет один на всю сцену.
-                float2 nSil;
-                float edge = SilhouetteEdge(IN.positionOS.xy, nSil);
+                float2 nSil = float2(0.0, 1.0);
+                float edge = 0.1;
+                [branch] if (_WoodProbe < 3.5 || _WoodProbe > 4.5) edge = SilhouetteEdge(IN.positionOS.xy, nSil);
                 float3 nSilW = TransformObjectToWorldDir(float3(nSil, 0.0), false);
                 float2 n = nSilW.xy;
                 n = (dot(n, n) < 1e-8) ? float2(0.0, 1.0) : normalize(n);

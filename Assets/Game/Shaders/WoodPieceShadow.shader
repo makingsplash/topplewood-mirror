@@ -75,8 +75,11 @@ Shader "Game/Wood Piece Shadow"
                 return OUT;
             }
 
+            float _WoodProbe;   // PROBE TASK-557 (временно)
+
             half4 frag(Varyings IN) : SV_Target
             {
+                clip(_WoodProbe > 4.5 && _WoodProbe < 5.5 ? -1.0 : 1.0);
 #ifdef _CONCAVE_SDF
                 float2 nUnused;
                 float edge = SilhouetteEdge(IN.positionOS, nUnused);
