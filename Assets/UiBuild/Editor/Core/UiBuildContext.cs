@@ -63,8 +63,15 @@ namespace Iliai.UiBuild
                 : Config.SpriteRoot + "/" + Spec.Name + "/" + reference;
 
             var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            // Конвенция «спека несёт короткое имя без расширения» (см. docstring выше) требует, чтобы
+            // резолвер сам дописал расширение: LoadAssetAtPath грузит по ТОЧНОМУ пути и без него молча
+            // вернёт null. Короткому имени дописываем .png — формат растровых UI-спрайтов по умолчанию;
+            // ссылка с явным расширением (напр. .svg встроенного SVG-импорта — docs/platform/unity-gotchas.md)
+            // грузится как есть.
+            if (sprite == null && !Path.HasExtension(path))
+                sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path + ".png");
             if (sprite == null)
-                Report.Error(where, $"спрайт не найден: {path} (ссылка '{reference}')");
+                Report.Error(where, $"спрайт не найден: {path}(.png) (ссылка '{reference}')");
             return sprite;
         }
 
