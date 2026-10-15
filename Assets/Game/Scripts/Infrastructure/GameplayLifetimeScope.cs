@@ -86,6 +86,9 @@ namespace Game.Code.Infrastructure
             // the win/lose screens are.
             builder.Register<PlayScreenInteraction>(Lifetime.Singleton);
             builder.RegisterEntryPoint<RestartButtonPresenter>();
+            // TASK-562: the settings gear, top-left. Built but hidden until its screen binds it (TASK-566) — .AsSelf()
+            // so that binder can inject it. Prod scope only: bringup has no settings screen.
+            builder.RegisterEntryPoint<SettingsButtonPresenter>().AsSelf();
             // TASK-398: the HUD buttons are Overlay canvases and draw ABOVE every UiService screen whatever their
             // sortingOrder, so they hide themselves while a screen is up. This bridge feeds that flag
             // (PlayScreenInteraction.IsCoveredByScreen) from the UiService show/hide events; UiService is bound below
@@ -114,8 +117,8 @@ namespace Game.Code.Infrastructure
             // это Loading → ЭТОТ прод-скоуп (child-scope, TASK-138/ADR-0004). Без дорегистрации здесь собранный
             // APK остался бы grey-box при зелёном компайле. Все три резолвятся в прод-графе: Backdrop/Foliage
             // без ctor-зависимостей (WoodArt/WoodTuning/Camera.main — статика), Palette тянет GameModel, который
-            // регистрирует GameplayCoreInstaller (общий с bringup). Вуд-скин RESTART-кнопки применяется в проде
-            // сам — он живёт внутри RestartButtonPresenter выше. Порядок регистрации не несущий: каждый презентер
+            // регистрирует GameplayCoreInstaller (общий с bringup). Скин RESTART-кнопки (с TASK-562 — кремовый
+            // die-cut, не вуд) живёт внутри RestartButtonPresenter выше. Порядок регистрации не несущий: каждый презентер
             // подгоняется под камеру покадрово / перекрашивает детали событием (см. их докстринги).
             builder.RegisterEntryPoint<WoodBackdropPresenter>();
             builder.RegisterEntryPoint<WoodLevelPalettePresenter>();

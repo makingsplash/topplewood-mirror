@@ -82,6 +82,12 @@ namespace Gameplay.View
                 var fit = Mathf.Min(
                     bandWorldW * pad / Mathf.Max(fitExtentX, 1e-3f),
                     bandWorldH * pad / Mathf.Max(fitExtentY, 1e-3f));
+                // TASK-563: the card shares the band with the top-corner buttons (RESTART, settings gear) — keep it
+                // between their inner edges. The zones reach well past the band's middle, where the card is anchored,
+                // so the clamp is horizontal only. On today's phones the band height binds first (the card spans
+                // ~31–69 % of the width at 21:9, the corners end at ~24 %), so this changes nothing until a wider card.
+                var halfRoom = TopCornerHalfRoom(aspect, config.AnchorViewportX);
+                fit = Mathf.Min(fit, 2f * halfRoom * bandWorldW / Mathf.Max(fitExtentX, 1e-3f));
                 // Потолок размера — из настроек стиля, а не из конфига: владелец крутит его
                 // ползунком в Play вместе с остальным деревом. Конфиг остаётся запасным значением.
                 var ceiling = WoodTuning.Current.PreviewScale > 0f
@@ -354,6 +360,27 @@ namespace Gameplay.View
             mpb.SetColor(BlockMaterial.ColorProperty, color);
             mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
             renderer.SetPropertyBlock(mpb);
+        }
+
+        /// <summary>
+        /// TASK-563: the widest half-width (viewport fraction) the card may take around <paramref name="anchorX"/>
+        /// without entering a top-corner button's quadrant (<see cref="HudCornerZone.TopButtons"/>, this device's safe
+        /// area), less a small gap. ONE layout value with the buttons themselves, so the reserve cannot drift.
+        /// </summary>
+        private static float TopCornerHalfRoom(float aspect, float anchorX)
+        {
+            const float gap = 0.01f;
+            var safe = Screen.safeArea;
+            var safeLeft = Screen.width > 0 ? safe.xMin / Screen.width : 0f;
+            var safeRight = Screen.width > 0 ? (Screen.width - safe.xMax) / Screen.width : 0f;
+            var safeTop = Screen.height > 0 ? (Screen.height - safe.yMax) / Screen.height : 0f;
+            var room = Mathf.Min(anchorX, 1f - anchorX);
+            foreach (var zone in HudCornerZone.TopButtons)
+            {
+                zone.ToViewport(aspect, zone.Right ? safeRight : safeLeft, safeTop, out var side, out _);
+                room = Mathf.Min(room, zone.Right ? 1f - side - anchorX : anchorX - side);
+            }
+            return Mathf.Max(room - gap, 0f);
         }
 
         /// <summary>

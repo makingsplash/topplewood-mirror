@@ -192,14 +192,14 @@ namespace Gameplay.PlayScreen
             // Offsets count from the SAFE edges (TASK-539, closes TASK-246): the button rides a safe-area container.
             _safeArea = SafeAreaFitter.Create(_canvas.transform);
 
-            // Root button — bottom-right, thumb reach (ui-composer §2). Both top corners are taken (DEV / RESTART).
+            // Root button — bottom-right, thumb reach (ui-composer §2). Both top corners are taken (settings gear / RESTART).
             var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
             buttonGo.transform.SetParent(_safeArea, false);
             var buttonRect = buttonGo.GetComponent<RectTransform>();
             buttonRect.anchorMin = new Vector2(1f, 0f);
             buttonRect.anchorMax = new Vector2(1f, 0f);
             buttonRect.pivot = new Vector2(1f, 0f);
-            buttonRect.anchoredPosition = new Vector2(-zone.SideInset, zone.BottomInset);
+            buttonRect.anchoredPosition = new Vector2(-zone.SideInset, zone.EdgeInset);
             buttonRect.sizeDelta = new Vector2(zone.Width, zone.Height);
 
             _icon = buttonGo.GetComponent<Image>();
@@ -303,7 +303,7 @@ namespace Gameplay.PlayScreen
             rect.anchorMin = new Vector2(1f, 0f);
             rect.anchorMax = new Vector2(1f, 0f);
             rect.pivot = new Vector2(1f, 0f);
-            rect.anchoredPosition = new Vector2(-zone.SideInset, zone.BottomInset + zone.Height + 16f);
+            rect.anchoredPosition = new Vector2(-zone.SideInset, zone.EdgeInset + zone.Height + 16f);
             rect.sizeDelta = new Vector2(380f, 110f);
 
             _tooltip.GetComponent<Image>().color = new Color(0.15f, 0.12f, 0.09f, 0.92f);

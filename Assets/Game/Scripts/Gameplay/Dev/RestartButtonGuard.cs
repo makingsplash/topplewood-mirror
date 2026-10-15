@@ -4,7 +4,8 @@ using UnityEngine;
 namespace Gameplay.Dev
 {
     /// <summary>
-    /// Hides the product HUD button canvases — RESTART and, since TASK-539, the hint booster — for as long as a dev
+    /// Hides the product HUD button canvases — RESTART, since TASK-539 the hint booster, since TASK-562 the settings
+    /// gear — for as long as a dev
     /// menu is open: the non-ordering lever from TASK-117. Extracted from <c>BringupDebugMenuHost</c> (TASK-172) so both
     /// the bringup host and the prod <see cref="GameDebugMenuEntryPoint"/> share one implementation instead of two
     /// drifting copies. The hint button sat over the menu's fields ("Add", "Input Drag Threshold") on a 20:9 phone
@@ -25,6 +26,7 @@ namespace Gameplay.Dev
         {
             "[PlayScreen] RestartButton",
             "[PlayScreen] HintBoosterButton",
+            Gameplay.PlayScreen.SettingsButtonPresenter.CanvasName, // TASK-562: the gear shares the top-left corner with the DEV toggle.
         };
 
         private readonly GameObject[] _hidden = new GameObject[HudCanvasNames.Length]; // what we hid; restored on close.

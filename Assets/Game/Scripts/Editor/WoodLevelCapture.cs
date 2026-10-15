@@ -622,8 +622,10 @@ namespace Game.Editor
 
             var config = new CameraFramingConfig();
             // TASK-539: с резервом угла кнопки подсказки, как в игре (safe-area у снимка нулевая).
+            // TASK-563: и верхних угловых кнопок (рестарт, шестерёнка).
             if (CameraFramingMath.TryFrame(level, cam.aspect, config.Margin, config.PreviewBandFraction,
-                    config.MinOrthoSize, HudCornerZone.HintButton, 0f, 0f, out var size, out var centre))
+                    config.MinOrthoSize, HudCornerZone.HintButton, 0f, 0f, HudCornerZone.TopButtons, default,
+                    out var size, out var centre))
             {
                 cam.orthographicSize = size;
                 cam.transform.position = new Vector3(centre.X, centre.Y, -10f);

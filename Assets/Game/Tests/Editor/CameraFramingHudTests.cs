@@ -96,7 +96,7 @@ namespace Gameplay.Tests
         [Test]
         public void LeftCorner_IsTheMirror()
         {
-            var left = new HudCornerZone(false, Hint.SideInset, Hint.BottomInset, Hint.Width, Hint.Height, Hint.Pad,
+            var left = new HudCornerZone(false, false, Hint.SideInset, Hint.EdgeInset, Hint.Width, Hint.Height, Hint.Pad,
                 Hint.RefWidth, Hint.RefHeight, Hint.Match);
             var level = Level(Pieces((0f, 0f), (0f, 1f), (0f, 2f), (0f, 3f), (0f, 4f), (0f, 5f), (2f, 0f)));
             var mirrored = Level(Pieces((0f, 0f), (0f, 1f), (0f, 2f), (0f, 3f), (0f, 4f), (0f, 5f), (-2f, 0f)));
@@ -149,6 +149,102 @@ namespace Gameplay.Tests
 
             Assert.That(source.Count, Is.GreaterThan(0));
             Assert.That(after, Is.Empty, string.Join("\n", after));
+        }
+
+        // ---------------------------------------------------------------- TASK-563: top corners
+
+        private static readonly HudCornerZone[] Top = HudCornerZone.TopButtons;
+
+        [Test]
+        public void TopZone_ReachingBelowBand_ZoomsOutUntilClear()
+        {
+            // A top-right zone deep enough to leave the preview band (930 units ≈ 43 % of a 20:9 screen) over a column
+            // with a block at its top-right: only zoom can free it. The real buttons never reach this deep — the
+            // fixture is what proves the pass is not a no-op.
+            var deep = new HudCornerZone(true, true, 28f, 30f, 300f, 900f, 0f, 1080f, 1920f, 0.5f);
+            var level = Level(Pieces((0f, 0f), (0f, 1f), (0f, 2f), (0f, 3f), (0f, 4f), (0f, 5f), (2f, 5f)));
+            const float aspect = 0.45f;
+            Old(level, aspect, out var oldSize, out var oldCentre);
+            Assert.That(CameraFramingMath.ContentInHudCorner(level, oldSize, oldCentre, aspect, deep, 0f, 0f),
+                Is.True, "fixture must start in the top corner");
+
+            Assert.That(CameraFramingMath.TryFrame(level, aspect, Margin, Band, MinOrtho, Hint, 0f, 0f,
+                new[] { deep }, default, out var size, out var centre), Is.True);
+            Assert.That(size, Is.GreaterThan(oldSize));
+            Assert.That(CameraFramingMath.ContentInHudCorner(level, size, centre, aspect, deep, 0f, 0f), Is.False);
+            Assert.That(CameraFramingMath.ContentInHudCorner(level, size, centre, aspect, Hint, 0f, 0f), Is.False,
+                "the bottom corner stays clear while the top one is freed");
+            AssertBelowPreviewBand(level, size, centre);
+
+            // Minimal: 1 % less zoom is back in the top corner.
+            CameraFramingMath.TryFrame(level, aspect, Margin, Band, size * 0.99f, Hint, 0f, 0f, out var s, out var c);
+            Assert.That(CameraFramingMath.ContentInHudCorner(level, s, c, aspect, deep, 0f, 0f), Is.True);
+        }
+
+        [Test]
+        public void TopZone_SafeTopInset_GrowsTheDepth()
+        {
+            var zone = HudCornerZone.RestartButton;
+            zone.ToViewport(0.45f, 0f, 0f, out var side0, out var depth0);
+            zone.ToViewport(0.45f, 0.02f, 0.05f, out var side1, out var depth1);
+            Assert.That(side1, Is.EqualTo(side0 + 0.02f).Within(Eps));
+            Assert.That(depth1, Is.EqualTo(depth0 + 0.05f).Within(Eps));
+        }
+
+        /// <summary>
+        /// The before/after proof for TASK-563: on every level of the real line-up, at phone and tablet aspects and
+        /// with and without a cutout's safe top, the frame WITH the top-corner reserve is bit-identical to the frame
+        /// without it — the buttons live inside the preview band, which content never enters. Writes the comparison
+        /// to <c>Logs/TASK-563-top-corners.txt</c>.
+        /// </summary>
+        [Test]
+        public void RealLineup_TopCornerReserve_LeavesFrameUnchanged()
+        {
+            var source = new JsonLevelSource(new FileStore(), new LevelDataValidator());
+            var aspects = Phones.Concat(new[] { ("21:9", 1080f / 2520f), ("3:4", 0.75f) }).ToArray();
+            var safeTops = new[] { 0f, 0.05f };
+            var report = new StringBuilder();
+            report.AppendLine("TASK-563 — кадр с резервом верхних углов против кадра без него, CameraFramingMath");
+            var changed = new List<string>();
+            var frames = 0;
+
+            foreach (var (name, aspect) in aspects)
+            foreach (var safeTop in safeTops)
+            {
+                var same = 0;
+                for (var i = 0; i < source.Count; i++)
+                {
+                    var level = source.Load(i);
+                    if (level == null)
+                        continue;
+                    CameraFramingMath.TryFrame(level, aspect, Margin, Band, MinOrtho, Hint, 0f, 0f,
+                        out var oldSize, out var oldCentre);
+                    CameraFramingMath.TryFrame(level, aspect, Margin, Band, MinOrtho, Hint, 0f, 0f, Top,
+                        new CameraFramingMath.SafeInsets(0f, 0f, 0f, safeTop), out var size, out var centre);
+                    frames++;
+                    // Exact equality on purpose: the claim is "unchanged", not "close".
+                    if (size == oldSize && centre.X == oldCentre.X && centre.Y == oldCentre.Y)
+                    {
+                        same++;
+                        continue;
+                    }
+                    changed.Add($"{name} safeTop {safeTop} #{i + 1} {level.LevelId}: orthoSize {oldSize} → {size}, " +
+                                $"centre ({oldCentre.X}, {oldCentre.Y}) → ({centre.X}, {centre.Y})");
+                }
+                HudCornerZone.RestartButton.ToViewport(aspect, 0f, safeTop, out var side, out var depth);
+                report.AppendLine($"{name} (aspect {aspect:0.####}), safeTop {safeTop:0.##}: угол {side:P1} ширины × " +
+                                  $"{depth:P1} высоты (полоса превью {Band:P0}); кадр совпал у {same} из {source.Count}");
+            }
+            report.AppendLine($"\nвсего кадров: {frames}, изменилось: {changed.Count}");
+            foreach (var line in changed)
+                report.AppendLine(line);
+
+            Directory.CreateDirectory("Logs");
+            File.WriteAllText("Logs/TASK-563-top-corners.txt", report.ToString());
+            TestContext.Out.WriteLine(report.ToString());
+
+            Assert.That(source.Count, Is.GreaterThan(0));
+            Assert.That(changed, Is.Empty, string.Join("\n", changed));
         }
 
         // ---------------------------------------------------------------- helpers
