@@ -10815,12 +10815,12 @@
       "bounds": { "min": { "x": -6, "y": -6 }, "max": { "x": 6, "y": 10 } },
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
-        { "kind": "lookout", "color": "#7D4B2A", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.5, "segments": 24 } },
-        { "kind": "hammer", "color": "#E23B3B", "symmetryOrder": 24, "material": { "density": 2.6, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.8, "segments": 24 } },
-        { "kind": "beam", "color": "#8D6E4A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 4.0, "height": 0.4 } },
-        { "kind": "hull", "color": "#6B4226", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.8 } },
-        { "kind": "mast", "color": "#A0522D", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 2.6 } },
-        { "kind": "nest", "color": "#C9A227", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.8, "topWidth": 1.4, "height": 0.6 } }
+        { "kind": "lookout", "color": "#5A55A3", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.5, "segments": 24 } },
+        { "kind": "hammer", "color": "#8B5A9E", "symmetryOrder": 24, "material": { "density": 2.6, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.8, "segments": 24 } },
+        { "kind": "beam", "color": "#5C8E3E", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 4.0, "height": 0.4 } },
+        { "kind": "hull", "color": "#B8577A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.8 } },
+        { "kind": "mast", "color": "#48699A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 2.6 } },
+        { "kind": "nest", "color": "#CBA016", "symmetryOrder": 1, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "trapezoid", "width": 0.8, "topWidth": 1.4, "height": 0.6 } }
       ],
       "target": {
         "outline": [ { "x": 3.9, "y": 0 }, { "x": 4.5, "y": 0 }, { "x": 4.5, "y": 4.5 }, { "x": 3.9, "y": 4.5 } ],
@@ -10834,7 +10834,7 @@
       "pieces": [
         { "kind": "beam", "startPosition": { "x": -1.05, "y": 2.8 }, "startRotation": 0, "preplaced": true, "expendable": true },
         { "kind": "hammer", "startPosition": { "x": 0.25, "y": 9.8 }, "startRotation": 0, "expendable": true },
-        { "kind": "lookout", "startPosition": { "x": -2.05, "y": 3.4 }, "startRotation": 0 },
+        { "kind": "lookout", "startPosition": { "x": -2.05, "y": 5.0 }, "startRotation": 0 },
         { "kind": "mast", "startPosition": { "x": 4.2, "y": 3.9 }, "startRotation": 0 },
         { "kind": "nest", "startPosition": { "x": 4.2, "y": 5.4 }, "startRotation": 0 },
         { "kind": "hull", "startPosition": { "x": 4.2, "y": 6.8 }, "startRotation": 0 }
