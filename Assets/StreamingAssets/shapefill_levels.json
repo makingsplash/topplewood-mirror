@@ -10816,7 +10816,7 @@
       "gravity": { "x": 0, "y": -9.81 },
       "pieceTypes": [
         { "kind": "lookout", "color": "#5A55A3", "symmetryOrder": 24, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.5, "segments": 24 } },
-        { "kind": "hammer", "color": "#8B5A9E", "symmetryOrder": 24, "material": { "density": 2.6, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.8, "segments": 24 } },
+        { "kind": "hammer", "color": "#2F8C86", "symmetryOrder": 24, "material": { "density": 2.6, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "circle", "radius": 0.8, "segments": 24 } },
         { "kind": "beam", "color": "#5C8E3E", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "plank", "width": 4.0, "height": 0.4 } },
         { "kind": "hull", "color": "#B8577A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 1.4, "height": 0.8 } },
         { "kind": "mast", "color": "#48699A", "symmetryOrder": 2, "material": { "density": 1.0, "friction": 0.6, "restitution": 0.05 }, "shape": { "primitive": "box", "width": 0.5, "height": 2.6 } },
