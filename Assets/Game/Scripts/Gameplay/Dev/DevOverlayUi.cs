@@ -1,5 +1,6 @@
 #if GPIE_DEVELOPMENT
 using System;
+using Gameplay.Core;
 using Gameplay.PlayScreen;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -36,15 +37,21 @@ namespace Gameplay.Dev
         // The visible, keyboard-free entry point (TASK-062). The template shipped a draggable prefab button
         // (com.say.services.common DebugMenuButtonUi) instantiated by DebugService from UiPrefabs.asset, but the prefab
         // asset was cut from the repo. Rebuild the affordance in code — no prefab asset, so nothing for the Unity
-        // bridge's missing prefab-save op to author. A small corner button on its own DontDestroyOnLoad overlay canvas
-        // keeps the play field clear; gameplay taps ride the raw PointerTapInputSource (not uGUI), so anything under the
-        // button is still reachable. Returns the canvas GO so the caller owns its teardown. <paramref name="onClick"/> is invoked on tap.
+        // bridge's missing prefab-save op to author. The button rides its own DontDestroyOnLoad overlay canvas. Returns
+        // the canvas GO so the caller owns its teardown. <paramref name="onClick"/> is invoked on a tap (not on a drag).
         //
-        // Look (TASK-562, ui-composer §3.2): a SERVICE chip, deliberately outside the game's style so it never reads as
-        // a player button — flat translucent black, no sprite/outline/shadow, square corners, the built-in font, half
-        // a fraction of the height of a game button (52 vs 200). The visible chip sits inside a larger invisible hit zone (≈57×50 dp)
-        // so it stays easy to hit. It sits UNDER the top-left settings slot (HudTopButtons), which keeps that slot free
-        // for the gear; the chip and the gear hit zones do not overlap.
+        // Look (TASK-562 ui-composer §3.2, resized TASK-587): a SERVICE chip, deliberately outside the game's style so it
+        // never reads as a player button — flat opaque grey, no sprite/outline/shadow, square corners, the built-in
+        // font. Owner 2026-10-16: bigger, grey, bottom-right, draggable. The chip is 168×84 (was 104×52) inside a 200×116
+        // invisible hit zone (≈86×50 dp on a 1080×2400 phone); white ink on #5E5E5E measures 6.48 (contrast.py, ≥ 4.5).
+        // Default spot: right edge on the hint button's right edge, a gap above the hint zone (HudCornerZone.HintButton,
+        // glow pad included), so it does not cover the booster. Drag moves it anywhere in the safe area and the spot is
+        // remembered (DevChipDrag).
+        //
+        // Every GO sits on the "UI" layer: the prod InputService drops a gameplay tap whose press STARTED over a UI-layer
+        // raycast hit (IsPointerOverUIObject), so a tap or a drag on the chip never releases the piece under it. On the
+        // Default layer the chip was invisible to that check (harmless in a fixed corner, not once it can be dragged
+        // over the play field). The bringup PointerTapInputSource has no UI check at all — see the TASK-587 artifact.
         public static GameObject CreateToggleButton(Action onClick)
         {
             var buttonCanvas = new GameObject("[Dev] DebugMenuButton",
@@ -58,29 +65,25 @@ namespace Gameplay.Dev
             HudTopButtons.ConfigureScaler(buttonCanvas.GetComponent<CanvasScaler>());
 
             // Offsets count from the SAFE edges, like every other HUD button (TASK-539): before TASK-562 the DEV button
-            // hung from the raw screen edge and sat under a cutout.
-            var hitGo = new GameObject("DevHit", typeof(Image), typeof(Button));
+            // hung from the raw screen edge and sat under a cutout. The drag is clamped to the same safe area.
+            var hitGo = new GameObject("DevHit", typeof(Image), typeof(DevChipDrag));
             hitGo.transform.SetParent(SafeAreaFitter.Create(buttonCanvas.transform), false);
 
             var hitRect = hitGo.GetComponent<RectTransform>();
-            hitRect.anchorMin = hitRect.anchorMax = hitRect.pivot = new Vector2(0f, 1f);
-            hitRect.anchoredPosition = new Vector2(HudTopButtons.LeftSideInset - ChipInHit, -HudTopButtons.LeftSlotBottom);
-            hitRect.sizeDelta = new Vector2(136f, 120f);
+            hitRect.sizeDelta = ChipSize + 2f * new Vector2(ChipInHit, ChipInHit);
 
             // Alpha-0 image is the raycast target: the hit zone is invisible but tappable.
             hitGo.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
-            hitGo.GetComponent<Button>().onClick.AddListener(() => onClick());
 
             var chipGo = new GameObject("DevChip", typeof(Image));
             chipGo.transform.SetParent(hitGo.transform, false);
             var chipRect = chipGo.GetComponent<RectTransform>();
-            chipRect.anchorMin = chipRect.anchorMax = chipRect.pivot = new Vector2(0f, 1f);
-            // Visible chip on the gear's side edge, 16 units under its slot.
-            chipRect.anchoredPosition = new Vector2(ChipInHit, -ChipInHit);
-            chipRect.sizeDelta = new Vector2(104f, 52f);
+            chipRect.anchorMin = chipRect.anchorMax = chipRect.pivot = new Vector2(0.5f, 0.5f);
+            chipRect.anchoredPosition = Vector2.zero;
+            chipRect.sizeDelta = ChipSize;
 
             var chip = chipGo.GetComponent<Image>();
-            chip.color = new Color(0f, 0f, 0f, 0.45f); // dev-chip-bg
+            chip.color = new Color32(0x5E, 0x5E, 0x5E, 0xFF); // dev-chip-bg
             chip.raycastTarget = false;
 
             var labelGo = new GameObject("DevLabel", typeof(Text));
@@ -89,8 +92,9 @@ namespace Gameplay.Dev
             var label = labelGo.GetComponent<Text>();
             label.text = "DEV";
             label.alignment = TextAnchor.MiddleCenter;
-            label.color = new Color(1f, 1f, 1f, 0.8f); // dev-chip-ink
-            label.fontSize = 28;
+            label.color = Color.white; // dev-chip-ink
+            label.fontSize = 44;
+            label.fontStyle = FontStyle.Bold;
             label.raycastTarget = false;
             // Built-in font of Unity 6 (renamed from Arial.ttf pre-2022) — the system look IS the point here. If
             // unavailable the glyphs just do not draw; the chip and its click still work.
@@ -102,13 +106,26 @@ namespace Gameplay.Dev
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = Vector2.zero;
 
+            var uiLayer = LayerMask.NameToLayer("UI");
+            foreach (var t in buttonCanvas.GetComponentsInChildren<Transform>(true))
+                t.gameObject.layer = uiLayer;
+
+            // Laid out last: the drag reads the zone size and the safe-area container set above.
+            var hint = HudCornerZone.HintButton;
+            hitGo.GetComponent<DevChipDrag>().Init(onClick, new Vector2(
+                hint.SideInset - ChipInHit,
+                hint.EdgeInset + hint.Height + hint.Pad + GapAboveHint - ChipInHit));
+
             return buttonCanvas;
         }
 
-        // The chip's offset inside its hit zone (ui-composer §3.2: chip at (16, −16) in the zone). The zone starts at the
-        // gear slot's bottom, so the chip keeps the spec's 16-unit gap under the gear and its left edge on the gear's
-        // side inset — after TASK-584's round buttons that is (28, −166) for the 120-unit slot at (28, −30).
+        private static readonly Vector2 ChipSize = new(168f, 84f);
+
+        // The invisible margin of the hit zone around the visible chip, on every side.
         private const float ChipInHit = 16f;
+
+        // Canvas units between the hint zone's top (button + glow pad) and the chip's bottom in the default spot.
+        private const float GapAboveHint = 24f;
     }
 }
 #endif

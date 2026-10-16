@@ -17,12 +17,6 @@ namespace Gameplay.PlayScreen
     {
         private static HudCornerZone Zone(bool right) => right ? HudCornerZone.RestartButton : HudCornerZone.SettingsButton;
 
-        /// <summary>Canvas units from the safe top edge to the bottom of the top-left slot — where the DEV chip starts.</summary>
-        public static float LeftSlotBottom => HudCornerZone.SettingsButton.EdgeInset + HudCornerZone.SettingsButton.Height;
-
-        /// <summary>Canvas units from the safe left edge to the top-left slot's outer edge.</summary>
-        public static float LeftSideInset => HudCornerZone.SettingsButton.SideInset;
-
         /// <summary>Overlay HUD canvas scaler, identical to the other code-built HUD canvases.</summary>
         public static void ConfigureScaler(CanvasScaler scaler)
         {
