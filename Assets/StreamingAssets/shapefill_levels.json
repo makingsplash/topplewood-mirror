@@ -16073,10 +16073,10 @@
         ]
       },
       "pieces": [
-        { "kind": "petal_btm", "startPosition": { "x": 2.9, "y": 4.19 }, "startRotation": 0 },
-        { "kind": "petal_lft", "startPosition": { "x": 1.1, "y": 3.44 }, "startRotation": 0 },
-        { "kind": "petal_rgt", "startPosition": { "x": 2.0, "y": 3.82 }, "startRotation": 0 },
-        { "kind": "petal_top", "startPosition": { "x": 0.2, "y": 3.07 }, "startRotation": 0 }
+        { "kind": "petal_btm", "startPosition": { "x": 2.9, "y": 4.53 }, "startRotation": 0 },
+        { "kind": "petal_lft", "startPosition": { "x": 1.1, "y": 3.78 }, "startRotation": 0 },
+        { "kind": "petal_rgt", "startPosition": { "x": 2.0, "y": 4.15 }, "startRotation": 0 },
+        { "kind": "petal_top", "startPosition": { "x": 0.2, "y": 3.4 }, "startRotation": 0 }
       ],
       "staticGeometry": [
         { "visible": true, "color": "#B8926B", "outline": [ { "x": -1.65, "y": 1.8 }, { "x": 3.4, "y": 3.9 }, { "x": 3.4, "y": 3.5 }, { "x": -1.65, "y": 1.4 } ] },
@@ -20034,7 +20034,7 @@
           "kind": "egg_a",
           "startPosition": {
             "x": 0.5,
-            "y": 5.95
+            "y": 6.155
           },
           "startRotation": 0
         },
@@ -20042,7 +20042,7 @@
           "kind": "egg_b",
           "startPosition": {
             "x": -1.5,
-            "y": 6.75
+            "y": 6.87
           },
           "startRotation": 0
         },
@@ -20050,7 +20050,7 @@
           "kind": "egg_c",
           "startPosition": {
             "x": -0.5,
-            "y": 6.35
+            "y": 6.51
           },
           "startRotation": 0
         },
