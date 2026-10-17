@@ -190,11 +190,6 @@ namespace Gameplay.Sim
                 tapAudits = AuditTapSpacing(levels);
                 foreach (var level in levels)
                 {
-                    // TASK-075: print the authored-touching classification of every slot pair (once per level) so QA
-                    // can eyeball the DISJOINT/TOUCHING/OVERLAPPING split + the bimodal gap that justifies
-                    // proximity_eps — before trusting the reference-rest floor. Diagnostic only; never gates.
-                    LogTouchClassification(level);
-
                     List<(int[] Order, string PolicyId)> orders = null;
                     try
                     {
@@ -302,11 +297,6 @@ namespace Gameplay.Sim
                         break;
                 }
             }
-
-            // TASK-075: fold the cross-run reference-rest floor into every run's honesty scalars BEFORE aggregation /
-            // report write, so the gate (sim-gate.py reads MaxPenetration/IntersectingPairs) judges authored-touching
-            // pairs against their settled honest rest, not against a physically-unreachable 0. Zero extra simulation.
-            ApplyTouchingRestFloor(runs);
 
             IReadOnlyList<LevelSolveStats> stats = Array.Empty<LevelSolveStats>();
             try
@@ -578,15 +568,8 @@ namespace Gameplay.Sim
             for (var g = 0; g < gaps.Length; g++)
             {
                 // Same run order a single-gap session produced: that gap's impatient runs, then the policy runs.
-                // A fresh list per gap — ApplyTouchingRestFloor rewrites entries in place, and the policy runs must
-                // enter every gap's floor raw.
                 var timingRuns = new List<SimRunResult>(impatientByGap[g]);
                 timingRuns.AddRange(policyRuns);
-
-                // TASK-075: apply the same reference-rest floor to the timing runs so their honesty FYI is measured on
-                // the right baseline too (its floor is MIN over the timing pass's OWN honest wins — a fast run is not a
-                // reference for the gated sweep and vice-versa). Still FYI-only: the timing report is never gated.
-                ApplyTouchingRestFloor(timingRuns);
 
                 // Honesty of the fast game is DATA, not a gate: report int/pen counts so a finding is visible.
                 // TASK-343: the unsup-won count was removed with the UnsupportedPlaced metric (a directional rudiment
@@ -754,138 +737,6 @@ namespace Gameplay.Sim
             {
                 Debug.LogError($"[level-sim] failed to write timing report: {e.Message}");
             }
-        }
-
-        // TASK-075 reference-rest baseline: fold the cross-run honest floor of every authored-TOUCHING pair into each
-        // run's honesty scalars. PURE post-processing of runs already produced — ZERO extra simulation (the answer to
-        // QA's "does it double the sweep?": no). Per level: floor[(lo,hi)] = MIN, over the level's HONEST WINS
-        // (Solved ∧ IntersectingPairs==0 — neither of which depends on the touching-pen verdict, so there is no
-        // circularity; TASK-343 dropped the UnsupportedPlaced==0 term with the metric), of that pair's raw resting
-        // penetration. Then EVERY run's scalars are rebuilt by
-        // folding max(raw − floor, 0) over its touching pairs back into MaxPenetration / IntersectingPairs / WorstPair.
-        // A pair that never appears in a reference win (no honest run mapped pieces into both its slots), or a level
-        // with NO honest win, floors at 0 → judged raw (strictest). Runs with no touching pair are left untouched, so
-        // non-circle levels stay byte-for-byte identical. Mutates the list in place (readonly struct → replace slot).
-        private static void ApplyTouchingRestFloor(List<SimRunResult> runs)
-        {
-            if (runs == null || runs.Count == 0)
-                return;
-
-            // Pass 1 — per level, per normalised slot pair, the MIN honest-win raw penetration = the floor.
-            var floorByLevel = new Dictionary<string, Dictionary<long, float>>();
-            foreach (var run in runs)
-            {
-                if (!(run.Solved && run.IntersectingPairs == 0))
-                    continue; // reference set = honest wins only (the safe MIN, RFC §2.2)
-                if (run.TouchingPens == null || run.TouchingPens.Count == 0)
-                    continue;
-
-                if (!floorByLevel.TryGetValue(run.LevelId, out var floor))
-                    floorByLevel[run.LevelId] = floor = new Dictionary<long, float>();
-                foreach (var tp in run.TouchingPens)
-                {
-                    var key = PairKey(tp.SlotA, tp.SlotB);
-                    if (!floor.TryGetValue(key, out var cur) || tp.Penetration < cur)
-                        floor[key] = tp.Penetration;
-                }
-            }
-
-            // Pass 2 — correct EVERY run (reference or not) against its level's floor.
-            for (var i = 0; i < runs.Count; i++)
-            {
-                var run = runs[i];
-                if (run.TouchingPens == null || run.TouchingPens.Count == 0)
-                    continue; // no authored-touching pair here → scalars already final
-
-                floorByLevel.TryGetValue(run.LevelId, out var floor);
-                var maxPen = run.MaxPenetration;
-                var intPairs = run.IntersectingPairs;
-                var worst = run.WorstPair;
-                foreach (var tp in run.TouchingPens)
-                {
-                    var f = 0f;
-                    if (floor != null && floor.TryGetValue(PairKey(tp.SlotA, tp.SlotB), out var ff))
-                        f = ff;
-                    var overshoot = tp.Penetration - f;
-                    if (overshoot < 0f)
-                        overshoot = 0f;
-                    if (overshoot > maxPen)
-                    {
-                        maxPen = overshoot;
-                        worst = new WorstOverlapPair(tp.KindA, tp.KindB, tp.Penetration, f, tp.SlotA, tp.SlotB);
-                    }
-                    if (overshoot > SimRun.DetectorEpsilon)
-                        intPairs++;
-                }
-                runs[i] = run.WithCorrectedHonesty(intPairs, maxPen, worst);
-            }
-        }
-
-        // Order-independent key for a slot pair (lo<<32 | hi) — a run may map the two pieces to the pair in either
-        // order, so the floor must key on the unordered pair.
-        private static long PairKey(int a, int b)
-        {
-            var lo = a < b ? a : b;
-            var hi = a < b ? b : a;
-            return ((long)lo << 32) | (uint)hi;
-        }
-
-        // TASK-075 corpus-validation (owner directive / RFC acceptance §5): print every slot pair's class + signed gap
-        // for one level, sorted by gap, so QA confirms the bimodal split (a touching cluster at ≈0, a disjoint cluster
-        // ≫ eps, an EMPTY band between where proximity_eps sits) with its own eyes rather than trusting the number.
-        // Especially the castle_gate roof/bigcircle circle-poly pair the owner flagged (deep overlap ⇒ must read
-        // OVERLAPPING, not TOUCHING, else it wrongly gets a dynamic floor). Diagnostic; never gates.
-        private static void LogTouchClassification(LevelData level)
-        {
-            var slots = level.Target?.Slots;
-            if (slots == null || slots.Count == 0)
-                return;
-
-            var shapeByKind = new Dictionary<string, Shape>();
-            CollectShapes(level.Pieces, shapeByKind);
-            CollectShapes(level.Decoys, shapeByKind);
-
-            var pairs = SlotTouchClassifier.ClassifyLevel(slots, shapeByKind);
-            var sorted = new List<SlotPairTouch>(pairs);
-            sorted.Sort((x, y) => x.Separation.CompareTo(y.Separation));
-
-            var sb = new StringBuilder();
-            sb.Append($"[level-sim] TOUCH-CLASSIFY {level.LevelId}: {pairs.Count} slot-pairs " +
-                      $"(proximity_eps={SlotTouchClassifier.ProximityEps.ToString("0.#####", CultureInfo.InvariantCulture)})");
-            var touchingMax = float.NegativeInfinity;
-            var disjointMin = float.PositiveInfinity;
-            foreach (var p in sorted)
-            {
-                var sepStr = p.Separation >= float.MaxValue
-                    ? "apart(poly)"
-                    : p.Separation.ToString("+0.#####;-0.#####;0", CultureInfo.InvariantCulture);
-                sb.Append($"\n   sep={sepStr,-12} {p.Class,-11} " +
-                          $"{slots[p.SlotA].Kind}[{p.SlotA}]/{slots[p.SlotB].Kind}[{p.SlotB}]" +
-                          (p.CircleContaining ? "" : " (poly-poly, floor N/A)"));
-                if (p.Class == SlotTouchClass.Touching && p.Separation > touchingMax)
-                    touchingMax = p.Separation;
-                if (p.Class == SlotTouchClass.Disjoint && p.Separation < disjointMin && p.Separation < float.MaxValue)
-                    disjointMin = p.Separation;
-            }
-            if (touchingMax > float.NegativeInfinity && disjointMin < float.PositiveInfinity)
-            {
-                var eps = SlotTouchClassifier.ProximityEps;
-                var inEmptyBand = eps > touchingMax && eps < disjointMin;
-                sb.Append($"\n   bimodal: touching-max={touchingMax.ToString("0.#####", CultureInfo.InvariantCulture)} " +
-                          $"disjoint-min={disjointMin.ToString("0.#####", CultureInfo.InvariantCulture)} " +
-                          $"gap={(disjointMin - touchingMax).ToString("0.#####", CultureInfo.InvariantCulture)} " +
-                          $"(eps in empty band: {(inEmptyBand ? "YES" : "CHECK")})");
-            }
-            Debug.Log(sb.ToString());
-        }
-
-        private static void CollectShapes(IReadOnlyList<PiecePlacement> pieces, Dictionary<string, Shape> shapeByKind)
-        {
-            if (pieces == null)
-                return;
-            foreach (var p in pieces)
-                if (p.Type != null && !shapeByKind.ContainsKey(p.Type.Kind))
-                    shapeByKind[p.Type.Kind] = p.Type.Shape;
         }
 
         // GAP-1: reuse the TASK-009 JSON pipeline verbatim (JsonLevelSource over the StreamingAssets ILevelStore,

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace Gameplay.Core.Sim
 {
@@ -43,11 +42,12 @@ namespace Gameplay.Core.Sim
         public readonly IReadOnlyList<SimPiecePose> PreGlidePoses;
         // TASK-042 honesty detector (semantics rewritten by TASK-043; docstring corrected TASK-056): physical-fidelity
         // checks over the FINAL settled poses, the proof the owner's interpenetration bug is gone in EVERY release
-        // order. IntersectingPairs = count of Placed piece pairs whose SAT penetration OVERSHOOTS their AUTHORED
-        // baseline overlap by more than DetectorEpsilon (= 0.05 world units; see SimRun.cs) — the overshoot, NOT the raw
-        // depth, so authored micro-overlaps (owl's ear in the head) are not false-flagged. MaxPenetration = the worst
-        // such overshoot (max(penetration − baseline), clamped ≥0; baseline already subtracted in the harness — 0 ⇒
-        // every contact within design + slop). Pass criterion (any order): both are 0. TASK-343: the freeze-in-air
+        // order. IntersectingPairs = count of Placed piece pairs whose SAT penetration OVERSHOOTS their baseline by
+        // more than DetectorEpsilon (= 0.05 world units; see SimRun.cs) — the overshoot, NOT the raw depth, so authored
+        // micro-overlaps (owl's ear in the head) are not false-flagged. TASK-077: baseline = max(authored slot overlap,
+        // the solver's honest-rest allowance for the pair type — ContactRestAllowance). MaxPenetration = the worst such
+        // overshoot (max(penetration − baseline), clamped ≥0; baseline already subtracted in SimRun — 0 ⇒ every
+        // contact within baseline). The sim-gate fails a win above PEN_EPS. TASK-343: the freeze-in-air
         // UnsupportedPlaced field was REMOVED — a directional rudiment after FreezeAt's removal (TASK-305); "not moving"
         // is proven by the rest-gated Won verdict itself. Sim-only measurement; the sim-gate is what enforces it.
         public readonly int IntersectingPairs;
@@ -59,14 +59,6 @@ namespace Gameplay.Core.Sim
         // baseline that belongs to a different slot pair (unexpected slotA/slotB for the two same-kind kinds) ⇒ a
         // cross-mapping to fix. Zeroed/-1 when no Placed pair overlaps at all (Worst == None).
         public readonly WorstOverlapPair WorstPair;
-        // TASK-075 reference-rest baseline: the RAW resting penetration of each authored-TOUCHING slot pair this run
-        // (≥1 circle, |sep|≤ProximityEps in the slot pose). NOT judged per-run — a touching pair's honest baseline is
-        // its cross-run reference-rest FLOOR (MIN over the level's honest wins), unknown to a single run; the harness
-        // (LevelSimRunner.ApplyTouchingRestFloor) computes the floor and folds max(raw−floor,0) back into
-        // IntersectingPairs/MaxPenetration/WorstPair via WithCorrectedHonesty. [JsonIgnore] (Newtonsoft): raw sim
-        // scaffolding, never in the report — only the ALREADY-CORRECTED scalars are written. Empty on runs with no
-        // authored-touching circle pair (⇒ non-circle levels are byte-unchanged: the pass is a no-op there).
-        [JsonIgnore] public readonly IReadOnlyList<TouchingPen> TouchingPens;
 
         public SimRunResult(string levelId, int seed, string policyId, string orderKey, int repeatIndex,
             bool solved, string outcome, int attemptsUsed, int stepsToResolve, float matchError,
@@ -74,7 +66,7 @@ namespace Gameplay.Core.Sim
             float preGlideAngResidual, float preGlidePosErr, IReadOnlyList<SimPiecePose> finalPoses,
             IReadOnlyList<SimPiecePose> preGlidePoses,
             int intersectingPairs, float maxPenetration,
-            WorstOverlapPair worstPair, IReadOnlyList<TouchingPen> touchingPens = null)
+            WorstOverlapPair worstPair)
         {
             LevelId = levelId;
             Seed = seed;
@@ -97,49 +89,15 @@ namespace Gameplay.Core.Sim
             IntersectingPairs = intersectingPairs;
             MaxPenetration = maxPenetration;
             WorstPair = worstPair;
-            TouchingPens = touchingPens ?? System.Array.Empty<TouchingPen>();
-        }
-
-        /// <summary>TASK-075: a copy with the three honesty scalars replaced by the harness after it applies the
-        /// reference-rest floor to this run's touching pairs (the struct is readonly, so it is rebuilt). Everything
-        /// else — pose hash, outcome, residuals, the raw TouchingPens — is carried over verbatim.</summary>
-        public SimRunResult WithCorrectedHonesty(int intersectingPairs, float maxPenetration, WorstOverlapPair worstPair)
-            => new(LevelId, Seed, PolicyId, OrderKey, RepeatIndex, Solved, Outcome, AttemptsUsed, StepsToResolve,
-                MatchError, SlotsFilled, SlotsTotal, LostPieces, PoseHash, PreGlideAngResidual, PreGlidePosErr,
-                FinalPoses, PreGlidePoses, intersectingPairs, maxPenetration,
-                worstPair: worstPair, touchingPens: TouchingPens);
-    }
-
-    /// <summary>
-    /// TASK-075 reference-rest baseline: the raw resting penetration of one authored-TOUCHING slot pair in a sim run
-    /// (a pair with ≥1 circle whose surfaces coincide in the slot pose). Carries both slot indices AND kinds so the
-    /// harness can rebuild a <see cref="WorstOverlapPair"/> when a touching pair drives the worst overshoot after the
-    /// floor is subtracted. Slot order is this run's nearest-slot mapping; the harness normalises (lo,hi) to key the
-    /// floor. Sim scaffolding, [JsonIgnore]'d off the report via <see cref="SimRunResult.TouchingPens"/>.
-    /// </summary>
-    public readonly struct TouchingPen
-    {
-        public readonly int SlotA;
-        public readonly int SlotB;
-        public readonly string KindA;
-        public readonly string KindB;
-        public readonly float Penetration;
-
-        public TouchingPen(int slotA, int slotB, string kindA, string kindB, float penetration)
-        {
-            SlotA = slotA;
-            SlotB = slotB;
-            KindA = kindA;
-            KindB = kindB;
-            Penetration = penetration;
         }
     }
 
     /// <summary>
     /// TASK-042 gate-v2 (owner 2026-07-26 20:42, pt.2): the Placed pair with the largest overshoot above its authored
     /// baseline in a sim run — the diagnostic the owner asked for so a detector hit on CANON is explained by data, not
-    /// a guess. <see cref="Penetration"/> is the raw SAT depth; <see cref="Baseline"/> is the authored overlap the
-    /// controller applied to this pair (via <c>OverlapAllowance</c>); <see cref="SlotA"/>/<see cref="SlotB"/> are the
+    /// a guess. <see cref="Penetration"/> is the raw SAT depth; <see cref="Baseline"/> is the baseline SimRun applied to
+    /// this pair (TASK-077: <see cref="ContactRestAllowance.Baseline"/> — 0.01 for circle–circle unless the authored
+    /// overlap is larger, the authored overlap otherwise); <see cref="SlotA"/>/<see cref="SlotB"/> are the
     /// slots each piece claimed (-1 if none). A canon hit with Penetration ≈ Baseline + small residual ⇒ physical-
     /// settle slop (calibrate ε); an unexpected slot pair for two same-kind kinds ⇒ a cross-mapping to fix. Sim-only.
     /// </summary>

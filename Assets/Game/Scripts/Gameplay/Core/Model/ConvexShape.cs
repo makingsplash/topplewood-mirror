@@ -41,8 +41,9 @@ namespace Gameplay.Core
         /// <c>Circle</c> primitive (centre = body position; a disc has no meaningful angle), a COMPOUND of convex parts
         /// for a concave polyomino (<see cref="Shape.ConvexParts"/> ≠ null), a world-vertex polygon for every other
         /// primitive. This single dispatch mirrors the adapter (UnityShapeFillSimulation.SpawnFloating) — the sim
-        /// honesty detector (SimRun) AND the authored-touching slot classifier (SlotTouchClassifier) both route through
-        /// here, so detector, floor classifier and physics can never diverge on how a piece is represented.</summary>
+        /// honesty detector (SimRun) routes through here for both the live poses and the authored slot baseline, and
+        /// the contact skin (ContactRestAllowance.SkinOf) keys on the resulting IsCircle, so detector, baseline and
+        /// physics can never diverge on how a piece is represented.</summary>
         public static ConvexShape Of(Shape shape, Vec2 position, float rotation)
         {
             if (shape.ConvexParts != null)

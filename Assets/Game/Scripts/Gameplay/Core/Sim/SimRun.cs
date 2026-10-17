@@ -36,16 +36,13 @@ namespace Gameplay.Core.Sim
         // DESIGN intends (0 for disjoint slots, small positive for authored nestings). Built once, lazily. So the
         // detector still measures OVERSHOOT above the authored baseline, keeping authored micro-overlaps from being
         // false-flagged, but with zero coupling to the controller.
+        // TASK-077: the static map is only half of a pair's baseline — ComputeHonestyMetrics takes the max of it and
+        // the solver's honest-rest allowance for the pair type (ContactRestAllowance). The TASK-075 touching-pair
+        // classification and its cross-run floor were removed: no pair's verdict depends on its slot-pose class.
         private float[,] _slotBaseline;
-        // TASK-075: which authored slot pairs are TOUCHING (≥1 circle, |sep|≤ProximityEps in the slot pose), baked
-        // beside _slotBaseline by the same classifier. A touching pair is NOT judged against the static baseline
-        // (that is ≈0 for circles authored in contact, which physics cannot hold → a false red); its raw resting
-        // penetration is emitted for the harness's cross-run reference-rest floor instead. Null until baked.
-        private bool[,] _touchingPair;
         // TASK-043: the detector's own tolerance, now a sim-local constant (it used to live on ShapeFillTuning and
         // be shared with the controller gate, both removed with the assist layer). Value carried over verbatim:
-        // DetectorEpsilon is the interpenetration overshoot above baseline that counts as dishonest. TASK-075:
-        // DetectorEpsilon is public so the harness applies the SAME intersect threshold to the floored touching pairs.
+        // DetectorEpsilon is the interpenetration overshoot above baseline that counts as dishonest.
         // TASK-343: the freeze-in-air/grounding probe (DetectorSupportProbe) was removed with CountUngrounded — a
         // directional rudiment after FreezeAt's removal (TASK-305); only the interpenetration tolerance remains.
         public const float DetectorEpsilon = 0.05f;
@@ -231,29 +228,28 @@ namespace Gameplay.Core.Sim
             var solved = _outcome == GameOutcome.Won;
             var outcome = _outcome == GameOutcome.None ? "Timeout" : _outcome.ToString();
 
-            ComputeHonestyMetrics(out var intersectingPairs, out var maxPenetration,
-                out var worst, out var touchingPens);
+            ComputeHonestyMetrics(out var intersectingPairs, out var maxPenetration, out var worst);
 
             return new SimRunResult(_level.LevelId, _level.Seed, policyId, orderKey, repeatIndex,
                 solved, outcome, _model.AttemptsUsed, stepsToResolve, match.TotalError,
                 match.SlotsFilled, match.SlotsTotal, lost, SimPoseHash.Of(_model),
                 _maxPreGlideAngResidual, _maxPreGlidePosErr, finalPoses, _preGlidePoses,
-                intersectingPairs, maxPenetration, worst, touchingPens);
+                intersectingPairs, maxPenetration, worst);
         }
 
         /// <summary>
         /// TASK-042 honesty detector — the owner's proof that physics stays honest in EVERY release order — now fully
         /// SIM-LOCAL (TASK-043 decoupled it from the removed controller assist layer, but its checks are unchanged).
         /// Over the FINAL settled (Placed) poses it measures:
-        /// (a) INTERPENETRATION — pairs of pieces whose measured penetration exceeds their AUTHORED baseline
-        ///     overlap (the sim-local per-pair design overlap baked in <see cref="EnsureSlotBaseline"/>) by more than
-        ///     the <c>DetectorEpsilon</c> constant. Measuring the OVERSHOOT above baseline — not raw penetration — is
+        /// (a) INTERPENETRATION — pairs of pieces whose measured penetration exceeds their baseline by more than the
+        ///     <c>DetectorEpsilon</c> constant. Measuring the OVERSHOOT above baseline — not raw penetration — is
         ///     what stops authored micro-overlaps (owl's ear in the head, birthday_cake's touching tiers) from being
-        ///     false-flagged. <c>maxPenetration</c> is the worst such overshoot (0 ⇒ every contact is within design + slop).
-        ///     TASK-075: an authored-TOUCHING pair (circles designed in contact, whose static baseline is ≈0 yet whose
-        ///     physical resting-slop is a nonzero honest contact) is NOT judged here — its raw penetration goes to
-        ///     <paramref name="touchingPens"/> and the harness measures overshoot above the cross-run reference-rest
-        ///     FLOOR instead of above 0. So this run's intersect/overshoot cover only the static-baseline pairs.
+        ///     false-flagged. <c>maxPenetration</c> is the worst such overshoot (0 ⇒ every contact is within baseline).
+        ///     TASK-077: the baseline is <see cref="ContactRestAllowance.Baseline"/> — the max of the AUTHORED static
+        ///     slot overlap (baked in <see cref="EnsureSlotBaseline"/>) and the solver's honest-rest allowance for the
+        ///     pair type (Box2D calls a contact solved within 3·linearSlop on the collision radius; a circle has no
+        ///     skin, a polygon 2·linearSlop): 0.01 for circle–circle, 0 for every pair with a polygon. A function of
+        ///     THIS run alone — no cross-run floor (TASK-075's, removed), no slot-pose touching class.
         /// TASK-343: the freeze-in-air / grounding check was REMOVED. It was a DIRECTIONAL proxy (dropped each Placed
         /// piece DOWN by a probe and looked for a static/lower-piece contact), which after FreezeAt's removal (TASK-305)
         /// became a rudiment: a production Won verdict is now issued ONLY at global rest (every Dynamic body GetSpeed&lt;ε
@@ -273,7 +269,7 @@ namespace Gameplay.Core.Sim
         /// Sim-only; the production path never runs this.
         /// </summary>
         private void ComputeHonestyMetrics(out int intersectingPairs, out float maxPenetration,
-            out WorstOverlapPair worst, out List<TouchingPen> touchingPens)
+            out WorstOverlapPair worst)
         {
             // TASK-043: the interpenetration tolerance is now a sim-local constant (the shared ShapeFillTuning knob was
             // removed with the assist layer). epsilon = the interpenetration overshoot above the authored baseline that
@@ -285,9 +281,6 @@ namespace Gameplay.Core.Sim
             intersectingPairs = 0;
             maxPenetration = 0f;
             worst = WorstOverlapPair.None;
-            // TASK-075: raw resting penetrations of authored-TOUCHING pairs, handed to the harness for the cross-run
-            // reference-rest floor (see field docs). Stays empty on levels with no authored-touching circle pair.
-            touchingPens = new List<TouchingPen>();
 
             // TASK-075: each Placed piece as the convex collider the PHYSICS simulates — a native disc for a Circle
             // piece (centre = body position, angle irrelevant), a world-vertex polygon for every other primitive.
@@ -312,17 +305,11 @@ namespace Gameplay.Core.Sim
                 for (var j = i + 1; j < shapes.Count; j++)
                 {
                     var penetration = Geometry.Penetration(shapes[i], shapes[j]);
-                    // TASK-075: an authored-TOUCHING pair (circles designed in contact) is NOT judged here — its
-                    // honest baseline is the cross-run reference-rest FLOOR, unknown to a single run. Emit the raw
-                    // resting penetration for the harness to floor and fold back; skip the static-baseline verdict so
-                    // it neither inflates this run's overshoot nor the intersect count (the harness re-derives both).
-                    if (IsTouchingPair(slotOf[i], slotOf[j]))
-                    {
-                        touchingPens.Add(new TouchingPen(slotOf[i], slotOf[j], kinds[i], kinds[j], penetration));
-                        continue;
-                    }
-                    var baseline = SlotBaselineBetween(slotOf[i], slotOf[j]);
-                    // Overshoot above what the DESIGN authored for this specific pair of nearest slots.
+                    // TASK-077: max(what the DESIGN authored for this pair of nearest slots, the solver's honest-rest
+                    // allowance for the pair type) — the same rule for every pair, whatever its slot-pose class.
+                    var baseline = ContactRestAllowance.Baseline(shapes[i], shapes[j],
+                        SlotBaselineBetween(slotOf[i], slotOf[j]));
+                    // Overshoot above that baseline.
                     var overshoot = penetration - baseline;
                     if (overshoot > maxPenetration)
                     {
@@ -341,7 +328,8 @@ namespace Gameplay.Core.Sim
 
         /// <summary>The convex collider the PHYSICS simulates for a piece/slot at a pose (TASK-075): delegates to the
         /// single shared dispatch <see cref="ConvexShape.Of"/> (native disc for a <c>Circle</c>, world-vertex polygon
-        /// otherwise), the SAME one the adapter (UnityShapeFillSimulation:95) and the touching classifier use.</summary>
+        /// otherwise), the SAME one the adapter (UnityShapeFillSimulation) uses — and the one whose IsCircle keys the
+        /// contact skin in <see cref="ContactRestAllowance.SkinOf"/>.</summary>
         private static ConvexShape ConvexShapeOf(Shape shape, Vec2 position, float rotation)
             => ConvexShape.Of(shape, position, rotation);
 
@@ -357,7 +345,6 @@ namespace Gameplay.Core.Sim
             var slots = _level.Target?.Slots;
             var count = slots?.Count ?? 0;
             _slotBaseline = new float[count, count];
-            _touchingPair = new bool[count, count];
             if (count == 0)
                 return;
 
@@ -372,7 +359,7 @@ namespace Gameplay.Core.Sim
 
             // TASK-075: bake with the SAME geometry dispatch as the live pairwise measurement (circle → native disc,
             // else polygon). The symmetry is load-bearing — overshoot = live − baseline, so baking a circle slot as a
-            // polygon while measuring it live as a disc would inject a false overshoot on authored-touching circles.
+            // polygon while measuring it live as a disc would inject a false overshoot on authored-nested circles.
             var hasShape = new bool[count];
             var shapeOf = new ConvexShape[count];
             for (var i = 0; i < count; i++)
@@ -393,27 +380,8 @@ namespace Gameplay.Core.Sim
                     var pen = Geometry.Penetration(shapeOf[i], shapeOf[j]);
                     _slotBaseline[i, j] = pen;
                     _slotBaseline[j, i] = pen;
-                    // TASK-075: classify the pair by its signed slot-pose gap. Only TOUCHING (≥1 circle, |sep|≤eps)
-                    // is diverted to the reference-rest floor; OVERLAPPING/DISJOINT keep the static baseline above.
-                    // Same SlotTouchClassifier the harness prints from, so the gate path and the eyes-on diagnostic
-                    // agree by construction.
-                    if (SlotTouchClassifier.Classify(shapeOf[i], shapeOf[j], out _) == SlotTouchClass.Touching)
-                    {
-                        _touchingPair[i, j] = true;
-                        _touchingPair[j, i] = true;
-                    }
                 }
             }
-        }
-
-        /// <summary>Whether two nearest-slot indices form an authored-TOUCHING pair (baked in
-        /// <see cref="EnsureSlotBaseline"/>) — false for out-of-range/-1 indices.</summary>
-        private bool IsTouchingPair(int a, int b)
-        {
-            if (_touchingPair == null || a < 0 || b < 0 ||
-                a >= _touchingPair.GetLength(0) || b >= _touchingPair.GetLength(1))
-                return false;
-            return _touchingPair[a, b];
         }
 
         /// <summary>Authored (design) overlap between two slots — 0 when either index is out of range.</summary>

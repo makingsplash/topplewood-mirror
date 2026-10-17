@@ -85,19 +85,18 @@ namespace Gameplay.Core
         /// <summary>
         /// SIGNED surface gap (world units) between two convex colliders (TASK-075 reference-rest baseline): &gt;0 is
         /// a clear gap, 0 is exact contact, &lt;0 is overlap (equals <c>−penetration</c>). Circle-circle and
-        /// circle-polygon are ANALYTIC (exact for the native disc). Used ONLY by the sim's authored-touching slot
-        /// classifier — computed once per level on the static slot poses, never on the live overshoot path (that
-        /// stays on <see cref="Penetration"/>). The poly-poly arm is DEFERRED (TASK-075 §12 tech-debt): the
-        /// classifier gates on "≥1 circle" before treating a pair as touch-eligible, so this arm is never used to
-        /// SELECT a touching pair — it returns <c>−ConvexPenetration</c> when the polygons overlap and
-        /// <see cref="float.MaxValue"/> when they are apart (a sentinel "not touching", never a real distance),
-        /// which is why a poly-poly pair can never be mis-classified as touching. Deterministic and Unity-free.
+        /// circle-polygon are ANALYTIC (exact for the native disc). TASK-077: no production caller — its only user,
+        /// the TASK-075 authored-touching slot classifier, was removed with the reference-rest floor (the honesty
+        /// baseline no longer depends on a pair's slot-pose class). Kept as a geometry primitive; the live overshoot
+        /// path stays on <see cref="Penetration"/>. The poly-poly arm is INCOMPLETE: it returns
+        /// <c>−ConvexPenetration</c> when the polygons overlap and <see cref="float.MaxValue"/> when they are apart (a
+        /// sentinel, never a real distance) — a new caller that needs a poly-poly gap must add a real SAT distance
+        /// first. Deterministic and Unity-free.
         /// </summary>
         public static float Separation(in ConvexShape a, in ConvexShape b)
         {
-            // TASK-178: a compound (concave polyomino) is never a circle, so it follows the deferred poly-poly arm —
-            // overlap → −penetration, apart → the "not touching" sentinel. It is thus never SELECTED as a touching
-            // pair (the classifier gates touching on ≥1 circle), exactly as a plain polygon pair.
+            // TASK-178: a compound (concave polyomino) is never a circle, so it follows the incomplete poly-poly arm —
+            // overlap → −penetration, apart → the sentinel, exactly as a plain polygon pair.
             if (a.IsCompound || b.IsCompound)
             {
                 var penC = CompoundPenetration(a, b);
