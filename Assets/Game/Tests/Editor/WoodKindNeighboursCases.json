@@ -1,0 +1,97 @@
+{
+    "about": "TASK-599: граф соседства WoodKindNeighbours.Build (SAT по Shape.Vertices в позе слота, ребро при зазоре <= TouchEpsilon 0.06). graphs[].edges сняты с РАНТАЙМА (C# — оракул): держат обе реализации — WoodKindNeighboursParityTests.Cases_MatchRuntimeGraph и palette-audit.py --selftest. allowDup и suggest — логика тулы, у рантайма её нет; их держит только --selftest. palette/excluded/wall — свои, смена wood_tuning.json фикстуру не ломает.",
+    "palette": ["#48699A", "#5C8E3E", "#CBA016", "#C7681D", "#BA3C32", "#8A5A3B", "#2F8C86", "#5A55A3", "#8B5A9E", "#B8577A", "#DFC694"],
+    "excluded": ["#BA3C32", "#C7681D", "#8A5A3B", "#DFC694"],
+    "wall": "#A45322",
+    "levels": [
+        {
+            "levelId": "fx_touch",
+            "seed": 1,
+            "difficultyTier": 1,
+            "matchTolerance": {"posTol": 0.1, "angTol": 0.1},
+            "bounds": {"min": {"x": -10, "y": -10}, "max": {"x": 10, "y": 10}},
+            "gravity": {"x": 0, "y": -9.81},
+            "pieceTypes": [
+                {"kind": "a", "color": "#48699A", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "box", "width": 1, "height": 1}},
+                {"kind": "b", "color": "#5C8E3E", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "box", "width": 1, "height": 1}},
+                {"kind": "c", "color": "#48699A", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "box", "width": 1, "height": 1}},
+                {"kind": "d", "color": "#5C8E3E", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "box", "width": 1, "height": 1}},
+                {"kind": "e", "color": "#CBA016", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "plank", "width": 0.4, "height": 2}},
+                {"kind": "g", "color": "#48699A", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "box", "width": 1, "height": 1}},
+                {"kind": "spare", "color": "#B8577A", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "box", "width": 0.5, "height": 0.5}}
+            ],
+            "target": {
+                "outline": [{"x": -1, "y": -1}, {"x": 1, "y": -1}, {"x": 0, "y": 1}],
+                "slots": [
+                    {"kind": "a", "position": {"x": 0, "y": 0}, "rotation": 0},
+                    {"kind": "b", "position": {"x": 1.05, "y": 0}, "rotation": 0},
+                    {"kind": "c", "position": {"x": 2.6, "y": 0}, "rotation": 0},
+                    {"kind": "d", "position": {"x": 0, "y": 1.07}, "rotation": 0},
+                    {"kind": "e", "position": {"x": 2.0, "y": -0.75}, "rotation": 1.5707963},
+                    {"kind": "g", "position": {"x": 0, "y": -3}, "rotation": 0}
+                ]
+            },
+            "pieces": [
+                {"kind": "a", "startPosition": {"x": -4, "y": 4}, "startRotation": 0},
+                {"kind": "b", "startPosition": {"x": -3, "y": 4}, "startRotation": 0},
+                {"kind": "c", "startPosition": {"x": -2, "y": 4}, "startRotation": 0},
+                {"kind": "d", "startPosition": {"x": -1, "y": 4}, "startRotation": 0},
+                {"kind": "e", "startPosition": {"x": 1, "y": 4}, "startRotation": 0},
+                {"kind": "g", "startPosition": {"x": 3, "y": 4}, "startRotation": 0},
+                {"kind": "spare", "startPosition": {"x": 4, "y": 4}, "startRotation": 0, "expendable": true}
+            ]
+        },
+        {
+            "levelId": "fx_notch",
+            "seed": 2,
+            "difficultyTier": 1,
+            "matchTolerance": {"posTol": 0.1, "angTol": 0.1},
+            "bounds": {"min": {"x": -10, "y": -10}, "max": {"x": 10, "y": 10}},
+            "gravity": {"x": 0, "y": -9.81},
+            "pieceTypes": [
+                {"kind": "ell", "color": "#8B5A9E", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "l_tetromino", "cell": 1}},
+                {"kind": "notch", "color": "#8B5A9E", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "box", "width": 0.5, "height": 0.5}},
+                {"kind": "far", "color": "#CBA016", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "box", "width": 0.5, "height": 0.5}},
+                {"kind": "ball", "color": "#2F8C86", "material": {"density": 1, "friction": 0.5, "restitution": 0}, "shape": {"primitive": "circle", "radius": 0.5}}
+            ],
+            "target": {
+                "outline": [{"x": -1, "y": -1}, {"x": 1, "y": -1}, {"x": 0, "y": 1}],
+                "slots": [
+                    {"kind": "ell", "position": {"x": 0, "y": 0}, "rotation": 0},
+                    {"kind": "notch", "position": {"x": 0.6, "y": 0.8}, "rotation": 0},
+                    {"kind": "far", "position": {"x": 3, "y": 0}, "rotation": 0},
+                    {"kind": "ball", "position": {"x": 0, "y": -2.05}, "rotation": 0}
+                ]
+            },
+            "pieces": [
+                {"kind": "ell", "startPosition": {"x": -3, "y": 4}, "startRotation": 0},
+                {"kind": "notch", "startPosition": {"x": -1, "y": 4}, "startRotation": 0},
+                {"kind": "far", "startPosition": {"x": 1, "y": 4}, "startRotation": 0},
+                {"kind": "ball", "startPosition": {"x": 3, "y": 4}, "startRotation": 0}
+            ]
+        }
+    ],
+    "graphs": [
+        {"levelId": "fx_touch", "edges": [["a", "b"], ["b", "e"], ["c", "e"]], "note": "a–b зазор 0.05 <= 0.06 — соседи; a–d и b–d 0.07 — нет; e (плашка 0.4×2, поворот π/2) лежит под b и c с зазором 0.05 — без поворота b–e не было бы; spare расходуемая, в слотах нет"},
+        {"levelId": "fx_notch", "edges": [["ell", "notch"], ["ball", "ell"]], "note": "notch в кармане L: физически до L 0.35, но SAT по вогнутому контуру = по выпуклой оболочке ⇒ C# считает соседями — зеркало обязано повторить; ball (окружность, 12 сегментов по умолчанию DTO) под L с зазором 0.05"}
+    ],
+    "allowDup": [
+        {"levels": ["fx_touch"], "allow": ["fx_touch: a = c = g | 2026-10-16 | TASK-599 | фикстура", "fx_touch: b = d | 2026-10-16 | TASK-599 | фикстура"], "expect": "ok", "note": "все дубли утверждены, внутри групп рёбер нет"},
+        {"levels": ["fx_touch"], "allow": ["fx_touch: a = c = g | 2026-10-16 | TASK-599 | фикстура"], "expect": "fail", "note": "b = d — новый дубль"},
+        {"levels": ["fx_touch"], "allow": ["fx_touch: a = c | 2026-10-16 | TASK-599 | фикстура", "fx_touch: b = d | 2026-10-16 | TASK-599 | фикстура"], "expect": "fail", "note": "g — лишний вид в утверждённой группе a = c"},
+        {"levels": ["fx_touch"], "allow": ["fx_touch: a = c | 2026-10-16 | TASK-599 | фикстура", "fx_touch: c = g | 2026-10-16 | TASK-599 | фикстура", "fx_touch: b = d | 2026-10-16 | TASK-599 | фикстура"], "expect": "ok", "note": "утверждение транзитивно: a = c и c = g покрывают a = c = g"},
+        {"levels": ["fx_touch"], "allow": ["fx_touch: a = c = g | 2026-10-16 | TASK-599 | фикстура", "fx_touch: b = d | 2026-10-16 | TASK-599 | фикстура", "fx_touch: a = b | 2026-10-16 | TASK-599 | фикстура"], "expect": "ok", "note": "a = b не дубль — запись устарела, это предупреждение, не нарушение"},
+        {"levels": ["fx_notch"], "allow": ["fx_notch: ell = notch | 2026-10-16 | TASK-599 | фикстура"], "expect": "fail", "note": "утверждённый дубль, но соседи по графу"},
+        {"levels": ["fx_notch"], "allow": [], "expect": "fail", "note": "пустой список — дубль ell = notch новый"},
+        {"levels": ["fx_notch"], "allow": ["fx_notch: ell = notch | 2026-10-17 | TASK-598 | соседи: фикстура — части одного предмета"], "expect": "ok", "note": "маркер «соседи:» разрешает общий тон соседям своей строки"},
+        {"levels": ["fx_notch"], "allow": ["fx_notch: ell = far | 2026-10-17 | TASK-598 | соседи: фикстура", "fx_notch: far = notch | 2026-10-17 | TASK-598 | фикстура"], "expect": "fail", "note": "соседство разрешает только строка, где оба вида; склейка ell = far (соседи:) и far = notch ребро ell–notch не покрывает"},
+        {"levels": ["fx_notch"], "allow": ["fx_notch: ell = notch | 2026-10-17 | TASK-598 | соседи:"], "expect": "refuse", "note": "«соседи:» без решения — отказ разбора"},
+        {"levels": ["fx_touch"], "allow": ["fx_touch: a = c = g | TASK-599 | фикстура"], "expect": "refuse", "note": "без даты — отказ разбора"},
+        {"levels": ["fx_touch"], "allow": ["fx_touch: a = c = g | 2026-10-16 | фикстура"], "expect": "refuse", "note": "без задачи — отказ разбора"},
+        {"levels": ["fx_touch"], "allow": ["fx_touch: a | 2026-10-16 | TASK-599 | фикстура"], "expect": "refuse", "note": "один вид — не дубль, отказ разбора"}
+    ],
+    "suggest": [
+        {"levelId": "fx_touch", "kind": "c", "top": "#5A55A3", "note": "синий (сейчас, Score выше всех: до соседа e 170°) уходит вниз — совпадает с a и g (§D6 раньше Score); из свободных индиго: до жёлтого e 162°"},
+        {"levelId": "fx_touch", "kind": "spare", "expendable": true, "note": "расходуемая (нет в target.slots) — помечена; top не сверяется: слива и роз. до занятых тонов 67.38° против 67.40°, ничья по замыслу фикстуры не нужна"}
+    ]
+}
