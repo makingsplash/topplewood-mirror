@@ -14134,7 +14134,7 @@
         },
         {
           "kind": "patty_left",
-          "color": "#B8577A",
+          "color": "#8B5A9E",
           "symmetryOrder": 4,
           "material": {
             "density": 1.0,
@@ -14149,7 +14149,7 @@
         },
         {
           "kind": "patty_right",
-          "color": "#B8577A",
+          "color": "#8B5A9E",
           "symmetryOrder": 4,
           "material": {
             "density": 1.0,
@@ -14164,7 +14164,7 @@
         },
         {
           "kind": "cheese_drip",
-          "color": "#48699A",
+          "color": "#CBA016",
           "symmetryOrder": 1,
           "material": {
             "density": 1.0,
@@ -14207,7 +14207,7 @@
         },
         {
           "kind": "cheese_slice",
-          "color": "#2F8C86",
+          "color": "#CBA016",
           "symmetryOrder": 2,
           "material": {
             "density": 1.0,
@@ -14222,7 +14222,7 @@
         },
         {
           "kind": "tomato",
-          "color": "#5A55A3",
+          "color": "#B8577A",
           "symmetryOrder": 2,
           "material": {
             "density": 1.0,
@@ -24440,7 +24440,7 @@
       "pieceTypes": [
         {
           "kind": "deck",
-          "color": "#5C8E3E",
+          "color": "#CBA016",
           "symmetryOrder": 2,
           "material": {
             "density": 2.0,

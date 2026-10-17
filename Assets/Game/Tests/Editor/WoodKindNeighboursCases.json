@@ -83,6 +83,9 @@
         {"levels": ["fx_touch"], "allow": ["fx_touch: a = c = g | 2026-10-16 | TASK-599 | фикстура", "fx_touch: b = d | 2026-10-16 | TASK-599 | фикстура", "fx_touch: a = b | 2026-10-16 | TASK-599 | фикстура"], "expect": "ok", "note": "a = b не дубль — запись устарела, это предупреждение, не нарушение"},
         {"levels": ["fx_notch"], "allow": ["fx_notch: ell = notch | 2026-10-16 | TASK-599 | фикстура"], "expect": "fail", "note": "утверждённый дубль, но соседи по графу"},
         {"levels": ["fx_notch"], "allow": [], "expect": "fail", "note": "пустой список — дубль ell = notch новый"},
+        {"levels": ["fx_notch"], "allow": ["fx_notch: ell = notch | 2026-10-17 | TASK-598 | соседи: фикстура — части одного предмета"], "expect": "ok", "note": "маркер «соседи:» разрешает общий тон соседям своей строки"},
+        {"levels": ["fx_notch"], "allow": ["fx_notch: ell = far | 2026-10-17 | TASK-598 | соседи: фикстура", "fx_notch: far = notch | 2026-10-17 | TASK-598 | фикстура"], "expect": "fail", "note": "соседство разрешает только строка, где оба вида; склейка ell = far (соседи:) и far = notch ребро ell–notch не покрывает"},
+        {"levels": ["fx_notch"], "allow": ["fx_notch: ell = notch | 2026-10-17 | TASK-598 | соседи:"], "expect": "refuse", "note": "«соседи:» без решения — отказ разбора"},
         {"levels": ["fx_touch"], "allow": ["fx_touch: a = c = g | TASK-599 | фикстура"], "expect": "refuse", "note": "без даты — отказ разбора"},
         {"levels": ["fx_touch"], "allow": ["fx_touch: a = c = g | 2026-10-16 | фикстура"], "expect": "refuse", "note": "без задачи — отказ разбора"},
         {"levels": ["fx_touch"], "allow": ["fx_touch: a | 2026-10-16 | TASK-599 | фикстура"], "expect": "refuse", "note": "один вид — не дубль, отказ разбора"}
