@@ -36,9 +36,12 @@ namespace Gameplay.PlayScreen
     ///
     /// The EventSystem is raised with the SAME idempotent guard as <see cref="RestartButtonPresenter"/> (create only
     /// if none, destroy only our own) so ownership is order-independent whichever HUD presenter starts first. The
-    /// canvas sits at <c>short.MaxValue-2</c> — above the banner/tutorial highlight, below the RESTART button
-    /// (<c>short.MaxValue-1</c>); like RESTART it hides while a UiService screen is up (<see cref="HudCover"/>,
-    /// TASK-398), and it is dimmed and untappable while a tutorial tour holds the focus (TASK-613). The proactive A/B affordance (glow pulse + tooltip) is non-modal and never blocks
+    /// canvas sits at <c>short.MaxValue-3</c> — above the banner/hint highlight/tour overlay, below the tour finger
+    /// (<c>short.MaxValue-2</c>, TASK-635) and the RESTART button (<c>short.MaxValue-1</c>); like RESTART it hides while a
+    /// UiService screen is up (<see cref="HudCover"/>, TASK-398), and it is dimmed and untappable while a tutorial tour
+    /// holds the focus (TASK-613). TASK-635: the button is ABSENT (alpha 0, no hit-test — not dimmed) until
+    /// <see cref="HintBoosterService.Unlocked"/>; it pops in on a live unlock, and it feeds <see cref="HintButtonTourTarget"/>
+    /// so the hint tour's HUD beat can point at it (exempt from the tour's dim while that beat holds it). The proactive A/B affordance (glow pulse + tooltip) is non-modal and never blocks
     /// the field (one-tap is sacrosanct); it is driven by <see cref="LevelFailStreak"/> under the treatment arm.
     /// </summary>
     public sealed class HintBoosterPresenter : IStartable, IDisposable
@@ -50,6 +53,7 @@ namespace Gameplay.PlayScreen
         private readonly LevelFailStreak _failStreak;
         private readonly IMechanicController _mechanic;
         private readonly TourConfig _tour;
+        private readonly HintButtonTourTarget _target;
 
         private GameObject _eventSystem;
         private GameObject _canvas;
@@ -75,6 +79,12 @@ namespace Gameplay.PlayScreen
         // enough that an ignored hint eventually tidies itself up (was a hard 2.5s timer pre-TASK-263).
         private const float HighlightFallbackSec = 6f;
 
+        // TASK-635: the button "pops" into its corner when it unlocks in a live session (scale 0 → 1, slight overshoot).
+        // A lever turned on the K1/K2 frames, beside the fallback timer.
+        private const float UnlockPopSeconds = 0.35f;
+
+        private RectTransform _buttonRect;
+        private Tween _unlockPop;
         private bool _onCooldown;
         private bool _proactiveSuppressed;
         private int _suppressedAtStreak;
@@ -86,7 +96,8 @@ namespace Gameplay.PlayScreen
             IPieceHighlightView highlightView,
             LevelFailStreak failStreak,
             IMechanicController mechanic,
-            TourConfig tour)
+            TourConfig tour,
+            HintButtonTourTarget target)
         {
             _model = model;
             _hint = hint;
@@ -95,6 +106,7 @@ namespace Gameplay.PlayScreen
             _failStreak = failStreak;
             _mechanic = mechanic;
             _tour = tour;
+            _target = target;
         }
 
         private BoostersConfig.HintData Cfg => _hint.HintConfig;
@@ -107,9 +119,21 @@ namespace Gameplay.PlayScreen
             _subs = new CompositeDisposable();
             _interaction.IsBusy.Subscribe(_ => RefreshState()).AddTo(_subs);
             // TASK-398: hidden (render + hit-test) while a UiService screen is up — win/lose, popups. TASK-613: dimmed
-            // and untappable during a tour — otherwise the "3" badge is the brightest spot next to the tour.
-            HudCover.Bind(_group, _interaction, _tour.HudFocusedAlpha).AddTo(_subs);
+            // and untappable during a tour — otherwise the "3" badge is the brightest spot next to the tour. TASK-635:
+            // absent (not dimmed) until unlocked, and exempt from the tour's dim while a HUD beat points at it.
+            HudCover.Bind(_group, _interaction, _tour.HudFocusedAlpha,
+                _hint.Unlocked.Select(u => !u), _target.FocusHeld).AddTo(_subs);
             _hint.Charges.Subscribe(_ => RefreshState()).AddTo(_subs);
+            var wasUnlocked = _hint.Unlocked.CurrentValue;
+            _hint.Unlocked.Subscribe(unlocked =>
+            {
+                if (unlocked && !wasUnlocked)
+                    PlayUnlockPop();
+                wasUnlocked = unlocked;
+                RefreshState();
+                RefreshProactive();
+                _target.SetReady(unlocked);
+            }).AddTo(_subs);
             _failStreak.Current.Subscribe(_ => RefreshProactive()).AddTo(_subs);
             // TASK-263 §2b: kill the hint outline the instant the player releases the piece it pointed at — the same
             // "piece actually left Idle" signal the tutorial uses (PieceReleased), so it is event-driven, not a timer.
@@ -159,9 +183,10 @@ namespace Gameplay.PlayScreen
 
             var canvas = _canvas.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            // Above the banner (31000) and tutorial highlight (32000), BELOW the RESTART button (short.MaxValue-1).
+            // Above the banner (31000), hint highlight (32000) and tour overlay (32100), BELOW the tour finger
+            // (short.MaxValue-2, TASK-635: the finger taps ON this button) and the RESTART button (short.MaxValue-1).
             // Not a lever against UiService screens (Overlay beats their Camera canvas at any order) — see HudCover.
-            canvas.sortingOrder = short.MaxValue - 2;
+            canvas.sortingOrder = short.MaxValue - 3;
 
             // Layout is ONE value shared with the camera framing (HudCornerZone.HintButton, TASK-539): the framing keeps
             // the level's figure and pieces out of this corner, so the numbers must not be retyped here.
@@ -183,6 +208,8 @@ namespace Gameplay.PlayScreen
             buttonRect.pivot = new Vector2(1f, 0f);
             buttonRect.anchoredPosition = new Vector2(-zone.SideInset, zone.EdgeInset);
             buttonRect.sizeDelta = new Vector2(zone.Width, zone.Height);
+            _buttonRect = buttonRect;
+            _target.Attach(buttonRect);
 
             _icon = buttonGo.GetComponent<Image>();
             // Same code-load idiom as WoodArt (Resources.Load, warn-not-crash): code-built HUD has no inspector to
@@ -337,6 +364,10 @@ namespace Gameplay.PlayScreen
             // shows the honest "0", not a "+" offer.
             var interactable = !busy && eligible && charges > 0;
             _button.interactable = interactable;
+            // TASK-635: the tour target's LASTING ability to activate — busy/cooldown left out on purpose: a level
+            // transition fires LevelLoaded while GatedResolutionFlow still holds IsBusy (it clears it right after), and
+            // the HUD beat's softlock guard would read that transient as "can never be tapped" and skip the tour.
+            _target.SetCanActivate(eligible && charges > 0);
 
             if (_countLabel != null)
                 _countLabel.text = charges.ToString();
@@ -366,7 +397,8 @@ namespace Gameplay.PlayScreen
 
         private bool ShouldOfferProactively()
         {
-            if (!Cfg.ProactiveEnabled || _proactiveSuppressed)
+            // TASK-635: nothing to glow before the unlock (design 01 §3.1).
+            if (!Cfg.ProactiveEnabled || _proactiveSuppressed || !_hint.Unlocked.CurrentValue)
                 return false;
             if (_hint.Charges.CurrentValue <= 0 || !LevelEligible())
                 return false;
@@ -455,6 +487,19 @@ namespace Gameplay.PlayScreen
             LogHint($"REVEAL id={instanceId} — calling highlight seam (class-2 territory if nothing appears)");
             RevealPiece(instanceId);
             CooldownAsync().Forget();
+            // TASK-635: an ACCEPTED activation — the hint tour's HUD beat completes on this, never on a swallowed click.
+            _target.NotifyActivated();
+        }
+
+        // TASK-635: the unlock in a live session (the tour's level) — the button pops into its corner.
+        private void PlayUnlockPop()
+        {
+            if (_buttonRect == null)
+                return;
+            _unlockPop?.Kill();
+            _buttonRect.localScale = Vector3.zero;
+            _unlockPop = _buttonRect.DOScale(1f, UnlockPopSeconds).SetEase(Ease.OutBack).SetUpdate(true)
+                .SetLink(_buttonRect.gameObject);
         }
 
         private void RevealPiece(int instanceId)
@@ -524,8 +569,12 @@ namespace Gameplay.PlayScreen
 
             try
             {
-                // Fallback only (the tap-driven clear above is the primary path): tidy up an ignored hint.
-                await UniTask.Delay(TimeSpan.FromSeconds(HighlightFallbackSec), cancellationToken: token);
+                // Fallback only (the tap-driven clear above is the primary path): tidy up an ignored hint. TASK-635: not
+                // while a tour holds the focus — the hint tour gates the field on THIS piece with no pointer of its own,
+                // so the outline must outlive the timer until the piece is tapped.
+                do
+                    await UniTask.Delay(TimeSpan.FromSeconds(HighlightFallbackSec), cancellationToken: token);
+                while (_interaction.IsTourFocused.Value);
                 ClearHighlight();
             }
             catch (OperationCanceledException)
@@ -576,6 +625,8 @@ namespace Gameplay.PlayScreen
 
             _glowPulse?.Kill();
             _glowPulse = null;
+            _unlockPop?.Kill();
+            _unlockPop = null;
 
             _highlightCts?.Cancel();
             _highlightCts?.Dispose();

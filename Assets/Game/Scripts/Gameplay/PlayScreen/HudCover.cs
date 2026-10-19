@@ -26,16 +26,33 @@ namespace Gameplay.PlayScreen
                     (covered, focused) => (covered, focused))
                 .Subscribe(s => Apply(group, s.covered, s.focused, focusedAlpha));
 
+        /// <summary>TASK-635: the same binding plus the element's own <paramref name="hidden"/> (the Hint button before its
+        /// unlock) and <paramref name="focusExempt"/> (a tour beat points AT this element, so the tour's dim must not touch
+        /// it). Both live HERE so the group keeps one writer — the class <see cref="HudCover"/> already split from
+        /// <c>RestartButtonGuard</c>.</summary>
+        public static IDisposable Bind(CanvasGroup group, PlayScreenInteraction interaction, float focusedAlpha,
+            Observable<bool> hidden, Observable<bool> focusExempt) =>
+            Observable.CombineLatest(interaction.IsCoveredByScreen, interaction.IsTourFocused, hidden, focusExempt,
+                    (covered, focused, h, exempt) => (covered, focused, h, exempt))
+                .Subscribe(s => Apply(group, s.covered, s.h, s.focused, s.exempt, focusedAlpha));
+
         /// <summary><paramref name="covered"/> wins (alpha 0, as before); otherwise <paramref name="focused"/> dims the
         /// group to <paramref name="focusedAlpha"/> and makes it non-interactive — visible, so the player still knows
         /// where the buttons are, but out of the tour's way.</summary>
-        public static void Apply(CanvasGroup group, bool covered, bool focused, float focusedAlpha)
+        public static void Apply(CanvasGroup group, bool covered, bool focused, float focusedAlpha) =>
+            Apply(group, covered, false, focused, false, focusedAlpha);
+
+        /// <summary>Full rule (TASK-635): <paramref name="covered"/> or <paramref name="hidden"/> → gone (alpha 0, no
+        /// hit-test); <paramref name="focused"/> and not <paramref name="exempt"/> → dimmed and untappable; otherwise open.</summary>
+        public static void Apply(CanvasGroup group, bool covered, bool hidden, bool focused, bool exempt, float focusedAlpha)
         {
             if (group == null)
                 return;
 
-            var open = !covered && !focused;
-            group.alpha = covered ? 0f : focused ? focusedAlpha : 1f;
+            var gone = covered || hidden;
+            var dimmed = !gone && focused && !exempt;
+            var open = !gone && !dimmed;
+            group.alpha = gone ? 0f : dimmed ? focusedAlpha : 1f;
             group.blocksRaycasts = open;
             group.interactable = open;
         }

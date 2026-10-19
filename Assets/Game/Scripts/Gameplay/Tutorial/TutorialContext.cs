@@ -21,14 +21,18 @@ namespace Gameplay.Tutorial
 
         public TourConfig Config { get; }
 
+        /// <summary>TASK-635: the HUD elements the hosting scope offers (<see cref="HudTapStep"/>); never null.</summary>
+        public IHudTourTargets HudTargets { get; }
+
         public TutorialContext(GameModel model, ITourView view, ITutorialInputGate inputGate,
-            IGameplayTapTolerance tapTolerance, TourConfig config)
+            IGameplayTapTolerance tapTolerance, TourConfig config, IHudTourTargets hudTargets = null)
         {
             Model = model;
             View = view;
             InputGate = inputGate;
             TapTolerance = tapTolerance;
             Config = config;
+            HudTargets = hudTargets ?? HudTourTargets.Empty;
         }
     }
 }

@@ -70,6 +70,8 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
         builder.Register<ITutorialProgressStore, PrefsTutorialProgressStore>(Lifetime.Singleton);
         builder.Register<ITutorialGate, BringupTutorialGate>(Lifetime.Singleton);
         builder.Register<ITutorialAnalytics, NullTutorialAnalytics>(Lifetime.Singleton);
+        // TASK-635: bringup hosts no Hint button, so no HUD targets — a HUD beat there warns and is skipped.
+        builder.RegisterInstance<IHudTourTargets>(HudTourTargets.Empty);
 
         // Play screen (TASK-116): the sequence layer is context-dependent — prod raises SequenceInstaller in
         // GameplayLifetimeScope, so bringup (the only path built into the APK) must raise its own copy or

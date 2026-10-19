@@ -19,7 +19,7 @@ namespace Gameplay.Configs
         [JsonObject]
         public class HintData
         {
-            public int SeedGrant = 3;                       // charges granted once, on first install (balancer §1.1)
+            public int UnlockGrantTo = 2;                   // top-up TO n on the hint tour level (owner 2026-10-19, TASK-635)
             public int SpendPerActivation = 1;              // one activation reveals ONE next piece (balancer §1.2)
             public int StockCap = 5;                        // anti-hoard stock ceiling (balancer §1.3)
             public int RewardedGrantPerView = 1;            // charge per rewarded view — source not live today

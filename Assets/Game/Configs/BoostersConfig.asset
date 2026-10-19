@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   _data:
     Hint:
-      SeedGrant: 3
+      UnlockGrantTo: 2
       SpendPerActivation: 1
       StockCap: 5
       RewardedGrantPerView: 1

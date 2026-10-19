@@ -23,5 +23,15 @@ namespace Gameplay.Tutorial
         /// <summary>The tour recipe registered for <paramref name="levelId"/>, or null if the level has none.</summary>
         public ITourRecipe Resolve(string levelId) =>
             levelId != null && _byLevelId.TryGetValue(levelId, out var recipe) ? recipe : null;
+
+        /// <summary>Reverse lookup (TASK-635): the level id whose recipe has <paramref name="tourId"/>, or null — so a
+        /// rule tied to a tour (the Hint unlock) follows the catalog instead of retyping the level id.</summary>
+        public string LevelIdOf(string tourId)
+        {
+            foreach (var pair in _byLevelId)
+                if (pair.Value != null && pair.Value.Id == tourId)
+                    return pair.Key;
+            return null;
+        }
     }
 }

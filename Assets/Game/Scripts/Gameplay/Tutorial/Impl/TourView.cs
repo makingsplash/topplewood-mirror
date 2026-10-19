@@ -11,7 +11,7 @@ namespace Gameplay.Tutorial
 {
     /// <summary>
     /// Real <see cref="ITourView"/> (TASK-613; replaces the tour half of the former <c>TutorialView</c>). A code-built
-    /// Screen Space Overlay at sorting order 32100 — above the hint highlight (32000), below the HUD (32765+), DEV 32767
+    /// Screen Space Overlay at sorting order 32100 — above the hint highlight (32000), below the HUD (32764+), DEV 32767
     /// untouched — that never eats input (no GraphicRaycaster, raycastTarget off), so the tap still reaches gameplay.
     /// The canvas scales like the HUD (ScaleWithScreenSize, reference 1080×1920, match-width — plan §3.9), so the
     /// sizes in <see cref="TourConfig"/> are a fraction of the screen WIDTH on every phone; every point is projected
@@ -25,7 +25,11 @@ namespace Gameplay.Tutorial
     ///
     /// Draw order (children of the canvas): <see cref="SpotlightDim"/> (dim with cut-outs: the piece and the card) →
     /// miss flash → contours → finger rig (<c>TourFinger</c> component, from <see cref="TourAssets"/>; missing →
-    /// code-built fallback with one warning). The TASK-613 "Совпало" beat (ghost, ✓, match dim) is gone since TASK-634:
+    /// code-built fallback with one warning). The finger rig carries its own nested canvas (overrideSorting,
+    /// <see cref="TourConfig.FingerSortingOrder"/>) so it draws ABOVE the HUD buttons while the dim stays under them.
+    /// TASK-635 HUD beat (<see cref="ShowHudTap"/>): the cut-out is a halo ellipse around a HUD element's screen quad,
+    /// re-read every frame from the target in screen space (no camera), and the finger taps its centre, turned 180°
+    /// near the bottom edge. The TASK-613 "Совпало" beat (ghost, ✓, match dim) is gone since TASK-634:
     /// the win is drawn by the common win beat «В рамку» (<c>WinBeatView</c>) on every level.
     /// </summary>
     public sealed class TourView : ITourView, IDisposable
@@ -53,6 +57,15 @@ namespace Gameplay.Tutorial
                 $"[{LogCategory.Tutorial}] ShowTap origin=({cue.Origin.X:0.##},{cue.Origin.Y:0.##}) kind={cue.Kind} " +
                 $"delay={cue.Delay:0.##} card={_card.Current.Valid} camMain={(UnityEngine.Camera.main != null)}");
             Get().ShowTap(cue);
+        }
+
+        public void ShowHudTap(HudTapCue cue)
+        {
+            Debug.unityLogger.Log(LogType.Log,
+                $"[{LogCategory.Tutorial}] ShowHudTap target={cue.Target?.Id ?? "<null>"}");
+            if (cue.Target == null)
+                return;
+            Get().ShowHudTap(cue);
         }
 
         public void PulseMiss()
@@ -109,6 +122,15 @@ namespace Gameplay.Tutorial
             private readonly List<Vector2[]> _fillPoints = new();
             private readonly List<int[]> _fillTris = new();
             private FillSource _flashPoly;
+
+            // HUD beat (TASK-635): the target's screen quad → a canvas-local halo ellipse, rebuilt every frame (the
+            // element can move: the unlock pop scales it, the safe area can change).
+            private IHudTourTarget _hud;
+            private readonly Vector2[] _hudScreen = new Vector2[4];
+            private Vector2[] _hudRing;
+            private Vector2[] _hudSent;
+            private int[] _hudTris;
+            private bool _hudEverSent;
 
             private bool _fingerShown;
             private float _halfGapWorld = float.PositiveInfinity;
@@ -171,6 +193,13 @@ namespace Gameplay.Tutorial
                 }
                 _rigRt = (RectTransform)_rig.transform;
                 _rigRt.anchorMin = _rigRt.anchorMax = new Vector2(0.5f, 0.5f); // anchoredPosition = canvas-local point
+                // TASK-635: the finger on its own sorting layer ABOVE the HUD buttons (which draw over this overlay), so
+                // a HUD beat's fingertip is not hidden under the button it taps. No GraphicRaycaster: it never eats input.
+                var fingerCanvas = _rig.gameObject.GetComponent<Canvas>();
+                if (fingerCanvas == null)
+                    fingerCanvas = _rig.gameObject.AddComponent<Canvas>();
+                fingerCanvas.overrideSorting = true;
+                fingerCanvas.sortingOrder = _config.FingerSortingOrder;
                 _rig.Setup(_config);
                 _rig.Contact += FlashContours;
                 _rig.gameObject.SetActive(false);
@@ -219,6 +248,83 @@ namespace Gameplay.Tutorial
                 Reposition();
             }
 
+            // ── HUD beat (TASK-635) ──────────────────────────────────────────────────────────────────────────────
+            /// <summary>Dim with a halo cut-out around the HUD target (screen space, no camera involved) and the finger's
+            /// tap cycle on its centre, at once. No contours: the element itself shows through the hole — it draws above
+            /// this overlay, the native "raise" of the highlight pattern.</summary>
+            public void ShowHudTap(HudTapCue cue)
+            {
+                HideTap(false);
+                gameObject.SetActive(true);
+
+                var n = Mathf.Max(8, _config.HudCutoutSegments);
+                _hud = cue.Target;
+                _hudRing = new Vector2[n];
+                _hudSent = new Vector2[n];
+                _hudEverSent = false;
+                _hudTris = new int[(n - 2) * 3];
+                for (var i = 0; i < n - 2; i++)
+                {
+                    _hudTris[i * 3] = 0;
+                    _hudTris[i * 3 + 1] = i + 1;
+                    _hudTris[i * 3 + 2] = i + 2;
+                }
+
+                RevealTap();
+                Reposition();
+            }
+
+            /// <summary>Re-project the HUD beat: the target's screen quad → canvas-local → the circumscribed ellipse
+            /// (half-axes = half-size × √2, so the quad's corners sit on it), sent to the dim when it moved; the miss
+            /// flash fills the same ellipse; the finger's tip goes on its centre.</summary>
+            private void RepositionHud()
+            {
+                if (!_hud.TryGetScreenCorners(_hudScreen))
+                    return;
+                var min = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+                var max = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+                foreach (var s in _hudScreen)
+                {
+                    if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, s, null, out var p))
+                        return;
+                    min = Vector2.Min(min, p);
+                    max = Vector2.Max(max, p);
+                }
+                var centre = (min + max) * 0.5f;
+                var axes = (max - min) * (0.5f * Mathf.Sqrt(2f));
+                var changed = !_hudEverSent;
+                for (var i = 0; i < _hudRing.Length; i++)
+                {
+                    var a = 2f * Mathf.PI * i / _hudRing.Length;
+                    var p = centre + new Vector2(Mathf.Cos(a) * axes.x, Mathf.Sin(a) * axes.y);
+                    if ((p - _hudSent[i]).sqrMagnitude > CutoutMoveEpsilon * CutoutMoveEpsilon)
+                        changed = true;
+                    _hudRing[i] = p;
+                }
+
+                if (changed)
+                {
+                    Array.Copy(_hudRing, _hudSent, _hudRing.Length);
+                    _hudEverSent = true;
+                    _cutoutScratch.Clear();
+                    _cutoutScratch.Add(new SpotlightCutout((Vector2[])_hudSent.Clone(),
+                        _config.HudCutoutPad, _config.HudCutoutFeather));
+                    _dim.SetCutouts(_cutoutScratch);
+                }
+
+                if (_flash.enabled)
+                {
+                    _fillPoints.Clear();
+                    _fillTris.Clear();
+                    _fillPoints.Add(_hudRing);
+                    _fillTris.Add(_hudTris);
+                    _flash.SetPolygons(_fillPoints, _fillTris);
+                }
+
+                if (_fingerShown)
+                    PlaceFingerAt(centre, Vector2.zero, flipY: true);
+            }
+
             private void RevealTap()
             {
                 _delay?.Kill();
@@ -239,7 +345,7 @@ namespace Gameplay.Tutorial
 
             public void PulseMiss()
             {
-                if (!_piece.Active)
+                if (!_piece.Active && _hud == null) // no beat shown (piece or HUD) → nothing to answer with
                     return;
                 if (!_fingerShown)
                     RevealTap(); // a miss during the between-taps pause answers at once
@@ -271,6 +377,10 @@ namespace Gameplay.Tutorial
                 _flash.enabled = false;
                 _flash.ClearPolygons();
                 _flashPoly = null;
+                _hud = null;
+                _hudRing = null;
+                _hudSent = null;
+                _hudTris = null;
                 if (fade)
                 {
                     FadeDim(0f, _config.DimOutSeconds, () => _cuts.Clear());
@@ -326,6 +436,11 @@ namespace Gameplay.Tutorial
 
             private void Reposition()
             {
+                if (_hud != null)
+                {
+                    RepositionHud(); // screen space: no camera needed
+                    return;
+                }
                 if (_camera == null)
                     _camera = UnityEngine.Camera.main; // same seam CameraFramingPresenter uses; re-fetch until one exists
                 if (_camera == null)
@@ -445,19 +560,29 @@ namespace Gameplay.Tutorial
                     min = Vector2.Min(min, pts[i]);
                     max = Vector2.Max(max, pts[i]);
                 }
-                var centre = (min + max) * 0.5f;
-                var half = (max - min) * 0.5f;
+                PlaceFingerAt((min + max) * 0.5f, (max - min) * 0.5f, flipY: false);
+            }
+
+            /// <param name="half">Half-size of the target's bbox; the tip is biased by <see cref="TourConfig.TouchBiasFraction"/>
+            /// of it (zero = the tip on the centre, the HUD beat).</param>
+            /// <param name="flipY">TASK-635 (HUD beat only — the field tours keep their look): when the hand would cross the
+            /// safe area's BOTTOM edge, flip it up too (scale.y = −k). With the X mirror that is a 180° turn: the hand up-left,
+            /// the finger pointing down-right — the Hint button sits at the bottom-right, so there it always turns.</param>
+            private void PlaceFingerAt(Vector2 centre, Vector2 half, bool flipY)
+            {
                 var bias = _config.TouchBiasFraction;
                 var size = _config.FingerSize;
+                var safe = SafeRect();
 
                 var tip = centre + new Vector2(-bias * half.x, bias * half.y);
-                var mirror = tip.x + _config.HandReachRight * size > SafeRect().xMax - _config.MirrorEdgeMargin;
+                var mirror = tip.x + _config.HandReachRight * size > safe.xMax - _config.MirrorEdgeMargin;
                 if (mirror)
                     tip = centre + new Vector2(bias * half.x, bias * half.y);
+                var flip = flipY && tip.y - _config.HandReachDown * size < safe.yMin + _config.MirrorEdgeMargin;
 
                 _rigRt.anchoredPosition = tip;
                 var k = _rigRt.rect.width > 0f ? size / _rigRt.rect.width : 1f; // FingerSize stays the one size lever
-                _rigRt.localScale = new Vector3(mirror ? -k : k, k, 1f);
+                _rigRt.localScale = new Vector3(mirror ? -k : k, flip ? -k : k, 1f);
             }
 
             /// <summary><c>Screen.safeArea</c> in canvas-local units (the whole canvas if the conversion fails).</summary>

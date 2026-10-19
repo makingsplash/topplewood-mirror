@@ -84,8 +84,10 @@ namespace Tools.Debug
                 Data.Meta.LineupCleared.Value = 0;
                 Data.Meta.PoolCursor.Value = 0;
 
-                // Hint charges re-seed on the next process launch via HintBoosterService's ctor — a dev-only
-                // same-session gap. (The start-gold re-seed that stood here went with the currency, TASK-612.)
+                // TASK-635: lock the Hint button EXPLICITLY (same "by construction" rule as LineupCleared): it stays
+                // hidden until the hint tour's level. There is no install seed any more; the service's in-memory
+                // Unlocked refreshes with the restarted scope. (The start-gold re-seed went with the currency, TASK-612.)
+                Data.Meta.HintUnlocked.Value = false;
 
                 PlayerPrefsCollection.Instance.SaveDataIfChanged();
 

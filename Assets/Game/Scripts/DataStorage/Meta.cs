@@ -47,8 +47,13 @@ namespace DataStorage
         // Additive PlayerPrefs keys: a missing key defaults (0/false/MinValue), so the one-time seed still fires on
         // an upgrading install — no schema bump, no migration (architect §8).
         public readonly PlayerPrefsInt HintCharges = new ("Meta.HintCharges", 0);
+        // Dormant since TASK-635: the install seed is gone (charges come with the hint tour). No reader; the key stays,
+        // like GoldAmount, so an existing save keeps its shape.
         public readonly PlayerPrefsBool HintSeeded = new ("Meta.HintSeeded", false);
         public readonly PlayerPrefsDateTime HintLastDailyRefill = new ("Meta.HintLastDailyRefill", DateTime.MinValue);
+        // TASK-635: the Hint button is hidden until this is set — by the hint tour's level (top-up to 2) or silently for
+        // a player already past that place. Additive key (missing = locked), no schema bump; rules in HintUnlockRules.
+        public readonly PlayerPrefsBool HintUnlocked = new ("Meta.HintUnlocked", false);
 
         // TASK-528: level pool after the line-up — additive keys (a missing key defaults to 0 = first pass, so an
         // upgrading install behaves as before; no schema bump, no migration). LineupCleared > 0 is the persisted

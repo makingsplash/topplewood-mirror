@@ -23,21 +23,29 @@ namespace Gameplay.Tutorial
     /// beat, <see cref="TourConfig.BetweenTapsDelay"/> after) that the VIEW holds — input is open from rest, so a tap on
     /// the right piece during that pause is legal, and the step stays timer-free. A whitelist miss
     /// (<see cref="ITutorialInputGate.Rejected"/>) pulses the view while this beat's gate is active.
+    /// TASK-635 <c>silent</c>: the beat gates exactly the same but shows NOTHING on arm — someone else points at the piece
+    /// (the Hint booster's own outline, <see cref="BoosterTourRecipe"/>). Only the first miss brings the tour's usual beat
+    /// in at once (cut-out + finger, delay 0), then the pulse: the same "not there — here" the player learnt on level 1.
     /// </summary>
     public sealed class TapPieceStep : ITutorialStep
     {
         private readonly int _placementIndex;
         private readonly int _ordinal;
+        private readonly bool _silent;
 
         /// <param name="placementIndex">Index into the level's pieces to tap.</param>
         /// <param name="ordinal">1-based position in the tour — names the analytics step and decides the delay.</param>
-        public TapPieceStep(int placementIndex, int ordinal)
+        /// <param name="silent">No visual on arm; the tour's beat appears on the first miss (TASK-635).</param>
+        public TapPieceStep(int placementIndex, int ordinal, bool silent = false)
         {
             _placementIndex = placementIndex;
             _ordinal = ordinal;
+            _silent = silent;
         }
 
         public int PlacementIndex => _placementIndex;
+
+        public bool Silent => _silent;
 
         public string Id => $"tap_{_ordinal}";
 
@@ -57,15 +65,26 @@ namespace Gameplay.Tutorial
 
                 void Arm()
                 {
-                    var delay = _ordinal <= 1 ? 0f : context.Config.BetweenTapsDelay;
+                    var delay = _ordinal <= 1 || _silent ? 0f : context.Config.BetweenTapsDelay;
                     var candidates = BuildCandidates(context.Model);
-                    context.View.ShowTap(new TapCue(target.Position, target.Rotation,
-                        context.Model.TypeFor(target).Shape, target.Kind, delay, OthersOf(candidates, target)));
+                    var cue = new TapCue(target.Position, target.Rotation,
+                        context.Model.TypeFor(target).Shape, target.Kind, delay, OthersOf(candidates, target));
+                    var shown = !_silent;
+                    if (shown)
+                        context.View.ShowTap(cue);
 
                     // Build the new gate handle BEFORE swapping the SerialDisposable so the block's dispose never
                     // leaves the gate open in between (last-wins on AllowOnly).
                     var gate = context.InputGate.AllowOnly(HitTest(context, target, candidates));
-                    var miss = context.InputGate.Rejected.Subscribe(_ => context.View.PulseMiss());
+                    var miss = context.InputGate.Rejected.Subscribe(_ =>
+                    {
+                        if (!shown)
+                        {
+                            shown = true;
+                            context.View.ShowTap(cue);
+                        }
+                        context.View.PulseMiss();
+                    });
                     var release = context.Model.PieceReleased
                         .Where(id => id == target.InstanceId)
                         .Take(1)

@@ -25,7 +25,9 @@ namespace Gameplay.Tutorial
     /// The runner is the ONLY writer of <see cref="ITourView"/> (TASK-613 split the former shared highlight view: the
     /// Hint booster draws through its own <c>IPieceHighlightView</c>), so a co-subscriber of LevelLoaded can no longer
     /// tear down a tour armed in the same delivery (the TASK-382 class is gone by construction). While a tour runs it
-    /// holds <see cref="PlayScreenInteraction.IsTourFocused"/>, which dims the HUD and takes its taps away.
+    /// holds <see cref="PlayScreenInteraction.IsTourFocused"/>, which dims the HUD and takes its taps away — except a HUD
+    /// element a <see cref="HudTapStep"/> points at (TASK-635), which holds its own focus exemption for that beat. The
+    /// hosting scope's <see cref="IHudTourTargets"/> reaches the steps through the context.
     ///
     /// A synchronously-completing step is supported by design: a step that observes a <c>ReactiveProperty</c>
     /// (e.g. <see cref="GameModel.Phase"/>/<see cref="GameModel.Outcome"/>, which replay their current value on
@@ -50,6 +52,7 @@ namespace Gameplay.Tutorial
         private readonly TutorialCatalog _catalog;
         private readonly TourConfig _config;
         private readonly PlayScreenInteraction _interaction;
+        private readonly IHudTourTargets _hudTargets;
 
         private IDisposable _levelLoadedSubscription;
         private IDisposable _stepSubscription;
@@ -73,7 +76,8 @@ namespace Gameplay.Tutorial
             IGameplayTapTolerance tapTolerance,
             TutorialCatalog catalog,
             TourConfig config,
-            PlayScreenInteraction interaction)
+            PlayScreenInteraction interaction,
+            IHudTourTargets hudTargets)
         {
             _model = model;
             _gate = gate;
@@ -85,11 +89,12 @@ namespace Gameplay.Tutorial
             _catalog = catalog;
             _config = config;
             _interaction = interaction;
+            _hudTargets = hudTargets;
         }
 
         public void Start()
         {
-            _context = new TutorialContext(_model, _view, _inputGate, _tapTolerance, _config);
+            _context = new TutorialContext(_model, _view, _inputGate, _tapTolerance, _config, _hudTargets);
             _levelLoadedSubscription = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
 
             // A level is already loaded before this entry point starts (GameControllerRunner + the campaign

@@ -124,6 +124,8 @@ namespace Gameplay.DI
             builder.Register<ITourView, TourView>(Lifetime.Singleton);
             builder.Register<IPieceHighlightView, PieceHighlightView>(Lifetime.Singleton);
             builder.RegisterInstance(BuildTutorialCatalog());
+            // TASK-635: the runner also takes IHudTourTargets — bound by the HOSTING scope (prod: the Hint button;
+            // bringup: none), like ICampaignStore, because the targets are prod-only presenters.
             builder.RegisterEntryPoint<TutorialRunner>();
             // NOTE: the dev level-switch cheat is NOT registered here. This core installer is context-independent
             // (shared with prod), and prod raises its own GameDebugMenu via LoadingGame — registering a cheat here
@@ -144,11 +146,16 @@ namespace Gameplay.DI
         /// potted_tree (campaign index 1, TASK-632) → the same recipe on the second level: tap pot, trunk, hammer (the
         /// hammer fires the catapult that throws the pre-placed crown), then the win. Its own id, so its progress mark is
         /// independent of the first tour's.
+        /// diamond_gem (campaign index 3, TASK-635) → the Hint booster's tour: the button appears, a HUD beat points at it,
+        /// the hint's own outline then shows winningOrder[0] (tri_tip, the core's bottom — the trap the wrong order loses
+        /// on) and the tour ends on its release. The place is read back by HintUnlockController through LevelIdOf, and
+        /// TourCatalogDataTests holds it inside the owner's "4–6" frame.
         /// </summary>
         public static TutorialCatalog BuildTutorialCatalog() => new(new Dictionary<string, ITourRecipe>
         {
             ["sailboat"] = new AssembleTourRecipe("first_tutorial"),
             ["potted_tree"] = new AssembleTourRecipe("second_level_tutorial"),
+            ["diamond_gem"] = new BoosterTourRecipe(BoosterTourRecipe.HintTourId, BoosterTourRecipe.HintButtonTargetId),
         });
     }
 }

@@ -62,6 +62,16 @@ namespace Gameplay.Tutorial
         public float CardCutoutPad = 12f;
         public float CardCutoutFeather = 16f;
         public float MinCutoutPad = 8f;
+        /// <summary>HUD beat (TASK-635): the halo cut-out around a HUD element — an ellipse circumscribing its quad (half-axes
+        /// = half-size × √2), padded and feathered by these; <see cref="HudCutoutSegments"/> = the ellipse's polygon. Starting
+        /// values, turned on frame K2. The gap rule does not apply (no pieces in the cut-out's way).</summary>
+        public float HudCutoutPad = 20f;
+        public float HudCutoutFeather = 28f;
+        public int HudCutoutSegments = 24;
+
+        /// <summary>The finger's own canvas order (TASK-635): above the HUD buttons it taps on (the Hint button sits at
+        /// <c>short.MaxValue − 3</c>), below RESTART. The dim stays at the overlay's 32100, under the HUD.</summary>
+        public int FingerSortingOrder = short.MaxValue - 2;
 
         // ── Tones (art 04) ───────────────────────────────────────────────────────────────────────────────────────
         /// <summary>Contour on the field: white (contrast ≈5.8 to the wall). Art 04 replaced the green #39D353.</summary>

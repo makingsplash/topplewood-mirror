@@ -118,6 +118,25 @@ namespace Gameplay.Tests
         }
 
         [Test]
+        public void SilentTapStep_ShowsNothingOnArm_FirstMissBringsTheBeat_ReleaseCompletes()
+        {
+            _rig.Model.SetFieldAtRest(true);
+            var completed = 0;
+            using var _ = new TapPieceStep(1, 2, silent: true).Enter(_rig.Context()).Subscribe(__ => completed++);
+
+            Assert.That(_rig.View.Taps, Is.Empty, "silent: someone else points at the piece");
+            Assert.That(_rig.Gate.Allows(TourRig.Tap(TourRig.BottomPos)), Is.False, "still gated to its piece");
+
+            _rig.Gate.NotifyRejected(TourRig.Tap(TourRig.BottomPos));
+            Assert.That(_rig.View.Taps.Count, Is.EqualTo(1));
+            Assert.That(_rig.View.Taps[0].Delay, Is.EqualTo(0f), "a miss answers at once, even on a later ordinal");
+            Assert.That(_rig.View.Misses, Is.EqualTo(1));
+
+            _rig.Release(1);
+            Assert.That(completed, Is.EqualTo(1));
+        }
+
+        [Test]
         public void WinStep_IgnoresNoneLostAndReleases_CompletesOnWon()
         {
             var completed = 0;

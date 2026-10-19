@@ -54,6 +54,51 @@ namespace Gameplay.Tests
         }
 
         [Test]
+        public void Hidden_WinsOverFocus_AndOverExempt()
+        {
+            HudCover.Apply(_group, covered: false, hidden: true, focused: true, exempt: true, focusedAlpha: 0.35f);
+
+            Assert.That(_group.alpha, Is.EqualTo(0f), "a locked button is absent, not dimmed");
+            Assert.That(_group.blocksRaycasts, Is.False);
+        }
+
+        [Test]
+        public void Exempt_UnderFocus_IsFullyOpen()
+        {
+            HudCover.Apply(_group, covered: false, hidden: false, focused: true, exempt: true, focusedAlpha: 0.35f);
+
+            Assert.That(_group.alpha, Is.EqualTo(1f));
+            Assert.That(_group.blocksRaycasts, Is.True, "the HUD beat's button must take the tap");
+            Assert.That(_group.interactable, Is.True);
+        }
+
+        [Test]
+        public void Covered_WinsOverExempt()
+        {
+            HudCover.Apply(_group, covered: true, hidden: false, focused: true, exempt: true, focusedAlpha: 0.35f);
+
+            Assert.That(_group.alpha, Is.EqualTo(0f));
+            Assert.That(_group.blocksRaycasts, Is.False);
+        }
+
+        [Test]
+        public void Bind_WithHiddenAndExempt_FollowsAllFour()
+        {
+            var hidden = new R3.ReactiveProperty<bool>(true);
+            var exempt = new R3.ReactiveProperty<bool>(false);
+            using var _ = HudCover.Bind(_group, _interaction, 0.35f, hidden, exempt);
+            Assert.That(_group.alpha, Is.EqualTo(0f));
+
+            hidden.Value = false;
+            _interaction.IsTourFocused.Value = true;
+            Assert.That(_group.alpha, Is.EqualTo(0.35f));
+
+            exempt.Value = true;
+            Assert.That(_group.alpha, Is.EqualTo(1f));
+            Assert.That(_group.blocksRaycasts, Is.True);
+        }
+
+        [Test]
         public void Bind_FollowsTheTourFlag()
         {
             using var _ = HudCover.Bind(_group, _interaction, 0.35f);

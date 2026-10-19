@@ -29,20 +29,23 @@ namespace Gameplay.Tests
         public readonly TutorialRunner Runner;
         private readonly LevelData _level;
 
-        public TourRig(LevelData level = null)
+        public readonly IHudTourTargets HudTargets;
+
+        public TourRig(LevelData level = null, ITourRecipe recipe = null, IHudTourTargets hudTargets = null)
         {
             _level = level ?? TwoBoxLevel();
+            HudTargets = hudTargets ?? HudTourTargets.Empty;
             Model.LoadLevel(_level);
             var catalog = new TutorialCatalog(new Dictionary<string, ITourRecipe>
             {
-                [_level.LevelId] = new AssembleTourRecipe(TourId),
+                [_level.LevelId] = recipe ?? new AssembleTourRecipe(TourId),
             });
             Runner = new TutorialRunner(Model, new OpenGate(), Progress, Analytics, View, Gate,
-                new NullTapTolerance(), catalog, Config, Interaction);
+                new NullTapTolerance(), catalog, Config, Interaction, HudTargets);
         }
 
         public TutorialContext Context() =>
-            new(Model, View, Gate, new NullTapTolerance(), Config);
+            new(Model, View, Gate, new NullTapTolerance(), Config, HudTargets);
 
         /// <summary>A retry/restart: the campaign controller reloads the level in place, firing LevelLoaded.</summary>
         public void Reload() => Model.LoadLevel(_level);

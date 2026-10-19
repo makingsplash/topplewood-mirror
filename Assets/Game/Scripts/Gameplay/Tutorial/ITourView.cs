@@ -34,6 +34,14 @@ namespace Gameplay.Tutorial
         }
     }
 
+    /// <summary>One "tap this HUD element" beat (TASK-635): the view re-reads the target's screen quad every frame.</summary>
+    public readonly struct HudTapCue
+    {
+        public readonly IHudTourTarget Target;
+
+        public HudTapCue(IHudTourTarget target) => Target = target;
+    }
+
     /// <summary>
     /// The tutorial tour's view seam (TASK-613 plan §3.4) — the TOUR's alone. The Hint booster has its own
     /// <c>Gameplay.View.IPieceHighlightView</c>, so each view has exactly one writer: no keys, no shared
@@ -47,6 +55,11 @@ namespace Gameplay.Tutorial
         /// <summary>Show one tap beat: dim with cut-outs (piece, card), the piece contour, the card slot(s) of its kind
         /// and the finger's tap cycle — after <see cref="TapCue.Delay"/>.</summary>
         void ShowTap(TapCue cue);
+
+        /// <summary>Show a HUD beat (TASK-635): dim with a halo cut-out around the target's screen quad and the finger's
+        /// tap cycle on it, at once. No piece or card contour. <see cref="HideTap"/>/<see cref="PulseMiss"/>/<see cref="Clear"/>
+        /// cover it too.</summary>
+        void ShowHudTap(HudTapCue cue);
 
         /// <summary>A tap went elsewhere: an out-of-turn cycle from the "press" phase plus a flash of the cut-out.
         /// Idempotent — a second call just restarts the cycle.</summary>

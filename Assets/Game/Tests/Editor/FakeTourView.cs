@@ -10,11 +10,14 @@ namespace Gameplay.Tests
     internal sealed class FakeTourView : ITourView
     {
         public readonly List<TapCue> Taps = new();
+        public readonly List<HudTapCue> HudTaps = new();
         public int Misses;
         public int Hides;
         public int Clears;
 
         public void ShowTap(TapCue cue) => Taps.Add(cue);
+
+        public void ShowHudTap(HudTapCue cue) => HudTaps.Add(cue);
 
         public void PulseMiss() => Misses++;
 

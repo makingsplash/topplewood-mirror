@@ -40,6 +40,12 @@ namespace Game.Code.Infrastructure
 
         protected override void Configure(IContainerBuilder builder)
         {
+            // TASK-635: ПОРЯДОК НЕСУЩИЙ — before the installers, so this entry point subscribes to LevelLoaded BEFORE the
+            // core TutorialRunner: a silent unlock (player past the tour's place) marks hint_tutorial completed on the
+            // same delivery the runner then reads, so a pool replay of the tour level raises no tour. Its dependencies
+            // resolve from anywhere in the graph; only the Start order rides on this line.
+            builder.RegisterEntryPoint<HintUnlockController>();
+
             foreach (var installer in _installers)
                 installer.Install(builder);
 
@@ -105,6 +111,12 @@ namespace Game.Code.Infrastructure
             builder.Register<HintBoosterService>(Lifetime.Singleton);
             builder.RegisterEntryPoint<LevelFailStreak>().AsSelf();
             builder.RegisterEntryPoint<HintBoosterPresenter>();
+            // TASK-635: the button as a tour target (the presenter feeds it), offered to tours through the fixed
+            // registry the core TutorialRunner takes — bound here, by the hosting scope, like ICampaignStore.
+            builder.Register<HintButtonTourTarget>(Lifetime.Singleton);
+            builder.Register<IHudTourTargets>(
+                resolver => new HudTourTargets(resolver.Resolve<HintButtonTourTarget>()),
+                Lifetime.Singleton);
 
             // TASK-612: the TASK-240 coin economy (level-reward faucet, start-gold seed, ×2 stub doubler) is gone
             // with its registrations — the game has no currency; a win shows three stars instead (design 01 §2).
