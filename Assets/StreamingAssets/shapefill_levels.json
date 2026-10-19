@@ -6834,30 +6834,22 @@
       ]
     },
     {
-      "levelId": "balloon_cloud",
-      "seed": 431,
+      "levelId": "giraffe",
+      "winningOrder": [0, 1, 2, 3, 4, 5, 6],
+      "seed": 44,
       "difficultyTier": 6,
-      "physicsMode": "assembly",
-      "winningOrder": [
-        0,
-        1,
-        4,
-        3,
-        5,
-        2
-      ],
       "matchTolerance": {
-        "posTol": 0.3,
-        "angTol": 0.34906585
+        "posTol": 0.32,
+        "angTol": 0.43633
       },
       "bounds": {
         "min": {
-          "x": -7,
-          "y": -1
+          "x": -6,
+          "y": -6
         },
         "max": {
-          "x": 7,
-          "y": 16
+          "x": 6,
+          "y": 10
         }
       },
       "gravity": {
@@ -6866,122 +6858,23 @@
       },
       "pieceTypes": [
         {
-          "kind": "envelope",
-          "color": "#B8577A",
-          "symmetryOrder": 1,
+          "color": "#E23B3B",
+          "kind": "leg",
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
             "friction": 0.6,
             "restitution": 0.05
           },
           "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -0.85,
-                "y": -1.0
-              },
-              {
-                "x": 0.85,
-                "y": -1.0
-              },
-              {
-                "x": 1.4,
-                "y": -0.45
-              },
-              {
-                "x": 1.5,
-                "y": 0.25
-              },
-              {
-                "x": 1.3,
-                "y": 1.0
-              },
-              {
-                "x": -1.3,
-                "y": 1.0
-              },
-              {
-                "x": -1.5,
-                "y": 0.25
-              },
-              {
-                "x": -1.4,
-                "y": -0.45
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -1.4,
-                  "y": -0.45
-                },
-                {
-                  "x": -0.85,
-                  "y": -1.0
-                },
-                {
-                  "x": 0.85,
-                  "y": -1.0
-                },
-                {
-                  "x": 1.4,
-                  "y": -0.45
-                },
-                {
-                  "x": 1.5,
-                  "y": 0.25
-                },
-                {
-                  "x": 1.3,
-                  "y": 1.0
-                },
-                {
-                  "x": -1.3,
-                  "y": 1.0
-                },
-                {
-                  "x": -1.5,
-                  "y": 0.25
-                }
-              ]
-            ]
+            "primitive": "plank",
+            "width": 0.3,
+            "height": 1.0
           }
         },
         {
-          "kind": "rigging",
-          "color": "#CBA016",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "trapezoid",
-            "width": 0.86,
-            "topWidth": 0.56,
-            "height": 0.55
-          }
-        },
-        {
-          "kind": "sandbag",
-          "color": "#48699A",
-          "symmetryOrder": 4,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
-            "width": 0.36,
-            "height": 0.36
-          }
-        },
-        {
-          "kind": "basket",
-          "color": "#5C8E3E",
+          "color": "#F2801D",
+          "kind": "body",
           "symmetryOrder": 2,
           "material": {
             "density": 1.0,
@@ -6990,13 +6883,43 @@
           },
           "shape": {
             "primitive": "box",
-            "width": 0.86,
-            "height": 0.6
+            "width": 1.0,
+            "height": 0.7
           }
         },
         {
-          "kind": "anchor",
-          "color": "#5A55A3",
+          "color": "#F4C20D",
+          "kind": "neck",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 0.35,
+            "height": 1.3
+          }
+        },
+        {
+          "color": "#4CAF50",
+          "kind": "head",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.5,
+            "height": 0.4
+          }
+        },
+        {
+          "color": "#12A5A5",
+          "kind": "horn_a",
           "symmetryOrder": 1,
           "material": {
             "density": 1.0,
@@ -7005,315 +6928,184 @@
           },
           "shape": {
             "primitive": "triangle",
-            "width": 0.5,
+            "width": 0.2,
+            "height": 0.3
+          }
+        },
+        {
+          "color": "#2E7CD6",
+          "kind": "horn_b",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "triangle",
+            "width": 0.2,
             "height": 0.45
           }
-        }
-      ],
-      "pieces": [
-        {
-          "kind": "envelope",
-          "startPosition": {
-            "x": 0.0,
-            "y": 6.9
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "rigging",
-          "startPosition": {
-            "x": 0.0,
-            "y": 4.425
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "sandbag",
-          "startPosition": {
-            "x": -0.66,
-            "y": 2.92
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "sandbag",
-          "startPosition": {
-            "x": 0.66,
-            "y": 2.92
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "basket",
-          "startPosition": {
-            "x": 0.0,
-            "y": 5.3
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "anchor",
-          "startPosition": {
-            "x": 0.0,
-            "y": 3.55
-          },
-          "startRotation": 3.14159
         }
       ],
       "target": {
         "outline": [
           {
-            "x": 0.0,
-            "y": 8.4
+            "x": -0.5,
+            "y": -0.5
           },
           {
-            "x": 0.25,
-            "y": 8.85
+            "x": 0.55,
+            "y": -0.5
           },
           {
-            "x": 0.43,
-            "y": 8.85
+            "x": 0.55,
+            "y": 3.35
           },
           {
-            "x": 0.43,
-            "y": 9.45
-          },
-          {
-            "x": 0.4,
-            "y": 9.64
-          },
-          {
-            "x": 0.84,
-            "y": 9.64
-          },
-          {
-            "x": 0.84,
-            "y": 10.0
-          },
-          {
-            "x": 1.4,
-            "y": 10.55
-          },
-          {
-            "x": 1.5,
-            "y": 11.25
-          },
-          {
-            "x": 1.3,
-            "y": 12.0
-          },
-          {
-            "x": -1.3,
-            "y": 12.0
-          },
-          {
-            "x": -1.5,
-            "y": 11.25
-          },
-          {
-            "x": -1.4,
-            "y": 10.55
-          },
-          {
-            "x": -0.84,
-            "y": 10.0
-          },
-          {
-            "x": -0.84,
-            "y": 9.64
-          },
-          {
-            "x": -0.4,
-            "y": 9.64
-          },
-          {
-            "x": -0.43,
-            "y": 9.45
-          },
-          {
-            "x": -0.43,
-            "y": 8.85
-          },
-          {
-            "x": -0.25,
-            "y": 8.85
+            "x": -0.5,
+            "y": 3.35
           }
         ],
         "slots": [
           {
-            "kind": "envelope",
+            "kind": "leg",
             "position": {
-              "x": 0.0,
-              "y": 11.0
+              "x": -0.35,
+              "y": 0
             },
             "rotation": 0
           },
           {
-            "kind": "rigging",
+            "kind": "leg",
             "position": {
-              "x": 0.0,
-              "y": 9.725
+              "x": 0.35,
+              "y": 0
             },
             "rotation": 0
           },
           {
-            "kind": "sandbag",
+            "kind": "body",
             "position": {
-              "x": -0.66,
-              "y": 9.82
+              "x": 0,
+              "y": 0.85
             },
             "rotation": 0
           },
           {
-            "kind": "sandbag",
+            "kind": "neck",
             "position": {
-              "x": 0.66,
-              "y": 9.82
+              "x": 0.3,
+              "y": 1.85
             },
             "rotation": 0
           },
           {
-            "kind": "basket",
+            "kind": "head",
             "position": {
-              "x": 0.0,
-              "y": 9.15
+              "x": 0.3,
+              "y": 2.7
             },
             "rotation": 0
           },
           {
-            "kind": "anchor",
+            "kind": "horn_a",
             "position": {
-              "x": 0.0,
-              "y": 8.625
+              "x": 0.15,
+              "y": 3.05
             },
-            "rotation": 3.14159
+            "rotation": 0
+          },
+          {
+            "kind": "horn_b",
+            "position": {
+              "x": 0.45,
+              "y": 3.125
+            },
+            "rotation": 0
           }
         ]
       },
+      "pieces": [
+        {
+          "kind": "leg",
+          "startPosition": {
+            "x": -0.35,
+            "y": 4.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "leg",
+          "startPosition": {
+            "x": 0.35,
+            "y": 4.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "body",
+          "startPosition": {
+            "x": 0,
+            "y": 5.35
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "neck",
+          "startPosition": {
+            "x": 0.3,
+            "y": 7.0
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "head",
+          "startPosition": {
+            "x": 0.3,
+            "y": 3.2
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "horn_a",
+          "startPosition": {
+            "x": 0.15,
+            "y": 4.75
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "horn_b",
+          "startPosition": {
+            "x": 0.45,
+            "y": 6.025
+          },
+          "startRotation": 0
+        }
+      ],
       "staticGeometry": [
         {
           "visible": true,
           "color": "#B8926B",
           "outline": [
             {
-              "x": -7,
-              "y": -0.6
+              "x": -0.8,
+              "y": -0.8
             },
             {
-              "x": 7,
-              "y": -0.6
+              "x": 0.8,
+              "y": -0.8
             },
             {
-              "x": 7,
-              "y": 0
+              "x": 0.8,
+              "y": -0.5
             },
             {
-              "x": -7,
-              "y": 0
+              "x": -0.8,
+              "y": -0.5
             }
           ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -2.6,
-              "y": 12.0
-            },
-            {
-              "x": 2.6,
-              "y": 12.0
-            },
-            {
-              "x": 2.6,
-              "y": 12.6
-            },
-            {
-              "x": -2.6,
-              "y": 12.6
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "collider": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -3.2,
-              "y": 12.0
-            },
-            {
-              "x": 3.2,
-              "y": 12.0
-            },
-            {
-              "x": 3.4,
-              "y": 12.5
-            },
-            {
-              "x": 3.0,
-              "y": 13.1
-            },
-            {
-              "x": 2.3,
-              "y": 13.2
-            },
-            {
-              "x": 1.9,
-              "y": 13.8
-            },
-            {
-              "x": 1.0,
-              "y": 14.1
-            },
-            {
-              "x": 0.2,
-              "y": 13.8
-            },
-            {
-              "x": -0.5,
-              "y": 14.2
-            },
-            {
-              "x": -1.4,
-              "y": 13.95
-            },
-            {
-              "x": -1.9,
-              "y": 13.3
-            },
-            {
-              "x": -2.7,
-              "y": 13.25
-            },
-            {
-              "x": -3.4,
-              "y": 12.6
-            }
-          ]
-        }
-      ],
-      "airZones": [
-        {
-          "region": {
-            "min": {
-              "x": -2.0,
-              "y": 1.0
-            },
-            "max": {
-              "x": 2.0,
-              "y": 12.0
-            }
-          },
-          "direction": {
-            "x": 0,
-            "y": 1
-          },
-          "acceleration": 15.0,
-          "color": "#CFE8F5",
-          "bypassHoverGuard": true
         }
       ]
     },
@@ -12595,22 +12387,30 @@
       ]
     },
     {
-      "levelId": "giraffe",
-      "winningOrder": [0, 1, 2, 3, 4, 5, 6],
-      "seed": 44,
+      "levelId": "balloon_cloud",
+      "seed": 431,
       "difficultyTier": 6,
+      "physicsMode": "assembly",
+      "winningOrder": [
+        0,
+        1,
+        4,
+        3,
+        5,
+        2
+      ],
       "matchTolerance": {
-        "posTol": 0.32,
-        "angTol": 0.43633
+        "posTol": 0.3,
+        "angTol": 0.34906585
       },
       "bounds": {
         "min": {
-          "x": -6,
-          "y": -6
+          "x": -7,
+          "y": -1
         },
         "max": {
-          "x": 6,
-          "y": 10
+          "x": 7,
+          "y": 16
         }
       },
       "gravity": {
@@ -12619,23 +12419,122 @@
       },
       "pieceTypes": [
         {
-          "color": "#E23B3B",
-          "kind": "leg",
-          "symmetryOrder": 2,
+          "kind": "envelope",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
           "material": {
             "density": 1.0,
             "friction": 0.6,
             "restitution": 0.05
           },
           "shape": {
-            "primitive": "plank",
-            "width": 0.3,
-            "height": 1.0
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.85,
+                "y": -1.0
+              },
+              {
+                "x": 0.85,
+                "y": -1.0
+              },
+              {
+                "x": 1.4,
+                "y": -0.45
+              },
+              {
+                "x": 1.5,
+                "y": 0.25
+              },
+              {
+                "x": 1.3,
+                "y": 1.0
+              },
+              {
+                "x": -1.3,
+                "y": 1.0
+              },
+              {
+                "x": -1.5,
+                "y": 0.25
+              },
+              {
+                "x": -1.4,
+                "y": -0.45
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -1.4,
+                  "y": -0.45
+                },
+                {
+                  "x": -0.85,
+                  "y": -1.0
+                },
+                {
+                  "x": 0.85,
+                  "y": -1.0
+                },
+                {
+                  "x": 1.4,
+                  "y": -0.45
+                },
+                {
+                  "x": 1.5,
+                  "y": 0.25
+                },
+                {
+                  "x": 1.3,
+                  "y": 1.0
+                },
+                {
+                  "x": -1.3,
+                  "y": 1.0
+                },
+                {
+                  "x": -1.5,
+                  "y": 0.25
+                }
+              ]
+            ]
           }
         },
         {
-          "color": "#F2801D",
-          "kind": "body",
+          "kind": "rigging",
+          "color": "#CBA016",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 0.86,
+            "topWidth": 0.56,
+            "height": 0.55
+          }
+        },
+        {
+          "kind": "sandbag",
+          "color": "#48699A",
+          "symmetryOrder": 4,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.36,
+            "height": 0.36
+          }
+        },
+        {
+          "kind": "basket",
+          "color": "#5C8E3E",
           "symmetryOrder": 2,
           "material": {
             "density": 1.0,
@@ -12644,229 +12543,330 @@
           },
           "shape": {
             "primitive": "box",
-            "width": 1.0,
-            "height": 0.7
+            "width": 0.86,
+            "height": 0.6
           }
         },
         {
-          "color": "#F4C20D",
-          "kind": "neck",
-          "symmetryOrder": 2,
+          "kind": "anchor",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
           "material": {
             "density": 1.0,
             "friction": 0.6,
             "restitution": 0.05
           },
           "shape": {
-            "primitive": "plank",
-            "width": 0.35,
-            "height": 1.3
-          }
-        },
-        {
-          "color": "#4CAF50",
-          "kind": "head",
-          "symmetryOrder": 2,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "box",
+            "primitive": "triangle",
             "width": 0.5,
-            "height": 0.4
-          }
-        },
-        {
-          "color": "#12A5A5",
-          "kind": "horn_a",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "triangle",
-            "width": 0.2,
-            "height": 0.3
-          }
-        },
-        {
-          "color": "#2E7CD6",
-          "kind": "horn_b",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "triangle",
-            "width": 0.2,
             "height": 0.45
           }
+        }
+      ],
+      "pieces": [
+        {
+          "kind": "envelope",
+          "startPosition": {
+            "x": 0.0,
+            "y": 6.9
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "rigging",
+          "startPosition": {
+            "x": 0.0,
+            "y": 4.425
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "sandbag",
+          "startPosition": {
+            "x": -0.66,
+            "y": 2.92
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "sandbag",
+          "startPosition": {
+            "x": 0.66,
+            "y": 2.92
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "basket",
+          "startPosition": {
+            "x": 0.0,
+            "y": 5.3
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "anchor",
+          "startPosition": {
+            "x": 0.0,
+            "y": 3.55
+          },
+          "startRotation": 3.14159
         }
       ],
       "target": {
         "outline": [
           {
-            "x": -0.5,
-            "y": -0.5
+            "x": 0.0,
+            "y": 8.4
           },
           {
-            "x": 0.55,
-            "y": -0.5
+            "x": 0.25,
+            "y": 8.85
           },
           {
-            "x": 0.55,
-            "y": 3.35
+            "x": 0.43,
+            "y": 8.85
           },
           {
-            "x": -0.5,
-            "y": 3.35
+            "x": 0.43,
+            "y": 9.45
+          },
+          {
+            "x": 0.4,
+            "y": 9.64
+          },
+          {
+            "x": 0.84,
+            "y": 9.64
+          },
+          {
+            "x": 0.84,
+            "y": 10.0
+          },
+          {
+            "x": 1.4,
+            "y": 10.55
+          },
+          {
+            "x": 1.5,
+            "y": 11.25
+          },
+          {
+            "x": 1.3,
+            "y": 12.0
+          },
+          {
+            "x": -1.3,
+            "y": 12.0
+          },
+          {
+            "x": -1.5,
+            "y": 11.25
+          },
+          {
+            "x": -1.4,
+            "y": 10.55
+          },
+          {
+            "x": -0.84,
+            "y": 10.0
+          },
+          {
+            "x": -0.84,
+            "y": 9.64
+          },
+          {
+            "x": -0.4,
+            "y": 9.64
+          },
+          {
+            "x": -0.43,
+            "y": 9.45
+          },
+          {
+            "x": -0.43,
+            "y": 8.85
+          },
+          {
+            "x": -0.25,
+            "y": 8.85
           }
         ],
         "slots": [
           {
-            "kind": "leg",
+            "kind": "envelope",
             "position": {
-              "x": -0.35,
-              "y": 0
+              "x": 0.0,
+              "y": 11.0
             },
             "rotation": 0
           },
           {
-            "kind": "leg",
+            "kind": "rigging",
             "position": {
-              "x": 0.35,
-              "y": 0
+              "x": 0.0,
+              "y": 9.725
             },
             "rotation": 0
           },
           {
-            "kind": "body",
+            "kind": "sandbag",
             "position": {
-              "x": 0,
-              "y": 0.85
+              "x": -0.66,
+              "y": 9.82
             },
             "rotation": 0
           },
           {
-            "kind": "neck",
+            "kind": "sandbag",
             "position": {
-              "x": 0.3,
-              "y": 1.85
+              "x": 0.66,
+              "y": 9.82
             },
             "rotation": 0
           },
           {
-            "kind": "head",
+            "kind": "basket",
             "position": {
-              "x": 0.3,
-              "y": 2.7
+              "x": 0.0,
+              "y": 9.15
             },
             "rotation": 0
           },
           {
-            "kind": "horn_a",
+            "kind": "anchor",
             "position": {
-              "x": 0.15,
-              "y": 3.05
+              "x": 0.0,
+              "y": 8.625
             },
-            "rotation": 0
-          },
-          {
-            "kind": "horn_b",
-            "position": {
-              "x": 0.45,
-              "y": 3.125
-            },
-            "rotation": 0
+            "rotation": 3.14159
           }
         ]
       },
-      "pieces": [
-        {
-          "kind": "leg",
-          "startPosition": {
-            "x": -0.35,
-            "y": 4.0
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "leg",
-          "startPosition": {
-            "x": 0.35,
-            "y": 4.0
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "body",
-          "startPosition": {
-            "x": 0,
-            "y": 5.35
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "neck",
-          "startPosition": {
-            "x": 0.3,
-            "y": 7.0
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "head",
-          "startPosition": {
-            "x": 0.3,
-            "y": 3.2
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "horn_a",
-          "startPosition": {
-            "x": 0.15,
-            "y": 4.75
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "horn_b",
-          "startPosition": {
-            "x": 0.45,
-            "y": 6.025
-          },
-          "startRotation": 0
-        }
-      ],
       "staticGeometry": [
         {
           "visible": true,
           "color": "#B8926B",
           "outline": [
             {
-              "x": -0.8,
-              "y": -0.8
+              "x": -7,
+              "y": -0.6
             },
             {
-              "x": 0.8,
-              "y": -0.8
+              "x": 7,
+              "y": -0.6
             },
             {
-              "x": 0.8,
-              "y": -0.5
+              "x": 7,
+              "y": 0
             },
             {
-              "x": -0.8,
-              "y": -0.5
+              "x": -7,
+              "y": 0
             }
           ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -2.6,
+              "y": 12.0
+            },
+            {
+              "x": 2.6,
+              "y": 12.0
+            },
+            {
+              "x": 2.6,
+              "y": 12.6
+            },
+            {
+              "x": -2.6,
+              "y": 12.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "collider": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.2,
+              "y": 12.0
+            },
+            {
+              "x": 3.2,
+              "y": 12.0
+            },
+            {
+              "x": 3.4,
+              "y": 12.5
+            },
+            {
+              "x": 3.0,
+              "y": 13.1
+            },
+            {
+              "x": 2.3,
+              "y": 13.2
+            },
+            {
+              "x": 1.9,
+              "y": 13.8
+            },
+            {
+              "x": 1.0,
+              "y": 14.1
+            },
+            {
+              "x": 0.2,
+              "y": 13.8
+            },
+            {
+              "x": -0.5,
+              "y": 14.2
+            },
+            {
+              "x": -1.4,
+              "y": 13.95
+            },
+            {
+              "x": -1.9,
+              "y": 13.3
+            },
+            {
+              "x": -2.7,
+              "y": 13.25
+            },
+            {
+              "x": -3.4,
+              "y": 12.6
+            }
+          ]
+        }
+      ],
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -2.0,
+              "y": 1.0
+            },
+            "max": {
+              "x": 2.0,
+              "y": 12.0
+            }
+          },
+          "direction": {
+            "x": 0,
+            "y": 1
+          },
+          "acceleration": 15.0,
+          "color": "#CFE8F5",
+          "bypassHoverGuard": true
         }
       ]
     },
@@ -19000,17 +19000,23 @@
       ]
     },
     {
-      "levelId": "parachute",
-      "seed": 4875,
+      "levelId": "round_top",
+      "seed": 5110,
       "difficultyTier": 7,
       "physicsMode": "assembly",
       "winningOrder": [
         0,
-        2,
         1,
-        3,
+        2,
         4,
-        5
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
       ],
       "matchTolerance": {
         "posTol": 0.3,
@@ -19018,12 +19024,12 @@
       },
       "bounds": {
         "min": {
-          "x": -7,
-          "y": -1
+          "x": -7.0,
+          "y": -3.0
         },
         "max": {
-          "x": 7,
-          "y": 13.5
+          "x": 7.0,
+          "y": 12.0
         }
       },
       "gravity": {
@@ -19032,125 +19038,101 @@
       },
       "pieceTypes": [
         {
-          "kind": "canopy",
-          "color": "#B8577A",
+          "kind": "tower_l",
+          "color": "#8B5A9E",
           "symmetryOrder": 1,
           "material": {
             "density": 1.0,
-            "friction": 0.6,
+            "friction": 0.8,
             "restitution": 0.05
           },
           "shape": {
             "primitive": "freeform",
             "outline": [
               {
-                "x": -1.7,
-                "y": -0.6
+                "x": -0.83,
+                "y": -0.7
               },
               {
-                "x": 1.7,
-                "y": -0.6
+                "x": 0.83,
+                "y": -0.7
               },
               {
-                "x": 1.3821,
-                "y": -0.0445
+                "x": -0.17,
+                "y": 0.7
               },
               {
-                "x": 0.7625,
-                "y": 0.431
-              },
-              {
-                "x": 0.0,
-                "y": 0.6
-              },
-              {
-                "x": -0.7625,
-                "y": 0.431
-              },
-              {
-                "x": -1.3821,
-                "y": -0.0445
+                "x": -0.83,
+                "y": 0.7
               }
             ],
             "parts": [
               [
                 {
-                  "x": -1.7,
-                  "y": -0.6
+                  "x": -0.83,
+                  "y": -0.7
                 },
                 {
-                  "x": 1.7,
-                  "y": -0.6
+                  "x": 0.83,
+                  "y": -0.7
                 },
                 {
-                  "x": 1.3821,
-                  "y": -0.0445
+                  "x": -0.17,
+                  "y": 0.7
                 },
                 {
-                  "x": 0.7625,
-                  "y": 0.431
-                },
-                {
-                  "x": 0.0,
-                  "y": 0.6
-                },
-                {
-                  "x": -0.7625,
-                  "y": 0.431
-                },
-                {
-                  "x": -1.3821,
-                  "y": -0.0445
+                  "x": -0.83,
+                  "y": 0.7
                 }
               ]
             ]
           }
         },
         {
-          "kind": "strap_l",
+          "kind": "tower_r",
           "color": "#2F8C86",
           "symmetryOrder": 1,
           "material": {
             "density": 1.0,
-            "friction": 0.6,
+            "friction": 0.8,
             "restitution": 0.05
           },
           "shape": {
             "primitive": "freeform",
             "outline": [
               {
-                "x": 0.275,
+                "x": -0.83,
                 "y": -0.7
               },
               {
-                "x": 0.475,
+                "x": 0.83,
                 "y": -0.7
               },
               {
-                "x": 0.125,
+                "x": 0.83,
                 "y": 0.7
               },
               {
-                "x": -0.475,
+                "x": 0.17,
                 "y": 0.7
               }
             ],
             "parts": [
               [
                 {
-                  "x": 0.275,
+                  "x": -0.83,
                   "y": -0.7
                 },
                 {
-                  "x": 0.475,
+                  "x": 0.83,
                   "y": -0.7
                 },
                 {
-                  "x": 0.125,
+                  "x": 0.83,
                   "y": 0.7
                 },
                 {
-                  "x": -0.475,
+                  "x": 0.17,
                   "y": 0.7
                 }
               ]
@@ -19158,395 +19140,478 @@
           }
         },
         {
-          "kind": "strap_r",
-          "color": "#48699A",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.6,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -0.475,
-                "y": -0.7
-              },
-              {
-                "x": -0.275,
-                "y": -0.7
-              },
-              {
-                "x": 0.475,
-                "y": 0.7
-              },
-              {
-                "x": -0.125,
-                "y": 0.7
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -0.475,
-                  "y": -0.7
-                },
-                {
-                  "x": -0.275,
-                  "y": -0.7
-                },
-                {
-                  "x": 0.475,
-                  "y": 0.7
-                },
-                {
-                  "x": -0.125,
-                  "y": 0.7
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "jumper",
+          "kind": "key_low",
           "color": "#CBA016",
           "symmetryOrder": 1,
           "material": {
             "density": 1.0,
-            "friction": 0.6,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 0.6,
+            "topWidth": 1.6,
+            "height": 0.7
+          }
+        },
+        {
+          "kind": "half_l",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
             "restitution": 0.05
           },
           "shape": {
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.35,
-                "y": -0.82
+                "x": -0.14,
+                "y": -0.35
               },
               {
-                "x": 0.35,
-                "y": -0.82
+                "x": 0.64,
+                "y": -0.35
               },
               {
-                "x": 0.65,
-                "y": -0.07
+                "x": 0.64,
+                "y": 0.35
               },
               {
-                "x": 0.65,
-                "y": 0.18
-              },
-              {
-                "x": 0.08,
-                "y": 0.18
-              },
-              {
-                "x": 0.08,
-                "y": 0.3
-              },
-              {
-                "x": 0.11,
-                "y": 0.3
-              },
-              {
-                "x": 0.25,
-                "y": 0.44
-              },
-              {
-                "x": 0.25,
-                "y": 0.68
-              },
-              {
-                "x": 0.11,
-                "y": 0.82
-              },
-              {
-                "x": -0.11,
-                "y": 0.82
-              },
-              {
-                "x": -0.25,
-                "y": 0.68
-              },
-              {
-                "x": -0.25,
-                "y": 0.44
-              },
-              {
-                "x": -0.11,
-                "y": 0.3
-              },
-              {
-                "x": -0.08,
-                "y": 0.3
-              },
-              {
-                "x": -0.08,
-                "y": 0.18
-              },
-              {
-                "x": -0.65,
-                "y": 0.18
-              },
-              {
-                "x": -0.65,
-                "y": -0.07
+                "x": -0.64,
+                "y": 0.35
               }
             ],
             "parts": [
               [
                 {
-                  "x": -0.35,
-                  "y": -0.82
+                  "x": -0.14,
+                  "y": -0.35
                 },
                 {
-                  "x": 0.35,
-                  "y": -0.82
+                  "x": 0.64,
+                  "y": -0.35
                 },
                 {
-                  "x": 0.65,
-                  "y": -0.07
+                  "x": 0.64,
+                  "y": 0.35
                 },
                 {
-                  "x": 0.65,
-                  "y": 0.18
-                },
-                {
-                  "x": -0.65,
-                  "y": 0.18
-                },
-                {
-                  "x": -0.65,
-                  "y": -0.07
-                }
-              ],
-              [
-                {
-                  "x": -0.08,
-                  "y": 0.18
-                },
-                {
-                  "x": 0.08,
-                  "y": 0.18
-                },
-                {
-                  "x": 0.08,
-                  "y": 0.3
-                },
-                {
-                  "x": -0.08,
-                  "y": 0.3
-                }
-              ],
-              [
-                {
-                  "x": -0.11,
-                  "y": 0.3
-                },
-                {
-                  "x": 0.11,
-                  "y": 0.3
-                },
-                {
-                  "x": 0.25,
-                  "y": 0.44
-                },
-                {
-                  "x": 0.25,
-                  "y": 0.68
-                },
-                {
-                  "x": 0.11,
-                  "y": 0.82
-                },
-                {
-                  "x": -0.11,
-                  "y": 0.82
-                },
-                {
-                  "x": -0.25,
-                  "y": 0.68
-                },
-                {
-                  "x": -0.25,
-                  "y": 0.44
+                  "x": -0.64,
+                  "y": 0.35
                 }
               ]
             ]
           }
         },
         {
-          "kind": "leg_l",
+          "kind": "half_r",
           "color": "#5C8E3E",
-          "symmetryOrder": 2,
+          "symmetryOrder": 1,
           "material": {
             "density": 1.0,
-            "friction": 0.6,
+            "friction": 0.8,
             "restitution": 0.05
           },
           "shape": {
-            "primitive": "box",
-            "width": 0.28,
-            "height": 0.75
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.64,
+                "y": -0.35
+              },
+              {
+                "x": 0.14,
+                "y": -0.35
+              },
+              {
+                "x": 0.64,
+                "y": 0.35
+              },
+              {
+                "x": -0.64,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.64,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.14,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.64,
+                  "y": 0.35
+                }
+              ]
+            ]
           }
         },
         {
-          "kind": "leg_r",
-          "color": "#8B5A9E",
-          "symmetryOrder": 2,
+          "kind": "shoulder_l",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
           "material": {
             "density": 1.0,
-            "friction": 0.6,
+            "friction": 0.8,
             "restitution": 0.05
           },
           "shape": {
-            "primitive": "box",
-            "width": 0.28,
-            "height": 0.75
+            "primitive": "quarterdisc",
+            "radius": 0.66,
+            "segments": 6
+          }
+        },
+        {
+          "kind": "shoulder_r",
+          "color": "#B8577A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "quarterdisc",
+            "radius": 0.66,
+            "segments": 6
+          }
+        },
+        {
+          "kind": "core_tri",
+          "color": "#5A55A3",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "triangle",
+            "width": 0.8,
+            "height": 0.7
+          }
+        },
+        {
+          "kind": "wedge_l",
+          "color": "#CBA016",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.63,
+                "y": -0.35
+              },
+              {
+                "x": 0.23,
+                "y": -0.35
+              },
+              {
+                "x": 0.63,
+                "y": 0.35
+              },
+              {
+                "x": -0.63,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.63,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.23,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.63,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.63,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "wedge_r",
+          "color": "#8B5A9E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "freeform",
+            "outline": [
+              {
+                "x": -0.23,
+                "y": -0.35
+              },
+              {
+                "x": 0.63,
+                "y": -0.35
+              },
+              {
+                "x": 0.63,
+                "y": 0.35
+              },
+              {
+                "x": -0.63,
+                "y": 0.35
+              }
+            ],
+            "parts": [
+              [
+                {
+                  "x": -0.23,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.63,
+                  "y": -0.35
+                },
+                {
+                  "x": 0.63,
+                  "y": 0.35
+                },
+                {
+                  "x": -0.63,
+                  "y": 0.35
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "dome_l",
+          "color": "#48699A",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "quarterdisc",
+            "radius": 1.0,
+            "segments": 6
+          }
+        },
+        {
+          "kind": "dome_r",
+          "color": "#5C8E3E",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.8,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "quarterdisc",
+            "radius": 1.0,
+            "segments": 6
           }
         }
       ],
       "target": {
         "outline": [
           {
-            "x": -0.33,
-            "y": 6.85
+            "x": -2.0,
+            "y": 0.0
           },
           {
-            "x": -0.05,
-            "y": 6.85
+            "x": 2.0,
+            "y": 0.0
           },
           {
-            "x": -0.05,
-            "y": 7.6
+            "x": 2.0,
+            "y": 1.4
           },
           {
-            "x": 0.05,
-            "y": 7.6
+            "x": 1.912,
+            "y": 1.73
           },
           {
-            "x": 0.05,
-            "y": 6.85
+            "x": 1.67,
+            "y": 1.972
           },
           {
-            "x": 0.33,
-            "y": 6.85
+            "x": 1.34,
+            "y": 2.06
           },
           {
-            "x": 0.33,
-            "y": 7.6
+            "x": 1.3,
+            "y": 2.1
           },
           {
-            "x": 0.35,
-            "y": 7.6
+            "x": 1.02,
+            "y": 2.1
           },
           {
-            "x": 0.65,
-            "y": 8.35
+            "x": 0.886,
+            "y": 2.6
           },
           {
-            "x": 0.65,
-            "y": 8.6
+            "x": 0.52,
+            "y": 2.966
           },
           {
-            "x": 1.4,
-            "y": 10.0
+            "x": 0.02,
+            "y": 3.1
           },
           {
-            "x": 1.7,
-            "y": 10.0
+            "x": -0.02,
+            "y": 3.1
           },
           {
-            "x": 1.3821,
-            "y": 10.5555
+            "x": -0.52,
+            "y": 2.966
           },
           {
-            "x": 0.7625,
-            "y": 11.031
+            "x": -0.886,
+            "y": 2.6
           },
           {
-            "x": 0.0,
-            "y": 11.2
+            "x": -1.02,
+            "y": 2.1
           },
           {
-            "x": -0.7625,
-            "y": 11.031
+            "x": -1.3,
+            "y": 2.1
           },
           {
-            "x": -1.3821,
-            "y": 10.5555
+            "x": -1.34,
+            "y": 2.06
           },
           {
-            "x": -1.7,
-            "y": 10.0
+            "x": -1.67,
+            "y": 1.972
           },
           {
-            "x": -1.4,
-            "y": 10.0
+            "x": -1.912,
+            "y": 1.73
           },
           {
-            "x": -0.65,
-            "y": 8.6
-          },
-          {
-            "x": -0.65,
-            "y": 8.35
-          },
-          {
-            "x": -0.35,
-            "y": 7.6
-          },
-          {
-            "x": -0.33,
-            "y": 7.6
+            "x": -2.0,
+            "y": 1.4
           }
         ],
         "slots": [
           {
-            "kind": "canopy",
+            "kind": "tower_l",
+            "position": {
+              "x": -1.17,
+              "y": 0.7
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "tower_r",
+            "position": {
+              "x": 1.17,
+              "y": 0.7
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "key_low",
             "position": {
               "x": 0.0,
-              "y": 10.6
+              "y": 0.35
             },
             "rotation": 0
           },
           {
-            "kind": "strap_l",
+            "kind": "half_l",
             "position": {
-              "x": -0.925,
-              "y": 9.3
+              "x": -0.66,
+              "y": 1.05
             },
             "rotation": 0
           },
           {
-            "kind": "strap_r",
+            "kind": "half_r",
             "position": {
-              "x": 0.925,
-              "y": 9.3
+              "x": 0.66,
+              "y": 1.05
             },
             "rotation": 0
           },
           {
-            "kind": "jumper",
+            "kind": "shoulder_l",
+            "position": {
+              "x": -1.67,
+              "y": 1.73
+            },
+            "rotation": 1.5707963
+          },
+          {
+            "kind": "shoulder_r",
+            "position": {
+              "x": 1.67,
+              "y": 1.73
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "core_tri",
             "position": {
               "x": 0.0,
-              "y": 8.42
+              "y": 1.75
             },
             "rotation": 0
           },
           {
-            "kind": "leg_l",
+            "kind": "wedge_l",
             "position": {
-              "x": -0.19,
-              "y": 7.225
+              "x": -0.67,
+              "y": 1.75
             },
             "rotation": 0
           },
           {
-            "kind": "leg_r",
+            "kind": "wedge_r",
             "position": {
-              "x": 0.19,
-              "y": 7.225
+              "x": 0.67,
+              "y": 1.75
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "dome_l",
+            "position": {
+              "x": -0.52,
+              "y": 2.6
+            },
+            "rotation": 1.5707963
+          },
+          {
+            "kind": "dome_r",
+            "position": {
+              "x": 0.52,
+              "y": 2.6
             },
             "rotation": 0
           }
@@ -19554,364 +19619,124 @@
       },
       "pieces": [
         {
-          "kind": "canopy",
+          "kind": "tower_l",
+          "startPosition": {
+            "x": -1.17,
+            "y": 6.03
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "tower_r",
+          "startPosition": {
+            "x": 1.17,
+            "y": 5.03
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "key_low",
           "startPosition": {
             "x": 0.0,
-            "y": 5.7
+            "y": 6.77
           },
           "startRotation": 0
         },
         {
-          "kind": "strap_l",
+          "kind": "half_l",
           "startPosition": {
-            "x": -0.925,
-            "y": 3.9
+            "x": -0.66,
+            "y": 3.65
           },
           "startRotation": 0
         },
         {
-          "kind": "strap_r",
+          "kind": "half_r",
           "startPosition": {
-            "x": 0.925,
-            "y": 3.85
+            "x": 0.66,
+            "y": 8.6
           },
           "startRotation": 0
         },
         {
-          "kind": "jumper",
+          "kind": "shoulder_l",
+          "startPosition": {
+            "x": -1.67,
+            "y": 3.23
+          },
+          "startRotation": 1.5707963
+        },
+        {
+          "kind": "shoulder_r",
+          "startPosition": {
+            "x": 1.67,
+            "y": 3.96
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "core_tri",
           "startPosition": {
             "x": 0.0,
-            "y": 4.2
+            "y": 6.03
           },
           "startRotation": 0
         },
         {
-          "kind": "leg_l",
+          "kind": "wedge_l",
           "startPosition": {
-            "x": -0.19,
-            "y": 1.6
+            "x": -0.67,
+            "y": 8.18
           },
           "startRotation": 0
         },
         {
-          "kind": "leg_r",
+          "kind": "wedge_r",
           "startPosition": {
-            "x": 0.19,
-            "y": 2.3
+            "x": 0.67,
+            "y": 7.51
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "dome_l",
+          "startPosition": {
+            "x": -0.52,
+            "y": 4.85
+          },
+          "startRotation": 1.5707963
+        },
+        {
+          "kind": "dome_r",
+          "startPosition": {
+            "x": 0.52,
+            "y": 3.8
           },
           "startRotation": 0
         }
       ],
       "staticGeometry": [
         {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -3.4,
-              "y": 10.0
-            },
-            {
-              "x": -1.7,
-              "y": 10.0
-            },
-            {
-              "x": -1.7,
-              "y": 12.0
-            },
-            {
-              "x": -3.4,
-              "y": 12.0
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -1.7,
-              "y": 10.0
-            },
-            {
-              "x": -1.3821,
-              "y": 10.5555
-            },
-            {
-              "x": -1.3821,
-              "y": 12.0
-            },
-            {
-              "x": -1.7,
-              "y": 12.0
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -1.3821,
-              "y": 10.5555
-            },
-            {
-              "x": -0.7625,
-              "y": 11.031
-            },
-            {
-              "x": -0.7625,
-              "y": 12.0
-            },
-            {
-              "x": -1.3821,
-              "y": 12.0
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -0.7625,
-              "y": 11.031
-            },
-            {
-              "x": 0.0,
-              "y": 11.2
-            },
-            {
-              "x": 0.0,
-              "y": 12.0
-            },
-            {
-              "x": -0.7625,
-              "y": 12.0
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 0.0,
-              "y": 11.2
-            },
-            {
-              "x": 0.7625,
-              "y": 11.031
-            },
-            {
-              "x": 0.7625,
-              "y": 12.0
-            },
-            {
-              "x": 0.0,
-              "y": 12.0
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 0.7625,
-              "y": 11.031
-            },
-            {
-              "x": 1.3821,
-              "y": 10.5555
-            },
-            {
-              "x": 1.3821,
-              "y": 12.0
-            },
-            {
-              "x": 0.7625,
-              "y": 12.0
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 1.3821,
-              "y": 10.5555
-            },
-            {
-              "x": 1.7,
-              "y": 10.0
-            },
-            {
-              "x": 1.7,
-              "y": 12.0
-            },
-            {
-              "x": 1.3821,
-              "y": 12.0
-            }
-          ]
-        },
-        {
-          "visible": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": 1.7,
-              "y": 10.0
-            },
-            {
-              "x": 3.4,
-              "y": 10.0
-            },
-            {
-              "x": 3.4,
-              "y": 12.0
-            },
-            {
-              "x": 1.7,
-              "y": 12.0
-            }
-          ]
-        },
-        {
-          "visible": true,
-          "collider": false,
-          "color": "#B8926B",
-          "outline": [
-            {
-              "x": -3.4,
-              "y": 10.0
-            },
-            {
-              "x": -1.7,
-              "y": 10.0
-            },
-            {
-              "x": -1.3821,
-              "y": 10.5555
-            },
-            {
-              "x": -0.7625,
-              "y": 11.031
-            },
-            {
-              "x": 0.0,
-              "y": 11.2
-            },
-            {
-              "x": 0.7625,
-              "y": 11.031
-            },
-            {
-              "x": 1.3821,
-              "y": 10.5555
-            },
-            {
-              "x": 1.7,
-              "y": 10.0
-            },
-            {
-              "x": 3.4,
-              "y": 10.0
-            },
-            {
-              "x": 3.6,
-              "y": 10.6
-            },
-            {
-              "x": 3.2,
-              "y": 11.3
-            },
-            {
-              "x": 2.6,
-              "y": 11.5
-            },
-            {
-              "x": 2.2,
-              "y": 12.1
-            },
-            {
-              "x": 1.2,
-              "y": 12.4
-            },
-            {
-              "x": 0.3,
-              "y": 12.2
-            },
-            {
-              "x": -0.6,
-              "y": 12.6
-            },
-            {
-              "x": -1.6,
-              "y": 12.3
-            },
-            {
-              "x": -2.3,
-              "y": 12.4
-            },
-            {
-              "x": -2.9,
-              "y": 11.9
-            },
-            {
-              "x": -3.4,
-              "y": 11.6
-            },
-            {
-              "x": -3.6,
-              "y": 10.7
-            }
-          ]
-        },
-        {
           "visible": true,
           "color": "#B8926B",
           "outline": [
             {
-              "x": -3.4,
-              "y": -0.6
+              "x": -4.0,
+              "y": -0.5
             },
             {
-              "x": 3.4,
-              "y": -0.6
+              "x": 4.0,
+              "y": -0.5
             },
             {
-              "x": 3.4,
+              "x": 4.0,
               "y": 0.0
             },
             {
-              "x": -3.4,
+              "x": -4.0,
               "y": 0.0
             }
           ]
-        }
-      ],
-      "airZones": [
-        {
-          "region": {
-            "min": {
-              "x": -2.4,
-              "y": 1.0
-            },
-            "max": {
-              "x": 2.4,
-              "y": 11.2
-            }
-          },
-          "direction": {
-            "x": 0,
-            "y": 1
-          },
-          "acceleration": 15.0,
-          "color": "#CFE8F5",
-          "bypassHoverGuard": true
         }
       ]
     },
@@ -22080,23 +21905,17 @@
       ]
     },
     {
-      "levelId": "round_top",
-      "seed": 5110,
+      "levelId": "parachute",
+      "seed": 4875,
       "difficultyTier": 7,
       "physicsMode": "assembly",
       "winningOrder": [
         0,
-        1,
         2,
-        4,
+        1,
         3,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11
+        4,
+        5
       ],
       "matchTolerance": {
         "posTol": 0.3,
@@ -22104,12 +21923,12 @@
       },
       "bounds": {
         "min": {
-          "x": -7.0,
-          "y": -3.0
+          "x": -7,
+          "y": -1
         },
         "max": {
-          "x": 7.0,
-          "y": 12.0
+          "x": 7,
+          "y": 13.5
         }
       },
       "gravity": {
@@ -22118,101 +21937,125 @@
       },
       "pieceTypes": [
         {
-          "kind": "tower_l",
-          "color": "#8B5A9E",
+          "kind": "canopy",
+          "color": "#B8577A",
           "symmetryOrder": 1,
           "material": {
             "density": 1.0,
-            "friction": 0.8,
+            "friction": 0.6,
             "restitution": 0.05
           },
           "shape": {
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.83,
-                "y": -0.7
+                "x": -1.7,
+                "y": -0.6
               },
               {
-                "x": 0.83,
-                "y": -0.7
+                "x": 1.7,
+                "y": -0.6
               },
               {
-                "x": -0.17,
-                "y": 0.7
+                "x": 1.3821,
+                "y": -0.0445
               },
               {
-                "x": -0.83,
-                "y": 0.7
+                "x": 0.7625,
+                "y": 0.431
+              },
+              {
+                "x": 0.0,
+                "y": 0.6
+              },
+              {
+                "x": -0.7625,
+                "y": 0.431
+              },
+              {
+                "x": -1.3821,
+                "y": -0.0445
               }
             ],
             "parts": [
               [
                 {
-                  "x": -0.83,
-                  "y": -0.7
+                  "x": -1.7,
+                  "y": -0.6
                 },
                 {
-                  "x": 0.83,
-                  "y": -0.7
+                  "x": 1.7,
+                  "y": -0.6
                 },
                 {
-                  "x": -0.17,
-                  "y": 0.7
+                  "x": 1.3821,
+                  "y": -0.0445
                 },
                 {
-                  "x": -0.83,
-                  "y": 0.7
+                  "x": 0.7625,
+                  "y": 0.431
+                },
+                {
+                  "x": 0.0,
+                  "y": 0.6
+                },
+                {
+                  "x": -0.7625,
+                  "y": 0.431
+                },
+                {
+                  "x": -1.3821,
+                  "y": -0.0445
                 }
               ]
             ]
           }
         },
         {
-          "kind": "tower_r",
+          "kind": "strap_l",
           "color": "#2F8C86",
           "symmetryOrder": 1,
           "material": {
             "density": 1.0,
-            "friction": 0.8,
+            "friction": 0.6,
             "restitution": 0.05
           },
           "shape": {
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.83,
+                "x": 0.275,
                 "y": -0.7
               },
               {
-                "x": 0.83,
+                "x": 0.475,
                 "y": -0.7
               },
               {
-                "x": 0.83,
+                "x": 0.125,
                 "y": 0.7
               },
               {
-                "x": 0.17,
+                "x": -0.475,
                 "y": 0.7
               }
             ],
             "parts": [
               [
                 {
-                  "x": -0.83,
+                  "x": 0.275,
                   "y": -0.7
                 },
                 {
-                  "x": 0.83,
+                  "x": 0.475,
                   "y": -0.7
                 },
                 {
-                  "x": 0.83,
+                  "x": 0.125,
                   "y": 0.7
                 },
                 {
-                  "x": 0.17,
+                  "x": -0.475,
                   "y": 0.7
                 }
               ]
@@ -22220,478 +22063,395 @@
           }
         },
         {
-          "kind": "key_low",
-          "color": "#CBA016",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "trapezoid",
-            "width": 0.6,
-            "topWidth": 1.6,
-            "height": 0.7
-          }
-        },
-        {
-          "kind": "half_l",
+          "kind": "strap_r",
           "color": "#48699A",
           "symmetryOrder": 1,
           "material": {
             "density": 1.0,
-            "friction": 0.8,
+            "friction": 0.6,
             "restitution": 0.05
           },
           "shape": {
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.14,
-                "y": -0.35
+                "x": -0.475,
+                "y": -0.7
               },
               {
-                "x": 0.64,
-                "y": -0.35
+                "x": -0.275,
+                "y": -0.7
               },
               {
-                "x": 0.64,
-                "y": 0.35
+                "x": 0.475,
+                "y": 0.7
               },
               {
-                "x": -0.64,
-                "y": 0.35
+                "x": -0.125,
+                "y": 0.7
               }
             ],
             "parts": [
               [
                 {
-                  "x": -0.14,
-                  "y": -0.35
+                  "x": -0.475,
+                  "y": -0.7
                 },
                 {
-                  "x": 0.64,
-                  "y": -0.35
+                  "x": -0.275,
+                  "y": -0.7
                 },
                 {
-                  "x": 0.64,
-                  "y": 0.35
+                  "x": 0.475,
+                  "y": 0.7
                 },
                 {
-                  "x": -0.64,
-                  "y": 0.35
+                  "x": -0.125,
+                  "y": 0.7
                 }
               ]
             ]
           }
         },
         {
-          "kind": "half_r",
-          "color": "#5C8E3E",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -0.64,
-                "y": -0.35
-              },
-              {
-                "x": 0.14,
-                "y": -0.35
-              },
-              {
-                "x": 0.64,
-                "y": 0.35
-              },
-              {
-                "x": -0.64,
-                "y": 0.35
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -0.64,
-                  "y": -0.35
-                },
-                {
-                  "x": 0.14,
-                  "y": -0.35
-                },
-                {
-                  "x": 0.64,
-                  "y": 0.35
-                },
-                {
-                  "x": -0.64,
-                  "y": 0.35
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "shoulder_l",
-          "color": "#B8577A",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "quarterdisc",
-            "radius": 0.66,
-            "segments": 6
-          }
-        },
-        {
-          "kind": "shoulder_r",
-          "color": "#B8577A",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "quarterdisc",
-            "radius": 0.66,
-            "segments": 6
-          }
-        },
-        {
-          "kind": "core_tri",
-          "color": "#5A55A3",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "triangle",
-            "width": 0.8,
-            "height": 0.7
-          }
-        },
-        {
-          "kind": "wedge_l",
+          "kind": "jumper",
           "color": "#CBA016",
           "symmetryOrder": 1,
           "material": {
             "density": 1.0,
-            "friction": 0.8,
+            "friction": 0.6,
             "restitution": 0.05
           },
           "shape": {
             "primitive": "freeform",
             "outline": [
               {
-                "x": -0.63,
-                "y": -0.35
+                "x": -0.35,
+                "y": -0.82
               },
               {
-                "x": 0.23,
-                "y": -0.35
+                "x": 0.35,
+                "y": -0.82
               },
               {
-                "x": 0.63,
-                "y": 0.35
+                "x": 0.65,
+                "y": -0.07
               },
               {
-                "x": -0.63,
-                "y": 0.35
+                "x": 0.65,
+                "y": 0.18
+              },
+              {
+                "x": 0.08,
+                "y": 0.18
+              },
+              {
+                "x": 0.08,
+                "y": 0.3
+              },
+              {
+                "x": 0.11,
+                "y": 0.3
+              },
+              {
+                "x": 0.25,
+                "y": 0.44
+              },
+              {
+                "x": 0.25,
+                "y": 0.68
+              },
+              {
+                "x": 0.11,
+                "y": 0.82
+              },
+              {
+                "x": -0.11,
+                "y": 0.82
+              },
+              {
+                "x": -0.25,
+                "y": 0.68
+              },
+              {
+                "x": -0.25,
+                "y": 0.44
+              },
+              {
+                "x": -0.11,
+                "y": 0.3
+              },
+              {
+                "x": -0.08,
+                "y": 0.3
+              },
+              {
+                "x": -0.08,
+                "y": 0.18
+              },
+              {
+                "x": -0.65,
+                "y": 0.18
+              },
+              {
+                "x": -0.65,
+                "y": -0.07
               }
             ],
             "parts": [
               [
                 {
-                  "x": -0.63,
-                  "y": -0.35
+                  "x": -0.35,
+                  "y": -0.82
                 },
                 {
-                  "x": 0.23,
-                  "y": -0.35
+                  "x": 0.35,
+                  "y": -0.82
                 },
                 {
-                  "x": 0.63,
-                  "y": 0.35
+                  "x": 0.65,
+                  "y": -0.07
                 },
                 {
-                  "x": -0.63,
-                  "y": 0.35
+                  "x": 0.65,
+                  "y": 0.18
+                },
+                {
+                  "x": -0.65,
+                  "y": 0.18
+                },
+                {
+                  "x": -0.65,
+                  "y": -0.07
+                }
+              ],
+              [
+                {
+                  "x": -0.08,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.08,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.08,
+                  "y": 0.3
+                },
+                {
+                  "x": -0.08,
+                  "y": 0.3
+                }
+              ],
+              [
+                {
+                  "x": -0.11,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.11,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.44
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.68
+                },
+                {
+                  "x": 0.11,
+                  "y": 0.82
+                },
+                {
+                  "x": -0.11,
+                  "y": 0.82
+                },
+                {
+                  "x": -0.25,
+                  "y": 0.68
+                },
+                {
+                  "x": -0.25,
+                  "y": 0.44
                 }
               ]
             ]
           }
         },
         {
-          "kind": "wedge_r",
+          "kind": "leg_l",
+          "color": "#5C8E3E",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.28,
+            "height": 0.75
+          }
+        },
+        {
+          "kind": "leg_r",
           "color": "#8B5A9E",
-          "symmetryOrder": 1,
+          "symmetryOrder": 2,
           "material": {
             "density": 1.0,
-            "friction": 0.8,
+            "friction": 0.6,
             "restitution": 0.05
           },
           "shape": {
-            "primitive": "freeform",
-            "outline": [
-              {
-                "x": -0.23,
-                "y": -0.35
-              },
-              {
-                "x": 0.63,
-                "y": -0.35
-              },
-              {
-                "x": 0.63,
-                "y": 0.35
-              },
-              {
-                "x": -0.63,
-                "y": 0.35
-              }
-            ],
-            "parts": [
-              [
-                {
-                  "x": -0.23,
-                  "y": -0.35
-                },
-                {
-                  "x": 0.63,
-                  "y": -0.35
-                },
-                {
-                  "x": 0.63,
-                  "y": 0.35
-                },
-                {
-                  "x": -0.63,
-                  "y": 0.35
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "kind": "dome_l",
-          "color": "#48699A",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "quarterdisc",
-            "radius": 1.0,
-            "segments": 6
-          }
-        },
-        {
-          "kind": "dome_r",
-          "color": "#5C8E3E",
-          "symmetryOrder": 1,
-          "material": {
-            "density": 1.0,
-            "friction": 0.8,
-            "restitution": 0.05
-          },
-          "shape": {
-            "primitive": "quarterdisc",
-            "radius": 1.0,
-            "segments": 6
+            "primitive": "box",
+            "width": 0.28,
+            "height": 0.75
           }
         }
       ],
       "target": {
         "outline": [
           {
-            "x": -2.0,
-            "y": 0.0
+            "x": -0.33,
+            "y": 6.85
           },
           {
-            "x": 2.0,
-            "y": 0.0
+            "x": -0.05,
+            "y": 6.85
           },
           {
-            "x": 2.0,
-            "y": 1.4
+            "x": -0.05,
+            "y": 7.6
           },
           {
-            "x": 1.912,
-            "y": 1.73
+            "x": 0.05,
+            "y": 7.6
           },
           {
-            "x": 1.67,
-            "y": 1.972
+            "x": 0.05,
+            "y": 6.85
           },
           {
-            "x": 1.34,
-            "y": 2.06
+            "x": 0.33,
+            "y": 6.85
           },
           {
-            "x": 1.3,
-            "y": 2.1
+            "x": 0.33,
+            "y": 7.6
           },
           {
-            "x": 1.02,
-            "y": 2.1
+            "x": 0.35,
+            "y": 7.6
           },
           {
-            "x": 0.886,
-            "y": 2.6
+            "x": 0.65,
+            "y": 8.35
           },
           {
-            "x": 0.52,
-            "y": 2.966
+            "x": 0.65,
+            "y": 8.6
           },
           {
-            "x": 0.02,
-            "y": 3.1
+            "x": 1.4,
+            "y": 10.0
           },
           {
-            "x": -0.02,
-            "y": 3.1
+            "x": 1.7,
+            "y": 10.0
           },
           {
-            "x": -0.52,
-            "y": 2.966
+            "x": 1.3821,
+            "y": 10.5555
           },
           {
-            "x": -0.886,
-            "y": 2.6
+            "x": 0.7625,
+            "y": 11.031
           },
           {
-            "x": -1.02,
-            "y": 2.1
+            "x": 0.0,
+            "y": 11.2
           },
           {
-            "x": -1.3,
-            "y": 2.1
+            "x": -0.7625,
+            "y": 11.031
           },
           {
-            "x": -1.34,
-            "y": 2.06
+            "x": -1.3821,
+            "y": 10.5555
           },
           {
-            "x": -1.67,
-            "y": 1.972
+            "x": -1.7,
+            "y": 10.0
           },
           {
-            "x": -1.912,
-            "y": 1.73
+            "x": -1.4,
+            "y": 10.0
           },
           {
-            "x": -2.0,
-            "y": 1.4
+            "x": -0.65,
+            "y": 8.6
+          },
+          {
+            "x": -0.65,
+            "y": 8.35
+          },
+          {
+            "x": -0.35,
+            "y": 7.6
+          },
+          {
+            "x": -0.33,
+            "y": 7.6
           }
         ],
         "slots": [
           {
-            "kind": "tower_l",
-            "position": {
-              "x": -1.17,
-              "y": 0.7
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "tower_r",
-            "position": {
-              "x": 1.17,
-              "y": 0.7
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "key_low",
+            "kind": "canopy",
             "position": {
               "x": 0.0,
-              "y": 0.35
+              "y": 10.6
             },
             "rotation": 0
           },
           {
-            "kind": "half_l",
+            "kind": "strap_l",
             "position": {
-              "x": -0.66,
-              "y": 1.05
+              "x": -0.925,
+              "y": 9.3
             },
             "rotation": 0
           },
           {
-            "kind": "half_r",
+            "kind": "strap_r",
             "position": {
-              "x": 0.66,
-              "y": 1.05
+              "x": 0.925,
+              "y": 9.3
             },
             "rotation": 0
           },
           {
-            "kind": "shoulder_l",
-            "position": {
-              "x": -1.67,
-              "y": 1.73
-            },
-            "rotation": 1.5707963
-          },
-          {
-            "kind": "shoulder_r",
-            "position": {
-              "x": 1.67,
-              "y": 1.73
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "core_tri",
+            "kind": "jumper",
             "position": {
               "x": 0.0,
-              "y": 1.75
+              "y": 8.42
             },
             "rotation": 0
           },
           {
-            "kind": "wedge_l",
+            "kind": "leg_l",
             "position": {
-              "x": -0.67,
-              "y": 1.75
+              "x": -0.19,
+              "y": 7.225
             },
             "rotation": 0
           },
           {
-            "kind": "wedge_r",
+            "kind": "leg_r",
             "position": {
-              "x": 0.67,
-              "y": 1.75
-            },
-            "rotation": 0
-          },
-          {
-            "kind": "dome_l",
-            "position": {
-              "x": -0.52,
-              "y": 2.6
-            },
-            "rotation": 1.5707963
-          },
-          {
-            "kind": "dome_r",
-            "position": {
-              "x": 0.52,
-              "y": 2.6
+              "x": 0.19,
+              "y": 7.225
             },
             "rotation": 0
           }
@@ -22699,124 +22459,364 @@
       },
       "pieces": [
         {
-          "kind": "tower_l",
-          "startPosition": {
-            "x": -1.17,
-            "y": 6.03
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "tower_r",
-          "startPosition": {
-            "x": 1.17,
-            "y": 5.03
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "key_low",
+          "kind": "canopy",
           "startPosition": {
             "x": 0.0,
-            "y": 6.77
+            "y": 5.7
           },
           "startRotation": 0
         },
         {
-          "kind": "half_l",
+          "kind": "strap_l",
           "startPosition": {
-            "x": -0.66,
-            "y": 3.65
+            "x": -0.925,
+            "y": 3.9
           },
           "startRotation": 0
         },
         {
-          "kind": "half_r",
+          "kind": "strap_r",
           "startPosition": {
-            "x": 0.66,
-            "y": 8.6
+            "x": 0.925,
+            "y": 3.85
           },
           "startRotation": 0
         },
         {
-          "kind": "shoulder_l",
-          "startPosition": {
-            "x": -1.67,
-            "y": 3.23
-          },
-          "startRotation": 1.5707963
-        },
-        {
-          "kind": "shoulder_r",
-          "startPosition": {
-            "x": 1.67,
-            "y": 3.96
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "core_tri",
+          "kind": "jumper",
           "startPosition": {
             "x": 0.0,
-            "y": 6.03
+            "y": 4.2
           },
           "startRotation": 0
         },
         {
-          "kind": "wedge_l",
+          "kind": "leg_l",
           "startPosition": {
-            "x": -0.67,
-            "y": 8.18
+            "x": -0.19,
+            "y": 1.6
           },
           "startRotation": 0
         },
         {
-          "kind": "wedge_r",
+          "kind": "leg_r",
           "startPosition": {
-            "x": 0.67,
-            "y": 7.51
-          },
-          "startRotation": 0
-        },
-        {
-          "kind": "dome_l",
-          "startPosition": {
-            "x": -0.52,
-            "y": 4.85
-          },
-          "startRotation": 1.5707963
-        },
-        {
-          "kind": "dome_r",
-          "startPosition": {
-            "x": 0.52,
-            "y": 3.8
+            "x": 0.19,
+            "y": 2.3
           },
           "startRotation": 0
         }
       ],
       "staticGeometry": [
         {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.4,
+              "y": 10.0
+            },
+            {
+              "x": -1.7,
+              "y": 10.0
+            },
+            {
+              "x": -1.7,
+              "y": 12.0
+            },
+            {
+              "x": -3.4,
+              "y": 12.0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.7,
+              "y": 10.0
+            },
+            {
+              "x": -1.3821,
+              "y": 10.5555
+            },
+            {
+              "x": -1.3821,
+              "y": 12.0
+            },
+            {
+              "x": -1.7,
+              "y": 12.0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.3821,
+              "y": 10.5555
+            },
+            {
+              "x": -0.7625,
+              "y": 11.031
+            },
+            {
+              "x": -0.7625,
+              "y": 12.0
+            },
+            {
+              "x": -1.3821,
+              "y": 12.0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -0.7625,
+              "y": 11.031
+            },
+            {
+              "x": 0.0,
+              "y": 11.2
+            },
+            {
+              "x": 0.0,
+              "y": 12.0
+            },
+            {
+              "x": -0.7625,
+              "y": 12.0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.0,
+              "y": 11.2
+            },
+            {
+              "x": 0.7625,
+              "y": 11.031
+            },
+            {
+              "x": 0.7625,
+              "y": 12.0
+            },
+            {
+              "x": 0.0,
+              "y": 12.0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.7625,
+              "y": 11.031
+            },
+            {
+              "x": 1.3821,
+              "y": 10.5555
+            },
+            {
+              "x": 1.3821,
+              "y": 12.0
+            },
+            {
+              "x": 0.7625,
+              "y": 12.0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.3821,
+              "y": 10.5555
+            },
+            {
+              "x": 1.7,
+              "y": 10.0
+            },
+            {
+              "x": 1.7,
+              "y": 12.0
+            },
+            {
+              "x": 1.3821,
+              "y": 12.0
+            }
+          ]
+        },
+        {
+          "visible": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.7,
+              "y": 10.0
+            },
+            {
+              "x": 3.4,
+              "y": 10.0
+            },
+            {
+              "x": 3.4,
+              "y": 12.0
+            },
+            {
+              "x": 1.7,
+              "y": 12.0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "collider": false,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.4,
+              "y": 10.0
+            },
+            {
+              "x": -1.7,
+              "y": 10.0
+            },
+            {
+              "x": -1.3821,
+              "y": 10.5555
+            },
+            {
+              "x": -0.7625,
+              "y": 11.031
+            },
+            {
+              "x": 0.0,
+              "y": 11.2
+            },
+            {
+              "x": 0.7625,
+              "y": 11.031
+            },
+            {
+              "x": 1.3821,
+              "y": 10.5555
+            },
+            {
+              "x": 1.7,
+              "y": 10.0
+            },
+            {
+              "x": 3.4,
+              "y": 10.0
+            },
+            {
+              "x": 3.6,
+              "y": 10.6
+            },
+            {
+              "x": 3.2,
+              "y": 11.3
+            },
+            {
+              "x": 2.6,
+              "y": 11.5
+            },
+            {
+              "x": 2.2,
+              "y": 12.1
+            },
+            {
+              "x": 1.2,
+              "y": 12.4
+            },
+            {
+              "x": 0.3,
+              "y": 12.2
+            },
+            {
+              "x": -0.6,
+              "y": 12.6
+            },
+            {
+              "x": -1.6,
+              "y": 12.3
+            },
+            {
+              "x": -2.3,
+              "y": 12.4
+            },
+            {
+              "x": -2.9,
+              "y": 11.9
+            },
+            {
+              "x": -3.4,
+              "y": 11.6
+            },
+            {
+              "x": -3.6,
+              "y": 10.7
+            }
+          ]
+        },
+        {
           "visible": true,
           "color": "#B8926B",
           "outline": [
             {
-              "x": -4.0,
-              "y": -0.5
+              "x": -3.4,
+              "y": -0.6
             },
             {
-              "x": 4.0,
-              "y": -0.5
+              "x": 3.4,
+              "y": -0.6
             },
             {
-              "x": 4.0,
+              "x": 3.4,
               "y": 0.0
             },
             {
-              "x": -4.0,
+              "x": -3.4,
               "y": 0.0
             }
           ]
+        }
+      ],
+      "airZones": [
+        {
+          "region": {
+            "min": {
+              "x": -2.4,
+              "y": 1.0
+            },
+            "max": {
+              "x": 2.4,
+              "y": 11.2
+            }
+          },
+          "direction": {
+            "x": 0,
+            "y": 1
+          },
+          "acceleration": 15.0,
+          "color": "#CFE8F5",
+          "bypassHoverGuard": true
         }
       ]
     },
