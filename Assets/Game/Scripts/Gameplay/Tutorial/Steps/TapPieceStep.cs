@@ -58,12 +58,13 @@ namespace Gameplay.Tutorial
                 void Arm()
                 {
                     var delay = _ordinal <= 1 ? 0f : context.Config.BetweenTapsDelay;
+                    var candidates = BuildCandidates(context.Model);
                     context.View.ShowTap(new TapCue(target.Position, target.Rotation,
-                        context.Model.TypeFor(target).Shape, target.Kind, delay));
+                        context.Model.TypeFor(target).Shape, target.Kind, delay, OthersOf(candidates, target)));
 
                     // Build the new gate handle BEFORE swapping the SerialDisposable so the block's dispose never
                     // leaves the gate open in between (last-wins on AllowOnly).
-                    var gate = context.InputGate.AllowOnly(HitTest(context, target));
+                    var gate = context.InputGate.AllowOnly(HitTest(context, target, candidates));
                     var miss = context.InputGate.Rejected.Subscribe(_ => context.View.PulseMiss());
                     var release = context.Model.PieceReleased
                         .Where(id => id == target.InstanceId)
@@ -111,11 +112,21 @@ namespace Gameplay.Tutorial
         /// disagree on which piece a tap hits, including the screen-space tap halo
         /// (<see cref="TutorialContext.TapTolerance"/>) that makes small pieces tappable IN the tour. Idle pieces do not
         /// move, so the candidate poses snapshotted at Arm stay valid until this beat's release.</summary>
-        private static System.Func<InputIntent, bool> HitTest(TutorialContext context, PieceInstance target)
+        private static System.Func<InputIntent, bool> HitTest(TutorialContext context, PieceInstance target,
+            List<PieceHitResolver.HitCandidate> candidates)
         {
-            var candidates = BuildCandidates(context.Model);
             return intent => PieceHitResolver.Resolve(
                 candidates, new Vec2(intent.X, intent.Y), context.TapTolerance.WorldRadius) == target.InstanceId;
+        }
+
+        /// <summary>World outlines of every Idle candidate except the target (the cut-out's gap rule, spec 02 §3).</summary>
+        private static List<Vec2[]> OthersOf(List<PieceHitResolver.HitCandidate> candidates, PieceInstance target)
+        {
+            var others = new List<Vec2[]>(candidates.Count);
+            foreach (var c in candidates)
+                if (c.InstanceId != target.InstanceId)
+                    others.Add(c.World);
+            return others;
         }
 
         /// <summary>Snapshot every currently-Idle piece as a hit candidate (its world polygon + centre), so the

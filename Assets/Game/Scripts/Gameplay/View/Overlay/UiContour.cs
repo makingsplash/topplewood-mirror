@@ -20,7 +20,35 @@ namespace Gameplay.View
     {
         private Vector2[] _points;
 
-        public float Width { get; set; } = 6f;
+        private float _width = 6f;
+        private float _reveal = 1f;
+
+        public float Width
+        {
+            get => _width;
+            set
+            {
+                if (Mathf.Approximately(_width, value))
+                    return;
+                _width = value;
+                SetVerticesDirty();
+            }
+        }
+
+        /// <summary>Fraction of the perimeter drawn, from the first point along the ring (TASK-613: the "Совпало"
+        /// contour draws itself on). 1 = closed ring.</summary>
+        public float Reveal
+        {
+            get => _reveal;
+            set
+            {
+                value = Mathf.Clamp01(value);
+                if (Mathf.Approximately(_reveal, value))
+                    return;
+                _reveal = value;
+                SetVerticesDirty();
+            }
+        }
 
         // No sprite/texture: the base Graphic.mainTexture returns the built-in white texture, tinted by the
         // vertex colour via the default UI shader — no material of our own, BlockMaterial untouched.
@@ -34,13 +62,21 @@ namespace Gameplay.View
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
-            if (_points == null || _points.Length < 2)
+            if (_points == null || _points.Length < 2 || _reveal <= 0f)
                 return;
 
             var half = Width * 0.5f;
             var n = _points.Length;
+            var budget = float.MaxValue;
+            if (_reveal < 1f)
+            {
+                var perimeter = 0f;
+                for (var i = 0; i < n; i++)
+                    perimeter += (_points[(i + 1) % n] - _points[i]).magnitude;
+                budget = perimeter * _reveal;
+            }
             var vi = 0;
-            for (var i = 0; i < n; i++)
+            for (var i = 0; i < n && budget > 0f; i++)
             {
                 var a = _points[i];
                 var b = _points[(i + 1) % n];
@@ -49,6 +85,12 @@ namespace Gameplay.View
                 if (len < 1e-4f)
                     continue; // skip degenerate edge
                 dir /= len;
+                if (len > budget)
+                {
+                    b = a + dir * budget; // the partially drawn edge of a draw-on
+                    len = budget;
+                }
+                budget -= len;
                 var nrm = new Vector2(-dir.y, dir.x) * half; // edge normal, half-width
 
                 AddVert(vh, a - nrm);

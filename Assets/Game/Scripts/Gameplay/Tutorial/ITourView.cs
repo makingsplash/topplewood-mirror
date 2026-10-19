@@ -19,13 +19,19 @@ namespace Gameplay.Tutorial
         /// after). Held by the view so the step stays timer-free and deterministic under test.</summary>
         public readonly float Delay;
 
-        public TapCue(Vec2 origin, float rotation, Shape shape, string kind, float delay)
+        /// <summary>World outlines of the OTHER still-Idle pieces — the view keeps the cut-out's pad+feather within half
+        /// the gap to the nearest of them (spec 02 §3 gap rule), so the cut-out never shows a second piece. May be null.</summary>
+        public readonly IReadOnlyList<Vec2[]> Others;
+
+        public TapCue(Vec2 origin, float rotation, Shape shape, string kind, float delay,
+            IReadOnlyList<Vec2[]> others = null)
         {
             Origin = origin;
             Rotation = rotation;
             Shape = shape;
             Kind = kind;
             Delay = delay;
+            Others = others;
         }
     }
 

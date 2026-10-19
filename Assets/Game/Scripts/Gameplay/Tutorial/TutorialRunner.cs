@@ -174,7 +174,10 @@ namespace Gameplay.Tutorial
         {
             _progress.MarkCompleted(_definition.Id); // durable — survives a kill
             _analytics.LogComplete(_definition.Id);
-            _view.Clear();
+            // NO _view.Clear() here: every step has already exited its own visuals, and the last one ("Совпало") is
+            // still fading its dim INTO the win screen (held until the screen covers the field). An immediate Clear
+            // cut that hold and left an un-dimmed frame before the screen (TASK-613 run 2, frame K5). Clear stays on
+            // StopSequence — a Lost/restart must drop everything at once.
             _interaction.IsTourFocused.Value = false;
             Debug.unityLogger.Log(LogType.Log, $"[{LogCategory.Tutorial}] Tutorial '{_definition.Id}' completed");
         }

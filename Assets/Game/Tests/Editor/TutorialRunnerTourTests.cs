@@ -39,6 +39,22 @@ namespace Gameplay.Tests
         }
 
         [Test]
+        public void Runner_Completion_DoesNotClearTheView_SoTheBeatFadesIntoTheWinScreen()
+        {
+            _rig.Runner.Start();
+            _rig.PlayBothTaps();
+            Assert.That(_rig.Interlude.TryTake(out var play), Is.True);
+            using var number = play().Subscribe();
+            var clearsBefore = _rig.View.Clears;
+
+            _rig.View.FinishMatch();
+
+            Assert.That(_rig.Progress.IsCompleted(TourRig.TourId), Is.True);
+            Assert.That(_rig.View.Clears, Is.EqualTo(clearsBefore),
+                "completion must not Clear the view: the \"Совпало\" dim is held until the win screen covers the field");
+        }
+
+        [Test]
         public void Runner_LostAfterLastTap_ReplaysTour_AndDisarmsInterlude()
         {
             _rig.Runner.Start();

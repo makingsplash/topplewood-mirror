@@ -28,6 +28,51 @@ namespace Gameplay.Tutorial
         public float PressScale = 0.88f;
         /// <summary>Approach start, up-right of the tip, as a fraction of the finger size.</summary>
         public float ApproachOffsetFraction = 0.12f;
+        /// <summary>Ripple ring over the contact phase: scale 0.3 → 1.0 of its 240 cu slot, alpha 0.8 → 0 (01 §3).</summary>
+        public float RippleStartScale = 0.3f;
+        public float RippleStartAlpha = 0.8f;
+        /// <summary>Contours flash on each contact (01 §3: «вспыхивает один раз на 0.1 с»): width × this, up and back.</summary>
+        public float ContactFlashSeconds = 0.1f;
+        public float ContactFlashWidthScale = 1.6f;
+
+        // ── Dim (01 §3: in 0.25 s with the beat; out 0.2 s on the tap so the fall stays visible) ───────────────────
+        public float DimInSeconds = 0.25f;
+        public float DimOutSeconds = 0.2f;
+        /// <summary>A miss flashes the cut-out: a white fill of the hole at this alpha, fading over the seconds.</summary>
+        public float MissFlashAlpha = 0.35f;
+        public float MissFlashSeconds = 0.3f;
+
+        // ── Finger placement (spec 02 §3) ────────────────────────────────────────────────────────────────────────
+        /// <summary>Touch point = the piece contour's centroid moved this fraction of the bbox half-size toward the
+        /// side AWAY from the hand (the hand hangs down-right, so the tip sits up-left; mirrored with the rig).</summary>
+        public float TouchBiasFraction = 0.25f;
+        /// <summary>How far the hand reaches from the tip, as a fraction of <see cref="FingerSize"/> (right, down).</summary>
+        public float HandReachRight = 0.62f;
+        public float HandReachDown = 0.74f;
+        /// <summary>The rig mirrors when the hand would cross the safe area's edge minus this (cu).</summary>
+        public float MirrorEdgeMargin = 24f;
+
+        // ── "Совпало" timeline (01 §3 «Такт 3»; seconds from the beat start, total = MatchSeconds) ──────────────────
+        public float MatchContourStart = 0.10f;
+        public float MatchContourSeconds = 0.30f;
+        public float GhostStart = 0.40f;
+        public float GhostEnd = 0.95f;
+        public float MatchFlashEnd = 1.10f;
+        public float CheckStart = 1.00f;
+        public float CheckEnd = 1.25f;
+        /// <summary>The beat's dim fades out over this while the win screen's own reveal plays (01 §3: «уходит в
+        /// затемнение винскрина»), so there is no un-dimmed frame between them.</summary>
+        public float MatchDimOutSeconds = 0.25f;
+        /// <summary>Ceiling on holding the beat's dim while waiting for the win screen to cover the field.</summary>
+        public float MatchDimHoldMaxSeconds = 0.6f;
+        public float GhostAlpha = 0.45f;
+        public float GhostOutlineWidth = 6f;
+        public float MatchFieldOutlineWidth = 10f;
+        public float MatchCardOutlineWidth = 6f;
+        /// <summary>✓ centre = the frame's top-right corner moved inward by this (cu, both axes; spec 02 §3).</summary>
+        public float CheckInset = 24f;
+        /// <summary>The ✓ is kept this far (cu) inside the safe area's top/right edges.</summary>
+        public float CheckEdgeMargin = 8f;
 
         // ── Sizes, canvas units ──────────────────────────────────────────────────────────────────────────────────
         /// <summary>Finger slot (02 §3: ≈20 % of the width at 1080 reference).</summary>
