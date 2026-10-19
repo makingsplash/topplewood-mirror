@@ -3785,7 +3785,7 @@
           "kind": "stick",
           "startPosition": {
             "x": 1.05,
-            "y": 1.2
+            "y": 1.1
           },
           "startRotation": 0,
           "preplaced": true
@@ -5206,7 +5206,7 @@
           "kind": "stick",
           "startPosition": {
             "x": 1.05,
-            "y": 1.2
+            "y": 1.1
           },
           "startRotation": 0,
           "preplaced": true,
@@ -5503,7 +5503,7 @@
           "kind": "lever",
           "startPosition": {
             "x": 0.6,
-            "y": 2.3
+            "y": 2.15
           },
           "startRotation": 0,
           "preplaced": true
@@ -11019,7 +11019,7 @@
         ]
       },
       "pieces": [
-        { "kind": "beam", "startPosition": { "x": -1.05, "y": 2.8 }, "startRotation": 0, "preplaced": true, "expendable": true },
+        { "kind": "beam", "startPosition": { "x": -1.05, "y": 2.7 }, "startRotation": 0, "preplaced": true, "expendable": true },
         { "kind": "hammer", "startPosition": { "x": 0.25, "y": 9.8 }, "startRotation": 0, "expendable": true },
         { "kind": "lookout", "startPosition": { "x": -2.05, "y": 5.0 }, "startRotation": 0 },
         { "kind": "mast", "startPosition": { "x": 4.2, "y": 3.9 }, "startRotation": 0 },
