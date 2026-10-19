@@ -102,7 +102,7 @@ namespace Gameplay.View
         public void Sync(Vec2 position, float rotation)
         {
             var t = transform;
-            t.position = new Vector3(position.X, position.Y, 0f);
+            t.position = new Vector3(position.X, position.Y, PieceDepth.For(_state, _ordinal));
             t.rotation = Quaternion.Euler(0f, 0f, rotation * Mathf.Rad2Deg);
 
             // Свет один на всю сцену, поэтому тень смещена в МИРОВЫХ координатах: у кувыркающейся
@@ -115,6 +115,13 @@ namespace Gameplay.View
         {
             _state = state;
             RefreshColor();
+
+            // TASK-631: слой — в том же вызове, что цвет и пунктир: тень и пунктир дочерние и едут с деталью, поэтому
+            // смена стейта переставляет всё одним кадром. Sync повторяет глубину каждый кадр, но стейт может прийти
+            // и без следующего Sync (кадр съёмки зовёт SetState после позы).
+            var p = transform.position;
+            p.z = PieceDepth.For(_state, _ordinal);
+            transform.position = p;
         }
 
         // Idle (waiting for a tap) reads differently from a released/placed piece. TASK-374 removed the balance "armed"
