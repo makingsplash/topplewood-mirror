@@ -134,10 +134,14 @@ namespace Gameplay.DI
         /// held by TourCatalogDataTests. Public static so that test reads THIS catalog, not a copy.
         ///
         /// sailboat (campaign index 0) → the "assemble the picture" FTUE: tap hull, tap sail, "Совпало".
+        /// potted_tree (campaign index 1, TASK-632) → the same recipe on the second level: tap pot, trunk, hammer (the
+        /// hammer fires the catapult that throws the pre-placed crown), "Совпало". Its own id, so its progress mark is
+        /// independent of the first tour's.
         /// </summary>
         public static TutorialCatalog BuildTutorialCatalog() => new(new Dictionary<string, ITourRecipe>
         {
             ["sailboat"] = new AssembleTourRecipe("first_tutorial"),
+            ["potted_tree"] = new AssembleTourRecipe("second_level_tutorial"),
         });
     }
 }
