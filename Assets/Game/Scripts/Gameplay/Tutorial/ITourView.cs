@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Gameplay.Core;
-using R3;
 
 namespace Gameplay.Tutorial
 {
@@ -35,25 +34,13 @@ namespace Gameplay.Tutorial
         }
     }
 
-    /// <summary>The "Совпало" beat: the level's target (union outline + slots) and the shape of every kind in it.</summary>
-    public readonly struct MatchCue
-    {
-        public readonly TargetFigure Target;
-        public readonly IReadOnlyDictionary<string, Shape> ShapesByKind;
-
-        public MatchCue(TargetFigure target, IReadOnlyDictionary<string, Shape> shapesByKind)
-        {
-            Target = target;
-            ShapesByKind = shapesByKind;
-        }
-    }
-
     /// <summary>
     /// The tutorial tour's view seam (TASK-613 plan §3.4) — the TOUR's alone. The Hint booster has its own
     /// <c>Gameplay.View.IPieceHighlightView</c>, so each view has exactly one writer: no keys, no shared
     /// <c>Clear()</c> that tears down the other consumer (TASK-383/244/550 closed by construction). Domain data flows
-    /// INTO the view (<see cref="Vec2"/>, <see cref="Shape"/>, <see cref="TargetFigure"/>), which is the permitted
-    /// direction; the view converts on its side. Steps are tested in EditMode against a fake of this interface.
+    /// INTO the view (<see cref="Vec2"/>, <see cref="Shape"/>), which is the permitted direction; the view converts on
+    /// its side. Steps are tested in EditMode against a fake of this interface. The TASK-613 "Совпало" beat
+    /// (<c>PlayMatch</c>) is gone since TASK-634: every win plays the common win beat «В рамку» instead.
     /// </summary>
     public interface ITourView
     {
@@ -67,10 +54,6 @@ namespace Gameplay.Tutorial
 
         /// <summary>The player tapped the piece: finger/contours out fast, the dim slower so the fall stays visible.</summary>
         void HideTap();
-
-        /// <summary>The "Совпало" beat. COLD: nothing plays until subscribed; emits once and completes when the beat is
-        /// over (≈<see cref="TourConfig.MatchSeconds"/>). Disposing it early stops the beat.</summary>
-        Observable<Unit> PlayMatch(MatchCue cue);
 
         /// <summary>Hide everything the tour shows, immediately.</summary>
         void Clear();

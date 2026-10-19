@@ -27,15 +27,17 @@ namespace Gameplay.PlayScreen
         /// figure while the pieces settle; a long beat here just DOUBLES that same pause and reads as a hang
         /// (owner live-playtest 2026-08-19). The lose beat stays 1.2s because there it buys comprehension (WHAT
         /// didn't fit), not savouring. Config, not a constant, so game-balancer can tune it without a code change.
+        /// Since TASK-634 this is the FALLBACK only: every win plays the <see cref="IWinBeat"/> «В рамку» instead, and
+        /// this pause runs when the beat has nothing to play with (no target card / figure / camera — e.g. bringup).
         /// </summary>
         public float WinSettleSeconds = 0.5f;
 
         /// <summary>
-        /// Ceiling on an armed <see cref="WinInterlude"/> (TASK-613): the flow waits for the number to finish OR for
-        /// this many seconds, whichever comes first, then shows the win screen anyway with a Warning. A broken view must
-        /// never hang a win forever. The tour's "Совпало" beat is ≈1.7 s, so 4 s is a safety net, not a tuning lever.
+        /// Ceiling on the <see cref="IWinBeat"/> (TASK-634): the flow waits for the beat to finish OR for this many
+        /// seconds, whichever comes first, then shows the win screen anyway with a Warning. A broken view must never hang
+        /// a win forever. The beat is ≈1.3 s (<c>WinBeatConfig.BeatEnd</c>), so 4 s is a safety net, not a tuning lever.
         /// </summary>
-        public float MaxWinInterludeSeconds = 4f;
+        public float MaxWinBeatSeconds = 4f;
 
         /// <summary>Banner intro (pop-in + fade) duration.</summary>
         public float BannerIntroSeconds = 0.45f;

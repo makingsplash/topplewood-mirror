@@ -56,7 +56,7 @@ namespace Gameplay.View
             var view = _preview.AddComponent<TargetPreviewView>();
             view.Initialize(level.Target, BuildKindMap(level), _config, UnityEngine.Camera.main,
                 _framingConfig.PreviewBandFraction, ScreenSafeInsets.Current());
-            _locator.Set(view.Pose, level.Target);
+            _locator.Set(view.Pose, level.Target, view.transform); // TASK-634: the win beat lands the figure on this root
         }
 
         // The preview shows the target only, so map from the pieces the player is given (Decoys are not

@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Game.Services.LogService;
 using Gameplay.Core;
-using Gameplay.PlayScreen;
 using Gameplay.View;
-using R3;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,29 +23,27 @@ namespace Gameplay.Tutorial
     /// goes through the card's pose (<see cref="TargetCardLocator"/>), read each frame, so the presenters' start order
     /// does not matter.
     ///
-    /// Draw order (children of the canvas): <see cref="SpotlightDim"/> (dim with cut-outs: the piece and the card on a
-    /// tap beat; the assembled figure and the card on "Совпало") → miss flash → ghost fill → contours → finger rig
-    /// (<c>TourFinger</c> component) → ✓ (<c>TourCheck</c> component). The two components come from
-    /// <see cref="TourAssets"/>; missing → code-built fallback with one warning.
+    /// Draw order (children of the canvas): <see cref="SpotlightDim"/> (dim with cut-outs: the piece and the card) →
+    /// miss flash → contours → finger rig (<c>TourFinger</c> component, from <see cref="TourAssets"/>; missing →
+    /// code-built fallback with one warning). The TASK-613 "Совпало" beat (ghost, ✓, match dim) is gone since TASK-634:
+    /// the win is drawn by the common win beat «В рамку» (<c>WinBeatView</c>) on every level.
     /// </summary>
     public sealed class TourView : ITourView, IDisposable
     {
         private readonly TourConfig _config;
         private readonly TargetCardLocator _card;
-        private readonly PlayScreenInteraction _interaction;
         private Overlay _overlay;
 
-        public TourView(TourConfig config, TargetCardLocator card, PlayScreenInteraction interaction)
+        public TourView(TourConfig config, TargetCardLocator card)
         {
             _config = config;
             _card = card;
-            _interaction = interaction;
         }
 
         private Overlay Get()
         {
             if (_overlay == null)
-                _overlay = Overlay.Create(_config, _card, _interaction);
+                _overlay = Overlay.Create(_config, _card);
             return _overlay;
         }
 
@@ -71,31 +67,11 @@ namespace Gameplay.Tutorial
                 _overlay.HideTap(true);
         }
 
-        public Observable<Unit> PlayMatch(MatchCue cue)
-        {
-            return Observable.Create<Unit>(observer =>
-            {
-                var overlay = Get();
-                var beat = overlay.PlayMatch(cue, () =>
-                {
-                    observer.OnNext(Unit.Default);
-                    observer.OnCompleted();
-                });
-                return Disposable.Create(() =>
-                {
-                    beat?.Kill();
-                    if (overlay != null)
-                        overlay.HideMatch(true);
-                });
-            });
-        }
-
         public void Clear()
         {
             if (_overlay == null)
                 return;
             _overlay.HideTap(false);
-            _overlay.HideMatch(false);
         }
 
         public void Dispose()
@@ -105,8 +81,8 @@ namespace Gameplay.Tutorial
             _overlay = null;
         }
 
-        /// <summary>MonoBehaviour driver on the overlay GameObject: owns the dim, contours, ghost, finger rig and ✓, their
-        /// tweens, and the per-frame re-projection in <see cref="LateUpdate"/>.</summary>
+        /// <summary>MonoBehaviour driver on the overlay GameObject: owns the dim, contours and finger rig, their tweens,
+        /// and the per-frame re-projection in <see cref="LateUpdate"/>.</summary>
         private sealed class Overlay : MonoBehaviour
         {
             private const int SortingOrder = 32100;
@@ -117,26 +93,17 @@ namespace Gameplay.Tutorial
 
             private TourConfig _config;
             private TargetCardLocator _card;
-            private PlayScreenInteraction _interaction;
-            private IDisposable _hold;
-            private Tween _holdCeiling;
             private RectTransform _canvasRect;
             private UnityEngine.Camera _camera; // fully-qualified: Gameplay.Camera namespace shadows the bare name
 
             private SpotlightDim _dim;
             private UiPolygonFill _flash;
-            private UiPolygonFill _ghostFill;
             private TourFingerRig _rig;
             private RectTransform _rigRt;
-            private RectTransform _check;
             private RectTransform _contourRoot;
 
             private Tracked _piece;
             private readonly List<Tracked> _slots = new();
-            private readonly List<Tracked> _matchField = new();
-            private readonly List<Tracked> _matchCard = new();
-            private readonly List<Tracked> _ghostContours = new();
-            private readonly List<FillSource> _ghostPolys = new();
             private readonly List<CutSource> _cuts = new();
             private readonly List<SpotlightCutout> _cutoutScratch = new();
             private readonly List<Vector2[]> _fillPoints = new();
@@ -144,15 +111,13 @@ namespace Gameplay.Tutorial
             private FillSource _flashPoly;
 
             private bool _fingerShown;
-            private float _ghostT;
             private float _halfGapWorld = float.PositiveInfinity;
             private Tween _delay;
             private Tween _dimTween;
             private Tween _flashTween;
             private Tween _missTween;
-            private DG.Tweening.Sequence _match; // qualified: the Gameplay.Sequence namespace shadows the bare name
 
-            public static Overlay Create(TourConfig config, TargetCardLocator card, PlayScreenInteraction interaction)
+            public static Overlay Create(TourConfig config, TargetCardLocator card)
             {
                 var go = new GameObject("TourOverlay");
                 DontDestroyOnLoad(go);
@@ -168,7 +133,6 @@ namespace Gameplay.Tutorial
                 // Deliberately NO GraphicRaycaster: the overlay must never intercept the gameplay tap.
 
                 var overlay = go.AddComponent<Overlay>();
-                overlay._interaction = interaction;
                 overlay.Build(go, config, card);
                 return overlay;
             }
@@ -184,13 +148,10 @@ namespace Gameplay.Tutorial
                 _dim.Alpha = 0f;
 
                 _flash = NewFill("MissFlash");
-                _ghostFill = NewFill("GhostFill");
                 _contourRoot = NewNode("Contours", _canvasRect);
                 _piece = NewContour("PieceContour", config.FieldOutlineColor, config.FieldOutlineWidth);
 
-                var assets = TourAssets.Load();
-                BuildRig(assets);
-                BuildCheck(assets);
+                BuildRig(TourAssets.Load());
             }
 
             private void BuildRig(TourAssets assets)
@@ -215,32 +176,9 @@ namespace Gameplay.Tutorial
                 _rig.gameObject.SetActive(false);
             }
 
-            private void BuildCheck(TourAssets assets)
-            {
-                var prefab = assets == null ? null : assets.Check;
-                if (prefab != null)
-                {
-                    _check = (RectTransform)Instantiate(prefab, _canvasRect, false).transform;
-                }
-                else
-                {
-                    if (assets != null)
-                        Debug.unityLogger.Log(LogType.Warning,
-                            $"[{LogCategory.Tutorial}] TourAssets has no TourCheck prefab — code-built ✓ (white square)");
-                    _check = NewNode("TourCheck(fallback)", _canvasRect);
-                    _check.sizeDelta = Vector2.one * _config.CheckSize;
-                    _check.gameObject.AddComponent<CanvasRenderer>();
-                    _check.gameObject.AddComponent<Image>().raycastTarget = false;
-                }
-                _check.anchorMin = _check.anchorMax = new Vector2(0.5f, 0.5f);
-                _check.pivot = new Vector2(0.5f, 0.5f);
-                _check.gameObject.SetActive(false);
-            }
-
             // ── Tap beat ─────────────────────────────────────────────────────────────────────────────────────────
             public void ShowTap(TapCue cue)
             {
-                HideMatch(false);
                 HideTap(false);
                 gameObject.SetActive(true);
 
@@ -339,15 +277,12 @@ namespace Gameplay.Tutorial
                 }
                 else
                 {
-                    CancelHold();
                     _dimTween?.Kill();
                     _dim.Alpha = 0f;
                     _cuts.Clear();
                     _dim.ClearCutouts();
                 }
             }
-
-            private void OnDestroy() => CancelHold();
 
             /// <summary>On each contact of the finger: the piece and slot contours flash together (spec 02 §3 — one
             /// synchronous flash links "tap here" with "it goes there").</summary>
@@ -366,178 +301,8 @@ namespace Gameplay.Tutorial
                     s.Graphic.Width = _config.CardOutlineWidth * k;
             }
 
-            // ── "Совпало" beat ───────────────────────────────────────────────────────────────────────────────────
-            /// <summary>Scenario 01 §3 «Такт 3» on one unscaled timeline: dim (lighter), the same contours draw on the
-            /// figure and on the card, a ghost of the target flies from the card onto the figure and lands, a shared
-            /// flash, the ✓ on the card's corner, a hold. <paramref name="done"/> fires at <see cref="TourConfig.MatchSeconds"/>.</summary>
-            public Tween PlayMatch(MatchCue cue, Action done)
-            {
-                HideTap(false);
-                HideMatch(false);
-                gameObject.SetActive(true);
-
-                // The figure is drawn as its SLOTS — each piece's silhouette at its slot pose — not as
-                // target.Outline: the manifest's union outline can be a coarse box (sailboat's is its bounding
-                // rectangle, seen on the live frame), which would outline "a box" instead of "your figure". The target
-                // is authored in field world coordinates (PoseMatchEvaluator compares slot and piece poses directly),
-                // so on the field the slots ARE the assembled figure, and mapped by the card pose they are the picture.
-                _cuts.Clear();
-                var drawn = 0;
-                if (cue.Target?.Slots != null && cue.ShapesByKind != null)
-                    foreach (var slot in cue.Target.Slots)
-                    {
-                        if (!cue.ShapesByKind.TryGetValue(slot.Kind, out var shape) || shape == null)
-                            continue;
-                        var points = Geometry.WorldVertices(ShapeVisualOutline.Build(shape), slot.Position, slot.Rotation);
-                        Pooled(_matchField, "MatchFieldContour", _config.FieldOutlineColor, _config.MatchFieldOutlineWidth)
-                            .Set(points, PointSpace.Field);
-                        Pooled(_matchCard, "MatchCardContour", _config.CardOutlineColor, _config.MatchCardOutlineWidth)
-                            .Set(points, PointSpace.Card);
-                        Pooled(_ghostContours, "GhostContour", _config.FieldOutlineColor, _config.GhostOutlineWidth)
-                            .Set(points, PointSpace.Ghost);
-                        var fill = FillSource.Build(points);
-                        if (fill != null)
-                            _ghostPolys.Add(fill);
-                        _cuts.Add(new CutSource(points, PointSpace.Field, _config.CutoutPad, _config.CutoutFeather, false));
-                        drawn++;
-                    }
-                AddCardCut();
-
-                if (drawn == 0)
-                    Debug.unityLogger.Log(LogType.Warning,
-                        $"[{LogCategory.Tutorial}] Match beat: target has no drawable slots — only the dim and the hold play");
-
-                var c = _config;
-                SetMatchReveal(0f);
-                SetGhost(0f, 0f);
-                _check.gameObject.SetActive(false);
-
-                _match = DOTween.Sequence()
-                    .Insert(0f, DOVirtual.Float(0f, c.MatchDimAlpha, c.DimInSeconds, a => _dim.Alpha = a).SetEase(Ease.OutQuad))
-                    .Insert(c.MatchContourStart, DOVirtual.Float(0f, 1f, c.MatchContourSeconds, SetMatchReveal).SetEase(Ease.OutQuad))
-                    // Visual state lives in the tweens' setters, not in inserted callbacks: a Goto (scrubbing the
-                    // timeline for a frame, docs/platform/unity-gotchas.md) lands every element where it belongs.
-                    .Insert(c.GhostStart, DOVirtual.Float(0f, 1f, c.GhostEnd - c.GhostStart, t => SetGhost(t, c.GhostAlpha))
-                        .SetEase(Ease.InOutSine))
-                    // Shared flash: the landed ghost brightens and dissolves, the figure's contours swell with it.
-                    .Insert(c.GhostEnd, DOVirtual.Float(0f, 1f, c.MatchFlashEnd - c.GhostEnd, MatchFlash).SetEase(Ease.Linear))
-                    .Insert(c.CheckStart, DOVirtual.Float(0f, 1f, c.CheckEnd - c.CheckStart, CheckPop).SetEase(Ease.Linear))
-                    .InsertCallback(c.MatchSeconds, () => done?.Invoke())
-                    .SetUpdate(true)
-                    .SetLink(gameObject);
-                Reposition();
-                return _match;
-            }
-
-            private void SetMatchReveal(float r)
-            {
-                foreach (var t in _matchField)
-                    if (t.Active)
-                        t.Graphic.Reveal = r;
-                foreach (var t in _matchCard)
-                    if (t.Active)
-                        t.Graphic.Reveal = r;
-            }
-
-            private void SetGhost(float t, float alpha)
-            {
-                _ghostT = t;
-                _ghostFill.color = new Color(1f, 1f, 1f, alpha);
-                _ghostFill.enabled = alpha > 0.001f && _ghostPolys.Count > 0;
-                foreach (var g in _ghostContours)
-                    if (g.Active)
-                    {
-                        g.Graphic.enabled = _ghostFill.enabled;
-                        g.SetAlpha(Mathf.Clamp01(alpha / Mathf.Max(_config.GhostAlpha, 0.001f)));
-                    }
-            }
-
-            // f: 0 → 1 over the flash window. Ghost alpha rises to 0.85 at the middle, then to 0; field contours swell.
-            private void MatchFlash(float f)
-            {
-                var bell = 1f - Mathf.Abs(f * 2f - 1f);
-                var alpha = f < 0.5f ? Mathf.Lerp(_config.GhostAlpha, 0.85f, bell) : 0.85f * bell;
-                SetGhost(1f, alpha);
-                foreach (var t in _matchField)
-                    if (t.Active)
-                        t.Graphic.Width = _config.MatchFieldOutlineWidth * (1f + 0.6f * bell);
-            }
-
-            // f: 0 → 1 over CheckStart..CheckEnd: scale 0.2 → 1.1 (first 60 %) → 1.0.
-            private void CheckPop(float f)
-            {
-                var s = f < 0.6f
-                    ? Mathf.Lerp(0.2f, 1.1f, DOVirtual.EasedValue(0f, 1f, f / 0.6f, Ease.OutQuad))
-                    : Mathf.Lerp(1.1f, 1f, (f - 0.6f) / 0.4f);
-                _check.localScale = Vector3.one * s;
-                if (!_check.gameObject.activeSelf)
-                    _check.gameObject.SetActive(true);
-            }
-
-            /// <param name="fade">True when the beat ends into the win screen: the dim fades over
-            /// <see cref="TourConfig.MatchDimOutSeconds"/> while the screen's own reveal plays — no un-dimmed frame.</param>
-            public void HideMatch(bool fade)
-            {
-                _match?.Kill();
-                _match = null;
-                foreach (var t in _matchField)
-                    t.Clear();
-                foreach (var t in _matchCard)
-                    t.Clear();
-                foreach (var t in _ghostContours)
-                    t.Clear();
-                _ghostPolys.Clear();
-                _ghostFill.enabled = false;
-                _ghostFill.ClearPolygons();
-                _check.gameObject.SetActive(false);
-                if (fade)
-                {
-                    HoldDimUntilCovered();
-                }
-                else if (!_piece.Active)
-                {
-                    CancelHold();
-                    _dimTween?.Kill();
-                    _dim.Alpha = 0f;
-                    _cuts.Clear();
-                    _dim.ClearCutouts();
-                }
-            }
-
-            /// <summary>The beat is over and the win screen is on its way (<c>Service.UI.Show</c> loads it). The dim stays
-            /// until a screen covers the field (<see cref="PlayScreenInteraction.IsCoveredByScreen"/>), then fades while
-            /// the screen's own reveal plays — so there is no un-dimmed frame between the beat and the screen even when
-            /// the load takes a few frames. No screen within <see cref="TourConfig.MatchDimHoldMaxSeconds"/> (bringup
-            /// shows a banner, not a UiService screen) → fade anyway.</summary>
-            private void HoldDimUntilCovered()
-            {
-                CancelHold();
-                void Release()
-                {
-                    CancelHold();
-                    FadeDim(0f, _config.MatchDimOutSeconds, () => _cuts.Clear());
-                }
-                if (_interaction == null || _interaction.IsCoveredByScreen.Value)
-                {
-                    Release();
-                    return;
-                }
-                _hold = _interaction.IsCoveredByScreen.Where(covered => covered).Take(1).Subscribe(_ => Release());
-                _holdCeiling = DOVirtual.DelayedCall(_config.MatchDimHoldMaxSeconds, Release, ignoreTimeScale: true)
-                    .SetLink(gameObject);
-            }
-
-            private void CancelHold()
-            {
-                _hold?.Dispose();
-                _hold = null;
-                _holdCeiling?.Kill();
-                _holdCeiling = null;
-            }
-
             private void FadeDim(float to, float seconds, Action onDone = null)
             {
-                CancelHold();
                 _dimTween?.Kill();
                 _dimTween = DOVirtual.Float(_dim.Alpha, to, seconds, a => _dim.Alpha = a)
                     .SetEase(Ease.OutQuad).SetUpdate(true).SetLink(gameObject);
@@ -570,55 +335,16 @@ namespace Gameplay.Tutorial
                 Project(_piece, pose);
                 foreach (var s in _slots)
                     Project(s, pose);
-                foreach (var t in _matchField)
-                    Project(t, pose);
-                foreach (var t in _matchCard)
-                    Project(t, pose);
-                foreach (var t in _ghostContours)
-                    Project(t, pose);
 
                 ProjectFills(pose);
                 ProjectCuts(pose);
 
                 if (_fingerShown && _piece.Active && _piece.Projected)
                     PlaceFinger();
-
-                if (_check.gameObject.activeSelf && pose.Valid && pose.FrameWorldCorners is { Length: >= 3 }
-                    && OverlayProjection.TryToCanvas(_camera, _canvasRect, pose.FrameWorldCorners[2], out var corner))
-                    _check.anchoredPosition = PlaceCheck(corner);
             }
 
-            /// <summary>✓ centre = the frame's top-right corner moved inward by <see cref="TourConfig.CheckInset"/> (spec
-            /// 02 §3), then kept whole inside the safe area: the card hangs right under the safe top, so on sailboat the
-            /// spec rule alone put the badge's top 8 px off-screen (frame K4, TASK-613 run 2).</summary>
-            private Vector2 PlaceCheck(Vector2 frameTopRight)
-            {
-                var p = frameTopRight + new Vector2(-_config.CheckInset, -_config.CheckInset);
-                var half = _config.CheckSize * 0.5f + _config.CheckEdgeMargin;
-                var safe = SafeRect();
-                p.x = Mathf.Min(p.x, safe.xMax - half);
-                p.y = Mathf.Min(p.y, safe.yMax - half);
-                return p;
-            }
-
-            private Vector3 ToWorld(Vec2 p, PointSpace space, TargetCardPose pose)
-            {
-                switch (space)
-                {
-                    case PointSpace.Card:
-                        return pose.ToWorld(p);
-                    case PointSpace.Ghost:
-                        // Interpolate the MAP, not the vertices (plan §3.5): at t = 1 the ghost is the target in field
-                        // coordinates, i.e. exactly the assembled figure.
-                        var e = _ghostT;
-                        var centre = new Vector3(pose.FigureCenter.X, pose.FigureCenter.Y, pose.WorldOrigin.z);
-                        var origin = Vector3.Lerp(pose.WorldOrigin, centre, e);
-                        var scale = Mathf.Lerp(pose.WorldScale, 1f, e);
-                        return origin + new Vector3((p.X - pose.FigureCenter.X) * scale, (p.Y - pose.FigureCenter.Y) * scale, 0f);
-                    default:
-                        return new Vector3(p.X, p.Y, 0f);
-                }
-            }
+            private Vector3 ToWorld(Vec2 p, PointSpace space, TargetCardPose pose) =>
+                space == PointSpace.Card ? pose.ToWorld(p) : new Vector3(p.X, p.Y, 0f);
 
             private void Project(Tracked t, TargetCardPose pose)
             {
@@ -639,18 +365,6 @@ namespace Gameplay.Tutorial
 
             private void ProjectFills(TargetCardPose pose)
             {
-                if (_ghostFill.enabled && pose.Valid)
-                {
-                    _fillPoints.Clear();
-                    _fillTris.Clear();
-                    foreach (var f in _ghostPolys)
-                        if (f.Project(this, PointSpace.Ghost, pose))
-                        {
-                            _fillPoints.Add(f.Scratch);
-                            _fillTris.Add(f.Triangles);
-                        }
-                    _ghostFill.SetPolygons(_fillPoints, _fillTris);
-                }
                 if (_flash.enabled && _flashPoly != null && _flashPoly.Project(this, PointSpace.Field, pose))
                 {
                     _fillPoints.Clear();
@@ -875,8 +589,6 @@ namespace Gameplay.Tutorial
             Field,
             /// <summary>Target space drawn on the card (<see cref="TargetCardPose.ToWorld"/>).</summary>
             Card,
-            /// <summary>Target space on the ghost's flight from the card to the field.</summary>
-            Ghost,
         }
 
         /// <summary>One dim cut-out: source points, their per-frame projection, and what was last sent to the dim.</summary>

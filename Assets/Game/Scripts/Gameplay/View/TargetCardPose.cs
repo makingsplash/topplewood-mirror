@@ -7,8 +7,8 @@ namespace Gameplay.View
     /// Where the target card sits in the world (TASK-613 plan §3.5, T2): ONE affine map "target space → world" plus the
     /// card's outer frame. The target is authored in the field's world coordinates (<c>PoseMatchEvaluator</c> compares
     /// slot and piece positions directly), and the card draws it shifted by the figure centre and uniformly scaled
-    /// (<see cref="TargetPreviewView"/>), so a slot, the card cut-out, the ✓ anchor and the "ghost" start are all
-    /// derived from this one pose — no second set of numbers to drift.
+    /// (<see cref="TargetPreviewView"/>), so a slot, the card cut-out and the win beat's landing (TASK-634; the TASK-613 ✓
+    /// anchor and "ghost" start used it too) are all derived from this one pose — no second set of numbers to drift.
     /// </summary>
     public readonly struct TargetCardPose
     {

@@ -4,12 +4,13 @@ using UnityEngine;
 namespace Gameplay.Tutorial
 {
     /// <summary>
-    /// The tour's prefab channel (TASK-613 plan 03 §1/§3.10): serialized references to the two compiled UI components
-    /// (<c>TourFinger</c>, <c>TourCheck</c> in <c>Assets/Game/Prefabs/UI/Components</c>), in an asset under
-    /// <c>Resources</c> so the tour loads them SYNCHRONOUSLY — it is armed inside the <c>LevelLoaded</c> delivery, where an
-    /// async load would create a "step armed, view not there yet" state. A reference (not a path string) also pulls the
-    /// prefabs and their sprites into the player build by construction. Missing asset or reference → one warning and the
-    /// code-built fallback (<see cref="TourFingerRig.BuildFallback"/>): the tour never breaks silently.
+    /// The tour's prefab channel (TASK-613 plan 03 §1/§3.10): a serialized reference to the compiled UI component
+    /// <c>TourFinger</c> (in <c>Assets/Game/Prefabs/UI/Components</c>), in an asset under <c>Resources</c> so the tour
+    /// loads it SYNCHRONOUSLY — it is armed inside the <c>LevelLoaded</c> delivery, where an async load would create a
+    /// "step armed, view not there yet" state. A reference (not a path string) also pulls the prefab and its sprites into
+    /// the player build by construction. Missing asset or reference → one warning and the code-built fallback
+    /// (<see cref="TourFingerRig.BuildFallback"/>): the tour never breaks silently. (The second component, the ✓
+    /// <c>TourCheck</c>, left with the "Совпало" beat in TASK-634.)
     /// </summary>
     public sealed class TourAssets : ScriptableObject
     {
@@ -17,10 +18,8 @@ namespace Gameplay.Tutorial
         public const string ResourcePath = "Tutorial/TourAssets";
 
         [SerializeField] private GameObject finger;
-        [SerializeField] private GameObject check;
 
         public GameObject Finger => finger;
-        public GameObject Check => check;
 
         private static TourAssets _instance;
         private static bool _loaded;
@@ -34,7 +33,7 @@ namespace Gameplay.Tutorial
             _instance = Resources.Load<TourAssets>(ResourcePath);
             if (_instance == null)
                 Debug.unityLogger.Log(LogType.Warning,
-                    $"[{LogCategory.Tutorial}] no Resources/{ResourcePath} asset — tour finger/✓ fall back to code-built ones");
+                    $"[{LogCategory.Tutorial}] no Resources/{ResourcePath} asset — the tour finger falls back to a code-built one");
             return _instance;
         }
     }

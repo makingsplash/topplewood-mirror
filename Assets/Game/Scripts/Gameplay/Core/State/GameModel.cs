@@ -17,6 +17,7 @@ namespace Gameplay.Core
         private readonly Subject<int> _pieceReleased = new();
         private readonly ReactiveProperty<bool> _fieldAtRest = new(false);
         private readonly List<PieceInstance> _pieces = new();
+        private IReadOnlyList<WinFigurePiece> _winFigure = System.Array.Empty<WinFigurePiece>();
 
         public ReadOnlyReactiveProperty<GamePhase> Phase => _phase;
         public ReadOnlyReactiveProperty<GameOutcome> Outcome => _outcome;
@@ -43,6 +44,14 @@ namespace Gameplay.Core
         /// </summary>
         public ReadOnlyReactiveProperty<bool> FieldAtRest => _fieldAtRest;
 
+        /// <summary>
+        /// The won figure (TASK-634): exactly the pieces the judge paired with target slots, with their landing
+        /// angles. Set by the mechanic controller BEFORE <see cref="Resolve"/>(Won), so a synchronous subscriber of
+        /// <see cref="Outcome"/> already reads it; empty otherwise and cleared on every (re)load. The win beat flies
+        /// these pieces into the target card. Observe-only and transient (not in any snapshot): poseHash unaffected.
+        /// </summary>
+        public IReadOnlyList<WinFigurePiece> WinFigure => _winFigure;
+
         public LevelData CurrentLevel { get; private set; }
         public IReadOnlyList<PieceInstance> Pieces => _pieces;
 
@@ -65,6 +74,7 @@ namespace Gameplay.Core
             AttemptsUsed = 0;
             _outcome.Value = GameOutcome.None;
             _fieldAtRest.Value = false;
+            _winFigure = System.Array.Empty<WinFigurePiece>();
 
             var id = level.Seed * 1000;
             for (var i = 0; i < level.Pieces.Count; i++)
@@ -93,6 +103,11 @@ namespace Gameplay.Core
         /// <summary>Mechanic controller only: publish whether the field is at global rest with play continuing
         /// (see <see cref="FieldAtRest"/>).</summary>
         public void SetFieldAtRest(bool atRest) => _fieldAtRest.Value = atRest;
+
+        /// <summary>Mechanic controller only: publish the won figure right before resolving Won (see
+        /// <see cref="WinFigure"/>).</summary>
+        public void SetWinFigure(IReadOnlyList<WinFigurePiece> figure) =>
+            _winFigure = figure ?? System.Array.Empty<WinFigurePiece>();
 
         public void Resolve(GameOutcome outcome)
         {

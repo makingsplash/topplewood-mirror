@@ -7,7 +7,8 @@ namespace Gameplay.Tutorial
 {
     /// <summary>
     /// "Assemble the picture" tour (TASK-613): one <see cref="TapPieceStep"/> per entry of the level's certified
-    /// <see cref="LevelData.WinningOrder"/> (ordinal 1..n), then <see cref="MatchTargetStep"/>. Replaces the hardcoded
+    /// <see cref="LevelData.WinningOrder"/> (ordinal 1..n), then <see cref="AwaitWinStep"/> (TASK-634; was the
+    /// "Совпало" beat). Replaces the hardcoded
     /// <c>new[] {0, 1}</c> sailboat order (TASK-078/079 debt): any level put in the catalog with this recipe gets its
     /// own beats from its own data. No order → no tour, loudly: the tour must not invent an order the sim never
     /// certified (the same rule as the Hint booster's "never guess").
@@ -34,7 +35,7 @@ namespace Gameplay.Tutorial
             var steps = new List<ITutorialStep>(order.Count + 1);
             for (var i = 0; i < order.Count; i++)
                 steps.Add(new TapPieceStep(order[i], i + 1));
-            steps.Add(new MatchTargetStep());
+            steps.Add(new AwaitWinStep());
             return new TutorialDefinition(_tourId, steps);
         }
     }

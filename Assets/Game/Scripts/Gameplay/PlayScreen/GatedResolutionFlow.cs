@@ -14,7 +14,8 @@ namespace Gameplay.PlayScreen
     /// tap-gated screen, each after a short settle-beat — the player never gets slammed straight to a reload:
     /// <list type="bullet">
     /// <item><c>Lost</c> → <see cref="LoseScreen"/>, waits for the "Try again" tap (TASK-154, unchanged).</item>
-    /// <item><c>Won</c> → the settle-beat lingers on the ASSEMBLED figure (the visual reward, design §2), then
+    /// <item><c>Won</c> → the win beat «В рамку» (TASK-634: the assembled figure bounces and flies into the target
+    /// card) — or, when there is nothing to play it with, the plain settle-beat on the ASSEMBLED figure — then
     /// <see cref="Ui.Screens.WinScreen"/> waits for the "Continue"/"Next" tap (TASK-157; "Next" under "ALL DONE!" on
     /// the last line-up level, TASK-528). This replaces the old
     /// silent auto-advance.</item>
@@ -39,23 +40,23 @@ namespace Gameplay.PlayScreen
     /// Both panels play their own show-animation, which is data on the prefab (<c>ScreenReveal</c>, TASK-425 — the
     /// "no fade" of TASK-121/155 is long gone, this summary said otherwise until TASK-613).
     ///
-    /// Win interlude (TASK-613): if someone armed a <see cref="WinInterlude"/> (today: the tutorial's "Совпало" beat),
-    /// the Won path plays THAT instead of the plain settle-beat and shows the panel when it ends — or after
-    /// <see cref="PlayScreenConfig.MaxWinInterludeSeconds"/> with a Warning, so a broken number never hangs a win.
-    /// Levels without an armed number keep the plain <see cref="PlayScreenConfig.WinSettleSeconds"/> beat.
+    /// Win beat (TASK-634, replaced the TASK-613 one-shot interlude): on EVERY Won the flow asks
+    /// <see cref="IWinBeat.TryBegin"/> and shows the panel when the beat completes — or after
+    /// <see cref="PlayScreenConfig.MaxWinBeatSeconds"/> with a Warning, so a broken view never hangs a win. A beat that
+    /// cannot begin (no card / figure / camera) falls back to the plain <see cref="PlayScreenConfig.WinSettleSeconds"/>.
     /// </summary>
     public sealed class GatedResolutionFlow : ILevelResolutionFlow, IDisposable
     {
         private readonly PlayScreenConfig _config;
         private readonly PlayScreenInteraction _interaction;
-        private readonly WinInterlude _interlude;
+        private readonly IWinBeat _beat;
         private readonly CancellationTokenSource _cts = new();
 
-        public GatedResolutionFlow(PlayScreenConfig config, PlayScreenInteraction interaction, WinInterlude interlude)
+        public GatedResolutionFlow(PlayScreenConfig config, PlayScreenInteraction interaction, IWinBeat beat)
         {
             _config = config;
             _interaction = interaction;
-            _interlude = interlude;
+            _beat = beat;
         }
 
         public void Present(GameOutcome outcome, Action applyTransition, bool isFinalLevel)
@@ -80,12 +81,11 @@ namespace Gameplay.PlayScreen
         {
             _interaction.IsBusy.Value = true;
 
-            // An armed interlude (the tour's "Совпало" beat) replaces the settle-beat; otherwise the settle-beat on the
-            // ASSEMBLED figure — the visual reward — before the panel (design 01 §2). Its number lives in
-            // PlayScreenConfig.WinSettleSeconds (0.5 s since the owner's 2026-08-19 playtest — see the config); config,
-            // not a constant — open tuning lever for game-balancer.
-            if (_interlude.TryTake(out var play))
-                await PlayInterludeAsync(play, ct);
+            // The win beat «В рамку» (TASK-634) on every win; when it cannot begin, the settle-beat on the ASSEMBLED
+            // figure before the panel (design 01 §2; PlayScreenConfig.WinSettleSeconds, 0.5 s since the owner's
+            // 2026-08-19 playtest — config, not a constant).
+            if (_beat.TryBegin(out var beat))
+                await PlayBeatAsync(beat, ct);
             else
                 await UniTask.Delay(TimeSpan.FromSeconds(_config.WinSettleSeconds), cancellationToken: ct);
 
@@ -99,18 +99,18 @@ namespace Gameplay.PlayScreen
             }, isFinalLevel);
         }
 
-        // Wait for the number to complete OR for the ceiling, whichever first. The subscription is disposed on the way
-        // out either way — that is what stops an over-long number before the panel shows.
-        private async UniTask PlayInterludeAsync(Func<Observable<Unit>> play, CancellationToken ct)
+        // Wait for the beat to complete OR for the ceiling, whichever first. The subscription is disposed on the way
+        // out either way — that is what stops an over-long beat before the panel shows.
+        private async UniTask PlayBeatAsync(Observable<Unit> beat, CancellationToken ct)
         {
             var done = new UniTaskCompletionSource();
-            using var subscription = play().Subscribe(_ => { }, _ => done.TrySetResult());
+            using var subscription = beat.Subscribe(_ => { }, _ => done.TrySetResult());
             var winner = await UniTask.WhenAny(
                 done.Task,
-                UniTask.Delay(TimeSpan.FromSeconds(_config.MaxWinInterludeSeconds), cancellationToken: ct));
+                UniTask.Delay(TimeSpan.FromSeconds(_config.MaxWinBeatSeconds), cancellationToken: ct));
             if (winner != 0)
                 UnityEngine.Debug.unityLogger.Log(UnityEngine.LogType.Warning,
-                    $"[PlayScreen] win interlude did not finish in {_config.MaxWinInterludeSeconds:0.#}s — showing the win screen");
+                    $"[PlayScreen] win beat did not finish in {_config.MaxWinBeatSeconds:0.#}s — showing the win screen");
         }
 
         private async UniTaskVoid PresentLostAsync(Action applyTransition, CancellationToken ct)

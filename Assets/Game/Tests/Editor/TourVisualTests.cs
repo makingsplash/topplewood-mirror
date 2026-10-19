@@ -11,8 +11,9 @@ namespace Gameplay.Tests
     /// <summary>TASK-613 run 2: the two parts of the tour visual that break SILENTLY — a frame still renders, just wrong.
     /// (1) Every pass of <see cref="SpotlightDim"/> carries a real stencil state: <c>StencilMaterial.Add</c> hands back
     /// the base material when the ref is 0 and the colour mask is All, and then the dim paints over its own holes.
-    /// (2) The prefab channel <see cref="TourAssets"/> resolves both compiled components with the rig's bindings — else
-    /// the tour runs on the code-built fallback and only a warning says so.</summary>
+    /// (2) The prefab channel <see cref="TourAssets"/> resolves the compiled finger component with the rig's bindings —
+    /// else the tour runs on the code-built fallback and only a warning says so. (The ✓ component left with the
+    /// "Совпало" beat in TASK-634.)</summary>
     [TestFixture]
     public sealed class TourVisualTests
     {
@@ -48,12 +49,11 @@ namespace Gameplay.Tests
         }
 
         [Test]
-        public void TourAssets_ResolvesBothComponents_WithTheRigBindings()
+        public void TourAssets_ResolvesTheFinger_WithTheRigBindings()
         {
             var assets = Resources.Load<TourAssets>(TourAssets.ResourcePath);
             Assert.IsNotNull(assets, $"Resources/{TourAssets.ResourcePath} is missing — the tour would use the fallback");
             Assert.IsNotNull(assets.Finger, "TourAssets.finger is empty");
-            Assert.IsNotNull(assets.Check, "TourAssets.check is empty");
 
             var rig = assets.Finger.GetComponent<TourFingerRig>();
             Assert.IsNotNull(rig, "the finger prefab has no TourFingerRig (component spec 'controller')");

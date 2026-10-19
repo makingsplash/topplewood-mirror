@@ -26,19 +26,19 @@ namespace Gameplay.PlayScreen
         private readonly IPlayScreenView _view;
         private readonly PlayScreenConfig _config;
         private readonly PlayScreenInteraction _interaction;
-        private readonly WinInterlude _interlude;
+        private readonly IWinBeat _beat;
         private readonly CancellationTokenSource _cts = new();
-        private readonly SerialDisposable _interludeSubscription = new();
+        private readonly SerialDisposable _beatSubscription = new();
 
         public SequencedResolutionFlow(
             ISequenceFactory factory, IPlayScreenView view, PlayScreenConfig config, PlayScreenInteraction interaction,
-            WinInterlude interlude)
+            IWinBeat beat)
         {
             _factory = factory;
             _view = view;
             _config = config;
             _interaction = interaction;
-            _interlude = interlude;
+            _beat = beat;
         }
 
         // isFinalLevel is presentational meta for the prod win screen (TASK-157); the bringup banner is
@@ -47,18 +47,18 @@ namespace Gameplay.PlayScreen
         {
             _interaction.IsBusy.Value = true;
 
-            // TASK-613: an armed win interlude (the tour's "Совпало" beat) plays BEFORE the banner, same contract as
-            // the prod GatedResolutionFlow — without this the beat would never finish in bringup and the tour would
-            // replay on every visit. Ceiling: PlayScreenConfig.MaxWinInterludeSeconds.
-            if (outcome == GameOutcome.Won && _interlude.TryTake(out var play))
+            // TASK-634: the win beat «В рамку» plays BEFORE the banner, same contract as the prod GatedResolutionFlow.
+            // Ceiling: PlayScreenConfig.MaxWinBeatSeconds. Bringup usually has no target card — then TryBegin is false
+            // (with its Warning) and the banner starts at once, as before.
+            if (outcome == GameOutcome.Won && _beat.TryBegin(out var beat))
             {
-                PlayInterlude(play, () => StartSequence(outcome, applyTransition));
+                PlayBeat(beat, () => StartSequence(outcome, applyTransition));
                 return;
             }
             StartSequence(outcome, applyTransition);
         }
 
-        private void PlayInterlude(Func<Observable<Unit>> play, Action then)
+        private void PlayBeat(Observable<Unit> beat, Action then)
         {
             var finished = false;
             void Finish(bool timedOut)
@@ -68,16 +68,16 @@ namespace Gameplay.PlayScreen
                 finished = true;
                 if (timedOut)
                     UnityEngine.Debug.unityLogger.Log(UnityEngine.LogType.Warning,
-                        $"[PlayScreen] win interlude did not finish in {_config.MaxWinInterludeSeconds:0.#}s — showing the banner");
-                _interludeSubscription.Disposable = null; // stop the number (and its ceiling) before the banner
+                        $"[PlayScreen] win beat did not finish in {_config.MaxWinBeatSeconds:0.#}s — showing the banner");
+                _beatSubscription.Disposable = null; // stop the beat (and its ceiling) before the banner
                 then();
             }
 
-            var ceiling = Observable.Timer(TimeSpan.FromSeconds(_config.MaxWinInterludeSeconds))
+            var ceiling = Observable.Timer(TimeSpan.FromSeconds(_config.MaxWinBeatSeconds))
                 .Subscribe(_ => Finish(true));
-            var number = play().Subscribe(_ => { }, _ => Finish(false));
+            var number = beat.Subscribe(_ => { }, _ => Finish(false));
             if (!finished)
-                _interludeSubscription.Disposable = Disposable.Combine(number, ceiling);
+                _beatSubscription.Disposable = Disposable.Combine(number, ceiling);
             else
             {
                 number.Dispose();
@@ -97,7 +97,7 @@ namespace Gameplay.PlayScreen
 
         public void Dispose()
         {
-            _interludeSubscription.Dispose();
+            _beatSubscription.Dispose();
             if (!_cts.IsCancellationRequested)
                 _cts.Cancel();
             _cts.Dispose();

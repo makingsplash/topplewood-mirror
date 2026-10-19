@@ -111,6 +111,27 @@ namespace Gameplay.View
                 _shadow.localPosition = PieceShadow.LocalOffset(rotation, _mesh);
         }
 
+        /// <summary>
+        /// TASK-634: вес тени в полёте бита «В рамку». У слотов картинки-цели тени нет, и тень прилетевшей детали
+        /// выглядывала бы из-под картинки, поэтому в полёте она «отрывается от земли»: сдвиг тени ×<paramref name="w"/>
+        /// (по текущему мировому углу детали — свет один на сцену, см. <see cref="Sync"/>), при w = 0 рендерер выключен.
+        /// </summary>
+        public void SetShadowWeight(float w)
+        {
+            if (_shadow == null)
+                return;
+            w = Mathf.Clamp01(w);
+            var full = PieceShadow.LocalOffset(transform.eulerAngles.z * Mathf.Deg2Rad, _mesh);
+            // Поправка на масштаб тени вокруг центра меша (часть LocalOffset) от веса не зависит — уходит только сдвиг света.
+            var centre = _mesh != null ? _mesh.bounds.center : Vector3.zero;
+            var anchor = (1f - WoodTuning.Current.ShadowScale) * new Vector3(centre.x, centre.y, 0f);
+            _shadow.localPosition = new Vector3(
+                Mathf.Lerp(anchor.x, full.x, w), Mathf.Lerp(anchor.y, full.y, w), full.z);
+            var shadowRenderer = _shadow.GetComponent<MeshRenderer>();
+            if (shadowRenderer != null)
+                shadowRenderer.enabled = w > 0f;
+        }
+
         public void SetState(PieceLifecycle state)
         {
             _state = state;

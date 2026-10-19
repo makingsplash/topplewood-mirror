@@ -4,10 +4,14 @@ using UnityEngine;
 
 namespace Gameplay.View
 {
-    /// <summary>Fills the <c>IPieceViewFactory</c> seam: instantiates a <see cref="PieceView"/> per piece type.</summary>
+    /// <summary>Fills the <c>IPieceViewFactory</c> seam: instantiates a <see cref="PieceView"/> per piece type and
+    /// registers it by placement index in <see cref="PieceViewRegistry"/> (TASK-634: the win beat flies these views).</summary>
     public sealed class PieceViewFactory : IPieceViewFactory
     {
+        private readonly PieceViewRegistry _registry;
         private Transform _root;
+
+        public PieceViewFactory(PieceViewRegistry registry) => _registry = registry;
 
         private Transform Root
         {
@@ -25,6 +29,7 @@ namespace Gameplay.View
             go.transform.SetParent(Root, false);
             var view = go.AddComponent<PieceView>();
             view.Initialize(type.Shape, type.Color, type.Kind, placementIndex);
+            _registry.Register(placementIndex, view);
             return view;
         }
     }

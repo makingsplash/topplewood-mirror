@@ -62,6 +62,8 @@ namespace Gameplay.DI
 
             builder.Register<IMatchEvaluator, PoseMatchEvaluator>(Lifetime.Singleton);
             builder.Register<LevelDataValidator>(Lifetime.Singleton);
+            // TASK-634: the factory files every live view by placement index, so the win beat can fly the won ones.
+            builder.Register<PieceViewRegistry>(Lifetime.Singleton);
             builder.Register<IPieceViewFactory, PieceViewFactory>(Lifetime.Singleton);
             // IGameplayInputSource is bound by the hosting scope (prod: InputService-backed; bringup: raw
             // pointer) so this core installer stays context-independent (RFC §2.3).
@@ -100,8 +102,8 @@ namespace Gameplay.DI
 
             // Tutorial system (TASK-049, step-by-step TASK-078, beats from data TASK-613) — context-INDEPENDENT parts
             // only: the reentrant input gate consumed by the input decorator, the tour's own overlay view (TourView)
-            // and its numbers, the hint's separate highlight view, the target card's pose for both, the win interlude
-            // the tour's "Совпало" beat arms, the per-level recipe catalog, and the runner entry point (registered AFTER
+            // and its numbers, the hint's separate highlight view, the target card's pose for both, the per-level recipe
+            // catalog, and the runner entry point (registered AFTER
             // CampaignProgressionController so the resumed level is already loaded into GameModel.CurrentLevel by the
             // time the runner starts — TASK-112 gates the tour on CurrentLevel.LevelId, not on the persisted progress, so the
             // ordering requirement stands and is now load-order, not pointer-resume). The context-DEPENDENT seams (progress store / gate /
@@ -112,7 +114,11 @@ namespace Gameplay.DI
             builder.Register<ITutorialInputGate, TutorialInputGate>(Lifetime.Singleton);
             builder.RegisterInstance(new TourConfig());
             builder.Register<TargetCardLocator>(Lifetime.Singleton);
-            builder.Register<WinInterlude>(Lifetime.Singleton);
+            // TASK-634: the win beat «В рамку» on EVERY win (replaced the TASK-613 one-shot WinInterlude the tour armed).
+            // Both hosting flows (prod GatedResolutionFlow, bringup SequencedResolutionFlow) take IWinBeat; no card / no
+            // figure → the flow keeps its WinSettleSeconds pause. The headless SimRun news the domain and never sees it.
+            builder.RegisterInstance(new WinBeatConfig());
+            builder.Register<IWinBeat, WinBeatView>(Lifetime.Singleton);
             // Two views, one writer each (TASK-613 closes TASK-383/244/550): the tour draws through ITourView, the Hint
             // booster through IPieceHighlightView — neither can clear the other's overlay.
             builder.Register<ITourView, TourView>(Lifetime.Singleton);
@@ -133,9 +139,10 @@ namespace Gameplay.DI
         /// is one line here and no code. Every level listed here must carry a non-empty winningOrder in the manifest —
         /// held by TourCatalogDataTests. Public static so that test reads THIS catalog, not a copy.
         ///
-        /// sailboat (campaign index 0) → the "assemble the picture" FTUE: tap hull, tap sail, "Совпало".
+        /// sailboat (campaign index 0) → the "assemble the picture" FTUE: tap hull, tap sail, then the win (the common win
+        /// beat «В рамку» draws it since TASK-634; the tour's own "Совпало" beat is gone).
         /// potted_tree (campaign index 1, TASK-632) → the same recipe on the second level: tap pot, trunk, hammer (the
-        /// hammer fires the catapult that throws the pre-placed crown), "Совпало". Its own id, so its progress mark is
+        /// hammer fires the catapult that throws the pre-placed crown), then the win. Its own id, so its progress mark is
         /// independent of the first tour's.
         /// </summary>
         public static TutorialCatalog BuildTutorialCatalog() => new(new Dictionary<string, ITourRecipe>

@@ -22,7 +22,12 @@ namespace Gameplay.Core
         private const float Eps = 1e-6f;
 
         public MatchResult Evaluate(TargetFigure target, IReadOnlyList<PlacedPiece> placed, MatchTolerance tol)
+            => Evaluate(target, placed, tol, null);
+
+        /// <inheritdoc />
+        public MatchResult Evaluate(TargetFigure target, IReadOnlyList<PlacedPiece> placed, MatchTolerance tol, List<MatchPair> pairs)
         {
+            pairs?.Clear();
             var slots = target?.Slots;
             var slotsTotal = slots?.Count ?? 0;
             if (slotsTotal == 0)
@@ -76,6 +81,8 @@ namespace Gameplay.Core
                 slotsFilled++;
                 totalError += c.Error;
                 residuals.Add(placed[c.Piece].Position - slots[c.Slot].Position);
+                // TASK-634: the layout, recorded before the rigidity check (the caller reads it only on a win).
+                pairs?.Add(new MatchPair(c.Slot, c.Piece));
             }
 
             var assembled = slotsFilled == slotsTotal;
@@ -110,7 +117,15 @@ namespace Gameplay.Core
         /// Reduce an angle delta into the piece's symmetry period and return its magnitude. period = 2π/order
         /// (box order=4 → 90°; triangle/half order=1 → full circle, i.e. reduce into [−π, π]).
         /// </summary>
-        private static float SymmetryReduce(float delta, int symmetryOrder)
+        private static float SymmetryReduce(float delta, int symmetryOrder) => Abs(SignedSymmetryDelta(delta, symmetryOrder));
+
+        /// <summary>
+        /// The signed form of <see cref="SymmetryReduce"/>: <paramref name="delta"/> folded into
+        /// [−period/2, period/2] with period = 2π/order. TASK-634 lands a won piece on <c>rest − SignedSymmetryDelta(rest
+        /// − slot)</c> — the slot angle NEAREST its rest pose — so a box that settled at 90° does not spin a quarter
+        /// turn in flight. Its magnitude is the judge's angle error bit for bit (one code path).
+        /// </summary>
+        public static float SignedSymmetryDelta(float delta, int symmetryOrder)
         {
             var order = symmetryOrder < 1 ? 1 : symmetryOrder;
             var period = (2f * PI) / order;
@@ -119,7 +134,7 @@ namespace Gameplay.Core
                 d -= period;
             else if (d < -period * 0.5f)
                 d += period;
-            return Abs(d);
+            return d;
         }
 
         private readonly struct Candidate

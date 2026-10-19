@@ -17,9 +17,10 @@ namespace Gameplay.Tutorial
     /// tour for THIS level from its catalog recipe and (re)starts it from step 0 when eligible — so a LOSS reload of
     /// the tutorial level replays the tour.
     ///
-    /// Completion is persisted only after the LAST step (RFC §Q4). Since TASK-613 the last step is the "Совпало" beat
-    /// (<see cref="MatchTargetStep"/>), which completes only once the resolution flow has played it on Won — so the
-    /// tour is marked AFTER the win beat, never on the last release (a loss after the last tap replays the tour).
+    /// Completion is persisted only after the LAST step (RFC §Q4). Since TASK-634 the last step is
+    /// <see cref="AwaitWinStep"/>, which completes on <c>Won</c> — the same event the win checkpoint is written on —
+    /// so the tour is marked after the WIN, never on the last release (a loss after the last tap replays the tour).
+    /// The tour has no beat of its own on the win any more: every win plays the common win beat «В рамку».
     ///
     /// The runner is the ONLY writer of <see cref="ITourView"/> (TASK-613 split the former shared highlight view: the
     /// Hint booster draws through its own <c>IPieceHighlightView</c>), so a co-subscriber of LevelLoaded can no longer
@@ -47,7 +48,6 @@ namespace Gameplay.Tutorial
         private readonly ITutorialInputGate _inputGate;
         private readonly IGameplayTapTolerance _tapTolerance;
         private readonly TutorialCatalog _catalog;
-        private readonly WinInterlude _interlude;
         private readonly TourConfig _config;
         private readonly PlayScreenInteraction _interaction;
 
@@ -72,7 +72,6 @@ namespace Gameplay.Tutorial
             ITutorialInputGate inputGate,
             IGameplayTapTolerance tapTolerance,
             TutorialCatalog catalog,
-            WinInterlude interlude,
             TourConfig config,
             PlayScreenInteraction interaction)
         {
@@ -84,14 +83,13 @@ namespace Gameplay.Tutorial
             _inputGate = inputGate;
             _tapTolerance = tapTolerance;
             _catalog = catalog;
-            _interlude = interlude;
             _config = config;
             _interaction = interaction;
         }
 
         public void Start()
         {
-            _context = new TutorialContext(_model, _view, _inputGate, _tapTolerance, _interlude, _config);
+            _context = new TutorialContext(_model, _view, _inputGate, _tapTolerance, _config);
             _levelLoadedSubscription = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
 
             // A level is already loaded before this entry point starts (GameControllerRunner + the campaign
@@ -174,18 +172,17 @@ namespace Gameplay.Tutorial
         {
             _progress.MarkCompleted(_definition.Id); // durable — survives a kill
             _analytics.LogComplete(_definition.Id);
-            // NO _view.Clear() here: every step has already exited its own visuals, and the last one ("Совпало") is
-            // still fading its dim INTO the win screen (held until the screen covers the field). An immediate Clear
-            // cut that hold and left an un-dimmed frame before the screen (TASK-613 run 2, frame K5). Clear stays on
-            // StopSequence — a Lost/restart must drop everything at once.
+            // NO _view.Clear() here: every tap step has already exited its own visuals (HideTap fades them out), and
+            // an immediate Clear would cut those fades short. Clear stays on StopSequence — a Lost/restart must drop
+            // everything at once.
             _interaction.IsTourFocused.Value = false;
             Debug.unityLogger.Log(LogType.Log, $"[{LogCategory.Tutorial}] Tutorial '{_definition.Id}' completed");
         }
 
         private void StopSequence()
         {
-            // Disposing the step's subscription also disarms an armed win interlude (MatchTargetStep) — a Lost or a
-            // restart after the last tap must not play the "Совпало" beat on some later Won.
+            // A Lost or a restart after the last tap disposes AwaitWinStep here, so a later Won of a REPLAYED tour is the
+            // only thing that can mark it completed.
             _stepSubscription?.Dispose();
             _stepSubscription = null;
             _view.Clear();

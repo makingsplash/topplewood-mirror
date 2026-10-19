@@ -7,7 +7,7 @@ namespace Gameplay.Tutorial
     /// <summary>
     /// One tap beat of the tour (TASK-613 plan §3.7): wait until the field is at rest, point at ONE piece, admit only a
     /// tap on it, complete on its REAL release. A tour is a chain of these built from the level's
-    /// <c>WinningOrder</c> (<see cref="AssembleTourRecipe"/>), closed by <see cref="MatchTargetStep"/>. This is the
+    /// <c>WinningOrder</c> (<see cref="AssembleTourRecipe"/>), closed by <see cref="AwaitWinStep"/>. This is the
     /// per-piece body of the former composite <c>AssembleInOrderStep</c>, behaviour unchanged:
     /// <list type="bullet">
     /// <item>TASK-524 rest gate: until <see cref="GameModel.FieldAtRest"/>, input is BLOCKED (not merely un-whitelisted:

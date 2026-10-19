@@ -5,7 +5,8 @@ using UnityEngine.UI;
 namespace Gameplay.View
 {
     /// <summary>Solid fill of N pre-triangulated polygons in canvas-local units (TASK-613, T1): the hole pass of
-    /// <see cref="SpotlightDim"/> and the "ghost" silhouette of the tour's "Совпало" beat. Triangulation is the caller's
+    /// <see cref="SpotlightDim"/>, the tour's miss flash and the win beat's window flash (TASK-634; the TASK-613 "Совпало"
+    /// ghost that it also drew is gone). Triangulation is the caller's
     /// (<c>Geometry.TriangulateConcave</c>, once per shape change) — this graphic only re-emits vertices, so moving the
     /// polygons every frame does not re-triangulate. Vertex-colour tinted default UI shader, no texture.
     ///

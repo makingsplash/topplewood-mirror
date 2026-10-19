@@ -22,10 +22,10 @@ namespace Gameplay.Tests
         public readonly GameModel Model = new();
         public readonly FakeTourView View = new();
         public readonly TutorialInputGate Gate = new();
-        public readonly WinInterlude Interlude = new();
         public readonly TourConfig Config = new();
         public readonly PlayScreenInteraction Interaction = new();
         public readonly MemoryProgress Progress = new();
+        public readonly RecordingAnalytics Analytics = new();
         public readonly TutorialRunner Runner;
         private readonly LevelData _level;
 
@@ -37,15 +37,18 @@ namespace Gameplay.Tests
             {
                 [_level.LevelId] = new AssembleTourRecipe(TourId),
             });
-            Runner = new TutorialRunner(Model, new OpenGate(), Progress, new NullTutorialAnalytics(), View, Gate,
-                new NullTapTolerance(), catalog, Interlude, Config, Interaction);
+            Runner = new TutorialRunner(Model, new OpenGate(), Progress, Analytics, View, Gate,
+                new NullTapTolerance(), catalog, Config, Interaction);
         }
 
         public TutorialContext Context() =>
-            new(Model, View, Gate, new NullTapTolerance(), Interlude, Config);
+            new(Model, View, Gate, new NullTapTolerance(), Config);
 
         /// <summary>A retry/restart: the campaign controller reloads the level in place, firing LevelLoaded.</summary>
         public void Reload() => Model.LoadLevel(_level);
+
+        /// <summary>The verdict, exactly as the mechanic controller resolves it (TASK-634: the tour ends on Won).</summary>
+        public void Resolve(GameOutcome outcome) => Model.Resolve(outcome);
 
         public void Release(int placementIndex)
         {
@@ -94,6 +97,16 @@ namespace Gameplay.Tests
             public void MarkCompleted(string tutorialId) => _done.Add(tutorialId);
 
             public void Reset(string tutorialId) => _done.Remove(tutorialId);
+        }
+
+        public sealed class RecordingAnalytics : ITutorialAnalytics
+        {
+            public readonly List<string> Steps = new();
+            public int Completes;
+
+            public void LogStep(string tutorialId, string stepId) => Steps.Add(stepId);
+
+            public void LogComplete(string tutorialId) => Completes++;
         }
 
         private sealed class OpenGate : ITutorialGate

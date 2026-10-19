@@ -36,7 +36,7 @@ namespace Gameplay.View
         }
 
         /// <summary>Fraction of the perimeter drawn, from the first point along the ring (TASK-613: the "Совпало"
-        /// contour draws itself on). 1 = closed ring.</summary>
+        /// contour drew itself on; that beat is gone since TASK-634, the lever stays). 1 = closed ring.</summary>
         public float Reveal
         {
             get => _reveal;

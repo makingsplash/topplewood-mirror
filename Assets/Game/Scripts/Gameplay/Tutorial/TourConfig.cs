@@ -14,9 +14,8 @@ namespace Gameplay.Tutorial
         /// <summary>Pause after the field comes to rest before the 2nd and later tap beats show (01 §3 «Такт 2»):
         /// the player notices the previous piece has landed. Held by the VIEW, not the step — input is open from rest.</summary>
         public float BetweenTapsDelay = 0.3f;
-
-        /// <summary>Length of the "Совпало" beat between Won and the win screen (01 §3 «Такт 3»).</summary>
-        public float MatchSeconds = 1.7f;
+        // The TASK-613 "Совпало" beat and its numbers are gone since TASK-634: every win plays the common win beat
+        // «В рамку» (its levers live in Gameplay.View.WinBeatConfig).
 
         // ── Finger tap cycle (01 §3, ≈1.3 s, repeats until the player taps) ────────────────────────────────────────
         public float ApproachSeconds = 0.25f;
@@ -52,32 +51,9 @@ namespace Gameplay.Tutorial
         /// <summary>The rig mirrors when the hand would cross the safe area's edge minus this (cu).</summary>
         public float MirrorEdgeMargin = 24f;
 
-        // ── "Совпало" timeline (01 §3 «Такт 3»; seconds from the beat start, total = MatchSeconds) ──────────────────
-        public float MatchContourStart = 0.10f;
-        public float MatchContourSeconds = 0.30f;
-        public float GhostStart = 0.40f;
-        public float GhostEnd = 0.95f;
-        public float MatchFlashEnd = 1.10f;
-        public float CheckStart = 1.00f;
-        public float CheckEnd = 1.25f;
-        /// <summary>The beat's dim fades out over this while the win screen's own reveal plays (01 §3: «уходит в
-        /// затемнение винскрина»), so there is no un-dimmed frame between them.</summary>
-        public float MatchDimOutSeconds = 0.25f;
-        /// <summary>Ceiling on holding the beat's dim while waiting for the win screen to cover the field.</summary>
-        public float MatchDimHoldMaxSeconds = 0.6f;
-        public float GhostAlpha = 0.45f;
-        public float GhostOutlineWidth = 6f;
-        public float MatchFieldOutlineWidth = 10f;
-        public float MatchCardOutlineWidth = 6f;
-        /// <summary>✓ centre = the frame's top-right corner moved inward by this (cu, both axes; spec 02 §3).</summary>
-        public float CheckInset = 24f;
-        /// <summary>The ✓ is kept this far (cu) inside the safe area's top/right edges.</summary>
-        public float CheckEdgeMargin = 8f;
-
         // ── Sizes, canvas units ──────────────────────────────────────────────────────────────────────────────────
         /// <summary>Finger slot (02 §3: ≈20 % of the width at 1080 reference).</summary>
         public float FingerSize = 320f;
-        public float CheckSize = 120f;
         public float FieldOutlineWidth = 8f;
         public float CardOutlineWidth = 4f;
         /// <summary>Cut-out padding around the piece and its soft edge (02 §3); shrunk per beat by the gap rule.</summary>
@@ -93,10 +69,9 @@ namespace Gameplay.Tutorial
         /// <summary>Contour on the card: navy #1F2844 (white on the cream canvas reads ≈1.36).</summary>
         public Color CardOutlineColor = new Color32(0x1F, 0x28, 0x44, 0xFF);
         /// <summary>Dim tone = RGB of the <c>scrim</c> token <c>#2A211A</c> (design/tokens.json; duplicated here,
-        /// tech-debt TASK-620). Its alpha is per beat below, not the token's 0x99.</summary>
+        /// tech-debt TASK-620). Its alpha is the tap beat's below, not the token's 0x99.</summary>
         public Color DimTone = new Color32(0x2A, 0x21, 0x1A, 0xFF);
         public float TapDimAlpha = 0.60f;
-        public float MatchDimAlpha = 0.40f;
 
         // ── HUD ──────────────────────────────────────────────────────────────────────────────────────────────────
         /// <summary>HUD buttons' alpha while the tour holds the focus (02 §3, T3).</summary>

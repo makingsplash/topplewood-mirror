@@ -7,8 +7,9 @@ namespace Gameplay.Tests
 {
     /// <summary>
     /// TASK-613 tour beats beyond the TASK-524 rest gate (<see cref="TutorialRestGateTests"/>): the "not there, here"
-    /// answer to a miss, the between-taps pause carried in the cue, the kind the card slot is lit by, the "Совпало"
-    /// step's arm/disarm of the win interlude, and the input decorator reporting a refused tap back to the gate.
+    /// answer to a miss, the between-taps pause carried in the cue, the kind the card slot is lit by, the closing
+    /// <see cref="AwaitWinStep"/> (TASK-634, replaced the "Совпало" step), and the input decorator reporting a refused tap
+    /// back to the gate.
     /// </summary>
     [TestFixture]
     public sealed class TourStepsTests
@@ -117,32 +118,43 @@ namespace Gameplay.Tests
         }
 
         [Test]
-        public void MatchStep_ArmsInterlude_CompletesWhenTheNumberEnds()
+        public void WinStep_IgnoresNoneLostAndReleases_CompletesOnWon()
         {
             var completed = 0;
-            using var _ = new MatchTargetStep().Enter(_rig.Context()).Subscribe(__ => completed++);
+            using var _ = new AwaitWinStep().Enter(_rig.Context()).Subscribe(__ => completed++);
+            Assert.That(completed, Is.EqualTo(0), "Outcome replays None on Subscribe — no false completion");
 
-            Assert.That(_rig.View.MatchSubscriptions, Is.EqualTo(0), "nothing plays before Won");
-            Assert.That(_rig.Interlude.TryTake(out var play), Is.True);
-            using var number = play().Subscribe();
-            Assert.That(completed, Is.EqualTo(0));
+            _rig.Model.SetFieldAtRest(true);
+            _rig.Release(0);
+            Assert.That(completed, Is.EqualTo(0), "a release is not a win");
 
-            _rig.View.FinishMatch();
+            _rig.Resolve(GameOutcome.Won);
 
             Assert.That(completed, Is.EqualTo(1));
-            Assert.That(_rig.View.LastMatch.Target, Is.SameAs(_rig.Model.CurrentLevel.Target));
-            Assert.That(_rig.View.LastMatch.ShapesByKind.ContainsKey("box"), Is.True);
+            Assert.That(_rig.View.Taps, Is.Empty, "the step draws nothing — the win beat does");
         }
 
         [Test]
-        public void MatchStep_DisposedBeforeWon_DisarmsInterlude()
+        public void WinStep_DoesNotCompleteOnLost()
         {
-            var sub = new MatchTargetStep().Enter(_rig.Context()).Subscribe();
-            Assert.That(_rig.Interlude.IsArmed, Is.True);
+            var completed = 0;
+            using var _ = new AwaitWinStep().Enter(_rig.Context()).Subscribe(__ => completed++);
+
+            _rig.Resolve(GameOutcome.Lost);
+
+            Assert.That(completed, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void WinStep_DisposedBeforeWon_StaysSilent()
+        {
+            var completed = 0;
+            var sub = new AwaitWinStep().Enter(_rig.Context()).Subscribe(__ => completed++);
 
             sub.Dispose(); // Lost / restart: the runner's StopSequence
+            _rig.Resolve(GameOutcome.Won);
 
-            Assert.That(_rig.Interlude.TryTake(out _), Is.False);
+            Assert.That(completed, Is.EqualTo(0));
         }
 
         private sealed class SubjectInput : IGameplayInputSource

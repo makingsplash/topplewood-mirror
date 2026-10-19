@@ -13,4 +13,3 @@ MonoBehaviour:
   m_Name: TourAssets
   m_EditorClassIdentifier:
   finger: {fileID: 1272100742834644542, guid: 4828d4b365b4141d7a3aa504f1ca8b54, type: 3}
-  check: {fileID: 9134724737351527516, guid: 609ff75d2fd924aaeb869511865926cb, type: 3}

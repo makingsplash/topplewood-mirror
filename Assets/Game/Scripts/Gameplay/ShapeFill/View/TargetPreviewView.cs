@@ -154,6 +154,7 @@ namespace Gameplay.View
                     Renderer = renderer,
                     LevelColor = color,
                     Kind = slot.Kind,
+                    StyleKey = WoodPieceKey.Of(type.Shape),
                     Ordinal = _slots.Count,
                     Silhouette = packed,
                     SilhouetteCount = packed == null ? 0 : silhouette.Length,
@@ -207,6 +208,9 @@ namespace Gameplay.View
             public Color LevelColor;
             public string Kind;
 
+            /// <summary>TASK-634: под каким именем форма ищет свою настройку дерева — та же, что у детали на поле.</summary>
+            public string StyleKey;
+
             /// <summary>TASK-559: номер слота — фаза волокна этой детали превью (доска — по виду, как на поле).</summary>
             public int Ordinal;
 
@@ -230,12 +234,17 @@ namespace Gameplay.View
             {
                 if (slot.Renderer == null)
                     continue;
-                var color = tuning.ResolveLevelColor(slot.LevelColor, slot.Kind);
+                // TASK-634: слот красится ТОЧНО как легшая деталь (PieceView.ApplyColor): тот же Tint(Active) и та же
+                // настройка дерева формы. Без них картинка была бледнее детали и с другим волокном у форм со своей
+                // настройкой, а бит «В рамку» кладёт детали прямо на слоты — разница читалась вспышкой тона и сменой
+                // волокна в кадре посадки (кропы A4 TASK-634).
+                var color = tuning.Tint(tuning.ResolveLevelColor(slot.LevelColor, slot.Kind), PieceVisualState.Active);
                 color.a = 1f;
                 // Блок один на все слоты: Clear, чтобы контур freeform-слота не доехал до следующего слота.
                 mpb.Clear();
                 mpb.SetColor(BlockMaterial.ColorProperty, color);
                 mpb.SetColor(BlockMaterial.LegacyColorProperty, color);
+                tuning.ApplyPieceStyle(mpb, slot.StyleKey);
                 // TASK-559: превью несёт те же доски, что детали на поле, — иначе оно читалось бы другой фигурой.
                 WoodTuning.SetGrainPick(mpb, tuning.GrainPick(slot.Kind, slot.Ordinal));
                 if (slot.Silhouette != null)

@@ -52,6 +52,10 @@ namespace Gameplay.Core.Mechanic
         private readonly Dictionary<int, IPieceView> _viewByInstance = new();
         private readonly Dictionary<int, PieceType> _typeByInstance = new();
         private readonly List<PlacedPiece> _placedScratch = new();
+        // TASK-634: the instance behind each _placedScratch entry (same index) and the judge's (slot, piece) pairs —
+        // the won figure is built from these, so the win beat reuses the verdict's layout instead of re-matching.
+        private readonly List<PieceInstance> _placedInstanceScratch = new();
+        private readonly List<MatchPair> _pairScratch = new();
         // Reused per tap so resolving a tap allocates only the per-piece world-vertex arrays (as it did before).
         private readonly List<PieceHitResolver.HitCandidate> _hitCandidates = new();
 
@@ -510,10 +514,12 @@ namespace Gameplay.Core.Mechanic
             // so every Dynamic piece has settled; greedy-match the live rest poses directly. If pieces are still Idle
             // the player has taps left — the win check below still runs (a partial field simply won't fill every
             // slot), and the `anyIdle` guard after it waits for the next tap rather than declaring Lost.
-            var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance);
+            var result = _match.Evaluate(_level.Target, CollectPlaced(), _level.MatchTolerance, _pairScratch);
 
             if (result.AllSlotsFilled && !anyEssentialLost)
             {
+                // TASK-634: publish the won figure BEFORE Resolve — the win flow reads it synchronously on Outcome.
+                _model.SetWinFigure(BuildWinFigure());
                 _model.Resolve(GameOutcome.Won);
                 return;
             }
@@ -528,14 +534,33 @@ namespace Gameplay.Core.Mechanic
         private IReadOnlyList<PlacedPiece> CollectPlaced()
         {
             _placedScratch.Clear();
+            _placedInstanceScratch.Clear();
             foreach (var piece in _model.Pieces)
             {
                 if (piece.State != PieceLifecycle.Placed)
                     continue;
                 var type = _typeByInstance[piece.InstanceId];
                 _placedScratch.Add(new PlacedPiece(piece.Kind, piece.Position, piece.Rotation, type.SymmetryOrder));
+                _placedInstanceScratch.Add(piece);
             }
             return _placedScratch;
+        }
+
+        /// <summary>The won figure from the judge's own pairs (TASK-634): one entry per filled slot, landing on the slot
+        /// angle nearest the rest pose under the piece's symmetry. A fresh list — one allocation per win.</summary>
+        private List<WinFigurePiece> BuildWinFigure()
+        {
+            var figure = new List<WinFigurePiece>(_pairScratch.Count);
+            foreach (var pair in _pairScratch)
+            {
+                var placed = _placedScratch[pair.PlacedIndex];
+                var instance = _placedInstanceScratch[pair.PlacedIndex];
+                var slot = _level.Target.Slots[pair.SlotIndex];
+                var land = placed.Rotation
+                           - PoseMatchEvaluator.SignedSymmetryDelta(placed.Rotation - slot.Rotation, placed.SymmetryOrder);
+                figure.Add(new WinFigurePiece(instance.PlacementIndex, pair.SlotIndex, placed.Position, placed.Rotation, land));
+            }
+            return figure;
         }
 
         /// <summary>Resolve a tap to an Idle piece via the shared two-tier <see cref="PieceHitResolver"/> (TASK-085):

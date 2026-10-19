@@ -114,6 +114,9 @@ namespace Gameplay.PlayScreen
             // TASK-263 §2b: kill the hint outline the instant the player releases the piece it pointed at — the same
             // "piece actually left Idle" signal the tutorial uses (PieceReleased), so it is event-driven, not a timer.
             _model.PieceReleased.Subscribe(OnPieceReleased).AddTo(_subs);
+            // TASK-634: a win flies the figure into the target card («В рамку») — an outline left on a piece (a hint on a
+            // piece the early assembly verdict never needed) would blink through the whole beat. Gone in frame 0.
+            _model.Outcome.Where(o => o == GameOutcome.Won).Subscribe(_ => ClearHighlight()).AddTo(_subs);
             _model.LevelLoaded.Subscribe(_ =>
             {
                 // New level (or reload): drop any active hint, clear the proactive affordance, and let a fresh

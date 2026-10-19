@@ -13,12 +13,14 @@ namespace Gameplay.Tests
     public sealed class TourRecipeTests
     {
         [Test]
-        public void Build_TapPerWinningOrderEntry_ThenMatch()
+        public void Build_TapPerWinningOrderEntry_ThenAwaitWin()
         {
             var definition = new AssembleTourRecipe("t").Build(TourRig.TwoBoxLevel(new[] { 1, 0 }));
 
             Assert.That(definition.Id, Is.EqualTo("t"));
-            Assert.That(definition.Steps.Select(s => s.Id), Is.EqualTo(new[] { "tap_1", "tap_2", "match" }));
+            // TASK-634: the closing step waits for the win ("win"), the "Совпало" beat ("match") is gone.
+            Assert.That(definition.Steps.Select(s => s.Id), Is.EqualTo(new[] { "tap_1", "tap_2", "win" }));
+            Assert.That(definition.Steps[2], Is.TypeOf<AwaitWinStep>());
             Assert.That(definition.Steps.Take(2).Cast<TapPieceStep>().Select(s => s.PlacementIndex),
                 Is.EqualTo(new[] { 1, 0 }), "the order is the level's, not placement order");
         }
