@@ -283,12 +283,18 @@ namespace Gameplay.View
         // Владелец: «хочу чтобы всё чётко ярко». Разницу состояний теперь несёт ПОП активной детали,
         // а не траур на ждущей.
 
+        // TASK-614: после плейтеста владельца (игроки не отличали висящие детали от упавших) ждущая деталь снова
+        // отличается — но НЕ потемнением: она бледнее (цветность 0.5) и обведена пунктиром (IdleDash* ниже).
+        // Яркость не трогается, поэтому на старте экран не тускнеет, а светлеет к пастели.
+
         /// <summary>Ждущая деталь: множитель яркости. 1 — полный цвет уровня.</summary>
         public float IdleBrightness = 1f;
 
-        /// <summary>Ждущая деталь: 1 — цвет как есть, 0 — совсем серая. Сильное обесцвечивание
-        /// уводит жёлтый в оливковый, поэтому приглушать надо в основном яркостью.</summary>
-        public float IdleSaturation = 1f;
+        /// <summary>Ждущая деталь: 1 — цвет как есть, 0 — совсем серая. <see cref="Tint"/> работает в HSV и держит V
+        /// (яркость самого сильного канала), поэтому снятие цветности ОСВЕТЛЯЕТ деталь к пастели, а не грязнит её:
+        /// жёлтый #D8A400 при 0.5 → #D8BE6C (светлая солома). Оливковый дают только яркостно-сохраняющие матрицы
+        /// (SVG <c>saturate</c>) и старое умножение на серое — не эта формула (замер TASK-614, 02-art-director §2).</summary>
+        public float IdleSaturation = 0.5f;
 
         /// <summary>Летящая (активная) деталь: множитель яркости. Больше 1 — «загорается» на запуске.
         /// Держит разницу состояний в одиночку, поэтому заметно больше единицы.</summary>
@@ -299,6 +305,36 @@ namespace Gameplay.View
 
         /// <summary>Взведённая в паре деталь (balance-режим): насколько уводить в белый.</summary>
         public float ArmedWhite = 0.4f;
+
+        // --------------------------------------------------- пунктир ждущей детали
+
+        // TASK-614: пунктир вокруг детали, которую ещё не тапнули (IdleDashOutline). Гаснет на тапе вместе с
+        // возвратом цвета. Все длины — В МИРОВЫХ ЕДИНИЦАХ, как фаска и тень: пунктир держит пропорцию к детали.
+        // Числа — мокап арт-директора V2 в пикселях кадра 738×1600 (3.5 px толщина, штрих/пробел 11/7 px, отступ 6 px,
+        // скругление 9 px, круглые концы), переведённые по МАСШТАБУ ЭТОГО ЖЕ КАДРА: render-level печатает 164 px на
+        // единицу на robot и 157 на toy_pyramid — взято 160. Оценка «75 px на единицу» из 01-art-director была вдвое
+        // мельче и дала бы пунктир вдвое толще и дальше мокапа (проверено кадром, TASK-614).
+
+        /// <summary>Рисовать ли пунктир вокруг ждущей детали.</summary>
+        public bool IdleDash = true;
+
+        /// <summary>Цвет пунктира, hex. <c>canvas-wood-lit</c> из STYLE_LOCK.</summary>
+        public string IdleDashColor = "#EEDAC0";
+
+        /// <summary>Толщина линии (ед.).</summary>
+        public float IdleDashWidth = 0.022f;
+
+        /// <summary>Длина штриха БЕЗ круглых концов (ед.) — как SVG <c>stroke-dasharray</c>: концы добавляют по полтолщины.</summary>
+        public float IdleDashLength = 0.069f;
+
+        /// <summary>Пробел между штрихами (ед.), тоже по SVG: круглые концы его съедают.</summary>
+        public float IdleDashGap = 0.044f;
+
+        /// <summary>Отступ осевой линии пунктира наружу от силуэта (ед.).</summary>
+        public float IdleDashOffset = 0.0375f;
+
+        /// <summary>Радиус скругления углов пути пунктира (ед.). Не меньше отступа: меньше выпуклый угол не скруглить.</summary>
+        public float IdleDashCorner = 0.056f;
 
         // ------------------------------------------------------------------- тень
 
@@ -973,6 +1009,9 @@ namespace Gameplay.View
             ApplyToShadow(PieceShadow.SilhouetteShared);
             PieceShadow.RefreshLiveShadows();
             FrameShadow.RefreshLive();
+            // TASK-614: цвет и шаг пунктира — в материал; отступ/толщину/скругление — в живые ленты (дёшево, детали
+            // на экране; пересобираются только когда сдвинулись их числа).
+            IdleDashOutline.RefreshLive();
 
             if (rebuildMeshes)
                 PieceMeshBuilder.RebuildAll();
@@ -1045,6 +1084,28 @@ namespace Gameplay.View
                 return;
             shadow.SetFloat(ShadowAlphaId, ShadowAlpha);
             shadow.SetFloat(ShadowSoftId, ShadowSoft);
+        }
+
+        private static readonly int IdleDashColorId = Shader.PropertyToID("_Color");
+        private static readonly int IdleDashWidthId = Shader.PropertyToID("_Width");
+        private static readonly int IdleDashLengthId = Shader.PropertyToID("_DashLength");
+        private static readonly int IdleDashGapId = Shader.PropertyToID("_DashGap");
+
+        /// <summary>TASK-614: числа пунктира ждущей детали — в его материал (<see cref="IdleDashOutline"/> зовёт это
+        /// сразу после создания материала, как тень). Кривой hex — белый, а не молчаливый ноль-альфа.</summary>
+        public void ApplyToIdleDash(Material dash)
+        {
+            if (dash == null)
+                return;
+            if (!ColorUtility.TryParseHtmlString(IdleDashColor, out var color))
+            {
+                Debug.LogWarning($"[wood] IdleDashColor '{IdleDashColor}' не hex — пунктир белый");
+                color = Color.white;
+            }
+            dash.SetColor(IdleDashColorId, color);
+            dash.SetFloat(IdleDashWidthId, IdleDashWidth);
+            dash.SetFloat(IdleDashLengthId, IdleDashLength);
+            dash.SetFloat(IdleDashGapId, IdleDashGap);
         }
 
         // ------------------------------------------------------------ файл настроек

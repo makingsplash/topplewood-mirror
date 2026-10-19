@@ -742,7 +742,7 @@ namespace Gameplay.View
         /// Почти прямые участки (тесселированная дуга купола/колеса от ShapeVisualOutline) пропускаются:
         /// скруглять там нечего, а вершины они бы утроили.
         /// </summary>
-        private static Vec2[] RoundCorners(Vec2[] verts, float radius, int segments)
+        internal static Vec2[] RoundCorners(Vec2[] verts, float radius, int segments)
         {
             var n = verts.Length;
             if (n < 3 || radius <= 1e-4f)
