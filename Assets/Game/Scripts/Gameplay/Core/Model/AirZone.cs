@@ -30,13 +30,21 @@ namespace Gameplay.Core
         /// The physics adapter (ApplyFlow) never reads this — it changes validation only, not the force.</summary>
         public readonly bool BypassHoverGuard;
 
-        public AirZone(Rect region, Vec2 direction, float acceleration, string color, bool bypassHoverGuard = false)
+        /// <summary>TASK-617: does THIS zone draw its own fan? true (default) — as before. false — the zone is a
+        /// continuation of a field whose visible source belongs to another zone: a force field authored as several
+        /// rectangles (an L-shaped or stepped flow) still reads as ONE fan. Fill and wind are drawn either way, and
+        /// the camera stops reserving the fan box behind the up-wind face. View/framing only — physics never reads it.</summary>
+        public readonly bool HasFan;
+
+        public AirZone(Rect region, Vec2 direction, float acceleration, string color, bool bypassHoverGuard = false,
+            bool hasFan = true)
         {
             Region = region;
             Direction = direction;
             Acceleration = acceleration;
             Color = color;
             BypassHoverGuard = bypassHoverGuard;
+            HasFan = hasFan;
         }
     }
 }

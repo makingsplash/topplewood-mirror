@@ -92,6 +92,11 @@ namespace Gameplay.Core
                     var region = zone.Region;
                     Accumulate(region.Min, ref minX, ref minY, ref maxX, ref maxY);
                     Accumulate(region.Max, ref minX, ref minY, ref maxX, ref maxY);
+                    any = true;
+
+                    // Зона без вентилятора (TASK-617) корпуса не рисует — резервировать под него нечего.
+                    if (!zone.HasFan)
+                        continue;
 
                     var dir = zone.Direction;
                     var halfX = (region.Max.X - region.Min.X) * 0.5f;
@@ -112,7 +117,6 @@ namespace Gameplay.Core
                         ref minX, ref minY, ref maxX, ref maxY);
                     Accumulate(new Vec2(backX - perpX * AirZoneFanReserve, backY - perpY * AirZoneFanReserve),
                         ref minX, ref minY, ref maxX, ref maxY);
-                    any = true;
                 }
             }
 

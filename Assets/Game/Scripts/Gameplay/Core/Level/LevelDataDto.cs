@@ -413,7 +413,9 @@ namespace Gameplay.Core
     /// vector; <c>acceleration</c> is mass-independent units/s² (balancer default 3.0, band [2,4]); <c>color</c>
     /// tints the visible zone mesh. A zero-length direction is left as-is → LevelDataValidator flags it (ERROR).
     /// TASK-107: <c>bypassHoverGuard</c> (optional, absent → false) opts THIS zone out of the hover-guard so a real
-    /// up-launcher may lift a piece; the burden of proving termination then moves to the sim gate (§L(air) Rule 4).</summary>
+    /// up-launcher may lift a piece; the burden of proving termination then moves to the sim gate (§L(air) Rule 4).
+    /// TASK-617: <c>fan</c> (optional, absent → true) — <c>false</c> draws no fan for this zone (a continuation of a
+    /// multi-rectangle field whose single visible fan belongs to another zone). View/framing only, not the force.</summary>
     public sealed class AirZoneDto
     {
         [JsonProperty("region")] public RectDto Region { get; set; }
@@ -421,6 +423,7 @@ namespace Gameplay.Core
         [JsonProperty("acceleration")] public float Acceleration { get; set; }
         [JsonProperty("color")] public string Color { get; set; }
         [JsonProperty("bypassHoverGuard")] public bool BypassHoverGuard { get; set; } // absent → false → guard on (TASK-107)
+        [JsonProperty("fan")] public bool Fan { get; set; } = true; // absent → true → the zone draws its fan (TASK-617)
 
         public AirZone ToDomain()
         {
@@ -428,7 +431,7 @@ namespace Gameplay.Core
             var len = dir.Length;
             var unit = len > 0f ? dir * (1f / len) : dir; // normalise; zero stays zero → validator rejects
             var region = Region != null ? Region.ToDomain() : default;
-            return new AirZone(region, unit, Acceleration, Color, BypassHoverGuard);
+            return new AirZone(region, unit, Acceleration, Color, BypassHoverGuard, Fan);
         }
     }
 }

@@ -119,7 +119,10 @@ namespace Gameplay.View
                 dir = dir.normalized; // domain already normalises; guard the direct-constructed path too
 
             BuildFill(region, zone.Color);
-            BuildFan(min, max, centre, dir);
+            // Зона без вентилятора (TASK-617) — продолжение поля, чей источник нарисован у соседней зоны:
+            // поток и заливка остаются, второго вентилятора посреди поля нет.
+            if (zone.HasFan)
+                BuildFan(min, max, centre, dir);
 
             // Донорский эффект — основной. Свой процедурный поток остаётся запасным: если префаб
             // не найден или его выключили, зона не должна остаться без движения воздуха.

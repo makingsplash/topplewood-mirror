@@ -159,6 +159,20 @@ namespace Gameplay.Tests
         }
 
         [Test]
+        public void FanlessAirZone_ReservesOnlyItsRegion()
+        {
+            // TASK-617: the same rightward zone with hasFan:false draws no fan, so the box stops at its face x = -1.
+            var zone = new AirZone(new Rect(new Vec2(-1f, 0f), new Vec2(1f, 2f)), new Vec2(1f, 0f), 10f, null,
+                hasFan: false);
+            var level = Level(Pieces((0f, 1f)));
+            level.AirZones = new[] { zone };
+
+            Assert.That(CameraFramingMath.TryContentBounds(level, out var min, out var max), Is.True);
+            AssertVec(min, new Vec2(-1f, 0f));
+            AssertVec(max, new Vec2(1f, 2f));
+        }
+
+        [Test]
         public void NewBounds_SubsetOfOldUnionAabb()
         {
             foreach (var level in Fixtures())
