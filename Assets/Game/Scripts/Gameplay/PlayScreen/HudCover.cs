@@ -1,10 +1,14 @@
+using System;
+using R3;
 using UnityEngine;
 
 namespace Gameplay.PlayScreen
 {
     /// <summary>
     /// Hides a code-built HUD canvas while a UiService screen covers the play screen (TASK-398,
-    /// <see cref="PlayScreenInteraction.IsCoveredByScreen"/>). One implementation for every HUD presenter.
+    /// <see cref="PlayScreenInteraction.IsCoveredByScreen"/>), and dims it while a tutorial tour holds the focus
+    /// (TASK-613, <see cref="PlayScreenInteraction.IsTourFocused"/>). One implementation for every HUD presenter: a new
+    /// HUD button calls <see cref="Bind"/>, which follows BOTH flags.
     ///
     /// Why a <see cref="CanvasGroup"/> on the canvas root and not <c>SetActive</c>: the dev <c>RestartButtonGuard</c>
     /// already owns the RESTART root's active flag (hide while the debug menu is open, restore the saved state on close).
@@ -15,14 +19,25 @@ namespace Gameplay.PlayScreen
     /// </summary>
     public static class HudCover
     {
-        public static void Apply(CanvasGroup group, bool covered)
+        /// <summary>Keep <paramref name="group"/> in step with both flags of <paramref name="interaction"/> until the
+        /// returned subscription is disposed — the one call a HUD presenter makes.</summary>
+        public static IDisposable Bind(CanvasGroup group, PlayScreenInteraction interaction, float focusedAlpha) =>
+            Observable.CombineLatest(interaction.IsCoveredByScreen, interaction.IsTourFocused,
+                    (covered, focused) => (covered, focused))
+                .Subscribe(s => Apply(group, s.covered, s.focused, focusedAlpha));
+
+        /// <summary><paramref name="covered"/> wins (alpha 0, as before); otherwise <paramref name="focused"/> dims the
+        /// group to <paramref name="focusedAlpha"/> and makes it non-interactive — visible, so the player still knows
+        /// where the buttons are, but out of the tour's way.</summary>
+        public static void Apply(CanvasGroup group, bool covered, bool focused, float focusedAlpha)
         {
             if (group == null)
                 return;
 
-            group.alpha = covered ? 0f : 1f;
-            group.blocksRaycasts = !covered;
-            group.interactable = !covered;
+            var open = !covered && !focused;
+            group.alpha = covered ? 0f : focused ? focusedAlpha : 1f;
+            group.blocksRaycasts = open;
+            group.interactable = open;
         }
     }
 }

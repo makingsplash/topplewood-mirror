@@ -212,13 +212,13 @@ namespace Gameplay.Dev
                 // M-1: reset FTUE via the existing dev seam — "forget the tutorial so it replays"
                 // (ITutorialProgressStore.cs:17-18), durable. The reset jumps to level 0, so it forgets the tour
                 // registered for level 0's id in the TutorialCatalog (sailboat → "first_tutorial", TASK-377) — the
-                // same id TutorialRunner.ShouldPlay reads there. A level 0 with no tour → nothing to reset.
+                // same id TutorialRunner reads there (the recipe's Id, TASK-613). A level 0 with no tour → nothing to reset.
                 var firstTour = _tutorialCatalog.Resolve(_levelSource.Load(0).LevelId);
                 if (firstTour != null)
                     _tutorialProgress.Reset(firstTour.Id);
 
-                // Reload level 0 in-place → GameModel.LevelLoaded → TutorialRunner.OnLevelLoaded → ShouldPlay
-                // (now IsCompleted==false, level 0 loaded) → FTUE replays. No relaunch needed.
+                // Reload level 0 in-place → GameModel.LevelLoaded → TutorialRunner.OnLevelLoaded (now
+                // IsCompleted==false, level 0 loaded) → FTUE replays. No relaunch needed.
                 AfterJump(() => _campaign.DevJumpToLevel(0));
             });
         }

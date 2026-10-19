@@ -13,7 +13,7 @@ namespace Gameplay.View
     /// (2) a procedural EMITTER bar on the up-wind edge — the propeller housing, drawn procedurally (owner PNG
     ///     decode: propeller.png has no alpha, would render as a white patch) → placeholder-grade art, folded into
     ///     TASK-082's pre-soft-launch art pass, NOT a new debt;
-    /// (3) tiled ARROW sprites along the flow, loaded like <c>TutorialView</c>'s finger (Resources.Load + graceful
+    /// (3) tiled ARROW sprites along the flow, loaded like the tour's finger (<c>TourView</c>) (Resources.Load + graceful
     ///     fallback). If the sprite is missing the fill + emitter still convey the zone and its source side.
     /// The domain stays Unity-free; all Vec2⇄Vector2 lives here.
     /// </summary>
@@ -774,7 +774,7 @@ namespace Gameplay.View
             go.transform.localPosition = new Vector3(0f, 0f, ZEmitter);
         }
 
-        // (3) Tiled direction arrows. Missing sprite ⇒ graceful skip (fill + emitter still read), like TutorialView.
+        // (3) Tiled direction arrows. Missing sprite ⇒ graceful skip (fill + emitter still read), like TourView's finger.
         private void BuildArrows(Vector2 min, Vector2 max, Vector2 centre, Vector2 dir)
         {
             if (dir.sqrMagnitude <= 0f)

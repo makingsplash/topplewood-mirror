@@ -15,10 +15,16 @@ namespace Gameplay.PlayScreen
     /// screens, so there it stays false) and read by the code-built HUD presenters to HIDE their buttons: those live on
     /// Screen Space Overlay canvases, and Overlay always draws above the Screen Space Camera UiService canvas whatever
     /// the sortingOrder, so without this the HUD sat on top of the screen and stayed tappable through it.
+    ///
+    /// <see cref="IsTourFocused"/> (TASK-613) is true while a tutorial tour runs. Written by
+    /// <c>TutorialRunner</c> (true on start, false on completion and on stop) and read by the same HUD presenters
+    /// through <see cref="HudCover.Apply"/>: the buttons are dimmed and stop
+    /// taking taps, so the tour's dim cannot be bypassed and the hint is not a second writer next to the tour.
     /// </summary>
     public sealed class PlayScreenInteraction
     {
         public readonly ReactiveProperty<bool> IsBusy = new(false);
         public readonly ReactiveProperty<bool> IsCoveredByScreen = new(false);
+        public readonly ReactiveProperty<bool> IsTourFocused = new(false);
     }
 }

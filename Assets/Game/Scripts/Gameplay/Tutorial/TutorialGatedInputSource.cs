@@ -24,8 +24,17 @@ namespace Gameplay.Tutorial
 
         // Per-emission gate check: Block()/AllowOnly()/dispose mutate the gate live, so pass/suppress is
         // evaluated per intent (not captured at subscription time). Gate.Allows folds both rules — block wins,
-        // else the optional allow-predicate decides (TASK-078 §4). Method group closes over the gate once per
-        // subscription (two subscribers: GameController + TutorialRunner) — no per-frame alloc.
-        public Observable<InputIntent> Intents => _inner.Intents.Where(_gate.Allows);
+        // else the optional allow-predicate decides (TASK-078 §4). A refused intent is reported back to the gate
+        // (TASK-613 §3.8), which turns a whitelist miss into Rejected for the tour's "not there, here" pulse. With
+        // more than one subscriber a miss is reported once per subscriber — harmless, the pulse is idempotent.
+        public Observable<InputIntent> Intents => _inner.Intents.Where(_gate, Admit);
+
+        private static bool Admit(InputIntent intent, ITutorialInputGate gate)
+        {
+            if (gate.Allows(intent))
+                return true;
+            gate.NotifyRejected(intent);
+            return false;
+        }
     }
 }

@@ -106,6 +106,8 @@ namespace Gameplay.View
                 t.localScale = Vector3.one * config.Scale;
             }
 
+            Pose = BuildPose(t, figureCenter, figureSize, backdropSide, config);
+
             // TASK-110: white square backdrop, created FIRST (before the slots) at a small +z nudge so it draws
             // BEHIND the slot meshes (camera looks along +Z ⇒ larger z = farther). The whole preview root sits at
             // ZPlane = -0.5, so the backdrop stays in front of the field and background, behind the silhouette.
@@ -166,6 +168,30 @@ namespace Gameplay.View
             // уровень, и без этого подписки копились бы.
             WoodTuning.Changed -= Repaint;
             WoodTuning.Changed += Repaint;
+        }
+
+        /// <summary>TASK-613 (T2): where this card sits — the map "target → world" and the outer frame. Invalid until
+        /// <see cref="Initialize"/> placed the card.</summary>
+        public TargetCardPose Pose { get; private set; }
+
+        // Read from the SAME numbers Initialize just put into the transform (position, uniform scale) and the same
+        // extents BuildBackdrop draws, so the pose cannot drift from the card on screen.
+        private static TargetCardPose BuildPose(Transform t, Vector2 figureCenter, Vector2 figureSize,
+            float backdropSide, TargetPreviewConfig config)
+        {
+            var scale = t.localScale.x;
+            var framePad = WoodArt.Frame != null ? 1f + 2f * WoodArt.FramePadFraction : 1f;
+            var halfX = 0.5f * scale * (config.BackdropEnabled ? backdropSide * framePad : figureSize.x);
+            var halfY = 0.5f * scale * (config.BackdropEnabled ? backdropSide * framePad : figureSize.y);
+            var o = t.position;
+            var corners = new[]
+            {
+                o + new Vector3(-halfX, -halfY, 0f),
+                o + new Vector3(halfX, -halfY, 0f),
+                o + new Vector3(halfX, halfY, 0f),
+                o + new Vector3(-halfX, halfY, 0f),
+            };
+            return new TargetCardPose(new Vec2(figureCenter.x, figureCenter.y), o, scale, corners);
         }
 
         private void OnDestroy()

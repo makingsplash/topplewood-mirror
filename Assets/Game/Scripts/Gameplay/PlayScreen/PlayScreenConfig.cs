@@ -30,6 +30,13 @@ namespace Gameplay.PlayScreen
         /// </summary>
         public float WinSettleSeconds = 0.5f;
 
+        /// <summary>
+        /// Ceiling on an armed <see cref="WinInterlude"/> (TASK-613): the flow waits for the number to finish OR for
+        /// this many seconds, whichever comes first, then shows the win screen anyway with a Warning. A broken view must
+        /// never hang a win forever. The tour's "Совпало" beat is ≈1.7 s, so 4 s is a safety net, not a tuning lever.
+        /// </summary>
+        public float MaxWinInterludeSeconds = 4f;
+
         /// <summary>Banner intro (pop-in + fade) duration.</summary>
         public float BannerIntroSeconds = 0.45f;
 

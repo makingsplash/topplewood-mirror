@@ -98,9 +98,10 @@ namespace Gameplay.DI
             builder.RegisterEntryPoint<ShapeFillPresenter>();
             builder.RegisterEntryPoint<TargetPreviewPresenter>();
 
-            // Tutorial system (TASK-049, step-by-step TASK-078) — context-INDEPENDENT parts only: the reentrant
-            // input gate consumed by the input decorator, the real ring/finger overlay view (TutorialView), the
-            // tour definition + its composite AssembleInOrderStep, and the runner entry point (registered AFTER
+            // Tutorial system (TASK-049, step-by-step TASK-078, beats from data TASK-613) — context-INDEPENDENT parts
+            // only: the reentrant input gate consumed by the input decorator, the tour's own overlay view (TourView)
+            // and its numbers, the hint's separate highlight view, the target card's pose for both, the win interlude
+            // the tour's "Совпало" beat arms, the per-level recipe catalog, and the runner entry point (registered AFTER
             // CampaignProgressionController so the resumed level is already loaded into GameModel.CurrentLevel by the
             // time the runner starts — TASK-112 gates the tour on CurrentLevel.LevelId, not on the persisted progress, so the
             // ordering requirement stands and is now load-order, not pointer-resume). The context-DEPENDENT seams (progress store / gate /
@@ -109,30 +110,34 @@ namespace Gameplay.DI
             // NOT registered here. The headless SimRun builds the domain with bare `new`, so it never creates
             // this runner → the sim physically cannot play the tutorial (RFC §7).
             builder.Register<ITutorialInputGate, TutorialInputGate>(Lifetime.Singleton);
-            builder.Register<ITutorialView, TutorialView>(Lifetime.Singleton);
-            // Per-level tutorial catalog (TASK-377, closing the TASK-078/243 hardcode): TutorialRunner resolves the
-            // tour for the LOADED level's id, so different levels teach different gestures. Keyed by LevelId (not
-            // campaign index), robust to a dev level-jump / manifest re-order (same reason as the id-based gate).
-            //
-            // sailboat (campaign index 0) → the assemble-in-order FTUE. Its 2-piece order = placement-order 0..1
-            // (hull, then sail; bottom-up) — the ONLY solve order for a 2-piece stack (sail has no base otherwise) =
-            // slot-ascending, the canonical k=2 example in level-authoring.md §L13. Still a hardcoded order
-            // (TASK-078/079 tech-debt: export a certified order into LevelData.WinningOrder and feed it from there;
-            // dormant while winning order == placement order here).
-            //
-            // The two-finger co-release tour (grand_seesaw → simul_release_tutorial) is gone with its level: the owner
-            // removed two-finger taps from the game (TASK-549, level-authoring.md §D27).
-            var catalog = new TutorialCatalog(new Dictionary<string, TutorialDefinition>
-            {
-                ["sailboat"] = new TutorialDefinition(
-                    "first_tutorial", new ITutorialStep[] { new AssembleInOrderStep(new[] { 0, 1 }) }),
-            });
-            builder.RegisterInstance(catalog);
+            builder.RegisterInstance(new TourConfig());
+            builder.Register<TargetCardLocator>(Lifetime.Singleton);
+            builder.Register<WinInterlude>(Lifetime.Singleton);
+            // Two views, one writer each (TASK-613 closes TASK-383/244/550): the tour draws through ITourView, the Hint
+            // booster through IPieceHighlightView — neither can clear the other's overlay.
+            builder.Register<ITourView, TourView>(Lifetime.Singleton);
+            builder.Register<IPieceHighlightView, PieceHighlightView>(Lifetime.Singleton);
+            builder.RegisterInstance(BuildTutorialCatalog());
             builder.RegisterEntryPoint<TutorialRunner>();
             // NOTE: the dev level-switch cheat is NOT registered here. This core installer is context-independent
             // (shared with prod), and prod raises its own GameDebugMenu via LoadingGame — registering a cheat here
             // would spawn a SECOND menu in prod. The bringup-only DDM host is registered by
             // ShapeFillBringupLifetimeScope instead (TASK-047).
         }
+
+        /// <summary>
+        /// Per-level tutorial catalog (TASK-377, closing the TASK-078/243 hardcode): TutorialRunner builds the tour for
+        /// the LOADED level's id, so different levels teach different things. Keyed by LevelId (not campaign index),
+        /// robust to a dev level-jump / manifest re-order (same reason as the id-based gate). A tour is a RECIPE
+        /// (TASK-613): its tap beats come from the level's certified winningOrder, so adding a tour to another level
+        /// is one line here and no code. Every level listed here must carry a non-empty winningOrder in the manifest —
+        /// held by TourCatalogDataTests. Public static so that test reads THIS catalog, not a copy.
+        ///
+        /// sailboat (campaign index 0) → the "assemble the picture" FTUE: tap hull, tap sail, "Совпало".
+        /// </summary>
+        public static TutorialCatalog BuildTutorialCatalog() => new(new Dictionary<string, ITourRecipe>
+        {
+            ["sailboat"] = new AssembleTourRecipe("first_tutorial"),
+        });
     }
 }

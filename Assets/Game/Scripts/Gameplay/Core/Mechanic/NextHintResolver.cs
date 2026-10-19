@@ -4,7 +4,7 @@ namespace Gameplay.Core.Mechanic
 {
     /// <summary>
     /// Pure, headless domain query behind the Hint booster (architect §2): "which Idle piece is next in the
-    /// certified winning order, given the current field?". It mirrors <c>AssembleInOrderStep.ResolveTargets</c> —
+    /// certified winning order, given the current field?". It mirrors the tour's target resolution (<c>TapPieceStep</c>) —
     /// walk the order, return the first placement index whose piece is currently <see cref="PieceLifecycle.Idle"/>.
     /// It reads the model read-only (like an <c>ITutorialStep</c>, never mutates), so the headless-simulatable
     /// invariant holds; the sim never calls it. A null/empty order → -1 (honest no-op — the hint never GUESSES an

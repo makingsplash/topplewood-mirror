@@ -18,17 +18,21 @@ namespace Gameplay.View
         private readonly GameModel _model;
         private readonly TargetPreviewConfig _config;
         private readonly CameraFramingConfig _framingConfig;
+        private readonly TargetCardLocator _locator;
         private IDisposable _subscription;
         private GameObject _preview;
 
         // Reads CameraFramingConfig so the preview knows the reserved top band (TASK-033) — the framing config
         // is the single source of truth for the band. Both configs are already RegisterInstance'd, so
-        // VContainer resolves this extra ctor parameter without a new registration.
-        public TargetPreviewPresenter(GameModel model, TargetPreviewConfig config, CameraFramingConfig framingConfig)
+        // VContainer resolves this extra ctor parameter without a new registration. TASK-613: publishes the card's
+        // pose to the TargetCardLocator, so the tour can light a slot / cut the card out of its dim.
+        public TargetPreviewPresenter(GameModel model, TargetPreviewConfig config, CameraFramingConfig framingConfig,
+            TargetCardLocator locator)
         {
             _model = model;
             _config = config;
             _framingConfig = framingConfig;
+            _locator = locator;
         }
 
         public void Start()
@@ -49,9 +53,10 @@ namespace Gameplay.View
                 return;
 
             _preview = new GameObject("TargetPreview");
-            _preview.AddComponent<TargetPreviewView>()
-                .Initialize(level.Target, BuildKindMap(level), _config, UnityEngine.Camera.main,
-                    _framingConfig.PreviewBandFraction, ScreenSafeInsets.Current());
+            var view = _preview.AddComponent<TargetPreviewView>();
+            view.Initialize(level.Target, BuildKindMap(level), _config, UnityEngine.Camera.main,
+                _framingConfig.PreviewBandFraction, ScreenSafeInsets.Current());
+            _locator.Set(view.Pose, level.Target);
         }
 
         // The preview shows the target only, so map from the pieces the player is given (Decoys are not
@@ -72,6 +77,7 @@ namespace Gameplay.View
 
         private void Clear()
         {
+            _locator.Invalidate();
             if (_preview != null)
                 UnityEngine.Object.Destroy(_preview);
             _preview = null;

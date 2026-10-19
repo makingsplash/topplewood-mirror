@@ -1,6 +1,7 @@
 using System;
 using Gameplay.Core;
 using Gameplay.Core.Adapters;
+using Gameplay.PlayScreen;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -12,20 +13,18 @@ namespace Gameplay.Tutorial
     /// Unity-side orchestrator for the tutorial system (TASK-049 RFC §3), registered as an entry point in the
     /// context-independent core installer. It lives OUTSIDE the domain: the headless simulation builds the
     /// domain graph with bare <c>new</c> and never registers this runner, so the sim physically cannot play the
-    /// tutorial (RFC §7 invariant 2). On each <see cref="GameModel.LevelLoaded"/> it re-evaluates the gate and
-    /// (re)starts the tour from step 0 when eligible — so a LOSS reload of the tutorial level replays the tour,
-    /// and completion is persisted only after the LAST step (mid-tour LOSS ⇒ tour repeats, RFC §Q4).
+    /// tutorial (RFC §7 invariant 2). On each <see cref="GameModel.LevelLoaded"/> it re-evaluates the gate, builds the
+    /// tour for THIS level from its catalog recipe and (re)starts it from step 0 when eligible — so a LOSS reload of
+    /// the tutorial level replays the tour.
     ///
-    /// This runner OWNS the tutorial overlay only for the tour: it arms on LevelLoaded and tears down on the next
-    /// LevelLoaded. The Hint booster (<see cref="Gameplay.PlayScreen.HintBoosterPresenter"/>) shares the same
-    /// <see cref="ITutorialView"/> singleton for its own PulseOutline hint, and it too subscribes to LevelLoaded.
-    /// The shared view's <see cref="ITutorialView.Clear"/> hides ALL overlays, so a co-subscriber that blanket-cleared
-    /// on load would tear down a tour armed by THIS runner in the SAME delivery (R3 fans a Subject out to subscribers
-    /// in registration order, synchronously). That was the level-5 "tutorial flashes then vanishes" bug (TASK-382):
-    /// the runner armed grand_seesaw's two-finger tour, then the hint presenter's load handler ran Clear() and hid it.
-    /// The fix lives in the hint presenter (it now clears the shared view only when IT owns an active hint), so this
-    /// runner does not need to defend against a spurious teardown — there is at most ONE LevelLoaded per transition
-    /// (measured, owner probe 2026-09-15), and no other writer touches the view while a tour is armed.
+    /// Completion is persisted only after the LAST step (RFC §Q4). Since TASK-613 the last step is the "Совпало" beat
+    /// (<see cref="MatchTargetStep"/>), which completes only once the resolution flow has played it on Won — so the
+    /// tour is marked AFTER the win beat, never on the last release (a loss after the last tap replays the tour).
+    ///
+    /// The runner is the ONLY writer of <see cref="ITourView"/> (TASK-613 split the former shared highlight view: the
+    /// Hint booster draws through its own <c>IPieceHighlightView</c>), so a co-subscriber of LevelLoaded can no longer
+    /// tear down a tour armed in the same delivery (the TASK-382 class is gone by construction). While a tour runs it
+    /// holds <see cref="PlayScreenInteraction.IsTourFocused"/>, which dims the HUD and takes its taps away.
     ///
     /// A synchronously-completing step is supported by design: a step that observes a <c>ReactiveProperty</c>
     /// (e.g. <see cref="GameModel.Phase"/>/<see cref="GameModel.Outcome"/>, which replay their current value on
@@ -39,21 +38,23 @@ namespace Gameplay.Tutorial
         // level's LevelId via the TutorialCatalog, NOT from a campaign index. Keying on the loaded LevelId keeps the
         // gate coherent with a DEV level-jump (a non-destructive preview that never writes the pointer) and with any
         // re-ordering of the manifest — a jumped-to or moved level plays exactly the tour registered for its id, or
-        // none. sailboat → assemble-in-order FTUE (the only tour since TASK-549 removed the two-finger one).
+        // none.
         private readonly GameModel _model;
         private readonly ITutorialGate _gate;
         private readonly ITutorialProgressStore _progress;
         private readonly ITutorialAnalytics _analytics;
-        private readonly ITutorialView _view;
+        private readonly ITourView _view;
         private readonly ITutorialInputGate _inputGate;
-        private readonly IGameplayInputSource _input;
         private readonly IGameplayTapTolerance _tapTolerance;
         private readonly TutorialCatalog _catalog;
+        private readonly WinInterlude _interlude;
+        private readonly TourConfig _config;
+        private readonly PlayScreenInteraction _interaction;
 
         private IDisposable _levelLoadedSubscription;
         private IDisposable _stepSubscription;
         private TutorialContext _context;
-        private TutorialDefinition _definition; // the tour resolved for the currently-loaded level (null ⇒ none)
+        private TutorialDefinition _definition; // the tour built for the currently-loaded level (null ⇒ none)
         private int _stepIndex;
 
         // Reentrancy guard for a step that completes synchronously during Enter's Subscribe (see class summary):
@@ -67,11 +68,13 @@ namespace Gameplay.Tutorial
             ITutorialGate gate,
             ITutorialProgressStore progress,
             ITutorialAnalytics analytics,
-            ITutorialView view,
+            ITourView view,
             ITutorialInputGate inputGate,
-            IGameplayInputSource input,
             IGameplayTapTolerance tapTolerance,
-            TutorialCatalog catalog)
+            TutorialCatalog catalog,
+            WinInterlude interlude,
+            TourConfig config,
+            PlayScreenInteraction interaction)
         {
             _model = model;
             _gate = gate;
@@ -79,14 +82,16 @@ namespace Gameplay.Tutorial
             _analytics = analytics;
             _view = view;
             _inputGate = inputGate;
-            _input = input;
             _tapTolerance = tapTolerance;
             _catalog = catalog;
+            _interlude = interlude;
+            _config = config;
+            _interaction = interaction;
         }
 
         public void Start()
         {
-            _context = new TutorialContext(_model, _view, _inputGate, _input.Intents, _tapTolerance);
+            _context = new TutorialContext(_model, _view, _inputGate, _tapTolerance, _interlude, _config);
             _levelLoadedSubscription = _model.LevelLoaded.Subscribe(_ => OnLevelLoaded());
 
             // A level is already loaded before this entry point starts (GameControllerRunner + the campaign
@@ -97,29 +102,25 @@ namespace Gameplay.Tutorial
 
         private void OnLevelLoaded()
         {
-            // Re-evaluate on every load: cancel any in-progress tour, resolve the tour for THIS level, then (re)start
+            // Re-evaluate on every load: cancel any in-progress tour, build the tour for THIS level, then (re)start
             // from step 0 if still eligible. Idempotent with the reset-in-place reload the campaign controller does on
             // LOSS.
             StopSequence();
-            _definition = ResolveDefinition();
-            if (_definition == null || !ShouldPlay())
+            var recipe = _model.CurrentLevel == null ? null : _catalog.Resolve(_model.CurrentLevel.LevelId);
+            // Gate before Build: a finished tour must not log "no winningOrder" on every visit of its level.
+            _definition = recipe != null && _gate.Enabled ? recipe.Build(_model.CurrentLevel) : null;
+            if (_definition == null || _progress.IsCompleted(_definition.Id))
+            {
+                _definition = null;
                 return;
+            }
             StartSequence();
-        }
-
-        // The tour registered for the loaded level's id, or null if the level has none (→ no tour plays).
-        private TutorialDefinition ResolveDefinition() =>
-            _model.CurrentLevel == null ? null : _catalog.Resolve(_model.CurrentLevel.LevelId);
-
-        private bool ShouldPlay()
-        {
-            return _gate.Enabled
-                && !_progress.IsCompleted(_definition.Id);
         }
 
         private void StartSequence()
         {
             _stepIndex = 0;
+            _interaction.IsTourFocused.Value = true;
             PlayCurrentStep();
         }
 
@@ -174,14 +175,18 @@ namespace Gameplay.Tutorial
             _progress.MarkCompleted(_definition.Id); // durable — survives a kill
             _analytics.LogComplete(_definition.Id);
             _view.Clear();
+            _interaction.IsTourFocused.Value = false;
             Debug.unityLogger.Log(LogType.Log, $"[{LogCategory.Tutorial}] Tutorial '{_definition.Id}' completed");
         }
 
         private void StopSequence()
         {
+            // Disposing the step's subscription also disarms an armed win interlude (MatchTargetStep) — a Lost or a
+            // restart after the last tap must not play the "Совпало" beat on some later Won.
             _stepSubscription?.Dispose();
             _stepSubscription = null;
             _view.Clear();
+            _interaction.IsTourFocused.Value = false;
         }
 
         public void Dispose()

@@ -1,5 +1,6 @@
 using System;
 using Gameplay.Core;
+using R3;
 
 namespace Gameplay.Tutorial
 {
@@ -33,6 +34,17 @@ namespace Gameplay.Tutorial
         // Block has priority: while depth > 0 nothing passes. Otherwise the whitelist decides (or, with no
         // whitelist, everything passes). One method, so the decorator and any caller agree on the gate rule.
         public bool Allows(InputIntent intent) => _blockDepth == 0 && (_allow == null || _allow(intent));
+
+        private readonly Subject<InputIntent> _rejected = new();
+
+        public Observable<InputIntent> Rejected => _rejected;
+
+        // A miss is "the whitelist said no" — not "blocked" (a fall in progress) and not "no whitelist at all".
+        public void NotifyRejected(InputIntent intent)
+        {
+            if (_blockDepth == 0 && _allow != null && !_allow(intent))
+                _rejected.OnNext(intent);
+        }
 
         private void Release()
         {

@@ -4,7 +4,7 @@ namespace Gameplay.Core
 {
     /// <summary>
     /// The single, pure two-tier tap resolver (TASK-085) shared by BOTH the domain (<c>ShapeFillMechanicController
-    /// .PickIdlePieceAt</c>) and the tutorial gate (<c>AssembleInOrderStep.HitTest</c>) so they can never disagree
+    /// .PickIdlePieceAt</c>) and the tutorial gate (<c>TapPieceStep.HitTest</c>) so they can never disagree
     /// on which piece a tap hits (this closes the TASK-078 tech-debt: the tutorial used to hit-test independently).
     ///
     /// tier-1 — CONTAINMENT: the tap lands inside a piece's polygon. Identical to the pre-TASK-085 hit-test

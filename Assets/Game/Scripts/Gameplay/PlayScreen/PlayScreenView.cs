@@ -10,11 +10,11 @@ namespace Gameplay.PlayScreen
 {
     /// <summary>
     /// Procedural WIN/LOSE banner (TASK-116, RFC §4). A plain C# class (not a scene MonoBehaviour) that builds its
-    /// own <see cref="RenderMode.ScreenSpaceOverlay"/> canvas in code, exactly like <c>TutorialView</c> and
+    /// own <see cref="RenderMode.ScreenSpaceOverlay"/> canvas in code, exactly like <c>TourView</c> and
     /// <c>BringupDebugMenuHost.CreateToggleButton</c> — the bringup scene has no Canvas and deliberately does not
     /// raise the SayKit UI graph (no prefab / <c>ILogService</c> for <c>UIShowHide</c>, RFC §4), so the ready-made
     /// UI animators are unusable here. Animation is procedural DOTween (scale pop-in via <c>OutBack</c> + alpha
-    /// fade), the idiom already established by <c>TutorialView</c>. The overlay carries NO GraphicRaycaster, so it
+    /// fade), the idiom the tutorial overlay established (<c>TourView</c> today). The overlay carries NO GraphicRaycaster, so it
     /// never intercepts the gameplay tap or the Restart button. <c>DontDestroyOnLoad</c> so it survives a level
     /// reload; <see cref="Dispose"/> destroys the GO (SetLink kills the tween with it).
     /// </summary>

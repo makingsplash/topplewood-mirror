@@ -29,16 +29,19 @@ namespace Gameplay.PlayScreen
         private Button _button;
         private Action _onClick;
         private IDisposable _coverSub;
+        private readonly Gameplay.Tutorial.TourConfig _tour;
 
-        public SettingsButtonPresenter(PlayScreenInteraction interaction)
+        public SettingsButtonPresenter(PlayScreenInteraction interaction, Gameplay.Tutorial.TourConfig tour)
         {
             _interaction = interaction;
+            _tour = tour;
         }
 
         public void Start()
         {
             CreateButton();
-            _coverSub = _interaction.IsCoveredByScreen.Subscribe(covered => HudCover.Apply(_group, covered));
+            // Hidden under a UiService screen (TASK-398), dimmed and untappable during a tour (TASK-613).
+            _coverSub = HudCover.Bind(_group, _interaction, _tour.HudFocusedAlpha);
         }
 
         /// <summary>Gives the gear its action and shows it. Until then the gear is not on screen.</summary>

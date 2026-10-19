@@ -34,6 +34,7 @@ namespace Gameplay.PlayScreen
 
         private readonly ICampaignRestart _restart;
         private readonly PlayScreenInteraction _interaction;
+        private readonly Gameplay.Tutorial.TourConfig _tour;
 
         private GameObject _eventSystem;
         private GameObject _canvas;
@@ -42,10 +43,12 @@ namespace Gameplay.PlayScreen
         private IDisposable _busySub;
         private IDisposable _coverSub;
 
-        public RestartButtonPresenter(ICampaignRestart restart, PlayScreenInteraction interaction)
+        public RestartButtonPresenter(ICampaignRestart restart, PlayScreenInteraction interaction,
+            Gameplay.Tutorial.TourConfig tour)
         {
             _restart = restart;
             _interaction = interaction;
+            _tour = tour;
         }
 
         public void Start()
@@ -57,7 +60,8 @@ namespace Gameplay.PlayScreen
                 if (_button != null)
                     _button.interactable = !busy;
             });
-            _coverSub = _interaction.IsCoveredByScreen.Subscribe(covered => HudCover.Apply(_group, covered));
+            // Hidden under a UiService screen (TASK-398), dimmed and untappable during a tour (TASK-613).
+            _coverSub = HudCover.Bind(_group, _interaction, _tour.HudFocusedAlpha);
         }
 
         // Idempotent EventSystem guard (see class summary). DontDestroyOnLoad so a level reload does not drop it.

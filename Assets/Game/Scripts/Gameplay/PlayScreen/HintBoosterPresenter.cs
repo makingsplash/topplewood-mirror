@@ -6,6 +6,7 @@ using Gameplay.Configs;
 using Gameplay.Core;
 using Gameplay.Core.Mechanic;
 using Gameplay.Tutorial;
+using Gameplay.View;
 using R3;
 using Services.Gameplay;
 using UnityEngine;
@@ -20,7 +21,8 @@ namespace Gameplay.PlayScreen
     /// Hint booster button (TASK-237) — a floating, code-built HUD button in the bottom-right, built on its own
     /// <c>DontDestroyOnLoad</c> overlay canvas exactly like <see cref="RestartButtonPresenter"/> (owner decision:
     /// code-built, not a UiBuild schema). Tapping it reveals the NEXT piece in the level's certified
-    /// <c>WinningOrder</c> by REUSING the tutorial highlight seam (<see cref="ITutorialView"/>) — the booster is a
+    /// <c>WinningOrder</c> through its OWN highlight seam (<see cref="IPieceHighlightView"/>; it shared the tour's view
+    /// until TASK-613 split them) — the booster is a
     /// pure UI hint: it never moves a piece, widens tolerance, or touches physics/state, so the sim is unaffected
     /// (architect §9). Charges are meta-state (<see cref="HintBoosterService"/>); a no-op (nothing to reveal, level
     /// ineligible, or an armed balance coalescence window) shows neutral feedback WITHOUT spending (balancer §1.2).
@@ -36,7 +38,7 @@ namespace Gameplay.PlayScreen
     /// if none, destroy only our own) so ownership is order-independent whichever HUD presenter starts first. The
     /// canvas sits at <c>short.MaxValue-2</c> — above the banner/tutorial highlight, below the RESTART button
     /// (<c>short.MaxValue-1</c>); like RESTART it hides while a UiService screen is up (<see cref="HudCover"/>,
-    /// TASK-398). The proactive A/B affordance (glow pulse + tooltip) is non-modal and never blocks
+    /// TASK-398), and it is dimmed and untappable while a tutorial tour holds the focus (TASK-613). The proactive A/B affordance (glow pulse + tooltip) is non-modal and never blocks
     /// the field (one-tap is sacrosanct); it is driven by <see cref="LevelFailStreak"/> under the treatment arm.
     /// </summary>
     public sealed class HintBoosterPresenter : IStartable, IDisposable
@@ -44,9 +46,10 @@ namespace Gameplay.PlayScreen
         private readonly GameModel _model;
         private readonly HintBoosterService _hint;
         private readonly PlayScreenInteraction _interaction;
-        private readonly ITutorialView _highlightView;
+        private readonly IPieceHighlightView _highlightView;
         private readonly LevelFailStreak _failStreak;
         private readonly IMechanicController _mechanic;
+        private readonly TourConfig _tour;
 
         private GameObject _eventSystem;
         private GameObject _canvas;
@@ -94,9 +97,10 @@ namespace Gameplay.PlayScreen
             GameModel model,
             HintBoosterService hint,
             PlayScreenInteraction interaction,
-            ITutorialView highlightView,
+            IPieceHighlightView highlightView,
             LevelFailStreak failStreak,
-            IMechanicController mechanic)
+            IMechanicController mechanic,
+            TourConfig tour)
         {
             _model = model;
             _hint = hint;
@@ -104,6 +108,7 @@ namespace Gameplay.PlayScreen
             _highlightView = highlightView;
             _failStreak = failStreak;
             _mechanic = mechanic;
+            _tour = tour;
         }
 
         private BoostersConfig.HintData Cfg => _hint.HintConfig;
@@ -115,8 +120,9 @@ namespace Gameplay.PlayScreen
 
             _subs = new CompositeDisposable();
             _interaction.IsBusy.Subscribe(_ => RefreshState()).AddTo(_subs);
-            // TASK-398: hidden (render + hit-test) while a UiService screen is up — win/lose, popups.
-            _interaction.IsCoveredByScreen.Subscribe(covered => HudCover.Apply(_group, covered)).AddTo(_subs);
+            // TASK-398: hidden (render + hit-test) while a UiService screen is up — win/lose, popups. TASK-613: dimmed
+            // and untappable during a tour — otherwise the "3" badge is the brightest spot next to the tour.
+            HudCover.Bind(_group, _interaction, _tour.HudFocusedAlpha).AddTo(_subs);
             _hint.Charges.Subscribe(_ => RefreshState()).AddTo(_subs);
             _failStreak.Current.Subscribe(_ => RefreshProactive()).AddTo(_subs);
             // TASK-263 §2b: kill the hint outline the instant the player releases the piece it pointed at — the same
@@ -124,23 +130,10 @@ namespace Gameplay.PlayScreen
             _model.PieceReleased.Subscribe(OnPieceReleased).AddTo(_subs);
             _model.LevelLoaded.Subscribe(_ =>
             {
-                // New level (or reload): drop any active hint WE own, clear the proactive affordance, and let a
-                // fresh struggle re-earn the offer.
-                //
-                // Clear the SHARED overlay only when a hint of ours is actually showing (TASK-382). This presenter
-                // and TutorialRunner share ONE ITutorialView singleton, and both subscribe to LevelLoaded. R3 fans a
-                // Subject out to its subscribers synchronously, in registration order, so a single LevelLoaded reaches
-                // the runner FIRST — it arms the level's tour (then grand_seesaw's two fingers) — and then reaches this
-                // handler. TutorialView.Clear() hides EVERY overlay, so an unconditional Clear() here tore the
-                // just-armed tour down inside the same delivery: the player saw a flash, i.e. "no tutorial" on level 5
-                // (owner probe 2026-09-15 proved exactly one LevelLoaded per transition, with the tour's Highlight
-                // then a Hide from this handler, then his own last-subscribed probe). When no hint is showing there is
-                // nothing of OURS to clear, so only cancel the fallback timer and leave the shared view — and the
-                // tour armed on this same load — untouched.
-                if (_activeHighlightId >= 0)
-                    ClearHighlight();
-                else
-                    CancelHighlightTimer();
+                // New level (or reload): drop any active hint, clear the proactive affordance, and let a fresh
+                // struggle re-earn the offer. The highlight view is this presenter's alone since TASK-613, so the
+                // unconditional clear can no longer tear down a tour armed on the same load (the TASK-382 bug).
+                ClearHighlight();
                 _proactiveSuppressed = false;
                 _suppressedAtStreak = 0;
                 RefreshState();
@@ -440,7 +433,7 @@ namespace Gameplay.PlayScreen
 
         // TASK-309 diagnostic: one line per tap naming EXACTLY which branch of OnHintClicked ran, so a single live
         // tap (owner via adb, or the orchestrator) distinguishes "a gate silently swallowed the call" (class 1) from
-        // "the call reached Highlight but nothing shows" (class 2 — pair with TutorialView's Highlight ENTER log).
+        // "the call reached Highlight but nothing shows" (class 2 — pair with PieceHighlightView's Show log).
         private static void LogHint(string msg) =>
             Debug.unityLogger.Log(LogType.Log, $"[booster] tap → {msg}");
 
@@ -534,7 +527,7 @@ namespace Gameplay.PlayScreen
             var shape = _model.TypeFor(piece).Shape;
             // Blinking silhouette outline, NO finger (TASK-263 §2a): a finger reads as "run the tutorial"; the hint
             // just says "this is the next piece".
-            _highlightView.Highlight(piece.Position, piece.Rotation, shape, HighlightStyle.PulseOutline);
+            _highlightView.Show(piece.Position, piece.Rotation, shape);
             _activeHighlightId = instanceId;
             HideProactive(); // accepted: drop the affordance for this level.
             AutoClearHighlightAsync().Forget();
@@ -616,9 +609,7 @@ namespace Gameplay.PlayScreen
             _highlightView.Clear();
         }
 
-        // Cancel the fallback auto-clear timer WITHOUT touching the shared overlay view. Used by the LevelLoaded
-        // handler when no hint of ours is showing: clearing the shared view there would tear down a tutorial tour
-        // armed on the same load (TASK-382), so we drop only our own pending timer.
+        // Cancel the fallback auto-clear timer without touching the view.
         private void CancelHighlightTimer()
         {
             _highlightCts?.Cancel();

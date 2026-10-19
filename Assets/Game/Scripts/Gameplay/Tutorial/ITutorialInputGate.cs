@@ -1,5 +1,6 @@
 using System;
 using Gameplay.Core;
+using R3;
 
 namespace Gameplay.Tutorial
 {
@@ -24,5 +25,14 @@ namespace Gameplay.Tutorial
 
         /// <summary>Single decision the input decorator asks per emission: will this intent pass the gate now?</summary>
         bool Allows(InputIntent intent);
+
+        /// <summary>TASK-613 §3.8: a tap the active <see cref="AllowOnly"/> predicate turned away — "the player tapped,
+        /// but not there". Emits only while a predicate is active and the gate is NOT blocked: a tap during a piece's
+        /// fall is not a miss (there is no finger to answer it).</summary>
+        Observable<InputIntent> Rejected { get; }
+
+        /// <summary>Called by the input decorator for an intent <see cref="Allows"/> refused. The gate itself decides
+        /// whether that is a miss worth reporting on <see cref="Rejected"/>.</summary>
+        void NotifyRejected(InputIntent intent);
     }
 }

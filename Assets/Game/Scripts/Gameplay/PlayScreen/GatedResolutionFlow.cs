@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using DataStorage;
 using Gameplay.Configs;
 using Gameplay.Core;
+using R3;
 using Services;
 using Services.Gameplay;
 using Ui;
@@ -38,13 +39,14 @@ namespace Gameplay.PlayScreen
     /// checkpoint is already written on resolve (CampaignProgressionController), so a teardown before the tap does NOT
     /// lose the win — relaunch resumes the next level (after the last line-up level: the first pool level).
     ///
-    /// No fade on either panel: <c>IWindowAnimator</c> is absent (TASK-121/155) — v1 shows instantly; the win
-    /// "celebration" is carried by the figure reveal in the settle-beat + the warm copy, not by animation.
+    /// Both panels play their own show-animation, which is data on the prefab (<c>ScreenReveal</c>, TASK-425 — the
+    /// "no fade" of TASK-121/155 is long gone, this summary said otherwise until TASK-613).
+    ///
+    /// Win interlude (TASK-613): if someone armed a <see cref="WinInterlude"/> (today: the tutorial's "Совпало" beat),
+    /// the Won path plays THAT instead of the plain settle-beat and shows the panel when it ends — or after
+    /// <see cref="PlayScreenConfig.MaxWinInterludeSeconds"/> with a Warning, so a broken number never hangs a win.
+    /// Levels without an armed number keep the plain <see cref="PlayScreenConfig.WinSettleSeconds"/> beat.
     /// </summary>
-    // NOTE (TASK-157): the file is still named LoseResolutionFlow.cs; the class was renamed in place because a
-    // `git mv` was not available in the implementer run (Bash denied). It is a plain-C# class (not a
-    // MonoBehaviour) so no scene/prefab GUID references it — the filename is cosmetic. Manual finishing step:
-    // `git mv LoseResolutionFlow.cs GatedResolutionFlow.cs` (+ .meta), no content change.
     public sealed class GatedResolutionFlow : ILevelResolutionFlow, IDisposable
     {
         private readonly PlayScreenConfig _config;
@@ -52,17 +54,19 @@ namespace Gameplay.PlayScreen
         private readonly LevelRewardService _reward;
         private readonly CoreConfig _core;
         private readonly IWinRewardDoubler _rewardDoubler;
+        private readonly WinInterlude _interlude;
         private readonly CancellationTokenSource _cts = new();
 
         public GatedResolutionFlow(
             PlayScreenConfig config, PlayScreenInteraction interaction, LevelRewardService reward,
-            CoreConfig core, IWinRewardDoubler rewardDoubler)
+            CoreConfig core, IWinRewardDoubler rewardDoubler, WinInterlude interlude)
         {
             _config = config;
             _interaction = interaction;
             _reward = reward;
             _core = core;
             _rewardDoubler = rewardDoubler;
+            _interlude = interlude;
         }
 
         public void Present(GameOutcome outcome, Action applyTransition, bool isFinalLevel)
@@ -87,10 +91,14 @@ namespace Gameplay.PlayScreen
         {
             _interaction.IsBusy.Value = true;
 
-            // Settle-beat on the ASSEMBLED figure — the visual reward — before the panel (design 01 §2). Number
-            // lives in PlayScreenConfig.WinSettleSeconds (v1 = 1.4s, owner decision: a touch longer than the lose
-            // beat, to "savour" the win); config, not a constant — open tuning lever for game-balancer.
-            await UniTask.Delay(TimeSpan.FromSeconds(_config.WinSettleSeconds), cancellationToken: ct);
+            // An armed interlude (the tour's "Совпало" beat) replaces the settle-beat; otherwise the settle-beat on the
+            // ASSEMBLED figure — the visual reward — before the panel (design 01 §2). Its number lives in
+            // PlayScreenConfig.WinSettleSeconds (0.5 s since the owner's 2026-08-19 playtest — see the config); config,
+            // not a constant — open tuning lever for game-balancer.
+            if (_interlude.TryTake(out var play))
+                await PlayInterludeAsync(play, ct);
+            else
+                await UniTask.Delay(TimeSpan.FromSeconds(_config.WinSettleSeconds), cancellationToken: ct);
 
             var screen = await Service.UI.Show<WinScreen>(ScreenNames.WinScreen);
 
@@ -107,6 +115,20 @@ namespace Gameplay.PlayScreen
                 applyTransition?.Invoke();
                 _interaction.IsBusy.Value = false;
             }, isFinalLevel, reward, x2Available, onX2: () => _rewardDoubler.TryDouble(reward, _ => { }));
+        }
+
+        // Wait for the number to complete OR for the ceiling, whichever first. The subscription is disposed on the way
+        // out either way — that is what stops an over-long number before the panel shows.
+        private async UniTask PlayInterludeAsync(Func<Observable<Unit>> play, CancellationToken ct)
+        {
+            var done = new UniTaskCompletionSource();
+            using var subscription = play().Subscribe(_ => { }, _ => done.TrySetResult());
+            var winner = await UniTask.WhenAny(
+                done.Task,
+                UniTask.Delay(TimeSpan.FromSeconds(_config.MaxWinInterludeSeconds), cancellationToken: ct));
+            if (winner != 0)
+                UnityEngine.Debug.unityLogger.Log(UnityEngine.LogType.Warning,
+                    $"[PlayScreen] win interlude did not finish in {_config.MaxWinInterludeSeconds:0.#}s — showing the win screen");
         }
 
         private async UniTaskVoid PresentLostAsync(Action applyTransition, CancellationToken ct)

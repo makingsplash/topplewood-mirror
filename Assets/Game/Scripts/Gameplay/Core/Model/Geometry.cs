@@ -720,6 +720,68 @@ namespace Gameplay.Core
             return !(hasNeg && hasPos);
         }
 
+        /// <summary>
+        /// TASK-613: the outline pushed OUTWARD by <paramref name="distance"/> (the cut-out padding of the tour's dim).
+        /// Miter join on the bisector; a corner whose miter would reach past <paramref name="miterLimit"/>·distance
+        /// is cut SQUARE at exactly that reach (Clipper's ClipperOffset semantics: miter + limit → square), so a sharp
+        /// spike cannot throw a vertex across the screen. Either winding is accepted (outward is decided by the signed
+        /// area); consecutive duplicate points are skipped. A concave corner may make the result self-intersect — fine
+        /// for its consumer (a stencil fill writes "1" twice, plan §2), not for a physics/validator caller. Unity-free.
+        /// </summary>
+        public static Vec2[] OffsetOutward(Vec2[] outline, float distance, float miterLimit)
+        {
+            if (outline == null || outline.Length < 3)
+                return outline;
+
+            var pts = new List<Vec2>(outline.Length);
+            foreach (var p in outline)
+                if (pts.Count == 0 || (p - pts[pts.Count - 1]).SqrLength > 1e-12f)
+                    pts.Add(p);
+            if (pts.Count > 1 && (pts[0] - pts[pts.Count - 1]).SqrLength <= 1e-12f)
+                pts.RemoveAt(pts.Count - 1);
+            var n = pts.Count;
+            if (n < 3)
+                return outline;
+
+            // CCW: outward normal of a travel direction t is (t.Y, −t.X); CW: the opposite.
+            var sign = PolygonSignedArea(pts.ToArray()) >= 0f ? 1f : -1f;
+            var reach = MathF.Max(miterLimit, 1f) * distance;
+            var result = new List<Vec2>(n + 4);
+            for (var i = 0; i < n; i++)
+            {
+                var p = pts[i];
+                var t0 = Normalize(p - pts[(i - 1 + n) % n]);
+                var t1 = Normalize(pts[(i + 1) % n] - p);
+                var n0 = new Vec2(t0.Y, -t0.X) * sign;
+                var n1 = new Vec2(t1.Y, -t1.X) * sign;
+
+                var sum = n0 + n1;
+                var m = sum.SqrLength > 1e-8f ? Normalize(sum) : t0; // a 180° spike: bisector = travel direction
+                var cos = Vec2.Dot(m, n0);                           // miter length = distance / cos
+                if (cos * reach >= distance)
+                {
+                    result.Add(p + m * (distance / cos));
+                    continue;
+                }
+
+                // Square cut: the cut line is perpendicular to the bisector at `reach` from p; intersect it with the
+                // two offset edge lines (incoming one forward along t0, outgoing one backward along t1).
+                var q0 = p + n0 * distance;
+                var q1 = p + n1 * distance;
+                var d0 = Vec2.Dot(t0, m);
+                var d1 = -Vec2.Dot(t1, m);
+                result.Add(MathF.Abs(d0) > 1e-6f ? q0 + t0 * ((reach - Vec2.Dot(n0, m) * distance) / d0) : q0);
+                result.Add(MathF.Abs(d1) > 1e-6f ? q1 - t1 * ((reach - Vec2.Dot(n1, m) * distance) / d1) : q1);
+            }
+            return result.ToArray();
+        }
+
+        private static Vec2 Normalize(Vec2 v)
+        {
+            var len = v.Length;
+            return len > 1e-12f ? v * (1f / len) : Vec2.Zero;
+        }
+
         /// <summary>A shape's local vertices transformed to world by a pose (rotate then translate).</summary>
         public static Vec2[] WorldVertices(Shape shape, Vec2 position, float rotation)
             => WorldVertices(shape.Vertices, position, rotation);
