@@ -12,7 +12,7 @@ namespace Services.Gameplay
         /// or a tour level missing from the line-up); the caller also marks the tour completed.</summary>
         UnlockSilent,
 
-        /// <summary>The tour's level, tour not yet completed: unlock and top the stock up to the intro grant.</summary>
+        /// <summary>The tour's level, tour not yet completed: unlock and set the stock to exactly the intro grant.</summary>
         UnlockWithGrant,
     }
 
@@ -29,8 +29,7 @@ namespace Services.Gameplay
     /// <see cref="HintUnlockAction.UnlockSilent"/> — ABOVE rule 3 on purpose: a pool/catch-up replay of the tour level
     /// must not raise the tour;</item>
     /// <item>on the tour level and the tour not completed → <see cref="HintUnlockAction.UnlockWithGrant"/> (also when
-    /// already unlocked: a tour killed mid-way tops up again on the replay — never above the grant, see
-    /// <see cref="TopUpAmount"/>);</item>
+    /// already unlocked: a tour killed mid-way sets the grant again on the replay — exactly the grant, TASK-638);</item>
     /// <item>otherwise <see cref="HintUnlockAction.None"/>.</item>
     /// </list>
     /// </summary>
@@ -55,9 +54,5 @@ namespace Services.Gameplay
         /// first-pass position (<c>LevelNumber − 1</c>) is past <paramref name="tourLineupIndex"/>.</summary>
         public static bool Passed(CampaignProgress progress, int tourLineupIndex) =>
             progress.LineupCleared > 0 || progress.LevelNumber - 1 > tourLineupIndex;
-
-        /// <summary>Charges to add to reach <paramref name="target"/> — a top-up TO n (<c>max(current, n)</c>), never "+n"
-        /// and never a take-away.</summary>
-        public static int TopUpAmount(int current, int target) => target > current ? target - current : 0;
     }
 }

@@ -20,6 +20,12 @@ namespace Gameplay.PlayScreen
     /// this entry point is registered before the installers (<c>GameplayLifetimeScope</c>, "порядок несущий"): VContainer
     /// starts entry points in registration order, and an earlier Start subscribes earlier. Steps never grant — the rule
     /// runs here, also where no tour plays (DisableTutorial, a level without an order: the player still gets the button).
+    ///
+    /// TASK-638: every delivery first re-reads the service's mirror from the store (<see cref="HintBoosterService.ResyncFromStore"/>)
+    /// and nothing is cached for the session. The DEV "Reset Progress"/"Go to Level" rewrite the prefs and reload the
+    /// level IN PLACE — this scope lives on — so a session cache ("unlocked and completed, nothing can change") and the
+    /// service's in-memory "3" survived a reset: the tour then pointed at a button whose tap could never spend.
+    /// Being the first LevelLoaded subscriber, the resync lands before the presenter and the runner read the state.
     /// </summary>
     public sealed class HintUnlockController : IStartable, IDisposable
     {
@@ -33,7 +39,6 @@ namespace Gameplay.PlayScreen
         private IDisposable _subscription;
         private string _tourLevelId;
         private int _tourLineupIndex = -2; // -2 = not resolved yet; -1 = not in the line-up
-        private bool _done;
 
         public HintUnlockController(GameModel model, HintBoosterService hint, ICampaignStore campaign,
             ILevelSource levels, TutorialCatalog catalog, ITutorialProgressStore progress)
@@ -54,18 +59,16 @@ namespace Gameplay.PlayScreen
 
         private void Evaluate()
         {
-            if (_done || _model.CurrentLevel == null)
+            if (_model.CurrentLevel == null)
                 return;
 
+            _hint.ResyncFromStore();
             ResolveTourPlace();
             var tourId = BoosterTourRecipe.HintTourId;
             var unlocked = _hint.Unlocked.CurrentValue;
             var completed = _progress.IsCompleted(tourId);
             if (unlocked && completed)
-            {
-                _done = true; // nothing can change any more this session
                 return;
-            }
 
             var onTourLevel = _tourLevelId != null && _model.CurrentLevel.LevelId == _tourLevelId;
             var action = HintUnlockRules.Decide(unlocked, completed, onTourLevel, _tourLineupIndex, _campaign.Read());

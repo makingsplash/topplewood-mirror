@@ -205,7 +205,8 @@ namespace Infrastructure.Loading
             AddResource<StartConfig>(ConfigPath.Start, config => Data.Configs.Start = config);
             AddResource<RewardedConfig>(ConfigPath.Rewarded, config => Data.Configs.RewardedConfig = config);
             // TASK-135 (folded into TASK-240): the BoostersConfig.asset now loads like the other configs, so the
-            // remote A/B levers (Hint ProactiveEnabled/DailyRefillTo, coin prices) go live. The folder Assets/Game/
+            // remote A/B lever (Hint ProactiveEnabled; DailyRefillTo removed in TASK-638, coin prices in TASK-612) goes
+            // live. The folder Assets/Game/
             // Configs is a single addressable entry (address "Configs"), so the asset resolves at this path with no
             // separate group registration. A missing/failed load leaves Data.Configs.BoostersConfig null → the
             // booster keeps running on its C# defaults (Configs.InitWithRemote already guards the null).

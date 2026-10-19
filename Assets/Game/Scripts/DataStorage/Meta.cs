@@ -50,9 +50,11 @@ namespace DataStorage
         // Dormant since TASK-635: the install seed is gone (charges come with the hint tour). No reader; the key stays,
         // like GoldAmount, so an existing save keeps its shape.
         public readonly PlayerPrefsBool HintSeeded = new ("Meta.HintSeeded", false);
-        public readonly PlayerPrefsDateTime HintLastDailyRefill = new ("Meta.HintLastDailyRefill", DateTime.MinValue);
-        // TASK-635: the Hint button is hidden until this is set — by the hint tour's level (top-up to 2) or silently for
-        // a player already past that place. Additive key (missing = locked), no schema bump; rules in HintUnlockRules.
+        // TASK-638: "Meta.HintLastDailyRefill" is gone with the daily refill (owner 2026-10-19: no daily top-ups). Installs
+        // that had it keep an orphan PlayerPrefs key nothing reads — harmless, no migration needed.
+        // TASK-635: the Hint button is hidden until this is set — by the hint tour's level (charges set to 2) or silently
+        // for a player already past that place. Additive key (missing = locked), no schema bump; rules in HintUnlockRules.
+        // Read and written only through MetaBoosterChargeStore (TASK-638), beside the charges.
         public readonly PlayerPrefsBool HintUnlocked = new ("Meta.HintUnlocked", false);
 
         // TASK-528: level pool after the line-up — additive keys (a missing key defaults to 0 = first pass, so an

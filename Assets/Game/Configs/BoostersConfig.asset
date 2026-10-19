@@ -18,7 +18,6 @@ MonoBehaviour:
       SpendPerActivation: 1
       StockCap: 5
       RewardedGrantPerView: 1
-      DailyRefillTo: 3
       ReactivationCooldownSec: 2
       MinTapablePieces: 3
       ProactiveEnabled: 0

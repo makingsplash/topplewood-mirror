@@ -1,4 +1,3 @@
-using System;
 using DataStorage;
 using Gameplay.Configs;
 using R3;
@@ -7,14 +6,19 @@ using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 namespace Services.Gameplay
 {
     /// <summary>
-    /// Today's charge faucet for the Hint booster, without a currency (architect §3.3, balancer §1). Since TASK-635 the
-    /// booster is LOCKED until the hint tour's level: no install seed any more — <see cref="Unlock"/> (driven by
-    /// <c>HintUnlockController</c>) sets the persisted flag and, on the tour's level, tops the stock up to
-    /// <c>UnlockGrantTo</c>. After the unlock it tops the stock up to the daily-refill target on a new day, and spends
-    /// one charge per accepted activation. All numbers come from <c>Data.Configs.BoostersConfig.Hint</c> (config-over-
-    /// hardcode). The reactive <see cref="Charges"/>/<see cref="Unlocked"/> mirror the persisted state so the presenter's
-    /// badge, enabled-state and visibility stay in sync (R3, the project's reactive idiom). No other source is wired:
-    /// rewarded plumbing is dead (owner 20:47), and the TASK-240 coin purchase was removed with the currency (TASK-612).
+    /// The Hint booster's charges, without a currency (architect §3.3, balancer §1). Since TASK-635 the booster is
+    /// LOCKED until the hint tour's level: no install seed — <see cref="Unlock"/> (driven by <c>HintUnlockController</c>)
+    /// sets the persisted flag and, on the tour's level, sets the stock to exactly <c>UnlockGrantTo</c> (TASK-638: assign,
+    /// not top up). That is the ONLY source of charges: there is no daily refill (owner 2026-10-19, TASK-638 — «У нас не
+    /// должно быть никаких ежедневных пополнений бустера»), rewarded plumbing is dead (owner 20:47), and the TASK-240
+    /// coin purchase went with the currency (TASK-612). It spends one charge per accepted activation. Numbers come from
+    /// <c>Data.Configs.BoostersConfig.Hint</c> (config-over-hardcode).
+    ///
+    /// <see cref="Charges"/>/<see cref="Unlocked"/> are a reactive MIRROR of the store (badge, enabled-state, visibility —
+    /// R3, the project's reactive idiom). The store is the truth: <see cref="ResyncFromStore"/> re-reads it, and
+    /// <c>HintUnlockController</c> calls it on every level load, so a write behind the service's back (the DEV "Reset
+    /// Progress" reloads the level IN PLACE, the scope and this singleton live on) never leaves a stale badge. TASK-638:
+    /// the stale "3" over an empty store made the tour's tap a silent no-op on the owner's phone.
     /// A future source adds a <see cref="IBoosterChargeStore.Grant"/> call with the right <see cref="ChargeSource"/>.
     /// </summary>
     public sealed class HintBoosterService
@@ -26,11 +30,7 @@ namespace Services.Gameplay
         public HintBoosterService(IBoosterChargeStore store)
         {
             _store = store;
-            // TASK-635: no install seed (Meta.HintSeeded is dormant) and no refill while locked — otherwise the badge
-            // would read "3" on the tour instead of the owner's "2".
-            _unlocked = new ReactiveProperty<bool>(Data.Meta.HintUnlocked.Value);
-            if (_unlocked.Value)
-                ApplyDailyRefill();
+            _unlocked = new ReactiveProperty<bool>(_store.IsUnlocked(BoosterId.Hint));
             _charges = new ReactiveProperty<int>(_store.Get(BoosterId.Hint));
         }
 
@@ -40,47 +40,43 @@ namespace Services.Gameplay
         /// <summary>The button exists for the player (TASK-635): false until the hint tour's level or a silent unlock.</summary>
         public ReadOnlyReactiveProperty<bool> Unlocked => _unlocked;
 
+        /// <summary>Re-read the mirror from the store (TASK-638). Cheap (two pref reads); setting an unchanged value
+        /// notifies nobody, so calling it on every level load is free for the subscribers.</summary>
+        public void ResyncFromStore()
+        {
+            _unlocked.Value = _store.IsUnlocked(BoosterId.Hint);
+            _charges.Value = _store.Get(BoosterId.Hint);
+        }
+
         /// <summary>
-        /// Unlock the booster (TASK-635 plan §3.1). <paramref name="introGrant"/> = the tour's level: top the stock up TO
-        /// <c>UnlockGrantTo</c> (repeatable — a tour replayed after a kill tops up again, never above the grant). On the
-        /// FIRST unlock the daily-refill stamp is set: with the intro grant to now (the first refill comes the next
-        /// calendar day, design 01 §4); silently, the refill runs now (a legacy player past the place keeps the faucet).
-        /// The flag is flushed durably (TASK-537).
+        /// Unlock the booster (TASK-635 plan §3.1). <paramref name="introGrant"/> = the tour's level: the stock becomes
+        /// EXACTLY <c>UnlockGrantTo</c> (TASK-638) — before the unlock the player can neither spend nor earn, so anything
+        /// else in the store is a leftover of an older build's install seed, and the owner's word is "2". Repeatable: a
+        /// tour replayed after a kill sets 2 again. A silent unlock (a player already past the tour's place) leaves the
+        /// charges alone. Both writes are flushed durably by the store (TASK-537).
         /// </summary>
         public void Unlock(bool introGrant)
         {
-            var first = !_unlocked.Value;
             if (introGrant)
-            {
-                var missing = HintUnlockRules.TopUpAmount(_store.Get(BoosterId.Hint), Cfg.UnlockGrantTo);
-                if (missing > 0)
-                    _store.Grant(BoosterId.Hint, missing, ChargeSource.FreeGrant, Cfg.StockCap);
-            }
-
-            if (first)
-            {
-                Data.Meta.HintUnlocked.Value = true;
-                if (introGrant)
-                    Data.Meta.HintLastDailyRefill.Value = DateTime.Now;
-                else
-                    ApplyDailyRefill();
-            }
+                _store.Set(BoosterId.Hint, Cfg.UnlockGrantTo, ChargeSource.FreeGrant);
+            if (!_store.IsUnlocked(BoosterId.Hint))
+                _store.MarkUnlocked(BoosterId.Hint);
 
             PlayerPrefsCollection.Instance?.SaveDataIfChanged();
             _charges.Value = _store.Get(BoosterId.Hint);
             _unlocked.Value = true;
         }
 
-        // The BoostersConfig asset is editor-assigned; until it is (or in a build without it), fall back to the C#
-        // defaults — which ARE the shipping values (balancer §5). Remote-config A/B overrides apply once the asset
-        // is assigned, with no code change (RemoteConfigMap already maps it to config_boosters).
+        // The BoostersConfig asset is editor-assigned; until it is (or in a build without it, or in an EditMode test with
+        // no Data), fall back to the C# defaults — which ARE the shipping values (balancer §5). Remote-config overrides
+        // apply once the asset is assigned, with no code change (RemoteConfigMap already maps it to config_boosters).
         private static readonly BoostersConfig.HintData Fallback = new();
 
         private static BoostersConfig.HintData Cfg
         {
             get
             {
-                var cfg = Data.Configs.BoostersConfig;
+                var cfg = Data.IsReady() ? Data.Configs.BoostersConfig : null;
                 return cfg != null && cfg.Hint != null ? cfg.Hint : Fallback;
             }
         }
@@ -89,39 +85,17 @@ namespace Services.Gameplay
         /// read one source.</summary>
         public BoostersConfig.HintData HintConfig => Cfg;
 
-        /// <summary>Bounded free faucet (balancer §1.3), only once unlocked (TASK-635): once per calendar day, top the stock UP TO
-        /// <c>DailyRefillTo</c> (not +n) — a player at 2 becomes 3, a player at 4 (hoarded) stays 4. 0 disables it
-        /// (A/B control arm). Uses <see cref="DateTime.Now"/> like <c>HeartsService</c>.</summary>
-        private void ApplyDailyRefill()
-        {
-            var target = Cfg.DailyRefillTo;
-            if (target <= 0)
-                return;
-
-            var now = DateTime.Now;
-            if (now.Date <= Data.Meta.HintLastDailyRefill.Value.Date)
-                return;
-
-            var missing = target - _store.Get(BoosterId.Hint);
-            if (missing > 0)
-                _store.Grant(BoosterId.Hint, missing, ChargeSource.FreeGrant, Cfg.StockCap);
-
-            Data.Meta.HintLastDailyRefill.Value = now;
-            PlayerPrefsCollection.Instance?.SaveDataIfChanged();   // stamp durable with the grant (TASK-537)
-        }
-
         public bool HasCharge => _charges.Value > 0;
 
         /// <summary>Spend for one accepted activation (balancer §1.2: one activation = one revealed piece). Call
         /// ONLY after the resolver found a real piece to reveal — a no-op must never spend (that stays the
-        /// presenter's contract, §5). Returns false when short.</summary>
+        /// presenter's contract, §5). Returns false when short — and then the mirror is re-read, so a badge that
+        /// disagreed with the store shows the truth instead of offering a tap that can never spend (TASK-638).</summary>
         public bool TrySpendActivation()
         {
-            if (!_store.TrySpend(BoosterId.Hint, Cfg.SpendPerActivation))
-                return false;
-
+            var spent = _store.TrySpend(BoosterId.Hint, Cfg.SpendPerActivation);
             _charges.Value = _store.Get(BoosterId.Hint);
-            return true;
+            return spent;
         }
 
         /// <summary>Dev/QA lever (architect §3.3): grant arbitrary charges for playtest. Not shipped in prod UI.</summary>

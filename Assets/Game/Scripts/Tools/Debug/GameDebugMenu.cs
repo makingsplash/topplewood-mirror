@@ -84,10 +84,16 @@ namespace Tools.Debug
                 Data.Meta.LineupCleared.Value = 0;
                 Data.Meta.PoolCursor.Value = 0;
 
-                // TASK-635: lock the Hint button EXPLICITLY (same "by construction" rule as LineupCleared): it stays
-                // hidden until the hint tour's level. There is no install seed any more; the service's in-memory
-                // Unlocked refreshes with the restarted scope. (The start-gold re-seed went with the currency, TASK-612.)
+                // TASK-635/638: a fresh install, EXPLICITLY (same "by construction" rule as LineupCleared): the Hint button
+                // locked, 0 charges, no tour completed. NOT a scope restart — the bridge reloads the level IN PLACE
+                // (GameDebugMenuRestartBridge → ResyncFromStore), so the services live on; HintUnlockController re-reads
+                // the booster's mirror from these prefs on that reload. (TASK-638: this comment used to promise "the
+                // in-memory Unlocked refreshes with the restarted scope" — there was no restart, and a stale "3" over
+                // 0 stored charges made the hint tour's tap a silent no-op on the owner's phone.) The start-gold re-seed
+                // went with the currency, TASK-612.
                 Data.Meta.HintUnlocked.Value = false;
+                Data.Meta.HintCharges.Value = 0;
+                SayData.Meta.CompletedTutorials.Clear();
 
                 PlayerPrefsCollection.Instance.SaveDataIfChanged();
 

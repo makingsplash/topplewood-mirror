@@ -521,7 +521,7 @@ namespace Game.Services.Input
 
                 foreach (RaycastResult uiRaycastResult in _uiRaycastResults)
                 {
-                    if (uiRaycastResult.gameObject.layer == _uiRaycastLayer)
+                    if (IsUiHit(uiRaycastResult.module, uiRaycastResult.gameObject, _uiRaycastLayer))
                     {
                         return true;
                     }
@@ -530,6 +530,18 @@ namespace Game.Services.Input
 
             return false;
         }
+
+        /// <summary>
+        /// A raycast hit that owns the tap, so gameplay must not get it too: any uGUI graphic (its raycaster is a
+        /// <see cref="UnityEngine.UI.GraphicRaycaster"/> — the graphic is raycast-enabled under a blocking canvas group, or
+        /// the raycaster would not have returned it), or anything on the UI layer. TASK-638: the old rule was the layer
+        /// alone, and every code-built HUD canvas (<c>new GameObject(...)</c> → layer Default: Hint, RESTART, settings
+        /// gear, DEV) failed it — one tap on the Hint button reached the button AND the field. During the hint tour the
+        /// field half was refused by the tour's gate, which answered with the miss pulse: the finger restarted on every
+        /// correct tap.
+        /// </summary>
+        public static bool IsUiHit(BaseRaycaster module, GameObject hit, int uiLayer) =>
+            module is UnityEngine.UI.GraphicRaycaster || (hit != null && hit.layer == uiLayer);
 
         private void EmitTwoFingerGesture()
         {

@@ -36,7 +36,7 @@ namespace Gameplay.Tests
         public void TourReplayedAfterAKill_AlreadyUnlocked_GrantsAgain()
         {
             Assert.That(Decide(true, false, true, CampaignCursor.AtLineup(TourIndex)),
-                Is.EqualTo(HintUnlockAction.UnlockWithGrant), "a tour killed mid-way tops up again on the replay");
+                Is.EqualTo(HintUnlockAction.UnlockWithGrant), "a tour killed mid-way grants again on the replay");
         }
 
         [Test]
@@ -85,13 +85,7 @@ namespace Gameplay.Tests
             Assert.That(HintUnlockRules.Passed(new CampaignProgress(1, 1, 0), TourIndex), Is.True, "line-up cleared");
         }
 
-        [TestCase(0, 2, 2)]
-        [TestCase(1, 2, 1)]
-        [TestCase(2, 2, 0)]
-        [TestCase(3, 2, 0)]
-        public void TopUp_IsToN_NeverPlusN_NeverATakeAway(int current, int target, int expected)
-        {
-            Assert.That(HintUnlockRules.TopUpAmount(current, target), Is.EqualTo(expected));
-        }
+        // The tour's charge amount (exactly the grant, TASK-638) is the service's, not the rule table's — see
+        // HintBoosterStateTests.
     }
 }
