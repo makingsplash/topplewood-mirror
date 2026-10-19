@@ -352,6 +352,11 @@ namespace Gameplay.Sim
                       $"csv={csvPath ?? "<none>"} json={jsonPath ?? "<none>"}");
             LogSmoke(stats);
 
+            // TASK-629: preplaced furniture must not visibly move before the first tap. Runs AFTER the gated report is
+            // on disk, each level in its own isolated world, log-only → the gated report and every poseHash unchanged.
+            if (ok && levels != null)
+                yield return StartCoroutine(RunPreplacedSettleAudit(levels));
+
             // TASK-060: OPT-IN "fast" game. Runs AFTER the gated report is on disk and into a SEPARATE report, so
             // the gate (sim-gate.py reads only the main report's runs) is untouched no matter what fast play finds.
             if (_runImpatientPass && ok && levels != null)
@@ -365,6 +370,71 @@ namespace Gameplay.Sim
 
             if (_exitOnDone)
                 Exit(exitCode);
+        }
+
+        // TASK-629: start-vs-rest audit of every PREPLACED piece (PreplacedSettleProbe): the level runs with no taps
+        // until its furniture rests, and a piece whose rest pose is more than the tolerance from its authored start is
+        // a [LEVEL-WARN] "Preplaced settle:" — motion the player watches before touching anything. The sibling of the
+        // validator's t=0 "Preplaced rest:" gap check: that one sees geometry only, this one sees the physics (a piece
+        // seated flush but off balance still tilts). Every preplaced piece also gets a [PREPLACED-SETTLE] data line, so
+        // a number under the tolerance is visible too. Log-only, additive (own isolated world per level, after the
+        // gated report) — never moves the verdict.
+        private IEnumerator RunPreplacedSettleAudit(IReadOnlyList<LevelData> levels)
+        {
+            var pieces = 0;
+            var over = new List<string>();
+            foreach (var level in levels)
+            {
+                if (!HasPreplaced(level))
+                    continue;
+
+                List<PreplacedSettleProbe.Entry> entries = null;
+                var sim = NewIsolatedSim(out var physicsScene);
+                try
+                {
+                    entries = PreplacedSettleProbe.Run(level, sim, _maxSteps);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[level-sim] {level.LevelId}: preplaced settle probe threw: {e}");
+                }
+
+                yield return UnloadIsolatedSim(physicsScene);
+                if (entries == null)
+                    continue;
+
+                foreach (var e in entries)
+                {
+                    pieces++;
+                    var poses = string.Format(CultureInfo.InvariantCulture,
+                        "start ({0:F3}, {1:F3}, r {2:F3}) → rest ({3:F3}, {4:F3}, r {5:F3}) at step {6} ({7})",
+                        e.Start.X, e.Start.Y, e.StartRotation, e.Rest.X, e.Rest.Y, e.RestRotation, e.Step, e.Outcome);
+                    var shift = e.MaxShift.ToString("F3", CultureInfo.InvariantCulture);
+                    Debug.Log($"[PREPLACED-SETTLE] {level.LevelId}: Pieces[{e.PieceIndex}] '{e.Kind}' {poses}, " +
+                              $"max point shift {shift}");
+                    if (!e.OverTolerance)
+                        continue;
+
+                    over.Add($"{level.LevelId}#{e.PieceIndex}");
+                    Debug.Log($"[LEVEL-WARN] {level.LevelId}: Preplaced settle: Pieces[{e.PieceIndex}] '{e.Kind}' " +
+                              $"moves {shift} world units before the first tap ({poses}). A preplaced piece should be " +
+                              "authored in the pose it rests in (shift ≤" +
+                              $"{PreplacedSettleProbe.Tolerance.ToString("0.###", CultureInfo.InvariantCulture)}).");
+                }
+            }
+
+            Debug.Log($"[PREPLACED-SETTLE] total: {pieces} preplaced piece(s), over tolerance {over.Count}" +
+                      (over.Count > 0 ? ": " + string.Join(", ", over) : string.Empty));
+        }
+
+        private static bool HasPreplaced(LevelData level)
+        {
+            if (level.Pieces == null)
+                return false;
+            foreach (var p in level.Pieces)
+                if (p.Preplaced)
+                    return true;
+            return false;
         }
 
         // TASK-070/076: emit the per-step [STEPLOG] stream for ONE campaign level — the sim (editor=1) half of the

@@ -116,6 +116,10 @@ namespace Gameplay.Core.Sim
 
         public long PoseHash() => SimPoseHash.Of(_model);
 
+        /// <summary>TASK-629: read-only view of the live pieces, for probes that watch poses between steps
+        /// (<see cref="PreplacedSettleProbe"/>). Reading never moves physics.</summary>
+        public IReadOnlyList<PieceInstance> Pieces => _model.Pieces;
+
         /// <summary>
         /// One driver iteration. For a rest-gated policy the driver asks it only when the controller reports the
         /// field is ready for the next release group (balance-aware — beam settled AND the coalescence window
