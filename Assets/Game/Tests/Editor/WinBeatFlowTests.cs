@@ -19,7 +19,8 @@ namespace Gameplay.Tests
     /// "banner started" moment is observable. Both flows share the contract: ask <see cref="IWinBeat.TryBegin"/> on Won;
     /// false → the old path at once; true → the next step only when the beat completes, its subscription disposed.
     /// The 4 s ceiling runs on a real-time timer and is not exercised here (no fake time provider in the project).
-    /// T6: the beat's timeline segments stay in order (a number turned in config must not tear the timeline).
+    /// T6: the beat's timeline segments stay in order (a number turned in config must not tear the timeline); since
+    /// TASK-639 the bounce is grow → shrink (uniform, in place).
     /// </summary>
     [TestFixture]
     public sealed class WinBeatFlowTests
@@ -92,8 +93,10 @@ namespace Gameplay.Tests
         {
             var c = new WinBeatConfig();
             Assert.That(c.FlightStart, Is.GreaterThan(0f));
-            Assert.That(c.SquashPeak, Is.GreaterThan(0f).And.LessThan(c.StretchPeak));
-            Assert.That(c.StretchPeak, Is.LessThan(c.BounceEnd));
+            Assert.That(c.GrowPeak, Is.GreaterThan(0f).And.LessThan(c.ShrinkPeak));
+            Assert.That(c.ShrinkPeak, Is.LessThan(c.BounceEnd));
+            Assert.That(c.GrowScale, Is.GreaterThan(1f), "the bounce grows first (TASK-639)");
+            Assert.That(c.ShrinkScale, Is.GreaterThan(0f).And.LessThan(c.GrowScale), "then shrinks");
             Assert.That(c.FlightStart, Is.LessThanOrEqualTo(c.BounceEnd), "the flight takes off before the bounce settles");
             Assert.That(c.BounceEnd, Is.LessThan(c.FlightEnd));
             Assert.That(c.FlightEnd, Is.EqualTo(c.ReceiveStart), "the frame answers in the landing frame");

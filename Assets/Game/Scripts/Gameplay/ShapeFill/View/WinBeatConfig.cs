@@ -11,16 +11,20 @@ namespace Gameplay.View
     /// </summary>
     public sealed class WinBeatConfig
     {
-        // ── Bounce: squash → stretch (+hop) → 1, pivot at the bottom of the figure's bbox ─────────────────────────
-        public float SquashPeak = 0.10f;
-        public float SquashX = 1.08f;
-        public float SquashY = 0.90f;
-        public float StretchPeak = 0.22f;
-        public float StretchX = 0.94f;
-        public float StretchY = 1.12f;
+        // ── Bounce: a uniform scale in place — grow → shrink → 1, the pivot never moves ─────────────────────────────
+        // (TASK-639: the squash/stretch with a hop of TASK-634 read as a jump; the owner asked for a plain bounce scale.)
+        /// <summary>Height of the fixed bounce pivot in the figure's bbox: 0 = bottom (default: the base stays on its
+        /// line, the figure grows upward); 0.5 = centre (the figure grows and shrinks around itself, so at the grow peak
+        /// its bottom dips into whatever it stands on and at the shrink peak lifts off it by (scale − 1)·height/2 — that
+        /// reads as the very hop TASK-639 removed, ≈15 px on the toaster at 1.12).</summary>
+        public float PivotHeightFraction = 0f;
+        public float GrowPeak = 0.12f;
+        /// <summary>Uniform scale at the grow peak (1 = none).</summary>
+        public float GrowScale = 1.12f;
+        public float ShrinkPeak = 0.24f;
+        /// <summary>Uniform scale at the shrink peak — a little under 1 is the springy overshoot (1 = no overshoot).</summary>
+        public float ShrinkScale = 0.95f;
         public float BounceEnd = 0.35f;
-        /// <summary>Hop at the stretch peak, as a fraction of the figure's height; fades out with the flight.</summary>
-        public float HopFraction = 0.15f;
 
         // ── Flight: the map "field → card" interpolated, piece poses eased from rest to their slots ─────────────────
         public float FlightStart = 0.30f;

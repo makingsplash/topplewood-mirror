@@ -12,7 +12,8 @@ namespace Gameplay.View
 {
     /// <summary>
     /// The win beat «В рамку» (TASK-634, plan 02 §2.3): on every win the assembled figure — exactly the pieces the judge
-    /// paired with slots (<see cref="GameModel.WinFigure"/>) — squashes, stretches, flies up and lands on the target card,
+    /// paired with slots (<see cref="GameModel.WinFigure"/>) — bounces in place (a uniform grow → shrink, TASK-639), flies
+    /// up and lands on the target card,
     /// which answers with a punch, a flash of its window and sparks off its frame. Then the resolution flow shows the win
     /// screen.
     ///
@@ -25,7 +26,8 @@ namespace Gameplay.View
     /// on the card as its picture until the next level load destroys the card.
     ///
     /// Hierarchy while the beat runs: <c>WinBeatFlight</c> (the map: FigureCenter → card origin, scale 1 → card scale) →
-    /// <c>BouncePivot</c> (bottom of the figure's bbox: squash/stretch/hop) → the piece views (rest pose → slot pose, angle
+    /// <c>BouncePivot</c> (fixed, at <see cref="WinBeatConfig.PivotHeightFraction"/> of the figure's bbox — bottom by
+    /// default, so the base stays on its line: uniform bounce scale) → the piece views (rest pose → slot pose, angle
     /// → the symmetric-nearest slot angle). The flash, the sparks and the tap catcher live on a code-built Screen Space
     /// Overlay (sorting 32200: above the tour 32100, below the HUD 32765+). ALL visual state is a function of the beat time
     /// in ONE setter (<see cref="Beat.Apply"/>), so <c>DOTween.Goto("WinBeat", t)</c> poses any frame for acceptance
@@ -175,14 +177,12 @@ namespace Gameplay.View
             private readonly Transform _flight;
             private readonly Transform _pivot;
             private readonly PieceView[] _views;
-            private readonly Vector3[] _restLocal; // relative to the bottom pivot, z = the piece's own depth
+            private readonly Vector3[] _restLocal; // relative to the bounce pivot, z = the piece's own depth
             private readonly Vector3[] _slotLocal;
             private readonly float[] _restAngle;
             private readonly float[] _landAngle;
             private readonly Vector3 _start;      // FigureCenter at z = 0
             private readonly Vector3 _control;    // Bézier control (xy)
-            private readonly Vector3 _pivotLocal; // bottom pivot − FigureCenter
-            private readonly float _height;
             private readonly float _zFly;
 
             private readonly Spark[] _sparks;
@@ -211,7 +211,7 @@ namespace Gameplay.View
                     ? _c.FlashWindowFraction
                     : 1f;
 
-                // Bottom pivot = (bbox centre x, bbox min y) of the figure's world outline at rest.
+                // Pivot = bbox of the figure's world outline at rest: centre x, PivotHeightFraction up (0 = bottom).
                 var min = new Vector2(float.MaxValue, float.MaxValue);
                 var max = new Vector2(float.MinValue, float.MinValue);
                 foreach (var f in pieces)
@@ -220,12 +220,12 @@ namespace Gameplay.View
                         min = Vector2.Min(min, new Vector2(v.X, v.Y));
                         max = Vector2.Max(max, new Vector2(v.X, v.Y));
                     }
-                var bottom = new Vector3((min.x + max.x) * 0.5f, min.y, 0f);
-                _height = Mathf.Max(max.y - min.y, 1e-3f);
+                var pivot = new Vector3((min.x + max.x) * 0.5f,
+                    Mathf.LerpUnclamped(min.y, max.y, _c.PivotHeightFraction), 0f);
 
                 var centre = new Vector3(pose.FigureCenter.X, pose.FigureCenter.Y, 0f);
                 _start = centre;
-                _pivotLocal = bottom - centre;
+                var pivotLocal = pivot - centre;
                 _zFly = _cardOrigin.z - _c.FlightZAhead;
                 _control = ArcControl(camera, centre, _cardOrigin);
 
@@ -233,7 +233,7 @@ namespace Gameplay.View
                 _flight.position = _start;
                 _pivot = new GameObject("BouncePivot").transform;
                 _pivot.SetParent(_flight, false);
-                _pivot.localPosition = _pivotLocal;
+                _pivot.localPosition = pivotLocal; // fixed: only the scale of the pivot animates
 
                 var n = pieces.Count;
                 _views = new PieceView[n];
@@ -249,8 +249,8 @@ namespace Gameplay.View
                     // The view's world pose IS the rest pose (last MirrorPose before the verdict); its z is the TASK-631
                     // depth rank, kept as the local z so the pieces' relative order survives the flight.
                     var z = f.View.transform.position.z;
-                    _restLocal[i] = new Vector3(f.Piece.RestPosition.X - bottom.x, f.Piece.RestPosition.Y - bottom.y, z);
-                    _slotLocal[i] = new Vector3(f.Slot.Position.X - bottom.x, f.Slot.Position.Y - bottom.y, z);
+                    _restLocal[i] = new Vector3(f.Piece.RestPosition.X - pivot.x, f.Piece.RestPosition.Y - pivot.y, z);
+                    _slotLocal[i] = new Vector3(f.Slot.Position.X - pivot.x, f.Slot.Position.Y - pivot.y, z);
                     _restAngle[i] = f.Piece.RestRotation * Mathf.Rad2Deg;
                     _landAngle[i] = f.Piece.LandRotation * Mathf.Rad2Deg;
                     f.View.transform.SetParent(_pivot, true);
@@ -300,11 +300,10 @@ namespace Gameplay.View
                 if (!cardAlive || _flight.parent != _cardRoot)
                     PlaceFlight(t < c.FlightStart ? -1f : e);
 
-                // Bounce pivot: squash → stretch (+hop) → 1, then a light stretch along the flight.
+                // Bounce pivot (never moves): uniform grow → shrink → 1, then a light stretch along the flight.
                 var bounce = Bounce(t);
                 var flightStretch = u > 0f && u < 1f ? 1f + (c.FlightStretchMaxY - 1f) * Mathf.Sin(Mathf.PI * u) : 1f;
-                _pivot.localScale = new Vector3(bounce.x, bounce.y * flightStretch, 1f);
-                _pivot.localPosition = _pivotLocal + new Vector3(0f, c.HopFraction * _height * Hop(t) * (1f - e), 0f);
+                _pivot.localScale = new Vector3(bounce, bounce * flightStretch, 1f);
 
                 var shadow = 1f - Mathf.Clamp01(u / Mathf.Max(c.ShadowFadeFraction, 1e-4f));
                 for (var i = 0; i < _views.Length; i++)
@@ -337,27 +336,19 @@ namespace Gameplay.View
                 _flight.localScale = new Vector3(s, s, 1f);
             }
 
-            private Vector2 Bounce(float t)
+            // Uniform scale: 1 → GrowScale (at GrowPeak) → ShrinkScale (at ShrinkPeak) → 1 (at BounceEnd), smoothstep legs.
+            private float Bounce(float t)
             {
                 var c = _c;
                 if (t <= 0f || t >= c.BounceEnd)
-                    return Vector2.one;
-                if (t < c.SquashPeak)
-                    return Vector2.Lerp(Vector2.one, new Vector2(c.SquashX, c.SquashY), Smooth(t / c.SquashPeak));
-                if (t < c.StretchPeak)
-                    return Vector2.Lerp(new Vector2(c.SquashX, c.SquashY), new Vector2(c.StretchX, c.StretchY),
-                        Smooth((t - c.SquashPeak) / Mathf.Max(c.StretchPeak - c.SquashPeak, 1e-4f)));
-                return Vector2.Lerp(new Vector2(c.StretchX, c.StretchY), Vector2.one,
-                    Smooth((t - c.StretchPeak) / Mathf.Max(c.BounceEnd - c.StretchPeak, 1e-4f)));
-            }
-
-            // 0 until the squash peak, up to 1 at the stretch peak, then held — the flight fades it out (× (1 − e)).
-            private float Hop(float t)
-            {
-                var c = _c;
-                if (t <= c.SquashPeak)
-                    return 0f;
-                return Smooth(Mathf.Clamp01((t - c.SquashPeak) / Mathf.Max(c.StretchPeak - c.SquashPeak, 1e-4f)));
+                    return 1f;
+                if (t < c.GrowPeak)
+                    return Mathf.Lerp(1f, c.GrowScale, Smooth(t / c.GrowPeak));
+                if (t < c.ShrinkPeak)
+                    return Mathf.Lerp(c.GrowScale, c.ShrinkScale,
+                        Smooth((t - c.GrowPeak) / Mathf.Max(c.ShrinkPeak - c.GrowPeak, 1e-4f)));
+                return Mathf.Lerp(c.ShrinkScale, 1f,
+                    Smooth((t - c.ShrinkPeak) / Mathf.Max(c.BounceEnd - c.ShrinkPeak, 1e-4f)));
             }
 
             private float Punch(float t)
