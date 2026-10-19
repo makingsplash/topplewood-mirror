@@ -75,7 +75,6 @@ namespace Tools.Debug
                 // caches, so Gold/Hearts/HintCharges keep returning the stale value and the next SaveDataIfChanged
                 // writes it straight back (the counter never even fires OnChanged). RefreshAll re-reads every live
                 // pref from the wiped backend → each returns its default, and OnChanged updates the HUD counters.
-                // With live gold (TASK-240) this is what makes a dev reset honest.
                 PlayerPrefsCollection.Instance.RefreshAll();
 
                 SayData.Meta.CurrentLevel.Value = 1;
@@ -85,12 +84,8 @@ namespace Tools.Debug
                 Data.Meta.LineupCleared.Value = 0;
                 Data.Meta.PoolCursor.Value = 0;
 
-                // Re-seed the start bank so the reset lands on a true fresh-install state WITHOUT relaunching (Reset
-                // is a reload-in-place, not a reboot — architect §7). The guard was just cleared by RefreshAll, so
-                // this fires; on a real fresh install the boot-time EconomySeedService already did it. (Hint charges
-                // re-seed on the next process launch via HintBoosterService's ctor — a dev-only same-session gap,
-                // noted in the ticket.)
-                Services.Gameplay.EconomySeedService.SeedIfNeeded();
+                // Hint charges re-seed on the next process launch via HintBoosterService's ctor — a dev-only
+                // same-session gap. (The start-gold re-seed that stood here went with the currency, TASK-612.)
 
                 PlayerPrefsCollection.Instance.SaveDataIfChanged();
 
@@ -163,11 +158,6 @@ namespace Tools.Debug
         {
             DDMLabel.Create(context, "Resources");
 
-            DDMInputButton.Create(context, "Gold", "Set", Data.Meta.GoldAmount.Value,
-                amount =>
-                {
-                    Data.Meta.GoldAmount.Value = amount;
-                });
             DDMInputButton.Create(context, "Hearts", "Set", Data.Meta.HeartsAmount.Value,
                 amount =>
                 {

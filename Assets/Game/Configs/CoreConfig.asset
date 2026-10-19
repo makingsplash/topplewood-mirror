@@ -13,10 +13,8 @@ MonoBehaviour:
   m_Name: CoreConfig
   m_EditorClassIdentifier: 
   _data:
-    LevelReward: 60
     AdditionalTimeSeconds: 20
     AdditionalMovesOnRevive: 10
-    WinScreenX2ButtonStartLevel: 4
     RevivePricesList: 200, 300, 450, 600
     LoseScreenOfferStartLevel: 10
     EnableFreeTutorialRevive: 1

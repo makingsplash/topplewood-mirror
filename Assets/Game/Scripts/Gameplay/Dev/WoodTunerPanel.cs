@@ -527,6 +527,21 @@ namespace Gameplay.Dev
             GUILayout.Space(6f);
             GUILayout.Label("Взведена в паре", _label);
             c |= Row("Увод в белый", ref t.ArmedWhite, 0f, 1f);
+
+            // TASK-614: пунктир вокруг ждущей детали — гаснет на тапе. Длины в единицах мира.
+            GUILayout.Space(6f);
+            GUILayout.Label("Пунктир ждущей", _label);
+            var dash = GUILayout.Toggle(t.IdleDash, " пунктир вокруг ещё не тапнутой детали");
+            if (dash != t.IdleDash)
+            {
+                t.IdleDash = dash;
+                c = true;
+            }
+            c |= Row("Толщина", ref t.IdleDashWidth, 0.01f, 0.15f);
+            c |= Row("Штрих", ref t.IdleDashLength, 0f, 0.5f);
+            c |= Row("Пробел", ref t.IdleDashGap, 0.02f, 0.5f);
+            c |= Row("Отступ", ref t.IdleDashOffset, 0f, 0.3f);
+            c |= Row("Скругление", ref t.IdleDashCorner, 0f, 0.4f);
             return c;
         }
 

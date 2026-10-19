@@ -351,11 +351,13 @@ namespace Game.Editor
 
                 Capture(level, $"Artifacts/role-preview/{id}-start.png", targetPose: false, crops, zoom);
                 Capture(level, $"Artifacts/role-preview/{id}-target.png", targetPose: true, crops, zoom);
+                // TASK-614: середина партии — висящие и упавшие детали на одном кадре.
+                Capture(level, $"Artifacts/role-preview/{id}-mid.png", PiecePose.Mid, crops, zoom);
                 captured++;
             }
 
             Debug.Log($"[render] снято {captured} уровень(ей) в Artifacts/role-preview " +
-                      $"(по 2 кадра + {crops.Count} кроп(ов) на кадр)");
+                      $"(по 3 кадра: start/target/mid + {crops.Count} кроп(ов) на кадр)");
             if (Application.isBatchMode)
                 EditorApplication.Exit(captured == 0 ? 1 : 0);
         }
@@ -444,11 +446,23 @@ namespace Game.Editor
 
         // ------------------------------------------------------------------- сцена
 
+        /// <summary>Где стоят детали на кадре: старт (все висят), середина партии (TASK-614) или собранная фигура.</summary>
+        private enum PiecePose
+        {
+            Start,
+            Target,
+            Mid,
+        }
+
         private static void Capture(LevelData level, string path)
             => Capture(level, path, targetPose: false, NoCrops, DefaultZoom);
 
         private static void Capture(LevelData level, string path, bool targetPose)
             => Capture(level, path, targetPose, NoCrops, DefaultZoom);
+
+        private static void Capture(LevelData level, string path, bool targetPose,
+            IReadOnlyList<Crop> crops, int zoom)
+            => Capture(level, path, targetPose ? PiecePose.Target : PiecePose.Start, crops, zoom);
 
         /// <summary>
         /// Один кадр уровня в PNG. <paramref name="targetPose"/> — единственное отличие двух кадров роли
@@ -458,8 +472,9 @@ namespace Game.Editor
         /// чтобы два PNG были прямо сопоставимы глазами.
         /// <paramref name="crops"/> (TASK-362) — после кадра во весь план снимаются увеличенные вырезки зон в
         /// мировых координатах (та же собранная сцена, отдельные орто-камеры) в <c>&lt;stem&gt;-&lt;name&gt;.png</c>.
+        /// TASK-614: третья поза — <see cref="PiecePose.Mid"/> (<see cref="BuildMidPieces"/>), середина партии.
         /// </summary>
-        private static void Capture(LevelData level, string path, bool targetPose,
+        private static void Capture(LevelData level, string path, PiecePose pose,
             IReadOnlyList<Crop> crops, int zoom)
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -473,10 +488,12 @@ namespace Game.Editor
             var cam = BuildCamera(level, out var shortest);
             Backdrop(cam);
             BuildStatics(level);
-            if (targetPose)
-                BuildTargetPosePieces(level);
-            else
-                BuildPieces(level);
+            switch (pose)
+            {
+                case PiecePose.Target: BuildTargetPosePieces(level); break;
+                case PiecePose.Mid: BuildMidPieces(level); break;
+                default: BuildPieces(level); break;
+            }
             BuildSilhouette(level);
             BuildPreviewCard(level, cam);
 
@@ -756,6 +773,68 @@ namespace Game.Editor
                 // ЦЕЛЕВАЯ поза вместо старта. slot.Rotation — РАДИАНЫ (как в TargetPreviewView: slot.Rotation·Rad2Deg);
                 // PieceView.Sync принимает ту же единицу, что StartRotation в BuildPieces (внутри умножает на Rad2Deg).
                 view.Sync(slot.Position, slot.Rotation);
+                // TASK-614: собранная фигура — детали УЖЕ упали. Без стейта они снимались ждущими: бледными и в
+                // пунктире, то есть кадр показывал не то, что игрок видит в конце уровня.
+                view.SetState(PieceLifecycle.Placed);
+            }
+        }
+
+        /// <summary>
+        /// TASK-614: кадр СЕРЕДИНЫ партии — нижняя половина целевой фигуры уже собрана (детали в позах слотов, стейт
+        /// Placed), остальные детали ещё висят на стартовых местах (Idle). Нужен, чтобы судить сигнал «висит / упала» на
+        /// одном кадре, а это не видно ни на старте (висят все), ни на собранной фигуре (не висит никто).
+        /// Правило одно для любого уровня: слоты по высоте снизу вверх, собрана половина (не меньше одной детали, хотя бы
+        /// одна остаётся висеть); слоту достаётся первая ещё не занятая деталь того же вида — у неё и номер размещения
+        /// (фаза волокна та же, что на поле).
+        /// </summary>
+        private static void BuildMidPieces(LevelData level)
+        {
+            if (level.Pieces == null)
+                return;
+
+            var placedIndices = new HashSet<int>();
+            var root = new GameObject("ShapeFillPiecesMid").transform;
+            var slots = level.Target?.Slots == null
+                ? new List<TargetSlot>()
+                : level.Target.Slots.OrderBy(s => s.Position.Y).ToList();
+            var placedCount = Mathf.Min(slots.Count / 2, level.Pieces.Count - 1);
+
+            for (var k = 0; k < slots.Count && placedIndices.Count < placedCount; k++)
+            {
+                var slot = slots[k];
+                var index = -1;
+                for (var i = 0; i < level.Pieces.Count; i++)
+                    if (!placedIndices.Contains(i) && level.Pieces[i].Type?.Kind == slot.Kind && level.Pieces[i].Type?.Shape != null)
+                    {
+                        index = i;
+                        break;
+                    }
+                if (index < 0)
+                    continue;
+                placedIndices.Add(index);
+
+                var type = level.Pieces[index].Type;
+                var go = new GameObject($"PieceView_{type.Kind}_placed");
+                go.transform.SetParent(root, false);
+                var view = go.AddComponent<PieceView>();
+                view.Initialize(type.Shape, type.Color, type.Kind, index);
+                view.Sync(slot.Position, slot.Rotation);
+                view.SetState(PieceLifecycle.Placed);
+            }
+
+            for (var index = 0; index < level.Pieces.Count; index++)
+            {
+                if (placedIndices.Contains(index))
+                    continue;
+                var placement = level.Pieces[index];
+                var type = placement.Type;
+                if (type?.Shape == null)
+                    continue;
+                var go = new GameObject($"PieceView_{type.Kind}");
+                go.transform.SetParent(root, false);
+                var view = go.AddComponent<PieceView>();
+                view.Initialize(type.Shape, type.Color, type.Kind, index);
+                view.Sync(placement.StartPosition, placement.StartRotation);
             }
         }
 

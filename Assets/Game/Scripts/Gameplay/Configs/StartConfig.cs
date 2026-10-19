@@ -12,13 +12,11 @@ namespace Gameplay.Configs
         [JsonObject]
         public class Data
         {
+            // TASK-612: StartGoldAmount removed with the coin currency (a stale remote value is ignored by Newtonsoft).
             [JsonProperty]
-            public int StartGoldAmount;
-            [JsonProperty]
-            public int HomeScreenAvailableLevel = 4;    
+            public int HomeScreenAvailableLevel = 4;
         }
 
-        public int StartGoldAmount => Config.StartGoldAmount;
         public int HomeScreenAvailableLevel => Config.HomeScreenAvailableLevel;
     }
 }

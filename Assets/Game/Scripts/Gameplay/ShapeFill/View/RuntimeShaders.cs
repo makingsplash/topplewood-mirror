@@ -26,11 +26,13 @@ namespace Gameplay.View
         public const string WoodPieceShadowName = "Game/Wood Piece Shadow";
         public const string UrpUnlitName = "Universal Render Pipeline/Unlit";
         public const string SpritesDefaultName = "Sprites/Default";
+        public const string IdleDashOutlineName = "Game/Idle Dash Outline";
 
         [SerializeField] private Shader woodBlock;
         [SerializeField] private Shader woodPieceShadow;
         [SerializeField] private Shader urpUnlit;
         [SerializeField] private Shader spritesDefault;
+        [SerializeField] private Shader idleDashOutline;
 
         private static RuntimeShaders _instance;
         private static bool _loaded;
@@ -40,6 +42,7 @@ namespace Gameplay.View
         public static Shader WoodPieceShadow => Resolve(Instance == null ? null : Instance.woodPieceShadow, WoodPieceShadowName);
         public static Shader UrpUnlit => Resolve(Instance == null ? null : Instance.urpUnlit, UrpUnlitName);
         public static Shader SpritesDefault => Resolve(Instance == null ? null : Instance.spritesDefault, SpritesDefaultName);
+        public static Shader IdleDashOutline => Resolve(Instance == null ? null : Instance.idleDashOutline, IdleDashOutlineName);
 
         /// <summary>Пары «ожидаемое имя шейдера → сериализованная ссылка»: по ним сборка и тест сверяют ассет.</summary>
         public IEnumerable<KeyValuePair<string, Shader>> Entries()
@@ -48,6 +51,7 @@ namespace Gameplay.View
             yield return new KeyValuePair<string, Shader>(WoodPieceShadowName, woodPieceShadow);
             yield return new KeyValuePair<string, Shader>(UrpUnlitName, urpUnlit);
             yield return new KeyValuePair<string, Shader>(SpritesDefaultName, spritesDefault);
+            yield return new KeyValuePair<string, Shader>(IdleDashOutlineName, idleDashOutline);
         }
 
         private static RuntimeShaders Instance

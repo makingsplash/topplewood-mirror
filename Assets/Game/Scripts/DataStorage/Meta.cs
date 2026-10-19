@@ -31,6 +31,9 @@ namespace DataStorage
 
         public readonly PlayerPrefsBool RateUsShown = new ("Meta.RateUsShown", false);
         public readonly PlayerPrefsBool FreeTutorialReviveUsed = new ("Meta.FreeTutorialReviveUsed", false);
+        // Dormant since TASK-612 (no coin currency: no faucet, no sink, no UI — design 01 §2). The key stays so an
+        // existing save keeps its shape; nothing in prod credits or debits it (only the SayKit template's coin-SKU
+        // branch in PurchaseProcessor, and no coin SKU is configured).
         public readonly PlayerPrefsInt GoldAmount = new ("Meta.GoldAmount", 0);
         public readonly PlayerPrefsInt HeartsAmount = new ("Meta.HeartsAmount", 1);
         public readonly PlayerPrefsDateTime LastHeartsAddTime = new("Meta.LastHeartsAddTime", DateTime.MinValue);
@@ -47,10 +50,6 @@ namespace DataStorage
         public readonly PlayerPrefsBool HintSeeded = new ("Meta.HintSeeded", false);
         public readonly PlayerPrefsDateTime HintLastDailyRefill = new ("Meta.HintLastDailyRefill", DateTime.MinValue);
 
-        // TASK-240: coin economy — additive PlayerPrefs keys (a missing key defaults, so the one-time seed still
-        // fires on an upgrading install; no schema bump, no migration — architect §9).
-        // StartGoldSeeded guards the one-time start-gold grant (EconomySeedService).
-        public readonly PlayerPrefsBool StartGoldSeeded = new ("Meta.StartGoldSeeded", false);
         // TASK-528: level pool after the line-up — additive keys (a missing key defaults to 0 = first pass, so an
         // upgrading install behaves as before; no schema bump, no migration). LineupCleared > 0 is the persisted
         // "campaign completed" fact (closes TASK-158); PoolCursor is the next place in the pool circle.

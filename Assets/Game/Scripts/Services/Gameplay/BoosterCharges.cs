@@ -13,12 +13,11 @@ namespace Services.Gameplay
 
     /// <summary>
     /// Where a booster charge came from — the "заряд ← источник" seam (designer §5 / architect §3.2).
-    /// <see cref="FreeGrant"/> (seed + daily refill) and, since TASK-240, <see cref="CoinPurchase"/> (coins →
-    /// charges via <c>HintBoosterService.TryPurchaseCharges</c>) are live. <see cref="RewardedAd"/> is a source
-    /// string but the ad plumbing is dead (owner 20:47, debt TASK-127). <see cref="LevelReward"/> stays a RESERVED
-    /// source: the TASK-240 level-reward faucet credits <c>Meta.GoldAmount</c> directly (coins, not a charge), so
-    /// this value has no caller yet — it is the seam for a future "win a booster charge as a level reward". Each
-    /// new source adds only the CALL, not the type, so the charge/cap machinery never re-forms.
+    /// Only <see cref="FreeGrant"/> (seed + daily refill) is live. <see cref="RewardedAd"/> is a source string but
+    /// the ad plumbing is dead (owner 20:47, debt TASK-127). <see cref="CoinPurchase"/> was live in TASK-240 and is
+    /// RESERVED again since TASK-612 (the game has no coin currency) — kept so the enum's values do not shift.
+    /// <see cref="LevelReward"/> is a RESERVED source too: the seam for a future "win a booster charge as a level
+    /// reward". Each new source adds only the CALL, not the type, so the charge/cap machinery never re-forms.
     /// </summary>
     public enum ChargeSource
     {

@@ -31,11 +31,6 @@ namespace Gameplay.Configs
             public int ProactiveFailThresholdHardTier = 2;  // fails before an offer, tiers ≥ HardTierFloor
             public int ProactiveHardTierFloor = 6;          // boundary of a "hard" tier
             public int ProactiveReofferSuppressFails = 2;   // extra fails suppressed after a declined offer
-
-            // TASK-240: coin price of a Hint charge, and of the discounted 3-pack (balancer §1: 50/шт, 3 за 120).
-            // Defaults ARE the shipping numbers (config-over-hardcode); A/B via config_boosters once the asset loads.
-            public int CoinPricePerCharge = 50;
-            public int CoinPricePack3 = 120;
         }
 
         [Serializable]

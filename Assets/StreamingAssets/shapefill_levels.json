@@ -43439,6 +43439,440 @@
           "color": "#CFE8F5"
         }
       ]
+    },
+    {
+      "levelId": "potted_tree",
+      "winningOrder": [
+        0,
+        1,
+        2
+      ],
+      "seed": 616,
+      "difficultyTier": 1,
+      "physicsMode": "catapult",
+      "freezeLoadsAtRest": true,
+      "matchTolerance": {
+        "posTol": 0.3,
+        "angTol": 0.43633
+      },
+      "bounds": {
+        "min": {
+          "x": -6,
+          "y": -6
+        },
+        "max": {
+          "x": 6,
+          "y": 10
+        }
+      },
+      "gravity": {
+        "x": 0,
+        "y": -9.81
+      },
+      "pieceTypes": [
+        {
+          "color": "#B8577A",
+          "kind": "pot",
+          "symmetryOrder": 1,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "trapezoid",
+            "width": 0.7,
+            "topWidth": 1.0,
+            "height": 0.7
+          }
+        },
+        {
+          "color": "#CBA016",
+          "kind": "trunk",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "box",
+            "width": 0.3,
+            "height": 0.7
+          }
+        },
+        {
+          "color": "#5C8E3E",
+          "kind": "crown",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.5,
+            "segments": 24
+          }
+        },
+        {
+          "color": "#8B5A9E",
+          "kind": "stick",
+          "symmetryOrder": 2,
+          "material": {
+            "density": 1.0,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "plank",
+            "width": 4.0,
+            "height": 0.4
+          }
+        },
+        {
+          "color": "#48699A",
+          "kind": "hammer",
+          "symmetryOrder": 24,
+          "material": {
+            "density": 2.6,
+            "friction": 0.6,
+            "restitution": 0.05
+          },
+          "shape": {
+            "primitive": "circle",
+            "radius": 0.8,
+            "segments": 24
+          }
+        }
+      ],
+      "target": {
+        "outline": [
+          {
+            "x": -2.9,
+            "y": -0.385
+          },
+          {
+            "x": -2.2,
+            "y": -0.385
+          },
+          {
+            "x": -2.05,
+            "y": 0.315
+          },
+          {
+            "x": -2.394,
+            "y": 0.315
+          },
+          {
+            "x": -2.394,
+            "y": 1.03
+          },
+          {
+            "x": -2.288,
+            "y": 1.065
+          },
+          {
+            "x": -2.049,
+            "y": 1.248
+          },
+          {
+            "x": -1.959,
+            "y": 1.535
+          },
+          {
+            "x": -2.049,
+            "y": 1.822
+          },
+          {
+            "x": -2.288,
+            "y": 2.005
+          },
+          {
+            "x": -2.63,
+            "y": 2.005
+          },
+          {
+            "x": -2.869,
+            "y": 1.822
+          },
+          {
+            "x": -2.959,
+            "y": 1.535
+          },
+          {
+            "x": -2.869,
+            "y": 1.248
+          },
+          {
+            "x": -2.63,
+            "y": 1.065
+          },
+          {
+            "x": -2.694,
+            "y": 1.03
+          },
+          {
+            "x": -2.694,
+            "y": 0.315
+          },
+          {
+            "x": -3.05,
+            "y": 0.315
+          }
+        ],
+        "slots": [
+          {
+            "kind": "pot",
+            "position": {
+              "x": -2.55,
+              "y": -0.035
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "trunk",
+            "position": {
+              "x": -2.544,
+              "y": 0.68
+            },
+            "rotation": 0
+          },
+          {
+            "kind": "crown",
+            "position": {
+              "x": -2.459,
+              "y": 1.535
+            },
+            "rotation": 0
+          }
+        ]
+      },
+      "pieces": [
+        {
+          "kind": "pot",
+          "startPosition": {
+            "x": -2.55,
+            "y": 2.6
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "trunk",
+          "startPosition": {
+            "x": -2.55,
+            "y": 4.25
+          },
+          "startRotation": 0
+        },
+        {
+          "kind": "hammer",
+          "startPosition": {
+            "x": -0.25,
+            "y": 7.6
+          },
+          "startRotation": 0,
+          "expendable": true
+        },
+        {
+          "kind": "stick",
+          "startPosition": {
+            "x": 1.05,
+            "y": 1.2
+          },
+          "startRotation": 0,
+          "preplaced": true,
+          "expendable": true
+        },
+        {
+          "kind": "crown",
+          "startPosition": {
+            "x": 2.05,
+            "y": 1.95
+          },
+          "startRotation": 0,
+          "preplaced": true
+        }
+      ],
+      "staticGeometry": [
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.5,
+              "y": 0
+            },
+            {
+              "x": -3.15,
+              "y": 0
+            },
+            {
+              "x": -3.15,
+              "y": 8
+            },
+            {
+              "x": -3.5,
+              "y": 8
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.5,
+              "y": -3.3
+            },
+            {
+              "x": -3.15,
+              "y": -3.3
+            },
+            {
+              "x": -3.15,
+              "y": 0
+            },
+            {
+              "x": -3.5,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.15,
+              "y": -0.7
+            },
+            {
+              "x": -1.95,
+              "y": -0.7
+            },
+            {
+              "x": -1.95,
+              "y": -0.4
+            },
+            {
+              "x": -3.15,
+              "y": -0.4
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -3.15,
+              "y": -3.3
+            },
+            {
+              "x": -1.95,
+              "y": -3.3
+            },
+            {
+              "x": -1.95,
+              "y": -0.7
+            },
+            {
+              "x": -3.15,
+              "y": -0.7
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.95,
+              "y": 0
+            },
+            {
+              "x": -1.8,
+              "y": 0
+            },
+            {
+              "x": -1.8,
+              "y": 1.6
+            },
+            {
+              "x": -1.95,
+              "y": 1.6
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.95,
+              "y": -3.3
+            },
+            {
+              "x": -1.8,
+              "y": -3.3
+            },
+            {
+              "x": -1.8,
+              "y": 0
+            },
+            {
+              "x": -1.95,
+              "y": 0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": -1.8,
+              "y": -3.3
+            },
+            {
+              "x": 0.9,
+              "y": -3.3
+            },
+            {
+              "x": 0.9,
+              "y": -3.0
+            },
+            {
+              "x": -1.8,
+              "y": -3.0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 0.9,
+              "y": -3.3
+            },
+            {
+              "x": 3.5,
+              "y": -3.3
+            },
+            {
+              "x": 3.5,
+              "y": 0.9
+            },
+            {
+              "x": 0.9,
+              "y": 0.9
+            }
+          ]
+        }
+      ]
     }
   ]
 }

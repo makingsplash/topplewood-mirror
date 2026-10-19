@@ -13,5 +13,4 @@ MonoBehaviour:
   m_Name: StartConfig
   m_EditorClassIdentifier: 
   _data:
-    StartGoldAmount: 400
     HomeScreenAvailableLevel: 10

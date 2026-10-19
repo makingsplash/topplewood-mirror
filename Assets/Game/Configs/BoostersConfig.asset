@@ -26,5 +26,3 @@ MonoBehaviour:
       ProactiveFailThresholdHardTier: 2
       ProactiveHardTierFloor: 6
       ProactiveReofferSuppressFails: 2
-      CoinPricePerCharge: 50
-      CoinPricePack3: 120

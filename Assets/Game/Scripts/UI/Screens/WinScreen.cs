@@ -1,5 +1,4 @@
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +18,11 @@ namespace Ui.Screens
     /// replay pool, TASK-528). Titles are baked lettering sprites (owner-sanctioned by the TASK-272 reference; loc-debt TASK-160), labels stay text nodes. Both title/label pairs are overlapping nodes in the same
     /// position (so the compiler measures BOTH for localization overflow); <see cref="Setup"/> toggles the
     /// visible pair by the presentational <c>isFinalLevel</c> flag — the flag never changes the transition itself.
+    ///
+    /// The hero of the screen is three stars for any win (TASK-612, owner 2026-10-19): decoration, not a grade and
+    /// not a currency — always three, never stored. They are static prefab nodes with their own show-animation
+    /// (<c>design/screens/WinScreen.json</c> → StarsBlock), so the controller has nothing to bind for them. The
+    /// TASK-240 coin row and ×2 button went with the currency.
     /// </summary>
     public class WinScreen : BaseScreen
     {
@@ -28,66 +32,33 @@ namespace Ui.Screens
         [SerializeField] private GameObject _labelDefault;
         [SerializeField] private GameObject _labelFinal;
 
-        // TASK-240 (ui-composer 03 §5): net-new reward + ×2 nodes. Null-guarded everywhere below so the screen keeps
-        // working on the not-yet-rebuilt prefab (the placeholder-first build) instead of NRE-ing — until ui-build
-        // regenerates the prefab from WinScreen.json these bind to nothing and reward/×2 are simply inert.
-        [SerializeField] private GameObject _rewardBlock;
-        [SerializeField] private TextMeshProUGUI _rewardAmount;
-        [SerializeField] private Button _x2Button;
-
         private Action _onNext;
-        private Action _onX2;
 
         public override void Init()
         {
             _nextButton.onClick.AddListener(OnClickNext);
-            if (_x2Button != null)
-                _x2Button.onClick.AddListener(OnClickX2);
         }
 
         public override void DeInit()
         {
             base.DeInit();
             _nextButton.onClick.RemoveListener(OnClickNext);
-            if (_x2Button != null)
-                _x2Button.onClick.RemoveListener(OnClickX2);
         }
 
-        /// <param name="reward">Coins credited for this win (every win pays, a replay included — TASK-432).
-        /// 0 (only a misconfigured reward table) hides the reward row instead of "+0".</param>
-        /// <param name="x2Available">Show the ×2 button (owner: visible stub from <c>WinScreenX2ButtonStartLevel</c>).</param>
-        /// <param name="onX2">Invoked on a ×2 tap — the reward-doubler stub; does NOT close the screen (the player
-        /// still taps Next).</param>
-        public void Setup(Action onNext, bool isFinalLevel, int reward, bool x2Available, Action onX2)
+        public void Setup(Action onNext, bool isFinalLevel)
         {
             _onNext = onNext;
-            _onX2 = onX2;
 
             _titleDefault.SetActive(!isFinalLevel);
             _titleFinal.SetActive(isFinalLevel);
             _labelDefault.SetActive(!isFinalLevel);
             _labelFinal.SetActive(isFinalLevel);
-
-            var hasReward = reward > 0;
-            if (_rewardBlock != null)
-                _rewardBlock.SetActive(hasReward);
-            if (hasReward && _rewardAmount != null)
-                _rewardAmount.text = "+" + reward;
-
-            if (_x2Button != null)
-                _x2Button.gameObject.SetActive(x2Available);
         }
 
         private void OnClickNext()
         {
             _onNext?.Invoke();
             Close();
-        }
-
-        private void OnClickX2()
-        {
-            // Stub tap: run the doubler seam (debug-log today) and leave the screen up — Next still transitions.
-            _onX2?.Invoke();
         }
     }
 }

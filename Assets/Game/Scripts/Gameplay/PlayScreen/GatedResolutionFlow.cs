@@ -1,12 +1,9 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using DataStorage;
-using Gameplay.Configs;
 using Gameplay.Core;
 using R3;
 using Services;
-using Services.Gameplay;
 using Ui;
 using Ui.Screens;
 
@@ -51,21 +48,13 @@ namespace Gameplay.PlayScreen
     {
         private readonly PlayScreenConfig _config;
         private readonly PlayScreenInteraction _interaction;
-        private readonly LevelRewardService _reward;
-        private readonly CoreConfig _core;
-        private readonly IWinRewardDoubler _rewardDoubler;
         private readonly WinInterlude _interlude;
         private readonly CancellationTokenSource _cts = new();
 
-        public GatedResolutionFlow(
-            PlayScreenConfig config, PlayScreenInteraction interaction, LevelRewardService reward,
-            CoreConfig core, IWinRewardDoubler rewardDoubler, WinInterlude interlude)
+        public GatedResolutionFlow(PlayScreenConfig config, PlayScreenInteraction interaction, WinInterlude interlude)
         {
             _config = config;
             _interaction = interaction;
-            _reward = reward;
-            _core = core;
-            _rewardDoubler = rewardDoubler;
             _interlude = interlude;
         }
 
@@ -102,19 +91,12 @@ namespace Gameplay.PlayScreen
 
             var screen = await Service.UI.Show<WinScreen>(ScreenNames.WinScreen);
 
-            // The faucet (LevelRewardService) computed this synchronously during the LevelResolved dispatch, i.e.
-            // before this settle-beat delay elapsed, so LastReward is always the value for the level just won
-            // (TASK-240, architect §8). Every win pays since TASK-432, a replay included; 0 only under a misconfigured
-            // reward table → the screen hides the reward row.
-            var reward = _reward.LastReward;
-            var x2Available = _core.WinScreenX2Enabled
-                              && Data.Meta.CurrentLevel.Value >= _core.WinScreenX2ButtonStartLevel;
-
+            // No reward to forward since TASK-612: the win screen always shows three stars, nothing is credited.
             screen.Setup(onNext: () =>
             {
                 applyTransition?.Invoke();
                 _interaction.IsBusy.Value = false;
-            }, isFinalLevel, reward, x2Available, onX2: () => _rewardDoubler.TryDouble(reward, _ => { }));
+            }, isFinalLevel);
         }
 
         // Wait for the number to complete OR for the ceiling, whichever first. The subscription is disposed on the way

@@ -21,6 +21,9 @@ namespace Gameplay.View
         private Mesh _mesh;
         private Transform _shadow;
 
+        /// <summary>TASK-614: пунктир вокруг ждущей детали (<see cref="IdleDashOutline"/>); виден только в Idle.</summary>
+        private GameObject _idleDash;
+
         /// <summary>Под каким именем эта форма ищет свою настройку дерева (<see cref="WoodPieceKey"/>).</summary>
         private string _styleKey;
 
@@ -76,6 +79,11 @@ namespace Gameplay.View
             // Тень — отдельный дочерний меш позади детали (объём, просьба владельца).
             _shadow = PieceShadow.Attach(transform, _mesh, _silhouette, _silhouetteCount);
 
+            // Пунктир ждущей детали — по СИЛУЭТУ формы: у полимино и freeform это Vertices (объединение частей),
+            // у выпуклых — тот же видовой контур, что у меша (купола тесселированы гуще коллайдера).
+            _idleDash = IdleDashOutline.Attach(transform,
+                shape.ConvexParts != null ? shape.Vertices : ShapeVisualOutline.Build(shape));
+
             _mpb = new MaterialPropertyBlock();
             RefreshColor();
 
@@ -109,22 +117,25 @@ namespace Gameplay.View
             RefreshColor();
         }
 
-        // Subtle feedback: dim while Idle (waiting for a tap), full colour once released/placed. TASK-374 removed the
-        // balance "armed" telegraph (co-release is a condition, not a helper — a tapped-but-unreleased group member
-        // shows nothing), so a piece is only ever Idle or Active here.
+        // Idle (waiting for a tap) reads differently from a released/placed piece. TASK-374 removed the balance "armed"
+        // telegraph (co-release is a condition, not a helper — a tapped-but-unreleased group member shows nothing), so
+        // a piece is only ever Idle or Active here.
         //
-        // Насколько именно приглушать — теперь не цифра в коде, а настройка (WoodTuning.Tint): владелец
-        // разбирает второй стейт («полетел — стал активный») и крутит разницу ползунками в Play.
+        // Чем именно отличается — не цифра в коде, а настройка (WoodTuning.Tint + IdleDash*): с TASK-614 ждущая деталь
+        // бледнее и обведена пунктиром, на тапе цвет возвращается, а пунктир гаснет.
         private void RefreshColor()
         {
-            var state = _state == PieceLifecycle.Idle
-                ? PieceVisualState.Idle
-                : PieceVisualState.Active;
+            var idle = _state == PieceLifecycle.Idle;
+            var state = idle ? PieceVisualState.Idle : PieceVisualState.Active;
 
             // Ремап цвета уровня к палитре считается ЗДЕСЬ, а не в Initialize: тумблер крутят в Play,
             // и исходный цвет уровня обязан остаться нетронутым, чтобы его можно было вернуть.
             var tuning = WoodTuning.Current;
             ApplyColor(tuning.Tint(tuning.ResolveLevelColor(_baseColor, _kind), state));
+
+            // Тумблер пунктира крутят в Play — поэтому здесь, а не в SetState: Changed приходит сюда же.
+            if (_idleDash != null)
+                _idleDash.SetActive(idle && tuning.IdleDash);
         }
 
         public void Dispose()
