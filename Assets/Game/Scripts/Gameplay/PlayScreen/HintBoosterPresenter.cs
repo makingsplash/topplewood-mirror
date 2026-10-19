@@ -24,9 +24,9 @@ namespace Gameplay.PlayScreen
     /// pure UI hint: it never moves a piece, widens tolerance, or touches physics/state, so the sim is unaffected
     /// (architect §9). Charges are meta-state (<see cref="HintBoosterService"/>); a no-op (nothing to reveal, level
     /// ineligible, or an armed balance coalescence window) shows neutral feedback WITHOUT spending (balancer §1.2).
-    /// At 0 charges on a usable level the button follows the f2p convention (owner TASK-263): it does NOT alpha-fade,
-    /// it stays fully visible with a muted, desaturated tint and a "+" badge, and a tap buys one charge for coins
-    /// (<see cref="HintBoosterService.TryPurchaseCharges"/>, TASK-240) — a short shake, never a modal, on a short balance.
+    /// At 0 charges the button is the plain disabled state (TASK-612, design 01 §2): dimmed, non-interactable, the
+    /// badge reads "0". There is no coin purchase any more — the game has no currency, so the old "+" buy-offer
+    /// (TASK-240/263) would have offered a trade the player can never make.
     /// The art is the C-02 die-cut sticker language (owner 2026-09-01, TASK-263): an EMERALD lamp button (variant B
     /// recolour — warm off-white border + lamp glyph over a navy contour) + a round orange charge badge, non-wood —
     /// the complementary colour carries the separation from the walnut wall on its own, so the old wood-era
@@ -58,11 +58,10 @@ namespace Gameplay.PlayScreen
         private Image _glow;
         private GameObject _tooltip;
         private Tween _glowPulse;
-        private Tween _shake;
         private CompositeDisposable _subs;
         private CancellationTokenSource _highlightCts;
         // Icon tone in the READY state (white with a sprite, the flat fallback token without one), captured at build
-        // so RefreshState can restore it after the empty-charge muted tint.
+        // so RefreshState can derive the dimmed state from it.
         private Color _iconBaseColor = Color.white;
         // InstanceId of the piece currently outlined by a hint (-1 = none). Lets the tap-driven clear (TASK-263 §2b)
         // fire the moment the PLAYER releases THAT piece, instead of waiting out the fallback timer.
@@ -72,19 +71,6 @@ namespace Gameplay.PlayScreen
         // PRIMARY clear is now event-driven (PieceReleased), so this is generous — long enough to keep guiding, short
         // enough that an ignored hint eventually tidies itself up (was a hard 2.5s timer pre-TASK-263).
         private const float HighlightFallbackSec = 6f;
-
-        // Empty-state (0 charges) icon tint — a near-neutral, muted grey MULTIPLY held at FULL alpha, so the button
-        // stays clearly visible and tappable instead of fading toward invisible (owner 19:10, genre convention: at 0
-        // boosters the button changes tone, it does not disappear). RETUNED for the emerald body (owner 2026-09-01
-        // 20:12): the old value (0.62,0.64,0.68) had a deliberate BLUE lean tuned to reinforce the previous blue cel's
-        // "cool off-blue"; multiplied onto the emerald green that same blue-heavy factor drags the hue toward teal —
-        // a deliberate-looking colour, not "off". The near-neutral cool-grey below darkens/mutes the emerald almost
-        // uniformly (~x0.61) so it reads "same button, dimmed = inactive, buy me" WITHOUT a hue shift, against the
-        // ready state's full-colour icon + numeric badge. NOTE (unchanged, honest): Image.color is a per-channel
-        // multiply — it darkens/mutes but cannot truly hue-desaturate; the art-director confirmed the die-cut sticker
-        // reads muted natively (TASK-263 §6d), so the wood-era grayscale-material debt TASK-281 stays OBSOLETE and is
-        // NOT re-raised. Exact tone is owner-gate-tunable on the live frame (owner reserved the visual verdict).
-        private static readonly Color EmptyTint = new(0.60f, 0.61f, 0.63f, 1f);
 
         private bool _onCooldown;
         private bool _proactiveSuppressed;
@@ -331,9 +317,8 @@ namespace Gameplay.PlayScreen
 
         // A level is eligible only if a hint can ever be revealed on it: enough tapable pieces (balancer §2.2) AND a
         // baked WinningOrder (TASK-541). Without an order every tap is a no-op, so the button must read ineligible
-        // (dimmed, non-interactable) — otherwise at 0 charges it offered a coin purchase the level can never use
-        // (a level with no baked order; the case was libra_scales, which won only by a paired release and was removed
-        // in TASK-549).
+        // (dimmed, non-interactable) — a tap there could never reveal anything (a level with no baked order; the case
+        // was libra_scales, which won only by a paired release and was removed in TASK-549).
         private bool LevelEligible()
         {
             var level = _model.CurrentLevel;
@@ -351,33 +336,20 @@ namespace Gameplay.PlayScreen
             var busy = _interaction.IsBusy.Value || _onCooldown;
             var eligible = LevelEligible();
 
-            // Empty-charge offer (owner 19:10, genre convention): on a usable level with 0 charges and no transient
-            // busy/cooldown, the button does NOT fade toward invisible. It stays fully opaque with a muted grey tint,
-            // the badge shows "+" instead of a count, and a tap buys a charge for coins (TASK-240). IsBusy / cooldown /
-            // an ineligible level keep the previous disabled alpha-dim, unchanged.
-            var buyOffer = charges == 0 && eligible && !busy;
-
-            // Interactable when a tap does something: reveal (charges>0) or buy (empty offer). Busy/cooldown and an
-            // ineligible level stay non-interactable exactly as before.
-            var interactable = !busy && eligible && (charges > 0 || buyOffer);
+            // Interactable only when a tap can reveal: a charge, an eligible level, no busy/cooldown. 0 charges is the
+            // same disabled look as busy/ineligible (TASK-612, design 01 §2): no currency, so nothing to buy — the badge
+            // shows the honest "0", not a "+" offer.
+            var interactable = !busy && eligible && charges > 0;
             _button.interactable = interactable;
 
             if (_countLabel != null)
-                _countLabel.text = buyOffer ? "+" : charges.ToString();
+                _countLabel.text = charges.ToString();
 
             if (_icon != null)
             {
-                Color c;
-                if (buyOffer)
-                {
-                    c = EmptyTint; // grey tint at FULL alpha — visible & tappable, the opposite of the old fade.
-                }
-                else
-                {
-                    // Ready → base tone at full alpha; disabled (busy/cooldown/ineligible) → the old 0.5 alpha-dim.
-                    c = _iconBaseColor;
-                    c.a = interactable ? 1f : 0.5f;
-                }
+                // Ready → base tone at full alpha; disabled (0 charges/busy/cooldown/ineligible) → 0.5 alpha-dim.
+                var c = _iconBaseColor;
+                c.a = interactable ? 1f : 0.5f;
                 _icon.color = c;
             }
         }
@@ -453,14 +425,11 @@ namespace Gameplay.PlayScreen
                 return;
             }
 
-            // Empty-state tap = buy a charge for coins (owner 19:10, TASK-240). The button is only interactable at 0
-            // charges on an eligible level — which now includes "has a baked WinningOrder" (TASK-541) — so the bought
-            // charge has an order to reveal from. Not a guarantee of a reveal: the order can already be exhausted
-            // (every listed piece released), and then the next tap is a neutral no-op, still without spending.
+            // 0 charges: the button is non-interactable then (RefreshState), so this only catches a click queued the
+            // frame the last charge was spent. Nothing to buy since TASK-612 — a neutral no-op.
             if (_hint.Charges.CurrentValue <= 0)
             {
-                LogHint("buy-charge path (0 charges) — no highlight expected");
-                TryBuyCharge();
+                LogHint("swallowed: 0 charges");
                 return;
             }
 
@@ -490,31 +459,6 @@ namespace Gameplay.PlayScreen
             LogHint($"REVEAL id={instanceId} — calling highlight seam (class-2 territory if nothing appears)");
             RevealPiece(instanceId);
             CooldownAsync().Forget();
-        }
-
-        // Empty-state buy path (owner 19:10): spend coins for a single Hint charge (TASK-240). On success the Charges
-        // reactive fires → RefreshState flips the button back to the ready look (numeric badge, full colour). On a
-        // short balance a brief non-blocking shake — NEVER a modal (one-tap is sacrosanct). AtCap cannot occur from 0
-        // charges (0 + 1 ≤ StockCap always), so a non-Ok result here is always an affordability miss.
-        private void TryBuyCharge()
-        {
-            var result = _hint.TryPurchaseCharges(HintBoosterService.HintSku.Single);
-            if (result != HintBoosterService.PurchaseResult.Ok)
-                ShakeButton();
-        }
-
-        // Short horizontal shake as non-blocking "can't afford" feedback (owner 19:10: shake/tooltip, not a modal). A
-        // fresh shake completes any in-flight one first so anchoredPosition never drifts; SetUpdate(true) keeps it
-        // alive under a time-scaled resolution hold.
-        private void ShakeButton()
-        {
-            if (_button == null)
-                return;
-
-            _shake?.Kill(true);
-            _shake = ((RectTransform)_button.transform)
-                .DOShakeAnchorPos(0.35f, new Vector2(16f, 0f), 20, 0f)
-                .SetUpdate(true);
         }
 
         private void RevealPiece(int instanceId)
@@ -638,9 +582,6 @@ namespace Gameplay.PlayScreen
 
             _glowPulse?.Kill();
             _glowPulse = null;
-
-            _shake?.Kill();
-            _shake = null;
 
             _highlightCts?.Cancel();
             _highlightCts?.Dispose();

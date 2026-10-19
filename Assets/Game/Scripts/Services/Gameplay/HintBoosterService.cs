@@ -7,13 +7,13 @@ using SGS.Infrastructure.Tools.PlayerPrefsWrapper.Storage;
 namespace Services.Gameplay
 {
     /// <summary>
-    /// Today's charge faucet for the Hint booster, without a currency yet (architect §3.3, balancer §1). It seeds
+    /// Today's charge faucet for the Hint booster, without a currency (architect §3.3, balancer §1). It seeds
     /// the one-time grant on first run, tops the stock up to the daily-refill target on a new day, and spends one
     /// charge per accepted activation. All numbers come from <c>Data.Configs.BoostersConfig.Hint</c> (config-over-
     /// hardcode). The reactive <see cref="Charges"/> mirrors the persisted balance so the presenter's badge and
-    /// enabled-state stay in sync (R3, the project's reactive idiom). Rewarded/coin sources are NOT wired here
-    /// today: rewarded plumbing is dead (owner 20:47), currency is the next ticket (TASK-240) — both add a
-    /// <see cref="IBoosterChargeStore.Grant"/> call with the right <see cref="ChargeSource"/>, no re-form.
+    /// enabled-state stay in sync (R3, the project's reactive idiom). No other source is wired: rewarded plumbing is
+    /// dead (owner 20:47), and the TASK-240 coin purchase was removed with the currency (TASK-612). A future source
+    /// adds a <see cref="IBoosterChargeStore.Grant"/> call with the right <see cref="ChargeSource"/>, no re-form.
     /// </summary>
     public sealed class HintBoosterService
     {
@@ -103,50 +103,6 @@ namespace Services.Gameplay
         {
             _store.Grant(BoosterId.Hint, amount, ChargeSource.FreeGrant, Cfg.StockCap);
             _charges.Value = _store.Get(BoosterId.Hint);
-        }
-
-        /// <summary>The SKUs the coin store offers for Hint charges (TASK-240, balancer §1): a single charge or the
-        /// discounted 3-pack. The count doubles as the pack size for pricing.</summary>
-        public enum HintSku
-        {
-            Single = 1,
-            Pack3 = 3,
-        }
-
-        public enum PurchaseResult
-        {
-            Ok,
-            Insufficient,   // not enough gold
-            AtCap,          // the SKU would overflow the stock cap → the UI must gate it
-        }
-
-        /// <summary>Buy Hint charges for coins (TASK-240, architect §4 — the <see cref="ChargeSource.CoinPurchase"/>
-        /// call the seam was built for). ATOMIC and cap-safe: a SKU that would overflow the cap is refused WHOLE
-        /// (never a partial grant charged in full), and gold is debited only after the affordability check, so a
-        /// short balance never debits. Debit and grant reach disk together: the store's <c>Grant</c> ends in
-        /// <c>SaveDataIfChanged</c>, and <c>PlayerPrefs.Save()</c> writes EVERY staged key, the gold debit included
-        /// (TASK-537; <c>ForceSave</c> alone is only <c>SetInt</c> and was never durable).
-        /// The UI is expected to gate an over-cap or unaffordable SKU up front; this method is the authoritative
-        /// backstop.</summary>
-        public PurchaseResult TryPurchaseCharges(HintSku sku)
-        {
-            var cfg = Cfg;
-            var count = (int)sku;
-
-            // Whole-SKU cap check (architect §4.1): refuse rather than clamp — clamping would grant fewer than paid.
-            if (_store.Get(BoosterId.Hint) + count > cfg.StockCap)
-                return PurchaseResult.AtCap;
-
-            var price = sku == HintSku.Pack3 ? cfg.CoinPricePack3 : count * cfg.CoinPricePerCharge;
-
-            if (Data.Meta.GoldAmount.Value < price)
-                return PurchaseResult.Insufficient;
-
-            // Debit first, then grant — both durable. Order matches the atomic-spend contract (never grant unpaid).
-            Data.Meta.GoldAmount.Value -= price;
-            _store.Grant(BoosterId.Hint, count, ChargeSource.CoinPurchase, cfg.StockCap);
-            _charges.Value = _store.Get(BoosterId.Hint);
-            return PurchaseResult.Ok;
         }
     }
 }
