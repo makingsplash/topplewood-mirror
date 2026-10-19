@@ -14,7 +14,7 @@ namespace Gameplay.View
     /// </summary>
     public sealed class StaticGeometryView : MonoBehaviour
     {
-        private const float ZBehindPieces = 0.5f; // pieces live at z=0; larger z = further from the +Z-facing camera
+        private const float ZBehindPieces = 0.5f; // pieces live at z∈[0, 0.04) (PieceDepth, TASK-631); larger z = further from the +Z-facing camera
 
         // TASK-349: a concave VISUAL MASS folds a would-be-separate wall in and tucks under the floor, so it must sit
         // STRICTLY behind the plain statics it overlaps (floor, ribbon) — otherwise same-z opaque statics z-fight and
