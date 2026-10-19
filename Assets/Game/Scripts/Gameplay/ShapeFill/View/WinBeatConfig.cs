@@ -13,10 +13,11 @@ namespace Gameplay.View
     {
         // ── Bounce: a uniform scale in place — grow → shrink → 1, the pivot never moves ─────────────────────────────
         // (TASK-639: the squash/stretch with a hop of TASK-634 read as a jump; the owner asked for a plain bounce scale.)
-        /// <summary>Height of the fixed bounce pivot in the figure's bbox: 0.5 = centre (the figure grows and shrinks
-        /// around itself, so at the grow peak its bottom dips onto whatever it stands on and at the shrink peak lifts
-        /// off it — by (scale − 1)·height/2); 0 = bottom (the base stays on its line, the figure grows upward).</summary>
-        public float PivotHeightFraction = 0.5f;
+        /// <summary>Height of the fixed bounce pivot in the figure's bbox: 0 = bottom (default: the base stays on its
+        /// line, the figure grows upward); 0.5 = centre (the figure grows and shrinks around itself, so at the grow peak
+        /// its bottom dips into whatever it stands on and at the shrink peak lifts off it by (scale − 1)·height/2 — that
+        /// reads as the very hop TASK-639 removed, ≈15 px on the toaster at 1.12).</summary>
+        public float PivotHeightFraction = 0f;
         public float GrowPeak = 0.12f;
         /// <summary>Uniform scale at the grow peak (1 = none).</summary>
         public float GrowScale = 1.12f;

@@ -26,8 +26,8 @@ namespace Gameplay.View
     /// on the card as its picture until the next level load destroys the card.
     ///
     /// Hierarchy while the beat runs: <c>WinBeatFlight</c> (the map: FigureCenter → card origin, scale 1 → card scale) →
-    /// <c>BouncePivot</c> (fixed, at <see cref="WinBeatConfig.PivotHeightFraction"/> of the figure's bbox — centre by
-    /// default: uniform bounce scale) → the piece views (rest pose → slot pose, angle
+    /// <c>BouncePivot</c> (fixed, at <see cref="WinBeatConfig.PivotHeightFraction"/> of the figure's bbox — bottom by
+    /// default, so the base stays on its line: uniform bounce scale) → the piece views (rest pose → slot pose, angle
     /// → the symmetric-nearest slot angle). The flash, the sparks and the tap catcher live on a code-built Screen Space
     /// Overlay (sorting 32200: above the tour 32100, below the HUD 32765+). ALL visual state is a function of the beat time
     /// in ONE setter (<see cref="Beat.Apply"/>), so <c>DOTween.Goto("WinBeat", t)</c> poses any frame for acceptance
@@ -211,7 +211,7 @@ namespace Gameplay.View
                     ? _c.FlashWindowFraction
                     : 1f;
 
-                // Pivot = bbox of the figure's world outline at rest: centre x, PivotHeightFraction up (0.5 = centre).
+                // Pivot = bbox of the figure's world outline at rest: centre x, PivotHeightFraction up (0 = bottom).
                 var min = new Vector2(float.MaxValue, float.MaxValue);
                 var max = new Vector2(float.MinValue, float.MinValue);
                 foreach (var f in pieces)
