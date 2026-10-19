@@ -706,9 +706,9 @@ namespace Game.Editor
             => StaticGeometrySpawner.Spawn(level, "Static");
 
         /// <summary>
-        /// Детали — на СТАРТОВЫХ позициях и в состоянии Idle: именно так игрок видит уровень до
-        /// первого тапа, и именно этот кадр прислал владелец. Состояние не выставляем явно —
-        /// <see cref="PieceView"/> сам стартует с <c>PieceLifecycle.Idle</c>.
+        /// Детали — на СТАРТОВЫХ позициях и в том состоянии, в каком их видит игрок до первого тапа
+        /// (<see cref="StartState"/>): ждущие — Idle, preplaced — Falling, как ставит им игра. До TASK-628
+        /// состояние не выставлялось, и preplaced-детали рисовались ждущими тапа.
         /// </summary>
         private static void BuildPieces(LevelData level)
         {
@@ -732,6 +732,7 @@ namespace Game.Editor
                 // Номер — индекс размещения, как у PieceViewFactory в игре: фаза волокна та же, что на поле (TASK-559).
                 view.Initialize(type.Shape, type.Color, type.Kind, index);
                 view.Sync(placement.StartPosition, placement.StartRotation);
+                view.SetState(StartState(placement));
             }
         }
 
@@ -835,8 +836,18 @@ namespace Game.Editor
                 var view = go.AddComponent<PieceView>();
                 view.Initialize(type.Shape, type.Color, type.Kind, index);
                 view.Sync(placement.StartPosition, placement.StartRotation);
+                view.SetState(StartState(placement));
             }
         }
+
+        /// <summary>
+        /// Состояние детали на стартовом кадре — то, в котором её видит игрок (TASK-628). Ждущая тапа — Idle;
+        /// preplaced в игре тапа не ждёт: <c>ShapeFillMechanicController.SpawnPreplaced</c> отпускает её в физику с t=0
+        /// и ставит виду Falling. Без этого кадр рисовал её бледной и в пунктире, как ждущую, и владелец по кадру
+        /// принял мебель уровня за детали, которые надо тапать.
+        /// </summary>
+        private static PieceLifecycle StartState(PiecePlacement placement)
+            => placement.Preplaced ? PieceLifecycle.Falling : PieceLifecycle.Idle;
 
         /// <summary>
         /// Контур целевой фигуры. Без него кадр показывал детали, висящие в пустоте, — то есть

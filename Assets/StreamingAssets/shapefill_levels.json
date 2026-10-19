@@ -377,7 +377,7 @@
           "kind": "stick",
           "startPosition": {
             "x": 1.05,
-            "y": 1.2
+            "y": 1.1
           },
           "startRotation": 0,
           "preplaced": true,
@@ -387,7 +387,7 @@
           "kind": "crown",
           "startPosition": {
             "x": 2.05,
-            "y": 1.95
+            "y": 1.8
           },
           "startRotation": 0,
           "preplaced": true

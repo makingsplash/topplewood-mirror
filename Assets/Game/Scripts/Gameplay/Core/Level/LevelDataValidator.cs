@@ -74,6 +74,18 @@ namespace Gameplay.Core
         /// (<see cref="TapZoneConfig.EnforceMinDistanceAsError"/>), which phased in for the same reason.</summary>
         public const bool SymmetryOrderMismatchIsError = true;
 
+        /// <summary>TASK-628: how far a PREPLACED piece may start above its support and still count as "resting on it".
+        /// It is the physics' own contact tolerance — <c>Physics2D.defaultContactOffset</c> = 0.01 in
+        /// ProjectSettings/Physics2DSettings.asset: bodies closer than that are already in contact for the solver, so a
+        /// smaller gap never reads as a fall. Above it the piece visibly drops at t=0 (potted_tree had 0.05 and 0.10).
+        /// Tightening is safe; widening it to hide a visible drop is the "loosen the criterion for green" the canon
+        /// forbids.</summary>
+        public const float PreplacedRestTolerance = 0.01f;
+
+        /// <summary>TASK-628: march step of the straight-down drop probe in <see cref="PreplacedDrop"/>. Far below the
+        /// thinnest piece (≥0.1) so no support is stepped over, then refined by bisection to a hair.</summary>
+        private const float DropProbeStep = 0.01f;
+
         private readonly TapZoneConfig _tapZone;
 
         /// <summary>TASK-085: takes the tap-zone config so the tap-spacing check can predict the per-level zone. The
@@ -181,6 +193,12 @@ namespace Gameplay.Core
             //     authoring mistake (a typo that would make the piece unreleasable). Same authoring-brak class as an
             //     out-of-range WinningOrder index.
             ValidateCoReleaseGroups(level, errors, warnings);
+
+            // 16. Preplaced rest (TASK-628): a preplaced piece is level furniture the player sees from t=0 — authored
+            //     a hair ABOVE its support, it visibly drops at level start (potted_tree: stick 0.10 over the block,
+            //     crown 0.05 over the stick). Invisible to #11 (no overlap) and to the sim (it just settles). WARNING
+            //     with the gap as a number and the support named; surfaced by the sweep under [LEVEL-WARN].
+            ValidatePreplacedRest(level, warnings);
 
             return new ValidationResult(errors, warnings);
         }
@@ -760,6 +778,125 @@ namespace Gameplay.Core
                             $"flush on a surface (≤{MinStaticPenetration:0.###}) but must not begin inside it.");
                 }
             }
+        }
+
+        /// <summary>
+        /// TASK-628: every PREPLACED piece should start RESTING on what holds it, not hovering above it. A preplaced piece
+        /// is released into physics at t=0 (<c>ShapeFillMechanicController.SpawnPreplaced</c>), so a gap under it is a
+        /// visible drop at level start — furniture that "settles" before the player's first tap (owner playtest of
+        /// potted_tree, 2026-10-19). Supports are colliding static blocks and the OTHER preplaced pieces at their start
+        /// poses; tapable pieces hang outside physics until tapped, so they never hold anything at t=0.
+        ///
+        /// The measure is the straight-down drop to first contact (<see cref="PreplacedDrop"/>), on the same collider
+        /// geometry as #11 (<see cref="ConvexShape.Of"/>, filled SAT / zero-width surface chain). Translation only — a
+        /// piece that would tip while falling is not modelled; for the thing this guards (a hair of gap under a piece
+        /// meant to sit) the first contact is what matters. A piece with nothing below it within Bounds is not reported
+        /// (it falls by design or out of the level — not a rest question). WARNING, not error: a deliberate drop of a
+        /// preplaced piece is legal design; the number lets the author tell a hair from an intent.
+        /// </summary>
+        private static void ValidatePreplacedRest(LevelData level, List<string> warnings)
+        {
+            if (level.Pieces == null)
+                return;
+
+            for (var i = 0; i < level.Pieces.Count; i++)
+            {
+                var piece = level.Pieces[i];
+                if (!piece.Preplaced || piece.Type?.Shape == null)
+                    continue;
+
+                var drop = PreplacedDrop(level, i, out var support);
+                // +∞ = nothing below within Bounds: not a rest question (see summary), so never a warning.
+                if (drop > PreplacedRestTolerance && !float.IsPositiveInfinity(drop))
+                    warnings.Add(
+                        $"Preplaced rest: Pieces[{i}] '{piece.Type.Kind}' starts {drop:F3} world units above its support " +
+                        $"{support} — it drops at level start. A preplaced piece meant to sit should start resting " +
+                        $"(gap ≤{PreplacedRestTolerance:0.###}).");
+            }
+        }
+
+        /// <summary>TASK-628: how far preplaced piece <paramref name="index"/> falls STRAIGHT DOWN from its start pose
+        /// before first contact with a support (see <see cref="ValidatePreplacedRest"/>); 0 when it already touches,
+        /// <see cref="float.PositiveInfinity"/> when nothing is below it within Bounds. March at
+        /// <see cref="DropProbeStep"/>, then bisect the last free/contact interval — a fixed-step search instead of an
+        /// analytic time-of-impact, because it reuses the exact penetration kernels #11 trusts for every primitive
+        /// (disc, polygon, compound, surface chain) rather than adding a second geometry path that could disagree.</summary>
+        public static float PreplacedDrop(LevelData level, int index, out string support)
+        {
+            support = null;
+            var piece = level.Pieces[index];
+            if (Contact(level, index, 0f, out support))
+                return 0f;
+
+            var floor = level.Bounds.Min.Y;
+            var free = 0f;
+            for (var d = DropProbeStep; piece.StartPosition.Y - d >= floor - DropProbeStep; d += DropProbeStep)
+            {
+                if (!Contact(level, index, d, out support))
+                {
+                    free = d;
+                    continue;
+                }
+
+                var hit = d;
+                for (var k = 0; k < 12; k++)
+                {
+                    var mid = 0.5f * (free + hit);
+                    if (Contact(level, index, mid, out _))
+                        hit = mid;
+                    else
+                        free = mid;
+                }
+                return hit;
+            }
+
+            support = null;
+            return float.PositiveInfinity;
+        }
+
+        /// <summary>Does preplaced piece <paramref name="index"/>, lowered by <paramref name="drop"/>, overlap a support
+        /// deeper than <see cref="MinStaticPenetration"/> (the same flush threshold as #11)? Names the support hit.</summary>
+        private static bool Contact(LevelData level, int index, float drop, out string support)
+        {
+            var piece = level.Pieces[index];
+            var shape = ConvexShape.Of(piece.Type.Shape,
+                new Vec2(piece.StartPosition.X, piece.StartPosition.Y - drop), piece.StartRotation);
+
+            if (level.StaticGeometry != null)
+                for (var g = 0; g < level.StaticGeometry.Length; g++)
+                {
+                    var block = level.StaticGeometry[g];
+                    if (block?.Outline == null || !block.HasCollider)
+                        continue;
+                    float pen;
+                    if (block.IsSurface)
+                        pen = block.Outline.Length >= 2 ? SurfaceEmbedDepth(block.Outline, shape) : 0f;
+                    else if (TryBuildStaticCollider(block, out var filled))
+                        pen = Geometry.Penetration(shape, filled);
+                    else
+                        continue;
+                    if (pen > MinStaticPenetration)
+                    {
+                        support = $"StaticGeometry[{g}]";
+                        return true;
+                    }
+                }
+
+            for (var j = 0; j < level.Pieces.Count; j++)
+            {
+                var other = level.Pieces[j];
+                if (j == index || !other.Preplaced || other.Type?.Shape == null)
+                    continue;
+                var otherShape = ConvexShape.Of(other.Type.Shape, other.StartPosition, other.StartRotation);
+                if (Geometry.Penetration(shape, otherShape) > MinStaticPenetration)
+                {
+                    support = $"Pieces[{j}] '{other.Type.Kind}'";
+                    return true;
+                }
+            }
+
+            support = null;
+            return false;
         }
 
         /// <summary>TASK-329: how deep the ZERO-WIDTH surface edge-chain reaches INSIDE a piece's convex collider at its
