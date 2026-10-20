@@ -45122,40 +45122,40 @@
           {
             "kind": "doll_3",
             "position": {
-              "x": -0.889,
-              "y": 0.691
+              "x": -0.876,
+              "y": 0.709
             },
             "rotation": 0.0873
           },
           {
             "kind": "doll_4",
             "position": {
-              "x": -0.252,
-              "y": 0.662
+              "x": -0.234,
+              "y": 0.679
             },
             "rotation": 0.0873
           },
           {
             "kind": "doll_2",
             "position": {
-              "x": -1.645,
-              "y": 0.716
+              "x": -1.639,
+              "y": 0.733
             },
             "rotation": 0.0873
           },
           {
             "kind": "doll_1",
             "position": {
-              "x": -2.554,
-              "y": 0.742
+              "x": -2.538,
+              "y": 0.76
             },
             "rotation": 0.0873
           },
           {
             "kind": "doll_5",
             "position": {
-              "x": 0.281,
-              "y": 0.638
+              "x": 0.308,
+              "y": 0.659
             },
             "rotation": 0.0873
           }
@@ -45165,42 +45165,42 @@
         {
           "kind": "doll_1",
           "startPosition": {
-            "x": 2.5,
-            "y": 2.15
+            "x": 2.06,
+            "y": 3.28
           },
-          "startRotation": 0.0873
+          "startRotation": 0.3491
         },
         {
           "kind": "doll_2",
           "startPosition": {
-            "x": 3.1,
-            "y": 2.45
+            "x": 2.06,
+            "y": 3.28
           },
-          "startRotation": 0.0873
+          "startRotation": 0.3491
         },
         {
           "kind": "doll_3",
           "startPosition": {
-            "x": 3.61,
-            "y": 2.71
+            "x": 2.06,
+            "y": 3.28
           },
-          "startRotation": 0.0873
+          "startRotation": 0.3491
         },
         {
           "kind": "doll_4",
           "startPosition": {
-            "x": 4.04,
-            "y": 2.92
+            "x": 2.06,
+            "y": 3.28
           },
-          "startRotation": 0.0873
+          "startRotation": 0.3491
         },
         {
           "kind": "doll_5",
           "startPosition": {
-            "x": 4.4,
-            "y": 3.1
+            "x": 2.06,
+            "y": 3.28
           },
-          "startRotation": 0.0873
+          "startRotation": 0.3491
         }
       ],
       "staticGeometry": [
@@ -45213,16 +45213,38 @@
               "y": -0.4
             },
             {
-              "x": 5.2,
+              "x": 1.0,
               "y": -0.4
             },
             {
-              "x": 5.2,
-              "y": 0.7175
+              "x": 1.0,
+              "y": 0.35
             },
             {
               "x": -3.0,
               "y": 0.0
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "color": "#B8926B",
+          "outline": [
+            {
+              "x": 1.0,
+              "y": -0.4
+            },
+            {
+              "x": 3.4,
+              "y": -0.4
+            },
+            {
+              "x": 3.4,
+              "y": 1.2235
+            },
+            {
+              "x": 1.0,
+              "y": 0.35
             }
           ]
         },
