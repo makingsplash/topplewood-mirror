@@ -6,7 +6,8 @@ public class SayKitApp
 
     /* App settings */
     public const string APP_NAME_CHINA_IOS = "";
-    public const string APP_NAME_IOS = "";
+    // Mirrors PlayerSettings.productName: the SayKit "[iOS] Application config" menu writes this back into it.
+    public const string APP_NAME_IOS = "Topplewood";
 
     public const string APP_BUNDLE_CHINA_IOS = "";
     public const string APP_BUNDLE_IOS = "com.game.dropcolorblocks";
