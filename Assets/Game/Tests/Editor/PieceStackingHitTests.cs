@@ -170,6 +170,161 @@ namespace Gameplay.Tests
                 "an uncovered piece keeps the centroid — the sweep of every other level is bit-for-bit");
         }
 
+        // ── TASK-649: an active piece on top catches the tap ─────────────────────────────────────────────────────
+        private static readonly PieceLifecycle[] AllStates =
+            { PieceLifecycle.Idle, PieceLifecycle.Falling, PieceLifecycle.Placed, PieceLifecycle.Lost };
+
+        [Test]
+        public void RankAcrossLayers_OrdersExactlyLikePieceDepth()
+        {
+            foreach (var s in AllStates)
+            foreach (var t in AllStates)
+                for (var i = 0; i < PieceStacking.Slots + 5; i += 3)
+                for (var j = 0; j < PieceStacking.Slots + 5; j += 3)
+                {
+                    var rankAbove = PieceStacking.Rank(s, i) < PieceStacking.Rank(t, j);
+                    var drawnAbove = PieceDepth.For(s, i) < PieceDepth.For(t, j);
+                    Assert.That(rankAbove, Is.EqualTo(drawnAbove), $"{s}#{i} vs {t}#{j}: the tap and the picture disagree");
+                }
+        }
+
+        [Test]
+        public void ActiveCover_CatchesTheTap_InItsArea_EvenWithAHalo_AndIsNeverReturned([Values] bool reversedList)
+        {
+            // The ACTIVE piece has the HIGHER index: only the layer puts it on top (an index-only rank would not).
+            var idle = new PieceHitResolver.HitCandidate(TopId, PieceLifecycle.Idle, 0, Box(new Vec2(0f, 0f), 1f),
+                new Vec2(0f, 0f));
+            var falling = new PieceHitResolver.HitCandidate(BottomId, PieceLifecycle.Falling, 1,
+                Box(new Vec2(0.6f, 0f), 1f), new Vec2(0.6f, 0f));
+            var c = reversedList
+                ? new List<PieceHitResolver.HitCandidate> { falling, idle }
+                : new List<PieceHitResolver.HitCandidate> { idle, falling };
+
+            Assert.That(PieceHitResolver.Resolve(c, InOverlap, 0f), Is.EqualTo(-1), "the falling piece is seen there");
+            Assert.That(PieceHitResolver.Resolve(c, InOverlap, 0.3f), Is.EqualTo(-1), "a caught tap is not a near miss");
+            Assert.That(PieceHitResolver.Resolve(c, OnBottomOnly, 0f), Is.EqualTo(-1), "an active piece is never released");
+            Assert.That(PieceHitResolver.Resolve(c, OnTopOnly, 0f), Is.EqualTo(TopId), "the Idle piece's visible part");
+            Assert.That(PieceHitResolver.Resolve(c, new Vec2(1.2f, 0f), 0.2f), Is.EqualTo(-1),
+                "the halo never reaches an active piece");
+
+            Assert.That(PieceHitResolver.FindAim(c, TopId, out var aim), Is.EqualTo(PieceHitResolver.Visibility.Partial));
+            Assert.That(PieceHitResolver.Resolve(c, aim, 0f), Is.EqualTo(TopId));
+        }
+
+        [Test]
+        public void Controller_FallingCoverOverAnIdlePiece_CatchesTheTap_UntilItHasFallenAway()
+        {
+            using var rig = new ControllerRig();
+            rig.Tap(OnTopOnly);
+            Assert.That(rig.Model.Pieces[0].State, Is.EqualTo(PieceLifecycle.Falling), "fixture: the cover falls");
+            var attempts = rig.Model.AttemptsUsed;
+
+            rig.Tap(InOverlap);
+            Assert.That(rig.Model.Pieces[1].State, Is.EqualTo(PieceLifecycle.Idle),
+                "the matryoshka case: the tap lands on the falling cover, not on the piece hanging under it");
+            Assert.That(rig.Model.AttemptsUsed, Is.EqualTo(attempts), "a caught tap releases nothing");
+
+            rig.Sim.SetPose(ControllerRig.BodyOf(0), new Vec2(0f, -4f), 0f); // the cover has fallen away
+            rig.Tick(0.01f);
+            Assert.That(rig.Model.Pieces[0].State, Is.EqualTo(PieceLifecycle.Falling));
+            rig.Tap(InOverlap);
+            Assert.That(rig.Model.Pieces[1].State, Is.EqualTo(PieceLifecycle.Falling), "nothing above it any more");
+        }
+
+        [Test]
+        public void Controller_LyingPieceOverAnIdlePiece_CatchesTheTap()
+        {
+            using var rig = new ControllerRig();
+            rig.Tap(OnTopOnly);
+            rig.Tick(1f); // rests where it was released (the pose canvas does not move it)
+            Assert.That(rig.Model.Pieces[0].State, Is.EqualTo(PieceLifecycle.Placed), "fixture: the cover lies there");
+            Assert.That(rig.Model.CurrentPhase, Is.EqualTo(GamePhase.Running), "fixture: play goes on");
+
+            rig.Tap(InOverlap);
+            Assert.That(rig.Model.Pieces[1].State, Is.EqualTo(PieceLifecycle.Idle));
+            rig.Tap(OnBottomOnly);
+            Assert.That(rig.Model.Pieces[1].State, Is.EqualTo(PieceLifecycle.Falling), "its visible part still taps it");
+        }
+
+        [Test]
+        public void Tour_LyingPieceOverTheTarget_GateRefusesTheCoveredPart_AimsAtTheVisibleOne()
+        {
+            var level = OverlapLevel(new[] { 0, 1 });
+            using var rig = new TourRig(level);
+            rig.Model.Pieces[0].State = PieceLifecycle.Placed; // lies where it hung: covers the target's left part
+            rig.Runner.Start();
+            rig.Model.SetFieldAtRest(true);
+
+            var cue = rig.View.Taps[rig.View.Taps.Count - 1];
+            Assert.That(rig.Gate.Allows(TourRig.Tap(InOverlap)), Is.False, "that part is under the lying piece");
+            Assert.That(rig.Gate.Allows(TourRig.Tap(OnBottomOnly)), Is.True);
+            Assert.That(cue.Aim.HasValue, Is.True);
+            Assert.That(rig.Gate.Allows(TourRig.Tap(cue.Aim.Value)), Is.True);
+        }
+
+        [Test]
+        public void SimTapPoint_PieceUnderALyingOne_TapsItsVisiblePart_FullyCoveredTapIsCaught()
+        {
+            var model = new GameModel();
+            model.LoadLevel(OverlapLevel(new[] { 0, 1 }, coverSize: 1.4f));
+            var bottom = model.Pieces[1];
+            model.Pieces[0].State = PieceLifecycle.Placed;
+            var candidates = PieceHitResolver.CandidatesOf(model);
+            Assert.That(PieceHitResolver.Resolve(candidates, SimGeometry.TapPoint(model, bottom), 0f),
+                Is.EqualTo(bottom.InstanceId), "the bot taps the part the player sees");
+
+            var covered = new GameModel();
+            covered.LoadLevel(OverlapLevel(new[] { 0, 1 }, coverSize: 3f));
+            covered.Pieces[0].State = PieceLifecycle.Falling;
+            Assert.That(PieceHitResolver.Resolve(PieceHitResolver.CandidatesOf(covered),
+                    SimGeometry.TapPoint(covered, covered.Pieces[1]), 0f), Is.EqualTo(-1),
+                "covered entirely by an active piece: the tap is caught, as a player's would be");
+        }
+
+        // ── TASK-649 (b): no Idle piece visible at rest → Lost ───────────────────────────────────────────────────
+        [Test]
+        public void Controller_EveryIdlePieceUnderALyingOne_AtRest_IsLost()
+        {
+            using var rig = new ControllerRig();
+            rig.Tap(OnTopOnly);
+            rig.Sim.SetPose(ControllerRig.BodyOf(0), new Vec2(0.6f, 0f), 0f); // the cover lands exactly on the other
+            rig.Tick(1f);
+            Assert.That(rig.Model.Pieces[0].State, Is.EqualTo(PieceLifecycle.Placed), "fixture: the cover lies there");
+            Assert.That(rig.Model.Pieces[1].State, Is.EqualTo(PieceLifecycle.Idle), "fixture: the hidden one still hangs");
+            Assert.That(rig.Model.Outcome.CurrentValue, Is.EqualTo(GameOutcome.Lost),
+                "no tap can ever reach the last piece — waiting forever is a dead end, not play");
+        }
+
+        [Test]
+        public void Controller_IdlePieceHiddenUnderAnIdleCover_AtRest_PlayGoesOn()
+        {
+            using var rig = new ControllerRig(coverSize: 3f); // the matryoshka start: the inner piece is not seen
+            rig.Tick(1f);
+            Assert.That(rig.Model.CurrentPhase, Is.EqualTo(GamePhase.Running),
+                "the cover itself is Idle and visible — the player taps it, then the inner one");
+        }
+
+        // ── TASK-650: the fast bot taps again, like a player ─────────────────────────────────────────────────────
+        [Test]
+        public void ImpatientBot_RepeatsACaughtTap_AtTheSameTempo_UntilThePieceFalls()
+        {
+            var model = new GameModel();
+            model.LoadLevel(OverlapLevel(new[] { 0, 1 }, coverSize: 3f));
+            model.Pieces[0].State = PieceLifecycle.Falling; // the cover falls over the piece the bot wants
+            var policy = ScriptedReleasePolicy.Impatient(new[] { 1 }, 5);
+            var taps = new List<Vec2>();
+
+            var tappedAt = new List<int>();
+            for (var step = 0; step < 6; step++)
+                if (policy.TryNextRelease(model, taps))
+                    tappedAt.Add(step);
+            Assert.That(tappedAt, Is.EqualTo(new[] { 0, 5 }), "caught at step 0 → the same tap again one gap later");
+
+            model.Pieces[1].State = PieceLifecycle.Falling; // the repeat got through
+            for (var step = 6; step < 30; step++)
+                Assert.That(policy.TryNextRelease(model, taps), Is.False, $"step {step}: a released piece is not re-tapped");
+        }
+
         // ── fixtures ─────────────────────────────────────────────────────────────────────────────────────────────
         private static List<PieceHitResolver.HitCandidate> Pair(bool reversed)
         {
@@ -215,18 +370,24 @@ namespace Gameplay.Tests
         private sealed class ControllerRig : System.IDisposable
         {
             public readonly GameModel Model = new();
+            public readonly ScriptedPoseSimulation Sim = new();
             private readonly ShapeFillMechanicController _controller;
 
-            public ControllerRig()
+            public ControllerRig(float coverSize = 1f)
             {
-                _controller = new ShapeFillMechanicController(Model, new ScriptedPoseSimulation(), new PoseMatchEvaluator(),
+                _controller = new ShapeFillMechanicController(Model, Sim, new PoseMatchEvaluator(),
                     new LevelDataValidator(new TapZoneConfig()), new NullPieceViewFactory(), new ShapeFillTuning(),
                     new NullTapTolerance());
-                Model.LoadLevel(OverlapLevel(new[] { 1, 0 }));
+                Model.LoadLevel(OverlapLevel(new[] { 1, 0 }, coverSize));
                 Assert.That(Model.CurrentPhase, Is.EqualTo(GamePhase.Running), "the fixture level must pass the validator");
             }
 
             public void Tap(Vec2 p) => _controller.OnIntent(new InputIntent(p.X, p.Y));
+
+            public void Tick(float dt) => _controller.Tick(dt);
+
+            /// <summary>The pose canvas body of a piece: spawned in level order, ids from 1.</summary>
+            public static int BodyOf(int placementIndex) => placementIndex + 1;
 
             public void Dispose() => _controller.Dispose();
         }

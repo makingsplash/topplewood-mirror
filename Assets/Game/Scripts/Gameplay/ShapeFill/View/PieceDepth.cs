@@ -9,7 +9,8 @@ namespace Gameplay.View
     /// Правило: любая не-Idle деталь (Falling, Placed, Lost, preplaced) БЛИЖЕ к камере, чем любая Idle (камера смотрит
     /// вдоль +Z, меньше z — ближе). Внутри слоя порядок устойчив — по индексу размещения в уровне: меньший индекс ближе.
     /// Он не меняется за всю жизнь детали, поэтому смена стейта — один прыжок между слоями, без мерцания. Ранг внутри
-    /// слоя — <see cref="PieceStacking.Rank"/>: тот же, по которому тап выбирает видимую сверху деталь (TASK-645).
+    /// слоя — <see cref="PieceStacking.Rank(int)"/>, слой — <see cref="PieceStacking.IsActiveLayer"/>: то же, по чему тап
+    /// выбирает видимую сверху деталь (TASK-645) и по чему активная сверху ловит тап (TASK-649).
     ///
     /// Числа держат цепочку глубин, на которую опираются соседи (всё — расстояние от камеры):
     /// активные [0, 0.01) &lt; ждущие [0.03, 0.04) &lt; пунктир ждущих (+0.05, <see cref="IdleDashOutline.ZBehind"/>)
@@ -34,7 +35,7 @@ namespace Gameplay.View
         public static float For(PieceLifecycle state, int ordinal)
         {
             var rank = PieceStacking.Rank(ordinal);
-            return (state == PieceLifecycle.Idle ? IdleBase : ActiveBase) + rank * Step;
+            return (PieceStacking.IsActiveLayer(state) ? ActiveBase : IdleBase) + rank * Step;
         }
     }
 }

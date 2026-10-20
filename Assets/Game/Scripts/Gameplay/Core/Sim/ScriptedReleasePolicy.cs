@@ -45,11 +45,18 @@ namespace Gameplay.Core.Sim
         // step _step reaches its due value regardless of whether its pieces are still Idle, so the release step is
         // ALWAYS the due step — timing is independent of idle-state, keeping the script byte-for-byte reproducible.
         private readonly int[] _dueStep;
+        // TASK-649/650: a tap an active piece caught releases nothing, and a player would simply tap again. Every
+        // tapped piece (outside a co-release group) is re-checked _retrySteps later; still Idle → tapped again at its
+        // CURRENT tap point, and again every _retrySteps until it falls or the level ends. Only a caught tap leaves a
+        // non-grouped piece Idle, so a run without one never re-taps (byte-for-byte the old script). 0 = no repeat.
+        private readonly int _retrySteps;
+        private readonly List<(int PlacementIndex, int DueStep)> _retries = new();
         private int _step;
         private int _cursor;
 
-        public ScriptedReleasePolicy(ScriptedStep[] script)
+        public ScriptedReleasePolicy(ScriptedStep[] script, int retrySteps = 0)
         {
+            _retrySteps = retrySteps;
             _script = script ?? Array.Empty<ScriptedStep>();
             _dueStep = new int[_script.Length];
             var acc = 0;
@@ -67,6 +74,20 @@ namespace Gameplay.Core.Sim
         public bool TryNextRelease(GameModel model, List<Vec2> taps)
         {
             taps.Clear();
+            // Repeat the caught taps that are due (oldest first — a player re-taps before moving on); a piece that
+            // has fallen since leaves the list.
+            for (var i = _retries.Count - 1; i >= 0; i--)
+                if (FindIdle(model, _retries[i].PlacementIndex) == null)
+                    _retries.RemoveAt(i);
+            for (var i = 0; i < _retries.Count; i++)
+            {
+                var (placementIndex, due) = _retries[i];
+                if (_step < due)
+                    continue;
+                taps.Add(SimGeometry.TapPoint(model, FindIdle(model, placementIndex)));
+                _retries[i] = (placementIndex, _step + _retrySteps);
+            }
+
             // Drain every entry due at this step (a later entry with DelaySteps == 0 fires in the same step as its
             // predecessor — a scripted synchronous group), tapping whichever addressed pieces are still Idle.
             while (_cursor < _script.Length && _step >= _dueStep[_cursor])
@@ -74,8 +95,10 @@ namespace Gameplay.Core.Sim
                 foreach (var placementIndex in _script[_cursor].PlacementIndices)
                 {
                     var piece = FindIdle(model, placementIndex);
-                    if (piece != null)
-                        taps.Add(SimGeometry.TapPoint(model, piece));
+                    if (piece == null)
+                        continue;
+                    taps.Add(SimGeometry.TapPoint(model, piece));
+                    ScheduleRetry(model, placementIndex);
                 }
                 _cursor++;
             }
@@ -84,18 +107,46 @@ namespace Gameplay.Core.Sim
             return taps.Count > 0;
         }
 
+        /// <summary>Re-check this tap <see cref="_retrySteps"/> later (see the field). A co-release group member is
+        /// left alone: its lone tap legitimately leaves it Idle (the group waits for its partners), so a repeat would
+        /// re-open the coincidence window — a different gesture, not "the same tap again".</summary>
+        private void ScheduleRetry(GameModel model, int placementIndex)
+        {
+            if (_retrySteps <= 0 || InCoReleaseGroup(model.CurrentLevel, placementIndex))
+                return;
+            for (var i = 0; i < _retries.Count; i++)
+                if (_retries[i].PlacementIndex == placementIndex)
+                {
+                    _retries[i] = (placementIndex, _step + _retrySteps);
+                    return;
+                }
+            _retries.Add((placementIndex, _step + _retrySteps));
+        }
+
+        private static bool InCoReleaseGroup(LevelData level, int placementIndex)
+        {
+            if (level?.CoReleaseGroups == null)
+                return false;
+            foreach (var group in level.CoReleaseGroups)
+                foreach (var member in group)
+                    if (member == placementIndex)
+                        return true;
+            return false;
+        }
+
         /// <summary>
         /// Named "impatient player" profile (TASK-060): release the pieces in <paramref name="order"/> with the
         /// first on step 0 and each subsequent one <paramref name="gapSteps"/> fixed steps later — WITHOUT waiting
         /// for the field to settle. Reuses the exact placement-index orders <see cref="SolveSweepPlan"/> already
-        /// builds, so it adds no new orders to the sweep space; it only removes the rest-gate.
+        /// builds, so it adds no new orders to the sweep space; it only removes the rest-gate. TASK-650: a caught tap
+        /// is repeated at the same tempo, <paramref name="gapSteps"/> later.
         /// </summary>
         public static ScriptedReleasePolicy Impatient(int[] order, int gapSteps)
         {
             var script = new ScriptedStep[order.Length];
             for (var i = 0; i < order.Length; i++)
                 script[i] = new ScriptedStep(new[] { order[i] }, i == 0 ? 0 : gapSteps);
-            return new ScriptedReleasePolicy(script);
+            return new ScriptedReleasePolicy(script, gapSteps);
         }
 
         private static PieceInstance FindIdle(GameModel model, int placementIndex)

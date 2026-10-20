@@ -833,6 +833,138 @@ namespace Gameplay.Core
             return result.ToArray();
         }
 
+        /// <summary>
+        /// TASK-647: the OUTER boundary of a closed CCW polyline that crosses itself — what Clipper gets by a Union of
+        /// the raw offset. A raw outward offset is self-intersecting wherever the outline is concave tighter than the
+        /// distance: a rounded inner corner of radius r &lt; distance turns into a back-running "swallowtail" loop, and
+        /// a notch narrower than 2·distance makes its two walls' offsets cross. Both loops lie INSIDE the true offset, so
+        /// the boundary is traced from a point surely on it (the leftmost vertex) and, at every crossing, the walk takes
+        /// the right-hand branch (the outermost one for a CCW walk) — loops are cut off at their crossing points.
+        /// Contract: the input is CCW and every point of it lies inside the region it bounds (true for a raw dilation,
+        /// whose points are all within distance of the outline). No crossings → the input itself. A walk that does not
+        /// close (degenerate input) → the input itself, never a half-path. Crossings are found by brute force, O(n²):
+        /// meant for outlines of tens to a few hundred points, built once per shape, not per frame.
+        /// </summary>
+        public static Vec2[] OuterLoop(Vec2[] path)
+        {
+            var n = path?.Length ?? 0;
+            if (n < 4)
+                return path;
+            var start = 0;
+            for (var i = 1; i < n; i++)
+                if (path[i].X < path[start].X || (path[i].X == path[start].X && path[i].Y < path[start].Y))
+                    start = i;
+            return OuterLoop(path, start);
+        }
+
+        /// <summary>
+        /// <see cref="OuterLoop(Vec2[])"/> from a caller-known boundary vertex <paramref name="start"/>. The general
+        /// form of the contract: the region kept is on the LEFT of the walk and every loop to cut lies on the left as
+        /// well. An inward offset (erosion) meets it walked BACKWARDS: its loops lie in the eaten band outside the
+        /// result, so the reversed walk keeps the complement on its left — and the leftmost vertex is no longer a safe
+        /// start there, hence the explicit one.
+        /// </summary>
+        public static Vec2[] OuterLoop(Vec2[] path, int start)
+        {
+            var n = path?.Length ?? 0;
+            if (n < 4 || start < 0 || start >= n)
+                return path;
+
+            List<Crossing>[] hits = null;
+            var total = 0;
+            for (var i = 0; i < n; i++)
+            {
+                var a = path[i];
+                var b = path[(i + 1) % n];
+                for (var j = i + 2; j < n; j++)
+                {
+                    if (i == 0 && j == n - 1)
+                        continue;   // adjacent through the closing vertex
+                    if (!SegmentsCross(a, b, path[j], path[(j + 1) % n], out var t, out var u))
+                        continue;
+                    hits ??= new List<Crossing>[n];
+                    (hits[i] ??= new List<Crossing>(2)).Add(new Crossing(t, j, u));
+                    (hits[j] ??= new List<Crossing>(2)).Add(new Crossing(u, i, t));
+                    total++;
+                }
+            }
+            if (hits == null)
+                return path;
+            foreach (var list in hits)
+                list?.Sort((x, y) => x.T.CompareTo(y.T));
+
+            var result = new List<Vec2>(n) { path[start] };
+            var seg = start;
+            var at = -1f;   // param on seg already walked; −1 = entered at the start vertex (a hit at t=0 still counts)
+            for (var guard = 4 * (n + 2 * total); guard > 0; guard--)
+            {
+                var hit = default(Crossing);
+                var found = false;
+                if (hits[seg] != null)
+                    foreach (var h in hits[seg])
+                        if (h.T > at)
+                        {
+                            hit = h;
+                            found = true;
+                            break;
+                        }
+
+                if (!found)
+                {
+                    seg = (seg + 1) % n;
+                    at = -1f;
+                    if (seg == start)
+                        return result.ToArray();
+                    result.Add(path[seg]);
+                    continue;
+                }
+
+                var dir = path[(seg + 1) % n] - path[seg];
+                var other = path[(hit.Other + 1) % n] - path[hit.Other];
+                if (dir.X * other.Y - dir.Y * other.X < 0f)
+                {
+                    // The other strand leaves to the right — outward of a CCW walk: the boundary goes there.
+                    result.Add(path[seg] + dir * hit.T);
+                    seg = hit.Other;
+                    at = hit.OtherT;
+                }
+                else
+                {
+                    at = hit.T;
+                }
+            }
+            return path;
+        }
+
+        private readonly struct Crossing
+        {
+            public readonly float T;
+            public readonly int Other;
+            public readonly float OtherT;
+
+            public Crossing(float t, int other, float otherT)
+            {
+                T = t;
+                Other = other;
+                OtherT = otherT;
+            }
+        }
+
+        /// <summary>Proper crossing of segments a→b and c→d: params on each in [0, 1). Parallel segments never cross.</summary>
+        private static bool SegmentsCross(Vec2 a, Vec2 b, Vec2 c, Vec2 d, out float t, out float u)
+        {
+            var r = b - a;
+            var s = d - c;
+            var denom = r.X * s.Y - r.Y * s.X;
+            t = u = 0f;
+            if (MathF.Abs(denom) < 1e-12f)
+                return false;
+            var ca = c - a;
+            t = (ca.X * s.Y - ca.Y * s.X) / denom;
+            u = (ca.X * r.Y - ca.Y * r.X) / denom;
+            return t >= 0f && t < 1f && u >= 0f && u < 1f;
+        }
+
         private static Vec2 Normalize(Vec2 v)
         {
             var len = v.Length;

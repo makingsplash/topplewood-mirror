@@ -12,7 +12,8 @@ namespace Gameplay.View
     /// решает <see cref="PieceView"/> по стейту (только Idle); здесь — геометрия и материал.
     ///
     /// Контур — силуэт ЛЮБОЙ формы: выпуклая деталь, полимино, freeform. Путь пунктира строится смещением силуэта наружу
-    /// (<see cref="BuildPath"/>): выпуклые углы обходятся дугой, вогнутые — точкой пересечения смещённых рёбер. Штрихи
+    /// (<see cref="BuildPath"/>, морфологическое замыкание): выпуклые углы обходятся дугой, вогнутые скругляются, узкий
+    /// вырез закрывается — путь не пересекает сам себя и не разворачивается назад (TASK-647). Штрихи
     /// режет шейдер <c>Game/Idle Dash Outline</c> по длине пути, записанной в uv, — меш от шага пунктира не зависит.
     ///
     /// Живые ленты помнятся списком: отступ, толщину и скругление владелец крутит ползунком в Play
@@ -132,21 +133,33 @@ namespace Gameplay.View
 
         private static void Fill(Mesh mesh, Vec2[] contour, WoodTuning tuning)
         {
-            var path = BuildPath(contour, tuning.IdleDashOffset, tuning.IdleDashCorner);
-            BuildRibbon(mesh, path, tuning.IdleDashWidth * 0.5f + AaMargin);
+            var half = tuning.IdleDashWidth * 0.5f + AaMargin;
+            var path = BuildPath(contour, tuning.IdleDashOffset, tuning.IdleDashCorner, half);
+            BuildRibbon(mesh, path, half);
         }
 
         // ------------------------------------------------------------------ путь
 
         /// <summary>
-        /// Замкнутый путь пунктира (CCW): силуэт, смещённый наружу на <paramref name="offset"/>. Углы пути скруглены
-        /// радиусом <paramref name="corner"/>: силуэт сначала скругляется на <c>corner − offset</c>, затем выпуклые
-        /// углы смещаются дугой радиуса <paramref name="offset"/> — в сумме радиус угла пути равен <paramref name="corner"/>
-        /// (при <c>corner ≤ offset</c> он равен отступу). Вогнутые углы (полимино, freeform) — точка пересечения
-        /// смещённых рёбер (митра), с потолком длины, чтобы острый вогнутый зуб не выстрелил иглой.
-        /// Пустой массив — контур вырожден.
+        /// Замкнутый путь пунктира (CCW) — граница МОРФОЛОГИЧЕСКОГО ЗАМЫКАНИЯ силуэта: силуэт раздувается на
+        /// <c>offset + close</c>, петли раздутия срезаются (<see cref="Geometry.OuterLoop"/>), затем контур
+        /// втягивается обратно на <c>close</c>, где <c>close = max(corner, gap)</c>. Путь не пересекает сам себя и
+        /// нигде не ближе <paramref name="offset"/> к силуэту, кроме выпуклых углов при <c>corner &gt; offset</c>:
+        /// там радиус угла пути больше отступа, и до вершины детали остаётся <c>corner − √2·(corner − offset)</c> (90°).
+        ///
+        /// Выпуклые углы: силуэт сначала скругляется на <c>corner − offset</c> (ТОЛЬКО выпуклые углы), раздутие
+        /// обходит их дугой — радиус угла пути равен <paramref name="corner"/> (при <c>corner ≤ offset</c> — отступу).
+        /// Вогнутые углы раздуваются до точного пересечения смещённых рёбер, а втягивание скругляет их дугой
+        /// радиуса <c>close</c>. Вырез уже <c>2·(offset + close)</c> закрывается целиком: путь проходит над устьем,
+        /// а не заходит внутрь, — так две стенки узкого выреза не сводят штрихи вплотную. <paramref name="gap"/> —
+        /// нижняя граница <c>close</c> (лента передаёт свою полуширину: просвет между стенками не уже ленты).
+        ///
+        /// TASK-647, почему не «смещение и митра на каждой вершине», как было: вогнутый угол, скруглённый радиусом
+        /// <c>corner − offset</c> &lt; offset, при смещении на offset выворачивается петлёй-«ласточкиным хвостом»
+        /// (смещённая дуга бежит назад на <c>offset − r</c>), а лента на развороте пути на 180° строит треугольник-шип и
+        /// схлопывает соседний квад в нить. Пустой массив — контур вырожден.
         /// </summary>
-        public static Vector2[] BuildPath(Vec2[] contour, float offset, float corner)
+        public static Vector2[] BuildPath(Vec2[] contour, float offset, float corner, float gap = 0f)
         {
             var ccw = CleanCcw(contour);
             if (ccw.Count < 3)
@@ -155,15 +168,32 @@ namespace Gameplay.View
             var preRound = corner - offset;
             if (preRound > 1e-4f)
             {
-                var asVec = new Vec2[ccw.Count];
-                for (var i = 0; i < ccw.Count; i++)
-                    asVec[i] = new Vec2(ccw[i].x, ccw[i].y);
-                var rounded = PieceMeshBuilder.RoundCorners(asVec, preRound, CornerSegments);
+                var rounded = PieceMeshBuilder.RoundCorners(ToVec(ccw), preRound, CornerSegments, convexOnly: true);
                 ccw = CleanCcw(rounded);
                 if (ccw.Count < 3)
                     return new Vector2[0];
             }
 
+            var close = Mathf.Max(corner, gap, 0f);
+            var dilated = CleanCcw(Geometry.OuterLoop(ToVec(CleanCcw(Dilate(ccw, offset + close)))));
+            if (close <= 1e-5f || dilated.Count < 3)
+                return dilated.ToArray();
+
+            // Втягивание тоже даёт петли — там, где короткий выпуклый уступ зажат между вогнутыми углами (тостер:
+            // ребро 0.084 между двумя вогнутыми) и втягивание его «съедает». Эти петли лежат СНАРУЖИ результата,
+            // поэтому контур обходится в обратную сторону — от образа самой левой вершины, заведомо верной точки.
+            DropShortEdges(dilated, close * 0.2f);
+            var eroded = ToVec(Erode(dilated, close, out var startAt));
+            System.Array.Reverse(eroded);
+            var outer = Geometry.OuterLoop(eroded, eroded.Length - 1 - startAt);
+            return CleanCcw(outer).ToArray();
+        }
+
+        /// <summary>Сырое раздутие CCW-контура: выпуклый угол — дуга радиуса <paramref name="distance"/>, вогнутый —
+        /// <see cref="AddConcaveJoin"/>. Петли (узкий вырез, вогнутый стык, острый зуб) не срезаются — это работа
+        /// <see cref="Geometry.OuterLoop"/>.</summary>
+        private static List<Vector2> Dilate(List<Vector2> ccw, float distance)
+        {
             var n = ccw.Count;
             var path = new List<Vector2>(n * 4);
             for (var i = 0; i < n; i++)
@@ -173,28 +203,143 @@ namespace Gameplay.View
                 var next = ccw[(i + 1) % n];
                 var n0 = OutwardNormal(prev, cur);
                 var n1 = OutwardNormal(cur, next);
-                var turn = Cross(cur - prev, next - cur);
 
-                if (turn > 0f)
+                if (Cross(cur - prev, next - cur) > 0f)
                 {
                     // Выпуклый угол: дуга от нормали входящего ребра к нормали исходящего.
                     var angle = Mathf.Atan2(Cross(n0, n1), Vector2.Dot(n0, n1));
                     var steps = Mathf.Max(1, Mathf.CeilToInt(angle / ArcStep));
                     for (var k = 0; k <= steps; k++)
-                        path.Add(cur + Rotate(n0, angle * k / steps) * offset);
+                        path.Add(cur + Rotate(n0, angle * k / steps) * distance);
                 }
                 else
                 {
-                    var denom = 1f + Vector2.Dot(n0, n1);
-                    var miter = denom > 1e-3f ? (n0 + n1) / denom * offset : n0 * offset;
-                    var limit = offset * 4f;
-                    if (miter.sqrMagnitude > limit * limit)
-                        miter = miter.normalized * limit;
-                    path.Add(cur + miter);
+                    AddConcaveJoin(path, cur, n0, n1, distance);
                 }
             }
+            return path;
+        }
 
-            return CleanCcw(path).ToArray();
+        /// <summary>
+        /// Вогнутый стык сырого офсета (сдвиг <paramref name="n0"/>/<paramref name="n1"/> уже со знаком стороны).
+        /// Почти прямой — митра. Любой другой — приём Clipper: концы смещённых рёбер соединяются ЧЕРЕЗ саму вершину
+        /// (<c>p+n0·d → p → p+n1·d</c>), и смещённые рёбра обязательно пересекаются — точку пересечения находит
+        /// <see cref="Geometry.OuterLoop"/>, а лишний «бантик» срезается. Одной митры мало: если соседнее ребро короче
+        /// выноса митры (ножка тостера после скругления — 0.0815 против 0.0935), смещённое ребро выходит ОТРИЦАТЕЛЬНОЙ
+        /// длины, путь возвращается назад по той же прямой без единого пересечения, и срезать нечего — лента рисует шип.
+        /// </summary>
+        private static void AddConcaveJoin(List<Vector2> path, Vector2 cur, Vector2 n0, Vector2 n1, float distance)
+        {
+            // Порог Clipper2 (|sin| < 0.001): митрой — только почти прямой стык. Шаг дуги (11°) уже крутой: короткое
+            // ребро между пересечением и вершиной дуги иначе даёт ту же шпору, только в доли миллиметра.
+            if (Mathf.Abs(Cross(n0, n1)) < 1e-3f && Vector2.Dot(n0, n1) > 0f)
+            {
+                path.Add(cur + Miter(n0, n1, distance));
+                return;
+            }
+            path.Add(cur + n0 * distance);
+            path.Add(cur);
+            path.Add(cur + n1 * distance);
+        }
+
+        /// <summary>Втягивание CCW-контура внутрь на <paramref name="distance"/> — зеркало <see cref="Dilate"/>: выпуклый
+        /// угол — митра или <see cref="AddConcaveJoin"/> с обратными нормалями, вогнутый — дуга радиуса
+        /// <paramref name="distance"/> вокруг вершины. Петли не срезаются.
+        /// <paramref name="leftmostAt"/> — индекс образа самой левой вершины входа: самая левая вершина многоугольника
+        /// выпуклая, у границы раздутия это дуга радиусом больше <paramref name="distance"/>, и её образ на результате.</summary>
+        private static List<Vector2> Erode(List<Vector2> ccw, float distance, out int leftmostAt)
+        {
+            var n = ccw.Count;
+            var leftmost = 0;
+            for (var i = 1; i < n; i++)
+                if (ccw[i].x < ccw[leftmost].x || (ccw[i].x == ccw[leftmost].x && ccw[i].y < ccw[leftmost].y))
+                    leftmost = i;
+
+            var path = new List<Vector2>(n * 2);
+            leftmostAt = 0;
+            for (var i = 0; i < n; i++)
+            {
+                if (i == leftmost)
+                    leftmostAt = path.Count;
+                var prev = ccw[(i - 1 + n) % n];
+                var cur = ccw[i];
+                var next = ccw[(i + 1) % n];
+                var n0 = OutwardNormal(prev, cur);
+                var n1 = OutwardNormal(cur, next);
+
+                if (i == leftmost)
+                {
+                    // Старт обхода OuterLoop обязан лежать на результате — «бантик» начинается за его пределами.
+                    path.Add(cur - Miter(n0, n1, distance));
+                }
+                else if (Cross(cur - prev, next - cur) >= 0f)
+                {
+                    // Выпуклый угол: вершина дуги раздутия (поворот не круче шага дуги) — митра; рёбра рядом не короче
+                    // её выноса (см. DropShortEdges). Круче — тот же «бантик» через вершину, что у раздутия.
+                    if (Vector2.Dot(n0, n1) >= Mathf.Cos(ArcStep) - 1e-4f)
+                        path.Add(cur - Miter(n0, n1, distance));
+                    else
+                        AddConcaveJoin(path, cur, -n0, -n1, distance);
+                }
+                else
+                {
+                    // Вогнутый угол (поворот по часовой): дуга от −n0 к −n1, угол отрицательный.
+                    var angle = Mathf.Atan2(Cross(n0, n1), Vector2.Dot(n0, n1));
+                    var steps = Mathf.Max(1, Mathf.CeilToInt(-angle / ArcStep));
+                    for (var k = 0; k <= steps; k++)
+                        path.Add(cur - Rotate(n0, angle * k / steps) * distance);
+                }
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// Схлопывает рёбра короче <paramref name="minLength"/>: из двух концов уходит вершина с МЕНЬШИМ поворотом
+        /// (точка среза петли с крутым поворотом остаётся, соседняя вершина дуги — нет). Зачем: срез петли оставляет у
+        /// точки пересечения микроребро, а митра втягивания выносит концы ребра вдоль него на
+        /// <c>close·tg(поворот/2)</c> (до 0.0055 на шаге дуги) — ребро короче выноса выходит отрицательной длины, и путь
+        /// разворачивается шпорой. Хорда дуги раздутия (≈0.018 на живых числах) порога не касается, а если и
+        /// коснётся — дуга лишь станет грубее, но останется дугой.
+        /// </summary>
+        private static void DropShortEdges(List<Vector2> ccw, float minLength)
+        {
+            var sqr = minLength * minLength;
+            for (var guard = ccw.Count; guard > 0 && ccw.Count > 3; guard--)
+            {
+                var n = ccw.Count;
+                var cut = -1;
+                for (var i = 0; i < n && cut < 0; i++)
+                    if ((ccw[(i + 1) % n] - ccw[i]).sqrMagnitude < sqr)
+                        cut = TurnAt(ccw, i) < TurnAt(ccw, (i + 1) % n) ? i : (i + 1) % n;
+                if (cut < 0)
+                    return;
+                ccw.RemoveAt(cut);
+            }
+        }
+
+        private static float TurnAt(List<Vector2> ccw, int i)
+        {
+            var n = ccw.Count;
+            return Vector2.Angle(ccw[i] - ccw[(i - 1 + n) % n], ccw[(i + 1) % n] - ccw[i]);
+        }
+
+        /// <summary>Точка пересечения двух рёбер, смещённых на <paramref name="distance"/> по их нормалям.</summary>
+        private static Vector2 Miter(Vector2 n0, Vector2 n1, float distance)
+        {
+            var denom = 1f + Vector2.Dot(n0, n1);
+            var miter = denom > 1e-3f ? (n0 + n1) / denom * distance : n0 * distance;
+            var limit = distance * 16f;
+            if (miter.sqrMagnitude > limit * limit)
+                miter = miter.normalized * limit;
+            return miter;
+        }
+
+        private static Vec2[] ToVec(List<Vector2> points)
+        {
+            var result = new Vec2[points.Count];
+            for (var i = 0; i < points.Count; i++)
+                result[i] = new Vec2(points[i].x, points[i].y);
+            return result;
         }
 
         /// <summary>
