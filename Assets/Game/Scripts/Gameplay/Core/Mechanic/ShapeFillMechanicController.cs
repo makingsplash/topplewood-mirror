@@ -566,19 +566,22 @@ namespace Gameplay.Core.Mechanic
         /// <summary>Resolve a tap to an Idle piece via the shared two-tier <see cref="PieceHitResolver"/> (TASK-085):
         /// containment first — the piece drawn on top at that point (TASK-645) — then, only with a live tap halo (r&gt;0),
         /// the nearest Idle piece whose boundary is within the halo. The sim's <c>NullTapTolerance</c> (r=0) never
-        /// enters the halo tier.</summary>
+        /// enters the halo tier. TASK-649: every live ACTIVE piece (Falling, Placed, preplaced — a body on the field) is a
+        /// candidate too: drawn above every Idle one, it catches a tap at the point where it lies, and nothing is
+        /// released — a fast second tap no longer drops the Idle piece hanging under a falling one. Its pose is the
+        /// last mirrored one (<c>MirrorPose</c> each Tick) — the pose the view shows.</summary>
         private PieceInstance PickIdlePieceAt(Vec2 p)
         {
             _hitCandidates.Clear();
             foreach (var piece in _model.Pieces)
             {
-                if (piece.State != PieceLifecycle.Idle || !_bodyByInstance.ContainsKey(piece.InstanceId))
-                    continue;
+                if (!_bodyByInstance.ContainsKey(piece.InstanceId))
+                    continue; // never spawned, or Lost (despawned) — nothing on the field to see
 
                 var type = _typeByInstance[piece.InstanceId];
                 var world = Geometry.WorldVertices(type.Shape, piece.Position, piece.Rotation);
-                _hitCandidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, piece.PlacementIndex, world,
-                    piece.Position));
+                _hitCandidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, piece.State,
+                    piece.PlacementIndex, world, piece.Position));
             }
 
             var instanceId = PieceHitResolver.Resolve(_hitCandidates, p, _tapTolerance.WorldRadius);
@@ -602,7 +605,8 @@ namespace Gameplay.Core.Mechanic
         /// <summary>
         /// Spawn a preplaced piece (TASK-031b): identical body/view setup to <see cref="SpawnIdle"/>, but the body
         /// is RELEASED immediately so it drops into the physics at t=0 (Falling), NOT hung Idle. It is therefore
-        /// never picked by <see cref="PickIdlePieceAt"/> (Idle-only), never awaited as a tap, and — unlike
+        /// never released by <see cref="PickIdlePieceAt"/> (only Idle pieces are; an active one merely catches a tap where
+        /// it lies on top, TASK-649), never awaited as a tap, and — unlike
         /// <see cref="ReleasePiece"/> — does NOT count a player attempt (it is level furniture, not a move). From
         /// here it follows the ordinary fall→rest→Place path; since TASK-305 it lands as a free Dynamic body in every
         /// mode (never frozen) so a later drop can still pivot it.

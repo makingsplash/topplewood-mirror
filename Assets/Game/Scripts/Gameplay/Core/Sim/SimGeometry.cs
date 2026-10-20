@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Gameplay.Core.Sim
 {
     /// <summary>
@@ -20,19 +18,14 @@ namespace Gameplay.Core.Sim
         /// resolves to the piece (every level without such an overlap — the sweep stays bit-for-bit), else the deepest
         /// point of the piece's visible part (<see cref="PieceHitResolver.FindAim"/>). A piece covered entirely has no
         /// such point: the bot taps the centroid and releases the cover, exactly what a player's tap there would do.
+        /// TASK-649: the candidates are what the player sees — active pieces too (<see cref="PieceHitResolver.CandidatesOf"/>).
+        /// A piece partly under a falling/lying one is tapped by its visible part; one covered entirely by an active
+        /// piece gets the centroid and the tap is caught — nothing falls, as for a player.
         /// </summary>
         public static Vec2 TapPoint(GameModel model, PieceInstance piece)
         {
             var centroid = ShapeCentroidWorld(model.TypeFor(piece), piece.Position, piece.Rotation);
-            var candidates = new List<PieceHitResolver.HitCandidate>();
-            foreach (var p in model.Pieces)
-            {
-                if (p.State != PieceLifecycle.Idle)
-                    continue;
-                var world = Geometry.WorldVertices(model.TypeFor(p).Shape, p.Position, p.Rotation);
-                candidates.Add(new PieceHitResolver.HitCandidate(p.InstanceId, p.PlacementIndex, world, p.Position));
-            }
-
+            var candidates = PieceHitResolver.CandidatesOf(model);
             if (PieceHitResolver.Resolve(candidates, centroid, 0f) == piece.InstanceId)
                 return centroid;
             return PieceHitResolver.FindAim(candidates, piece.InstanceId, out var aim) == PieceHitResolver.Visibility.Hidden

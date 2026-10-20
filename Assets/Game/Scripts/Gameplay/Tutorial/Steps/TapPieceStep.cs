@@ -131,7 +131,8 @@ namespace Gameplay.Tutorial
         /// <see cref="PieceHitResolver"/> the domain uses (TASK-085), so the tutorial gate and the domain can never
         /// disagree on which piece a tap hits, including the screen-space tap halo
         /// (<see cref="TutorialContext.TapTolerance"/>) that makes small pieces tappable IN the tour. Idle pieces do not
-        /// move, so the candidate poses snapshotted at Arm stay valid until this beat's release.</summary>
+        /// move and the active ones are at rest when the beat arms, so the candidate poses snapshotted at Arm stay valid
+        /// until this beat's release.</summary>
         private static System.Func<InputIntent, bool> HitTest(TutorialContext context, PieceInstance target,
             List<PieceHitResolver.HitCandidate> candidates)
         {
@@ -151,31 +152,21 @@ namespace Gameplay.Tutorial
                 : (Vec2?)null;
         }
 
-        /// <summary>World outlines of every Idle candidate except the target (the cut-out's gap rule, spec 02 §3).</summary>
+        /// <summary>World outlines of every Idle candidate except the target (the cut-out's gap rule, spec 02 §3).
+        /// Active candidates (TASK-649) only catch taps; the cut-out keeps its pre-TASK-649 look.</summary>
         private static List<Vec2[]> OthersOf(List<PieceHitResolver.HitCandidate> candidates, PieceInstance target)
         {
             var others = new List<Vec2[]>(candidates.Count);
             foreach (var c in candidates)
-                if (c.InstanceId != target.InstanceId)
+                if (c.Tapable && c.InstanceId != target.InstanceId)
                     others.Add(c.World);
             return others;
         }
 
-        /// <summary>Snapshot every currently-Idle piece as a hit candidate (its world polygon + centre), so the
-        /// shared resolver picks over the SAME set the domain would.</summary>
-        private static List<PieceHitResolver.HitCandidate> BuildCandidates(GameModel model)
-        {
-            var candidates = new List<PieceHitResolver.HitCandidate>();
-            foreach (var piece in model.Pieces)
-            {
-                if (piece.State != PieceLifecycle.Idle)
-                    continue;
-                var shape = model.TypeFor(piece).Shape;
-                var world = Geometry.WorldVertices(shape, piece.Position, piece.Rotation);
-                candidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, piece.PlacementIndex, world,
-                    piece.Position));
-            }
-            return candidates;
-        }
+        /// <summary>Snapshot every piece on the field as a hit candidate (its world polygon + centre) — Idle ones and,
+        /// since TASK-649, the active ones that catch a tap where they lie on top — so the shared resolver picks over
+        /// the SAME set the domain would. The beat arms at rest, so the snapshot stays valid until its release.</summary>
+        private static List<PieceHitResolver.HitCandidate> BuildCandidates(GameModel model) =>
+            PieceHitResolver.CandidatesOf(model);
     }
 }
