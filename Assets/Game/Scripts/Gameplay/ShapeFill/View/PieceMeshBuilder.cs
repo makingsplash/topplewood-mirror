@@ -735,18 +735,26 @@ namespace Gameplay.View
         }
 
         /// <summary>
-        /// Срезает каждый выпуклый угол контура короткой дугой (квадратичная безье через сам угол —
-        /// от настоящей дуги на глаз не отличается, зато нет деления на синус половинного угла).
+        /// Срезает каждый угол контура — и выпуклый, и вогнутый — короткой дугой (квадратичная безье через сам угол —
+        /// от настоящей дуги на глаз не отличается, зато нет деления на синус половинного угла). С
+        /// <paramref name="convexOnly"/> вогнутые углы остаются острыми: так скругляет путь пунктира (TASK-647) —
+        /// вогнутый угол, скруглённый радиусом меньше последующего отступа, при смещении выворачивается петлёй.
         /// Радиус зажимается по КОРОТКОЙ соседней стороне, иначе на узком бруске два соседних
         /// скругления съели бы сторону целиком и контур вывернулся бы.
         /// Почти прямые участки (тесселированная дуга купола/колеса от ShapeVisualOutline) пропускаются:
         /// скруглять там нечего, а вершины они бы утроили.
         /// </summary>
-        internal static Vec2[] RoundCorners(Vec2[] verts, float radius, int segments)
+        internal static Vec2[] RoundCorners(Vec2[] verts, float radius, int segments, bool convexOnly = false)
         {
             var n = verts.Length;
             if (n < 3 || radius <= 1e-4f)
                 return verts;
+
+            // Обход контура: выпуклость угла — знак поворота относительно него.
+            var winding = 0f;
+            if (convexOnly)
+                for (int i = 0, j = n - 1; i < n; j = i++)
+                    winding += verts[j].X * verts[i].Y - verts[i].X * verts[j].Y;
 
             var result = new List<Vec2>(n * (segments + 1));
             for (var i = 0; i < n; i++)
@@ -768,6 +776,12 @@ namespace Gameplay.View
                 var dirPrev = toPrev / lenPrev;
                 var dirNext = toNext / lenNext;
                 if (Vector2.Dot(dirPrev, dirNext) < -0.985f)   // ≈ развёрнутый угол
+                {
+                    result.Add(verts[i]);
+                    continue;
+                }
+                // Поворот cur−prev → next−cur того же знака, что обход, — угол выпуклый.
+                if (convexOnly && (toPrev.x * toNext.y - toPrev.y * toNext.x) * winding >= 0f)
                 {
                     result.Add(verts[i]);
                     continue;
