@@ -38,7 +38,7 @@ namespace Gameplay.Core.Sim
             if (best == null)
                 return false;
 
-            taps.Add(SimGeometry.ShapeCentroidWorld(model.TypeFor(best), best.Position, best.Rotation));
+            taps.Add(SimGeometry.TapPoint(model, best));
             return true;
         }
 

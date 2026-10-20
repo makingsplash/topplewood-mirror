@@ -68,7 +68,8 @@ namespace Gameplay.Tutorial
                     var delay = _ordinal <= 1 || _silent ? 0f : context.Config.BetweenTapsDelay;
                     var candidates = BuildCandidates(context.Model);
                     var cue = new TapCue(target.Position, target.Rotation,
-                        context.Model.TypeFor(target).Shape, target.Kind, delay, OthersOf(candidates, target));
+                        context.Model.TypeFor(target).Shape, target.Kind, delay, OthersOf(candidates, target),
+                        AimOf(candidates, target));
                     var shown = !_silent;
                     if (shown)
                         context.View.ShowTap(cue);
@@ -138,6 +139,18 @@ namespace Gameplay.Tutorial
                 candidates, new Vec2(intent.X, intent.Y), context.TapTolerance.WorldRadius) == target.InstanceId;
         }
 
+        /// <summary>TASK-645: where the finger must touch when a piece drawn above covers part of the target — the view's
+        /// default tip (the bbox centre, biased) may land on the cover, and the gate would refuse the very tap it shows.
+        /// Null when nothing covers the target (the view keeps its look) or when it is covered entirely (no point taps
+        /// it; the authoring rule keeps such a piece after its cover in <c>winningOrder</c>).</summary>
+        private static Vec2? AimOf(List<PieceHitResolver.HitCandidate> candidates, PieceInstance target)
+        {
+            return PieceHitResolver.FindAim(candidates, target.InstanceId, out var aim)
+                == PieceHitResolver.Visibility.Partial
+                ? aim
+                : (Vec2?)null;
+        }
+
         /// <summary>World outlines of every Idle candidate except the target (the cut-out's gap rule, spec 02 §3).</summary>
         private static List<Vec2[]> OthersOf(List<PieceHitResolver.HitCandidate> candidates, PieceInstance target)
         {
@@ -159,7 +172,8 @@ namespace Gameplay.Tutorial
                     continue;
                 var shape = model.TypeFor(piece).Shape;
                 var world = Geometry.WorldVertices(shape, piece.Position, piece.Rotation);
-                candidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, world, piece.Position));
+                candidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, piece.PlacementIndex, world,
+                    piece.Position));
             }
             return candidates;
         }

@@ -28,7 +28,7 @@ namespace Gameplay.Core.Sim
                 if (piece == null)
                     continue;
 
-                taps.Add(SimGeometry.ShapeCentroidWorld(model.TypeFor(piece), piece.Position, piece.Rotation));
+                taps.Add(SimGeometry.TapPoint(model, piece));
                 return true;
             }
 

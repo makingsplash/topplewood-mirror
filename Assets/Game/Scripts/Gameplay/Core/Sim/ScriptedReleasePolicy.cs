@@ -75,7 +75,7 @@ namespace Gameplay.Core.Sim
                 {
                     var piece = FindIdle(model, placementIndex);
                     if (piece != null)
-                        taps.Add(SimGeometry.ShapeCentroidWorld(model.TypeFor(piece), piece.Position, piece.Rotation));
+                        taps.Add(SimGeometry.TapPoint(model, piece));
                 }
                 _cursor++;
             }
