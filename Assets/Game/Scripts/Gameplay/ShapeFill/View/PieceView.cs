@@ -18,6 +18,7 @@ namespace Gameplay.View
         private MaterialPropertyBlock _mpb;
         private Color _baseColor = DefaultColor;
         private PieceLifecycle _state = PieceLifecycle.Idle;
+        private bool _hinted; // TASK-641: see SetHinted
         private Mesh _mesh;
         private Transform _shadow;
 
@@ -151,10 +152,21 @@ namespace Gameplay.View
         //
         // Чем именно отличается — не цифра в коде, а настройка (WoodTuning.Tint + IdleDash*): с TASK-614 ждущая деталь
         // бледнее и обведена пунктиром, на тапе цвет возвращается, а пунктир гаснет.
+        /// <summary>TASK-641: на эту деталь сейчас показывает Подсказка (<see cref="PieceHighlightView"/>). Действует
+        /// только пока деталь ждёт: после тапа её цвет — обычный активный.</summary>
+        public void SetHinted(bool hinted)
+        {
+            if (_hinted == hinted)
+                return;
+            _hinted = hinted;
+            RefreshColor();
+        }
+
         private void RefreshColor()
         {
             var idle = _state == PieceLifecycle.Idle;
-            var state = idle ? PieceVisualState.Idle : PieceVisualState.Active;
+            var state = !idle ? PieceVisualState.Active
+                : _hinted ? PieceVisualState.Hinted : PieceVisualState.Idle;
 
             // Ремап цвета уровня к палитре считается ЗДЕСЬ, а не в Initialize: тумблер крутят в Play,
             // и исходный цвет уровня обязан остаться нетронутым, чтобы его можно было вернуть.

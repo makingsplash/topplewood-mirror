@@ -517,9 +517,9 @@ namespace Gameplay.PlayScreen
                 return;
 
             var shape = _model.TypeFor(piece).Shape;
-            // Blinking silhouette outline, NO finger (TASK-263 §2a): a finger reads as "run the tutorial"; the hint
-            // just says "this is the next piece".
-            _highlightView.Show(piece.Position, piece.Rotation, shape);
+            // Silhouette halo, NO finger (TASK-263 §2a, halo since TASK-641): a finger reads as "run the tutorial"; the
+            // hint just says "this is the next piece".
+            _highlightView.Show(piece.Position, piece.Rotation, shape, piece.PlacementIndex);
             _activeHighlightId = instanceId;
             HideProactive(); // accepted: drop the affordance for this level.
             AutoClearHighlightAsync().Forget();
