@@ -11,12 +11,31 @@ namespace Gameplay.View
     /// offset by pad and pad+feather (<c>Geometry.OffsetOutward</c> picks miter vs square per corner independently of
     /// the distance, so both offsets have the same topology).
     ///
+    /// TASK-641 reuses it twice for the hint halo: <see cref="InnerAlpha"/> = 1 makes the band SOLID (a stroke with
+    /// mitered/square joins — no notch at a convex corner, unlike <see cref="UiContour"/>'s per-edge quads), and rings
+    /// passed far-as-inner fade OUTWARD (a glow).
+    ///
     /// <c>[RequireComponent(typeof(CanvasRenderer))]</c> is mandatory on the concrete type (TASK-309).</summary>
     [RequireComponent(typeof(CanvasRenderer))]
     public sealed class UiFeatherRing : MaskableGraphic
     {
         private readonly List<Vector2[]> _inner = new();
         private readonly List<Vector2[]> _outer = new();
+        private float _innerAlpha;
+
+        /// <summary>Alpha of the INNER ring as a fraction of <c>color.a</c>: 0 (default) = the feather, 1 = a solid band.</summary>
+        public float InnerAlpha
+        {
+            get => _innerAlpha;
+            set
+            {
+                value = Mathf.Clamp01(value);
+                if (Mathf.Approximately(_innerAlpha, value))
+                    return;
+                _innerAlpha = value;
+                SetVerticesDirty();
+            }
+        }
 
         /// <summary>Replace every ring. A pair whose counts differ is skipped (no band rather than a twisted one).</summary>
         public void SetRings(IReadOnlyList<Vector2[]> inner, IReadOnlyList<Vector2[]> outer)
@@ -38,8 +57,8 @@ namespace Gameplay.View
         {
             vh.Clear();
             Color32 solid = color;
-            var clear = solid;
-            clear.a = 0;
+            var clear = solid; // the inner ring's tone: transparent for a feather, solid for a band
+            clear.a = (byte)Mathf.RoundToInt(solid.a * _innerAlpha);
             var vi = 0;
             for (var r = 0; r < _inner.Count; r++)
             {

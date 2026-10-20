@@ -19,6 +19,10 @@ namespace Gameplay.View
 
         /// <summary>Взведена в паре (balance-режим): уводится в белый поверх активного цвета.</summary>
         Armed,
+
+        /// <summary>TASK-641: ждёт тапа, но на неё показала Подсказка — цветнее ждущей, на долю
+        /// <see cref="WoodTuning.HintedBlend"/> пути к активному виду.</summary>
+        Hinted,
     }
 
     /// <summary>
@@ -305,6 +309,11 @@ namespace Gameplay.View
 
         /// <summary>Взведённая в паре деталь (balance-режим): насколько уводить в белый.</summary>
         public float ArmedWhite = 0.4f;
+
+        /// <summary>TASK-641: деталь под Подсказкой. 0 — как ждущая, 1 — как активная; яркость и цветность идут
+        /// от ждущих чисел к активным на эту долю. Владелец: «деталь становится немного более цветной» — поэтому
+        /// середина, а не полный активный вид (тот остаётся сигналом «уже полетела»).</summary>
+        public float HintedBlend = 0.5f;
 
         // --------------------------------------------------- пунктир ждущей детали
 
@@ -943,6 +952,12 @@ namespace Gameplay.View
             var idle = state == PieceVisualState.Idle;
             var brightness = idle ? IdleBrightness : ActiveBrightness;
             var saturation = idle ? IdleSaturation : ActiveSaturation;
+            if (state == PieceVisualState.Hinted)
+            {
+                var t = Mathf.Clamp01(HintedBlend);
+                brightness = Mathf.Lerp(IdleBrightness, ActiveBrightness, t);
+                saturation = Mathf.Lerp(IdleSaturation, ActiveSaturation, t);
+            }
 
             Color.RGBToHSV(baseColor, out var h, out var s, out var v);
             var result = Color.HSVToRGB(h, Mathf.Clamp01(s * saturation), Mathf.Clamp01(v * brightness));

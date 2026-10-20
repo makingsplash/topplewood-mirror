@@ -776,6 +776,63 @@ namespace Gameplay.Core
             return result.ToArray();
         }
 
+        /// <summary>
+        /// TASK-641: <see cref="OffsetOutward"/> with ROUND joins (Clipper's <c>JoinType.Round</c>): a convex corner
+        /// becomes an arc of radius <paramref name="distance"/> around the vertex, split into
+        /// ⌈turn / <paramref name="maxStepRad"/>⌉ steps; a concave corner keeps the miter point (its cosine clamped like
+        /// a miter limit 4, so a sharp notch cannot throw a vertex away). The vertex count depends ONLY on the outline's
+        /// corner angles, never on the distance — so rings at different distances pair vertex by vertex (the hint halo
+        /// draws bands between them). Either winding is accepted; consecutive duplicate points are skipped. Unity-free.
+        /// </summary>
+        public static Vec2[] OffsetOutwardRound(Vec2[] outline, float distance, float maxStepRad)
+        {
+            if (outline == null || outline.Length < 3)
+                return outline;
+
+            var pts = new List<Vec2>(outline.Length);
+            foreach (var p in outline)
+                if (pts.Count == 0 || (p - pts[pts.Count - 1]).SqrLength > 1e-12f)
+                    pts.Add(p);
+            if (pts.Count > 1 && (pts[0] - pts[pts.Count - 1]).SqrLength <= 1e-12f)
+                pts.RemoveAt(pts.Count - 1);
+            var n = pts.Count;
+            if (n < 3)
+                return outline;
+
+            var sign = PolygonSignedArea(pts.ToArray()) >= 0f ? 1f : -1f;
+            var step = MathF.Max(maxStepRad, 0.01f);
+            var result = new List<Vec2>(n * 3);
+            for (var i = 0; i < n; i++)
+            {
+                var p = pts[i];
+                var t0 = Normalize(p - pts[(i - 1 + n) % n]);
+                var t1 = Normalize(pts[(i + 1) % n] - p);
+                var n0 = new Vec2(t0.Y, -t0.X) * sign;
+                var n1 = new Vec2(t1.Y, -t1.X) * sign;
+
+                // Signed turn from n0 to n1; it has the winding's sign exactly at a convex corner.
+                var turn = MathF.Atan2(n0.X * n1.Y - n0.Y * n1.X, Vec2.Dot(n0, n1));
+                if (turn * sign > 0f)
+                {
+                    var k = Math.Max(1, (int)MathF.Ceiling(MathF.Abs(turn) / step));
+                    for (var j = 0; j <= k; j++)
+                    {
+                        var a = turn * j / k;
+                        var c = MathF.Cos(a);
+                        var s = MathF.Sin(a);
+                        result.Add(p + new Vec2(n0.X * c - n0.Y * s, n0.X * s + n0.Y * c) * distance);
+                    }
+                    continue;
+                }
+
+                var sum = n0 + n1;
+                var m = sum.SqrLength > 1e-8f ? Normalize(sum) : n0;
+                var cos = MathF.Max(Vec2.Dot(m, n0), 0.25f);
+                result.Add(p + m * (distance / cos));
+            }
+            return result.ToArray();
+        }
+
         private static Vec2 Normalize(Vec2 v)
         {
             var len = v.Length;
