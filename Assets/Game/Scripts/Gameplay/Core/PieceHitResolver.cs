@@ -23,6 +23,14 @@ namespace Gameplay.Core
     /// distance first, then the upper piece (rank — a shared edge of a cover and the piece under it goes to the cover),
     /// then the centre-distance tie-break. This only WIDENS which piece a tap hits — it never adds a
     /// delay/queue/confirmation, so "a tap drops the piece immediately" (TASK-069) is preserved.
+    ///
+    /// BODY OCCLUSION (TASK-652, after either tier): the Idle piece a tap resolves to is NOT released while its body
+    /// overlaps a FALLING piece's body — the tap is absorbed (-1), the player (and the fast sim bot, TASK-650) taps
+    /// again. Point occlusion alone (TASK-649) let a nested piece go the moment the falling cover had left the tap point
+    /// but not its body: it was released inside the cover and pushed out (matryoshka_row, fast taps). Only Falling
+    /// blocks: a falling piece moves by definition and leaves, so the absorb is a short wait, never a dead end. A Placed
+    /// (lying) piece overlapping an Idle body does not block — it may never move again, and it already catches the tap
+    /// where it lies on top (TASK-649).
     /// </summary>
     public static class PieceHitResolver
     {
@@ -34,7 +42,8 @@ namespace Gameplay.Core
         /// (the same key the pre-TASK-085 hit-test used); <see cref="Rank"/> is its draw rank across both layers
         /// (lower = on top, <see cref="PieceStacking.Rank(PieceLifecycle,int)"/>). <see cref="Tapable"/> is false for an
         /// ACTIVE piece (TASK-649): it is drawn above every Idle one, so where it lies it catches the tap — and a
-        /// caught tap releases nothing (cf. a UI element that blocks raycasts without being interactable).</summary>
+        /// caught tap releases nothing (cf. a UI element that blocks raycasts without being interactable).
+        /// <see cref="Falling"/> (TASK-652): its body keeps every Idle piece it overlaps from being released.</summary>
         public readonly struct HitCandidate
         {
             public readonly int InstanceId;
@@ -42,6 +51,7 @@ namespace Gameplay.Core
             public readonly Vec2 Center;
             public readonly int Rank;
             public readonly bool Tapable;
+            public readonly bool Falling;
 
             /// <summary>An Idle piece — the only kind a tap can release.</summary>
             public HitCandidate(int instanceId, int placementIndex, Vec2[] world, Vec2 center)
@@ -59,6 +69,7 @@ namespace Gameplay.Core
                 Center = center;
                 Rank = PieceStacking.Rank(state, placementIndex);
                 Tapable = !PieceStacking.IsActiveLayer(state);
+                Falling = state == PieceLifecycle.Falling;
             }
         }
 
@@ -89,17 +100,37 @@ namespace Gameplay.Core
             /// <summary>Something above covers part of it; the rest still taps it.</summary>
             Partial,
 
-            /// <summary>Covered entirely (to the grid's resolution): no point taps it until the cover is gone.</summary>
+            /// <summary>Covered entirely (to the grid's resolution), or its body overlaps a falling one (TASK-652): no
+            /// point taps it until the cover is gone.</summary>
             Hidden,
         }
 
-        /// <summary>Resolve the tap to a tapable candidate's <c>InstanceId</c>, or -1 on a miss or when an active piece on
-        /// top catches it (InstanceIds are always ≥ 0).</summary>
+        /// <summary>Resolve the tap to a tapable candidate's <c>InstanceId</c>, or -1 on a miss, when an active piece on
+        /// top catches it, or when the piece it reaches overlaps a falling body (TASK-652; InstanceIds are always ≥ 0).</summary>
         public static int Resolve(IReadOnlyList<HitCandidate> candidates, Vec2 p, float radius)
+        {
+            var hit = ResolveTop(candidates, p, radius);
+            return hit < 0 || IsHeldByFallingBody(candidates, hit) ? -1 : candidates[hit].InstanceId;
+        }
+
+        /// <summary>TASK-652: does a FALLING candidate's body overlap candidate <paramref name="index"/>'s body?
+        /// <see cref="Geometry.PolygonGap"/> = 0 — concave outlines and full containment (a nested piece inside its
+        /// cover) included.</summary>
+        private static bool IsHeldByFallingBody(IReadOnlyList<HitCandidate> candidates, int index)
+        {
+            var world = candidates[index].World;
+            for (var i = 0; i < candidates.Count; i++)
+                if (i != index && candidates[i].Falling && Geometry.PolygonGap(world, candidates[i].World) <= 0f)
+                    return true;
+            return false;
+        }
+
+        /// <summary>Both tiers without the body occlusion: the INDEX of the tapable candidate the point reaches, or -1
+        /// on a miss / an active piece on top.</summary>
+        private static int ResolveTop(IReadOnlyList<HitCandidate> candidates, Vec2 p, float radius)
         {
             // tier-1: containment — the piece drawn on top wins; nearest centre only among equal ranks.
             var best = -1;
-            var bestTapable = false;
             var bestRank = int.MaxValue;
             var bestSqr = float.MaxValue;
             for (var i = 0; i < candidates.Count; i++)
@@ -112,14 +143,13 @@ namespace Gameplay.Core
                 {
                     bestRank = c.Rank;
                     bestSqr = sqr;
-                    best = c.InstanceId;
-                    bestTapable = c.Tapable;
+                    best = i;
                 }
             }
 
             // TASK-649: an active piece on top caught the tap — it releases nothing, and the halo is not consulted
             // (the finger is ON something the player sees; it is not a near miss).
-            if (best >= 0 && !bestTapable)
+            if (best >= 0 && !candidates[best].Tapable)
                 return -1;
 
             // A tier-1 hit, or a disabled halo (sim/headless), returns exactly tier-1's answer.
@@ -146,7 +176,7 @@ namespace Gameplay.Core
                     bestDist = d;
                     bestRank = c.Rank;
                     bestSqr = sqr;
-                    best = c.InstanceId;
+                    best = i;
                 }
             }
             return best;
@@ -181,6 +211,11 @@ namespace Gameplay.Core
             if (t < 0)
                 return Visibility.Hidden;
 
+            // TASK-652: a target held by a falling body taps nowhere — every cell would resolve to -1. Judged once here
+            // rather than per cell, so the grid below asks only the per-point tiers (the same answer, 576× cheaper).
+            if (IsHeldByFallingBody(candidates, t))
+                return Visibility.Hidden;
+
             var target = candidates[t];
             var min = target.World[0];
             var max = target.World[0];
@@ -201,7 +236,7 @@ namespace Gameplay.Core
                     min.Y + (max.Y - min.Y) * (iy + 0.5f) / AimGrid);
                 if (!Geometry.PointInPolygon(target.World, p))
                     continue;
-                if (Resolve(candidates, p, 0f) != targetId)
+                if (ResolveTop(candidates, p, 0f) != t)
                 {
                     covered = true;
                     continue;

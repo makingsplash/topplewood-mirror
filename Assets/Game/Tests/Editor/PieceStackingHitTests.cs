@@ -192,6 +192,30 @@ namespace Gameplay.Tests
         public void ActiveCover_CatchesTheTap_InItsArea_EvenWithAHalo_AndIsNeverReturned([Values] bool reversedList)
         {
             // The ACTIVE piece has the HIGHER index: only the layer puts it on top (an index-only rank would not).
+            // TASK-652: it LIES there — a falling one would also hold the Idle piece by its body (the test below).
+            var idle = new PieceHitResolver.HitCandidate(TopId, PieceLifecycle.Idle, 0, Box(new Vec2(0f, 0f), 1f),
+                new Vec2(0f, 0f));
+            var lying = new PieceHitResolver.HitCandidate(BottomId, PieceLifecycle.Placed, 1,
+                Box(new Vec2(0.6f, 0f), 1f), new Vec2(0.6f, 0f));
+            var c = reversedList
+                ? new List<PieceHitResolver.HitCandidate> { lying, idle }
+                : new List<PieceHitResolver.HitCandidate> { idle, lying };
+
+            Assert.That(PieceHitResolver.Resolve(c, InOverlap, 0f), Is.EqualTo(-1), "the lying piece is seen there");
+            Assert.That(PieceHitResolver.Resolve(c, InOverlap, 0.3f), Is.EqualTo(-1), "a caught tap is not a near miss");
+            Assert.That(PieceHitResolver.Resolve(c, OnBottomOnly, 0f), Is.EqualTo(-1), "an active piece is never released");
+            Assert.That(PieceHitResolver.Resolve(c, OnTopOnly, 0f), Is.EqualTo(TopId), "the Idle piece's visible part");
+            Assert.That(PieceHitResolver.Resolve(c, new Vec2(1.2f, 0f), 0.2f), Is.EqualTo(-1),
+                "the halo never reaches an active piece");
+
+            Assert.That(PieceHitResolver.FindAim(c, TopId, out var aim), Is.EqualTo(PieceHitResolver.Visibility.Partial));
+            Assert.That(PieceHitResolver.Resolve(c, aim, 0f), Is.EqualTo(TopId));
+        }
+
+        // ── TASK-652: a falling body holds every Idle piece it overlaps ──────────────────────────────────────────
+        [Test]
+        public void FallingBody_HoldsTheIdlePieceItOverlaps_WhereverTheTapLands_UntilItIsGone([Values] bool reversedList)
+        {
             var idle = new PieceHitResolver.HitCandidate(TopId, PieceLifecycle.Idle, 0, Box(new Vec2(0f, 0f), 1f),
                 new Vec2(0f, 0f));
             var falling = new PieceHitResolver.HitCandidate(BottomId, PieceLifecycle.Falling, 1,
@@ -201,14 +225,63 @@ namespace Gameplay.Tests
                 : new List<PieceHitResolver.HitCandidate> { idle, falling };
 
             Assert.That(PieceHitResolver.Resolve(c, InOverlap, 0f), Is.EqualTo(-1), "the falling piece is seen there");
-            Assert.That(PieceHitResolver.Resolve(c, InOverlap, 0.3f), Is.EqualTo(-1), "a caught tap is not a near miss");
-            Assert.That(PieceHitResolver.Resolve(c, OnBottomOnly, 0f), Is.EqualTo(-1), "an active piece is never released");
-            Assert.That(PieceHitResolver.Resolve(c, OnTopOnly, 0f), Is.EqualTo(TopId), "the Idle piece's visible part");
-            Assert.That(PieceHitResolver.Resolve(c, new Vec2(1.2f, 0f), 0.2f), Is.EqualTo(-1),
-                "the halo never reaches an active piece");
+            Assert.That(PieceHitResolver.Resolve(c, OnTopOnly, 0f), Is.EqualTo(-1),
+                "the point is on the Idle piece alone, but its body is still inside the falling one");
+            Assert.That(PieceHitResolver.Resolve(c, new Vec2(-0.6f, 0f), 0.2f), Is.EqualTo(-1), "the halo is held too");
+            Assert.That(PieceHitResolver.FindAim(c, TopId, out _), Is.EqualTo(PieceHitResolver.Visibility.Hidden));
+            Assert.That(PieceHitResolver.IsVisible(c, TopId), Is.False);
 
-            Assert.That(PieceHitResolver.FindAim(c, TopId, out var aim), Is.EqualTo(PieceHitResolver.Visibility.Partial));
-            Assert.That(PieceHitResolver.Resolve(c, aim, 0f), Is.EqualTo(TopId));
+            var gone = new PieceHitResolver.HitCandidate(BottomId, PieceLifecycle.Falling, 1,
+                Box(new Vec2(0f, -1.2f), 1f), new Vec2(0f, -1.2f)); // fallen clear: the bodies are apart
+            var apart = new List<PieceHitResolver.HitCandidate> { idle, gone };
+            Assert.That(PieceHitResolver.Resolve(apart, OnTopOnly, 0f), Is.EqualTo(TopId));
+            Assert.That(PieceHitResolver.FindAim(apart, TopId, out _), Is.EqualTo(PieceHitResolver.Visibility.Full));
+        }
+
+        [Test]
+        public void FallingBody_HoldsANestedPiece_InsideIt()
+        {
+            // The matryoshka: the inner piece lies wholly inside its falling cover — no vertex crossing, containment only.
+            var cover = new PieceHitResolver.HitCandidate(TopId, PieceLifecycle.Falling, 0, Box(new Vec2(0f, 0f), 2f),
+                new Vec2(0f, 0f));
+            var inner = new PieceHitResolver.HitCandidate(BottomId, PieceLifecycle.Idle, 1, Box(new Vec2(0f, 0.2f), 0.5f),
+                new Vec2(0f, 0.2f));
+            var c = new List<PieceHitResolver.HitCandidate> { inner, cover };
+            // Every point of the inner piece is under the cover (point occlusion already holds those); a halo tap just
+            // outside the cover reaches the inner piece's rim — only the body test keeps it from going.
+            Assert.That(PieceHitResolver.Resolve(c, new Vec2(1.1f, 0.2f), 1f), Is.EqualTo(-1),
+                "the halo must not release a piece nested inside a falling one");
+
+            var lyingCover = new PieceHitResolver.HitCandidate(TopId, PieceLifecycle.Placed, 0, Box(new Vec2(0f, 0f), 2f),
+                new Vec2(0f, 0f));
+            Assert.That(PieceHitResolver.Resolve(new List<PieceHitResolver.HitCandidate> { inner, lyingCover },
+                    new Vec2(1.1f, 0.2f), 1f), Is.EqualTo(BottomId),
+                "a LYING body does not hold (TASK-652 scope: only a falling one leaves); the halo is as before");
+        }
+
+        [Test]
+        public void Controller_FallingCoverLeftTheTapPoint_ButNotTheBody_TheTapIsAbsorbed_UntilTheBodiesPart()
+        {
+            using var rig = new ControllerRig();
+            rig.Tap(OnTopOnly);
+            Assert.That(rig.Model.Pieces[0].State, Is.EqualTo(PieceLifecycle.Falling), "fixture: the cover falls");
+            var attempts = rig.Model.AttemptsUsed;
+
+            // Fallen 0.8: the cover spans y∈[-1.3,-0.3], the lower piece y∈[-0.5,0.5] — the tap point (0.4, 0.3) is on
+            // the lower piece only, its body is still inside the cover. Point occlusion (TASK-649) released it here.
+            var probe = new Vec2(0.4f, 0.3f);
+            rig.Sim.SetPose(ControllerRig.BodyOf(0), new Vec2(0f, -0.8f), 0f);
+            rig.Tick(0.01f);
+            Assert.That(rig.Model.Pieces[0].State, Is.EqualTo(PieceLifecycle.Falling), "fixture: still falling");
+            rig.Tap(probe);
+            Assert.That(rig.Model.Pieces[1].State, Is.EqualTo(PieceLifecycle.Idle),
+                "released now it would be pushed out of the cover — the tap is absorbed");
+            Assert.That(rig.Model.AttemptsUsed, Is.EqualTo(attempts), "an absorbed tap is not an attempt");
+
+            rig.Sim.SetPose(ControllerRig.BodyOf(0), new Vec2(0f, -1.2f), 0f); // y∈[-1.7,-0.7]: the bodies are apart
+            rig.Tick(0.01f);
+            rig.Tap(probe);
+            Assert.That(rig.Model.Pieces[1].State, Is.EqualTo(PieceLifecycle.Falling), "the same tap goes through");
         }
 
         [Test]

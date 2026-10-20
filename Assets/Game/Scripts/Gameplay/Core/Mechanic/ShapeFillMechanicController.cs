@@ -587,7 +587,9 @@ namespace Gameplay.Core.Mechanic
         /// enters the halo tier. TASK-649: every live ACTIVE piece (Falling, Placed, preplaced — a body on the field) is a
         /// candidate too: drawn above every Idle one, it catches a tap at the point where it lies, and nothing is
         /// released — a fast second tap no longer drops the Idle piece hanging under a falling one. Its pose is the
-        /// last mirrored one (<c>MirrorPose</c> each Tick) — the pose the view shows.</summary>
+        /// last mirrored one (<c>MirrorPose</c> each Tick) — the pose the view shows. TASK-652: nor is an Idle piece
+        /// released while its body still overlaps a FALLING one (a nested piece inside its falling cover), wherever the
+        /// tap lands on it — the tap is absorbed, the player taps again.</summary>
         private PieceInstance PickIdlePieceAt(Vec2 p)
         {
             BuildHitCandidates();
