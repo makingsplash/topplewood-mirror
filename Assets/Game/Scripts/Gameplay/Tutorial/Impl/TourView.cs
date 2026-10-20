@@ -133,6 +133,7 @@ namespace Gameplay.Tutorial
             private bool _hudEverSent;
 
             private bool _fingerShown;
+            private Vec2? _aim; // TASK-645: the cue's visible-part aim (a cover overlaps the piece), else null
             private float _halfGapWorld = float.PositiveInfinity;
             private Tween _delay;
             private Tween _dimTween;
@@ -213,6 +214,7 @@ namespace Gameplay.Tutorial
 
                 var outline = Geometry.WorldVertices(ShapeVisualOutline.Build(cue.Shape), cue.Origin, cue.Rotation);
                 _piece.Set(outline, PointSpace.Field);
+                _aim = cue.Aim;
                 _halfGapWorld = HalfGap(outline, cue.Others);
                 _flashPoly = FillSource.Build(outline);
 
@@ -549,9 +551,21 @@ namespace Gameplay.Tutorial
 
             /// <summary>Tip on the piece: its projected bbox centre moved <see cref="TourConfig.TouchBiasFraction"/> of
             /// the half-size AWAY from the hand (up-left; up-right when mirrored). The rig mirrors (scale.x = −1, the tip
-            /// stays put — the pivot is on it) when the hand would cross the safe area's right edge (spec 02 §3).</summary>
+            /// stays put — the pivot is on it) when the hand would cross the safe area's right edge (spec 02 §3).
+            /// TASK-645: a piece partly under another carries an aim — the tip goes exactly there (no bias): the biased
+            /// bbox point could sit on the cover, where the gate refuses the tap the finger shows.</summary>
             private void PlaceFinger()
             {
+                if (_aim.HasValue)
+                {
+                    var a = _aim.Value;
+                    if (OverlayProjection.TryToCanvas(_camera, _canvasRect, new Vector3(a.X, a.Y, 0f), out var tip))
+                    {
+                        PlaceFingerAt(tip, Vector2.zero, flipY: false);
+                        return;
+                    }
+                }
+
                 var pts = _piece.Scratch;
                 var min = pts[0];
                 var max = pts[0];

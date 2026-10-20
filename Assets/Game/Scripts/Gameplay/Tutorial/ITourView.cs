@@ -22,8 +22,13 @@ namespace Gameplay.Tutorial
         /// the gap to the nearest of them (spec 02 §3 gap rule), so the cut-out never shows a second piece. May be null.</summary>
         public readonly IReadOnlyList<Vec2[]> Others;
 
+        /// <summary>TASK-645: world point the finger's tip must touch, set only when a piece drawn above covers part of
+        /// this one — the deepest point of its VISIBLE part, the one a tap there resolves to it. Null = the view's own
+        /// biased-bbox tip (nothing covers the piece).</summary>
+        public readonly Vec2? Aim;
+
         public TapCue(Vec2 origin, float rotation, Shape shape, string kind, float delay,
-            IReadOnlyList<Vec2[]> others = null)
+            IReadOnlyList<Vec2[]> others = null, Vec2? aim = null)
         {
             Origin = origin;
             Rotation = rotation;
@@ -31,6 +36,7 @@ namespace Gameplay.Tutorial
             Kind = kind;
             Delay = delay;
             Others = others;
+            Aim = aim;
         }
     }
 

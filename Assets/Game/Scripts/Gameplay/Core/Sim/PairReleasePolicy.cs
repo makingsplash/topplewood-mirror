@@ -47,7 +47,7 @@ namespace Gameplay.Core.Sim
             {
                 if (piece.State != PieceLifecycle.Idle || piece.Kind != bestKind)
                     continue;
-                taps.Add(SimGeometry.ShapeCentroidWorld(model.TypeFor(piece), piece.Position, piece.Rotation));
+                taps.Add(SimGeometry.TapPoint(model, piece));
             }
 
             return taps.Count > 0;

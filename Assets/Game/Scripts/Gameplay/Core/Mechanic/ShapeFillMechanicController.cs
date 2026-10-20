@@ -564,9 +564,9 @@ namespace Gameplay.Core.Mechanic
         }
 
         /// <summary>Resolve a tap to an Idle piece via the shared two-tier <see cref="PieceHitResolver"/> (TASK-085):
-        /// containment first (byte-for-byte the old pick), then — only with a live tap halo (r&gt;0) — the nearest
-        /// Idle piece whose boundary is within the halo. The sim's <c>NullTapTolerance</c> (r=0) makes this identical
-        /// to the pre-TASK-085 containment-only pick, so the seeded sweep's poseHash is unchanged.</summary>
+        /// containment first — the piece drawn on top at that point (TASK-645) — then, only with a live tap halo (r&gt;0),
+        /// the nearest Idle piece whose boundary is within the halo. The sim's <c>NullTapTolerance</c> (r=0) never
+        /// enters the halo tier.</summary>
         private PieceInstance PickIdlePieceAt(Vec2 p)
         {
             _hitCandidates.Clear();
@@ -577,7 +577,8 @@ namespace Gameplay.Core.Mechanic
 
                 var type = _typeByInstance[piece.InstanceId];
                 var world = Geometry.WorldVertices(type.Shape, piece.Position, piece.Rotation);
-                _hitCandidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, world, piece.Position));
+                _hitCandidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, piece.PlacementIndex, world,
+                    piece.Position));
             }
 
             var instanceId = PieceHitResolver.Resolve(_hitCandidates, p, _tapTolerance.WorldRadius);

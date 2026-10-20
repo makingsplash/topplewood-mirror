@@ -1,5 +1,4 @@
 using Gameplay.Core;
-using UnityEngine;
 
 namespace Gameplay.View
 {
@@ -9,7 +8,8 @@ namespace Gameplay.View
     ///
     /// Правило: любая не-Idle деталь (Falling, Placed, Lost, preplaced) БЛИЖЕ к камере, чем любая Idle (камера смотрит
     /// вдоль +Z, меньше z — ближе). Внутри слоя порядок устойчив — по индексу размещения в уровне: меньший индекс ближе.
-    /// Он не меняется за всю жизнь детали, поэтому смена стейта — один прыжок между слоями, без мерцания.
+    /// Он не меняется за всю жизнь детали, поэтому смена стейта — один прыжок между слоями, без мерцания. Ранг внутри
+    /// слоя — <see cref="PieceStacking.Rank"/>: тот же, по которому тап выбирает видимую сверху деталь (TASK-645).
     ///
     /// Числа держат цепочку глубин, на которую опираются соседи (всё — расстояние от камеры):
     /// активные [0, 0.01) &lt; ждущие [0.03, 0.04) &lt; пунктир ждущих (+0.05, <see cref="IdleDashOutline.ZBehind"/>)
@@ -29,11 +29,11 @@ namespace Gameplay.View
 
         /// <summary>Сколько индексов различается внутри слоя: <c>Slots·Step</c> = 0.01 — ширина слоя. Деталям с
         /// индексом ≥ Slots достаётся последняя ступень (порядок между ними снова не определён, слой — по-прежнему).</summary>
-        public const int Slots = 50;
+        public const int Slots = PieceStacking.Slots;
 
         public static float For(PieceLifecycle state, int ordinal)
         {
-            var rank = Mathf.Clamp(ordinal, 0, Slots - 1);
+            var rank = PieceStacking.Rank(ordinal);
             return (state == PieceLifecycle.Idle ? IdleBase : ActiveBase) + rank * Step;
         }
     }

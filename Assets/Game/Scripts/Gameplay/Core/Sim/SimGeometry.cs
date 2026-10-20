@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Gameplay.Core.Sim
 {
     /// <summary>
@@ -11,6 +13,33 @@ namespace Gameplay.Core.Sim
     /// </summary>
     public static class SimGeometry
     {
+        /// <summary>
+        /// TASK-645: the point the bot taps to address <paramref name="piece"/>. The tap goes through the same
+        /// <see cref="PieceHitResolver"/> a player's does, and that resolver now gives the point to the piece drawn ON TOP
+        /// — so the centroid of a piece partly under another may release the cover instead. Rule: the centroid when it
+        /// resolves to the piece (every level without such an overlap — the sweep stays bit-for-bit), else the deepest
+        /// point of the piece's visible part (<see cref="PieceHitResolver.FindAim"/>). A piece covered entirely has no
+        /// such point: the bot taps the centroid and releases the cover, exactly what a player's tap there would do.
+        /// </summary>
+        public static Vec2 TapPoint(GameModel model, PieceInstance piece)
+        {
+            var centroid = ShapeCentroidWorld(model.TypeFor(piece), piece.Position, piece.Rotation);
+            var candidates = new List<PieceHitResolver.HitCandidate>();
+            foreach (var p in model.Pieces)
+            {
+                if (p.State != PieceLifecycle.Idle)
+                    continue;
+                var world = Geometry.WorldVertices(model.TypeFor(p).Shape, p.Position, p.Rotation);
+                candidates.Add(new PieceHitResolver.HitCandidate(p.InstanceId, p.PlacementIndex, world, p.Position));
+            }
+
+            if (PieceHitResolver.Resolve(candidates, centroid, 0f) == piece.InstanceId)
+                return centroid;
+            return PieceHitResolver.FindAim(candidates, piece.InstanceId, out var aim) == PieceHitResolver.Visibility.Hidden
+                ? centroid
+                : aim;
+        }
+
         public static Vec2 ShapeCentroidWorld(PieceType type, Vec2 position, float rotation)
         {
             var localCentroid = type.Shape.ConvexParts != null
