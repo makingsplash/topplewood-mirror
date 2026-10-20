@@ -281,6 +281,50 @@ namespace Gameplay.Tests
                 "covered entirely by an active piece: the tap is caught, as a player's would be");
         }
 
+        // ── TASK-649 (b): no Idle piece visible at rest → Lost ───────────────────────────────────────────────────
+        [Test]
+        public void Controller_EveryIdlePieceUnderALyingOne_AtRest_IsLost()
+        {
+            using var rig = new ControllerRig();
+            rig.Tap(OnTopOnly);
+            rig.Sim.SetPose(ControllerRig.BodyOf(0), new Vec2(0.6f, 0f), 0f); // the cover lands exactly on the other
+            rig.Tick(1f);
+            Assert.That(rig.Model.Pieces[0].State, Is.EqualTo(PieceLifecycle.Placed), "fixture: the cover lies there");
+            Assert.That(rig.Model.Pieces[1].State, Is.EqualTo(PieceLifecycle.Idle), "fixture: the hidden one still hangs");
+            Assert.That(rig.Model.Outcome.CurrentValue, Is.EqualTo(GameOutcome.Lost),
+                "no tap can ever reach the last piece — waiting forever is a dead end, not play");
+        }
+
+        [Test]
+        public void Controller_IdlePieceHiddenUnderAnIdleCover_AtRest_PlayGoesOn()
+        {
+            using var rig = new ControllerRig(coverSize: 3f); // the matryoshka start: the inner piece is not seen
+            rig.Tick(1f);
+            Assert.That(rig.Model.CurrentPhase, Is.EqualTo(GamePhase.Running),
+                "the cover itself is Idle and visible — the player taps it, then the inner one");
+        }
+
+        // ── TASK-650: the fast bot taps again, like a player ─────────────────────────────────────────────────────
+        [Test]
+        public void ImpatientBot_RepeatsACaughtTap_AtTheSameTempo_UntilThePieceFalls()
+        {
+            var model = new GameModel();
+            model.LoadLevel(OverlapLevel(new[] { 0, 1 }, coverSize: 3f));
+            model.Pieces[0].State = PieceLifecycle.Falling; // the cover falls over the piece the bot wants
+            var policy = ScriptedReleasePolicy.Impatient(new[] { 1 }, 5);
+            var taps = new List<Vec2>();
+
+            var tappedAt = new List<int>();
+            for (var step = 0; step < 6; step++)
+                if (policy.TryNextRelease(model, taps))
+                    tappedAt.Add(step);
+            Assert.That(tappedAt, Is.EqualTo(new[] { 0, 5 }), "caught at step 0 → the same tap again one gap later");
+
+            model.Pieces[1].State = PieceLifecycle.Falling; // the repeat got through
+            for (var step = 6; step < 30; step++)
+                Assert.That(policy.TryNextRelease(model, taps), Is.False, $"step {step}: a released piece is not re-tapped");
+        }
+
         // ── fixtures ─────────────────────────────────────────────────────────────────────────────────────────────
         private static List<PieceHitResolver.HitCandidate> Pair(bool reversed)
         {
@@ -329,12 +373,12 @@ namespace Gameplay.Tests
             public readonly ScriptedPoseSimulation Sim = new();
             private readonly ShapeFillMechanicController _controller;
 
-            public ControllerRig()
+            public ControllerRig(float coverSize = 1f)
             {
                 _controller = new ShapeFillMechanicController(Model, Sim, new PoseMatchEvaluator(),
                     new LevelDataValidator(new TapZoneConfig()), new NullPieceViewFactory(), new ShapeFillTuning(),
                     new NullTapTolerance());
-                Model.LoadLevel(OverlapLevel(new[] { 1, 0 }));
+                Model.LoadLevel(OverlapLevel(new[] { 1, 0 }, coverSize));
                 Assert.That(Model.CurrentPhase, Is.EqualTo(GamePhase.Running), "the fixture level must pass the validator");
             }
 

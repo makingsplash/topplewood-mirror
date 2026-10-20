@@ -90,6 +90,9 @@ namespace Gameplay.Core.Mechanic
         // Last computed global-rest state, exposed via ReadyForNextRelease so the sim driver releases the next
         // group only once the beam + loads have settled — recomputed each tick the field is not falling.
         private bool _lastGlobalRestReached;
+        // TASK-649: the "is any Idle piece visible?" verdict has been judged for the current rest episode (reset the
+        // moment the field is not at rest — a release always ends the episode, see ResolveAtRest).
+        private bool _restVisibilityJudged;
 
         public ShapeFillMechanicController(
             GameModel model,
@@ -342,6 +345,7 @@ namespace Gameplay.Core.Mechanic
             // Defer the verdict while any piece is still falling.
             if (anyFalling)
             {
+                _restVisibilityJudged = false;
                 _model.SetFieldAtRest(false);
                 return;
             }
@@ -354,6 +358,7 @@ namespace Gameplay.Core.Mechanic
             _lastGlobalRestReached = GlobalRestReached(dt);
             if (!_lastGlobalRestReached)
             {
+                _restVisibilityJudged = false;
                 _model.SetFieldAtRest(false);
                 return;
             }
@@ -493,8 +498,10 @@ namespace Gameplay.Core.Mechanic
 
         /// <summary>
         /// Verdict at global rest (RFC §4.3). Won when every slot is filled by a pose-matched piece and none
-        /// is Lost. If no piece is Idle or Falling (nothing left to change) and it is not Won → Lost. Otherwise
-        /// Idle pieces remain → wait for the player's next tap (no instant fail; canon §3 judges at final rest).
+        /// is Lost. If no piece is Idle or Falling (nothing left to change) and it is not Won → Lost; TASK-649: the
+        /// same when Idle pieces remain but none is visible (all under active pieces — no tap can reach them).
+        /// Otherwise a visible Idle piece remains → wait for the player's next tap (no instant fail; canon §3 judges
+        /// at final rest).
         /// </summary>
         private void ResolveAtRest()
         {
@@ -525,9 +532,20 @@ namespace Gameplay.Core.Mechanic
             }
 
             if (anyIdle)
-                return; // pieces remain on the field — wait for the player's tap.
+            {
+                // TASK-649 (owner decision, variant b): a lying piece catches a tap, so an Idle piece entirely under
+                // one can never be released. If NO Idle piece is visible the level is as stuck as with none left →
+                // Lost below. Judged once per rest episode: the field does not change until a tap releases something
+                // (which ends the episode), and the grid scan must not run every frame while the player thinks.
+                if (_restVisibilityJudged)
+                    return;
+                _restVisibilityJudged = true;
+                if (AnyIdleVisible())
+                    return; // pieces remain on the field — wait for the player's tap.
+            }
 
-            // Nothing Idle or Falling and the figure is not complete → the level cannot progress further.
+            // Nothing tapable left (none Idle, or every Idle one hidden) and the figure is not complete → the level
+            // cannot progress further.
             _model.Resolve(GameOutcome.Lost);
         }
 
@@ -572,6 +590,15 @@ namespace Gameplay.Core.Mechanic
         /// last mirrored one (<c>MirrorPose</c> each Tick) — the pose the view shows.</summary>
         private PieceInstance PickIdlePieceAt(Vec2 p)
         {
+            BuildHitCandidates();
+            var instanceId = PieceHitResolver.Resolve(_hitCandidates, p, _tapTolerance.WorldRadius);
+            return instanceId < 0 ? null : FindPiece(instanceId);
+        }
+
+        /// <summary>Every piece on the field as the player sees it (live body, last mirrored pose) → <c>_hitCandidates</c>.
+        /// The one candidate set for the tap and the rest-time visibility verdict, so the two cannot disagree.</summary>
+        private void BuildHitCandidates()
+        {
             _hitCandidates.Clear();
             foreach (var piece in _model.Pieces)
             {
@@ -583,9 +610,19 @@ namespace Gameplay.Core.Mechanic
                 _hitCandidates.Add(new PieceHitResolver.HitCandidate(piece.InstanceId, piece.State,
                     piece.PlacementIndex, world, piece.Position));
             }
+        }
 
-            var instanceId = PieceHitResolver.Resolve(_hitCandidates, p, _tapTolerance.WorldRadius);
-            return instanceId < 0 ? null : FindPiece(instanceId);
+        /// <summary>TASK-649 (b): is any Idle piece tapable somewhere — <see cref="PieceHitResolver.IsVisible"/>, the
+        /// same grid the tour and the sim bot aim by. Idle covers are ranked by placement index, so the topmost Idle
+        /// piece of any stack is covered only by active ones: "no Idle piece visible" means every remaining one lies
+        /// under a fallen/lying piece and no tap can ever release it.</summary>
+        private bool AnyIdleVisible()
+        {
+            BuildHitCandidates();
+            foreach (var c in _hitCandidates)
+                if (c.Tapable && PieceHitResolver.IsVisible(_hitCandidates, c.InstanceId))
+                    return true;
+            return false;
         }
 
         private void SpawnIdle(PieceInstance piece)
@@ -641,6 +678,7 @@ namespace Gameplay.Core.Mechanic
             _groupTapped.Clear();
             _groupWindowStepsLeft.Clear();
             _lastGlobalRestReached = false;
+            _restVisibilityJudged = false;
         }
 
         public void Dispose()

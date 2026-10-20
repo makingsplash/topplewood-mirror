@@ -162,7 +162,16 @@ namespace Gameplay.Core
         /// cover; the aim is then the deepest point of the whole piece. <paramref name="aim"/> is meaningful unless
         /// <see cref="Visibility.Hidden"/> (unknown target → Hidden).
         /// </summary>
-        public static Visibility FindAim(IReadOnlyList<HitCandidate> candidates, int targetId, out Vec2 aim)
+        public static Visibility FindAim(IReadOnlyList<HitCandidate> candidates, int targetId, out Vec2 aim) =>
+            Scan(candidates, targetId, false, out aim);
+
+        /// <summary>TASK-649: can the player tap <paramref name="targetId"/> anywhere — <see cref="FindAim"/> is not
+        /// <see cref="Visibility.Hidden"/>. The same grid and the same <see cref="Resolve"/>, but it stops at the first
+        /// cell that taps the target and skips the clearance search (the rest-time verdict asks only yes/no).</summary>
+        public static bool IsVisible(IReadOnlyList<HitCandidate> candidates, int targetId) =>
+            Scan(candidates, targetId, true, out _) != Visibility.Hidden;
+
+        private static Visibility Scan(IReadOnlyList<HitCandidate> candidates, int targetId, bool firstHit, out Vec2 aim)
         {
             aim = default;
             var t = -1;
@@ -196,6 +205,11 @@ namespace Gameplay.Core
                 {
                     covered = true;
                     continue;
+                }
+                if (firstHit)
+                {
+                    aim = p;
+                    return Visibility.Partial; // seen at all; Full vs Partial is not decided on a first hit
                 }
 
                 var clear = Geometry.DistanceToPolygonBoundary(target.World, p);

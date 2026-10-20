@@ -594,7 +594,8 @@ namespace Gameplay.Sim
                         var sim = NewIsolatedSim(out var physicsScene); // TASK-379: fresh Box2D world per run
                         try
                         {
-                            var res = SimRun.Run(level, sim, new ScriptedReleasePolicy(script),
+                            // TASK-650: a caught tap is repeated at the script's tempo, as a player would.
+                            var res = SimRun.Run(level, sim, new ScriptedReleasePolicy(script, policyGap),
                                 fastPolicyId, orderKey, r, _maxSteps);
                             policyRuns.Add(res);
                             fastHashes.Add(res.PoseHash);
