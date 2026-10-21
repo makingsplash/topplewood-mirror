@@ -13,6 +13,7 @@ namespace Tools.Constants
         public const string Start = "Configs/StartConfig.asset";
         public const string Rewarded = "Configs/RewardedConfig.asset";
         public const string Boosters = "Configs/BoostersConfig.asset";   // TASK-240/TASK-135
+        public const string Ads = "Configs/AdsConfig.asset";             // TASK-658
         public const string Messages = "Configs/MessagesConfig.asset";
         public const string RateUs = "Configs/RateUsConfig.asset";
         public const string Heart = "Configs/HeartConfig.asset";

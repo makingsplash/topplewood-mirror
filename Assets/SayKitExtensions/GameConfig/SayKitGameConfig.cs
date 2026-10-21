@@ -11,6 +11,7 @@ using System;
 [System.Serializable]
 public class SayKitGameConfig
 {
+    public string config_ads;
     public string config_boosters;
     public string config_core;
     public string config_levels;

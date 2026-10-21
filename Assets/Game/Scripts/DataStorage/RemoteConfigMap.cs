@@ -31,6 +31,7 @@ namespace DataStorage
             [typeof(HeartConfig)] = nameof(SayKitGameConfig.config_heart),
             [typeof(AssetPreloadConfig)] = nameof(SayKitGameConfig.config_asset_preload),
             [typeof(BoostersConfig)] = nameof(SayKitGameConfig.config_boosters), // TASK-237: pre-existing unused field
+            [typeof(AdsConfig)] = nameof(SayKitGameConfig.config_ads),           // TASK-658: between-levels interstitial
 
 #if SAYKIT_PURCHASING
             [typeof(PurchasesConfig)] = nameof(SayKitGameConfig.config_purchases),

@@ -30,6 +30,7 @@ namespace DataStorage
         public RateUsConfig RateUsConfig;
         public HeartConfig HeartConfig;
         public BoostersConfig BoostersConfig;
+        public AdsConfig AdsConfig;
 
         public InputConfig InputConfig;
         public NoAdsOfferConfig NoAdsOfferConfig;
@@ -56,6 +57,9 @@ namespace DataStorage
             // without it assigned still boots (the booster then runs on its C# defaults — see HintBoosterService).
             if (BoostersConfig != null)
                 Init(BoostersConfig, remoteConfig);
+            // TASK-658: same guard — without the asset the interstitial runs on AdsConfig's C# defaults.
+            if (AdsConfig != null)
+                Init(AdsConfig, remoteConfig);
             Init(AssetPreloadConfig, remoteConfig);
 
 #if SAYKIT_PURCHASING

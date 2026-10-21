@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using Gameplay.Core;
 using R3;
 using Services;
+using Services.Gameplay;
 using Ui;
 using Ui.Screens;
 
@@ -44,19 +45,28 @@ namespace Gameplay.PlayScreen
     /// <see cref="IWinBeat.TryBegin"/> and shows the panel when the beat completes — or after
     /// <see cref="PlayScreenConfig.MaxWinBeatSeconds"/> with a Warning, so a broken view never hangs a win. A beat that
     /// cannot begin (no card / figure / camera) falls back to the plain <see cref="PlayScreenConfig.WinSettleSeconds"/>.
+    ///
+    /// Between-levels interstitial (TASK-658): the panel tap first asks <see cref="IBetweenLevelsAds.TryShow"/>
+    /// ("Next" → AfterWin; "Try again" → AfterLose, which the config keeps off by default) and then runs the transition
+    /// at once — it does NOT wait for the ad's close callback (in the SDK wrapper's Dev ad mode that callback never
+    /// arrives, so waiting would strand the player on the win screen). The native ad covers the Unity view while the
+    /// next level builds underneath. Threshold, SDK gates and frequency live behind the seam, not here.
     /// </summary>
     public sealed class GatedResolutionFlow : ILevelResolutionFlow, IDisposable
     {
         private readonly PlayScreenConfig _config;
         private readonly PlayScreenInteraction _interaction;
         private readonly IWinBeat _beat;
+        private readonly IBetweenLevelsAds _ads;
         private readonly CancellationTokenSource _cts = new();
 
-        public GatedResolutionFlow(PlayScreenConfig config, PlayScreenInteraction interaction, IWinBeat beat)
+        public GatedResolutionFlow(PlayScreenConfig config, PlayScreenInteraction interaction, IWinBeat beat,
+            IBetweenLevelsAds ads)
         {
             _config = config;
             _interaction = interaction;
             _beat = beat;
+            _ads = ads;
         }
 
         public void Present(GameOutcome outcome, Action applyTransition, bool isFinalLevel)
@@ -94,6 +104,7 @@ namespace Gameplay.PlayScreen
             // No reward to forward since TASK-612: the win screen always shows three stars, nothing is credited.
             screen.Setup(onNext: () =>
             {
+                _ads.TryShow(BetweenLevelsMoment.AfterWin);   // TASK-658: fire-and-forget, the transition does not wait
                 applyTransition?.Invoke();
                 _interaction.IsBusy.Value = false;
             }, isFinalLevel);
@@ -125,6 +136,7 @@ namespace Gameplay.PlayScreen
             var screen = await Service.UI.Show<LoseScreen>(ScreenNames.LoseScreen);
             screen.Setup(onTryAgain: () =>
             {
+                _ads.TryShow(BetweenLevelsMoment.AfterLose);  // TASK-658: only with AdsConfig OnLose (off by default)
                 applyTransition?.Invoke();
                 _interaction.IsBusy.Value = false;
             });

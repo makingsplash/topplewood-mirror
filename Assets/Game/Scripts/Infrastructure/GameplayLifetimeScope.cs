@@ -81,6 +81,9 @@ namespace Game.Code.Infrastructure
             // "won ? advance : reload" — that stays the single source of truth in CampaignProgressionController.
             builder.RegisterInstance(new PlayScreenConfig());
             builder.Register<ILevelResolutionFlow, GatedResolutionFlow>(Lifetime.Singleton);
+            // TASK-658: the between-levels interstitial the flow asks on the panel tap (threshold from config_ads).
+            // Prod scope only — bringup's SequencedResolutionFlow and the headless sim never show ads.
+            builder.Register<IBetweenLevelsAds, SayKitBetweenLevelsAds>(Lifetime.Singleton);
 
             // Play screen (TASK-138 → TASK-154): the always-on RESTART button + its confirm popup + the lose screen
             // live in the PROD graph, raised as a child scope by LoadingGame (CreateChildFromPrefab). No duplicate

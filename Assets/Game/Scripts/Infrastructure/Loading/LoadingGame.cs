@@ -211,6 +211,8 @@ namespace Infrastructure.Loading
             // separate group registration. A missing/failed load leaves Data.Configs.BoostersConfig null → the
             // booster keeps running on its C# defaults (Configs.InitWithRemote already guards the null).
             AddResource<BoostersConfig>(ConfigPath.Boosters, config => Data.Configs.BoostersConfig = config);
+            // TASK-658: the between-levels interstitial knobs (config_ads); same folder entry, same null-guard story.
+            AddResource<AdsConfig>(ConfigPath.Ads, config => Data.Configs.AdsConfig = config);
             AddResource<HeartConfig>(ConfigPath.Heart, config => Data.Configs.HeartConfig = config);
 
             AddResource<InputConfig>(ConfigPath.InputConfig, config => Data.Configs.InputConfig = config);

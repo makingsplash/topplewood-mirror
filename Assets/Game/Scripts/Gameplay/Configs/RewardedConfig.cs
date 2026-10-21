@@ -58,6 +58,11 @@ namespace Gameplay.Configs
     [CreateAssetMenu(fileName = "RewardedConfig", menuName = "Configs/RewardedConfig")]
     public class RewardedConfig : ConfigWithJson<RewardedConfig.Data>
     {
+        /// <summary>
+        /// Template leftover — NOT read by the game. The between-levels interstitial threshold is
+        /// <c>AdsConfig.Interstitial.FromLevel</c> (TASK-658, remote section <c>config_ads</c>); do not add a second source
+        /// of truth here. A partial remote <c>config_rewarded</c> would null the other sections (ConfigWithJson replaces).
+        /// </summary>
         [Serializable]
         [JsonObject]
         public class InterstitialData
