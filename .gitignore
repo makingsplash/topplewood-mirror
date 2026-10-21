@@ -166,3 +166,12 @@ Assets/Plugins/Demigiant/DOTween/Editor/DOTweenUpgradeManager.XML
 # Локальная отметка сверки мета-слоя с шаблоном студии (template-sync.py ack) — состояние машины,
 # а не проекта: у каждого дерева своя.
 .studio/.template-sync.json
+
+# Промежуточные картинки ролей в папках задач — НА ДИСКЕ (гейт смотрит их там, в слот их переносит cpSync дашборда),
+# в git НЕ идут. Решение владельца 2026-10-21 при чистке LFS (.studio/audits/2026-10-21-history-rewrite.md):
+# гейтовые кадры, кропы, рендеры и сырые генерации. Арт-паки (`art/`), вложения владельца `OWNER-*` и референсы
+# коммитятся как раньше. Куда роли кладут промежуточное — соглашение в .claude/commands/studio-run.md, шаг 4.
+.studio/tasks/*/frames*/
+.studio/tasks/*/crops*/
+.studio/tasks/*/renders/
+.studio/tasks/**/raw/
