@@ -21,6 +21,13 @@ namespace Gameplay.Configs
 
         public SteppedValuesList(int startStep, string stepsString)
         {
+            // TASK-660: a partial remote config_rewarded leaves the delay strings null — no steps, not an NRE.
+            if (string.IsNullOrEmpty(stepsString))
+            {
+                _steps = Array.Empty<SteppedValue>();
+                return;
+            }
+
             var splitSteps = stepsString.Split(";", StringSplitOptions.RemoveEmptyEntries);
 
             _steps = new SteppedValue[splitSteps.Length];
@@ -28,7 +35,8 @@ namespace Gameplay.Configs
             for (int i = 0; i < splitSteps.Length; i++)
             {
                 var stepValues = splitSteps[i].Trim().Split(",", 2);
-                if (int.TryParse(stepValues[0], out int value) && int.TryParse(stepValues[1], out int len) )
+                // TASK-660: an element without a comma ("5") used to throw IndexOutOfRange on stepValues[1].
+                if (stepValues.Length == 2 && int.TryParse(stepValues[0], out int value) && int.TryParse(stepValues[1], out int len))
                 {
                     _steps[i] = new SteppedValue{ Idx = step, Value = value };
                     step += len;
@@ -61,7 +69,8 @@ namespace Gameplay.Configs
         /// <summary>
         /// Template leftover — NOT read by the game. The between-levels interstitial threshold is
         /// <c>AdsConfig.Interstitial.FromLevel</c> (TASK-658, remote section <c>config_ads</c>); do not add a second source
-        /// of truth here. A partial remote <c>config_rewarded</c> would null the other sections (ConfigWithJson replaces).
+        /// of truth here. A partial remote <c>config_rewarded</c> nulls the sections it omits (ConfigWithJson replaces);
+        /// <see cref="InitWithRemote"/> re-creates them empty (TASK-660), it does not restore the asset's values.
         /// </summary>
         [Serializable]
         [JsonObject]
@@ -133,8 +142,12 @@ namespace Gameplay.Configs
         {
             base.InitWithRemote(remoteConfig);
             Config ??= new();
-            
+
+            // TASK-660: a partial remote payload (ConfigWithJson replaces, never merges) nulls the sections it omits.
+            Config.Inters ??= new();
+            Config.Revives ??= new();
             Config.AdBoosters ??= new();
+            Config.AdHearts ??= new();
 
             Config.Revives.ParsedDelaysForPayers = new(Config.Revives.StartAfterLevel, Config.Revives.DelaysForPayers);
             Config.Revives.ParsedDelaysForNonPayers = new(Config.Revives.StartAfterLevel, Config.Revives.DelaysForNonPayers);

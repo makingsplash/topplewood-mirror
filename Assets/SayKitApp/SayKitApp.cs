@@ -21,10 +21,10 @@ public class SayKitApp
     public const string APP_KEY_IOS = "";
     public const string APP_SECRET_IOS = "";
 
-    // TODO: provision this game's own SayKit app key/secret from SayGames (dropcolorblocks).
-    // Left empty on purpose — the previous values belonged to TileSort and would report into its app.
-    public const string APP_KEY_ANDROID = "";
-    public const string APP_SECRET_ANDROID = "";
+    // Topplewood (Android) in SayLauncher, bundle com.game.dropcolorblocks (TASK-064, 2026-10-21).
+    // iOS keys stay empty on purpose: the publisher registered the Android app only.
+    public const string APP_KEY_ANDROID = "tplwoda";
+    public const string APP_SECRET_ANDROID = "tmOydPtySPlSrZMThip7a8iNBB0ZXzeA";
 
     public const string PROMO_KEY_IOS = "";
 

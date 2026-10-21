@@ -53,6 +53,11 @@ namespace DataStorage
                 return null;
             }
 
+            // TASK-064: no remote at all (the boot ran past the SDK wait on the player deadline) — every section is
+            // "empty" and ConfigWithJson serves the asset. GetValue(null) on an instance field would throw instead.
+            if (remoteConfig == null)
+                return null;
+
             var field = typeof(SayKitGameConfig).GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
             return (string)field.GetValue(remoteConfig);
         }

@@ -38,34 +38,50 @@ namespace SGS.Infrastructure.Tools.Configs
                 Config = _data;
                 return;
             }
-#elif SAYKIT_SMOKE_DISABLE_RUNTIME
-            // Project edit (TASK-533): the smoke player never inits SayKit, so remote never arrives and the
-            // empty-remote branch below would hand out a blank TData (null nested sections → NRE in overrides,
-            // e.g. RewardedConfig.Revives). Mirror the editor's local mode: serve the asset's own data.
-            Config = _data;
-            return;
 #endif
+            ApplyRemote(remoteConfig);
+        }
 
-            if (!string.IsNullOrEmpty(remoteConfig))
+        // Project edit (TASK-064): a missing or unreadable remote section serves the ASSET's data, not a blank
+        // new TData() (the template's behaviour: every section of a freshly registered app played on C# zero
+        // defaults, and null nested objects threw in the overrides — RewardedConfig.Revives — on a boot step the
+        // player runs without try/catch). The remote is NOT merged over the asset: a section is a whole blob
+        // (publisher contract, A/B controls rely on it). One line per section says whose data plays.
+        private void ApplyRemote(string remoteConfig)
+        {
+            if (string.IsNullOrEmpty(remoteConfig))
             {
-                LoadFromJson(remoteConfig);
+                Debug.LogWarning($"[config] {GetType().Name}: remote empty → local asset");
+                Config = _data;
+                return;
             }
-            else
+
+            if (!TryLoadFromJson(remoteConfig))
             {
-                Debug.LogError($"Error: remote config {GetType().Name} is null or empty");
-                Config = Activator.CreateInstance<TData>();
+                Debug.LogError($"[config] {GetType().Name}: remote invalid → local asset");
+                Config = _data;
             }
         }
 
-        protected virtual void LoadFromJson(string jsonString)
+        // Project edit (TASK-064): was `void LoadFromJson` catching only JsonSerializationException — a malformed
+        // string (JsonReaderException) escaped it, and a failure left Config as it was (null on the first boot).
+        // Any parse failure is caught here: the input comes from the server, and the caller falls back to the asset.
+        // A literal "null" payload deserializes to null and counts as a failure too.
+        protected virtual bool TryLoadFromJson(string jsonString)
         {
             try
             {
-                Config = JsonConvert.DeserializeObject<TData>(jsonString, JsonSettings);
+                var parsed = JsonConvert.DeserializeObject<TData>(jsonString, JsonSettings);
+                if (parsed == null)
+                    return false;
+
+                Config = parsed;
+                return true;
             }
-            catch (JsonSerializationException ex)
+            catch (Exception ex)
             {
-                Debug.LogError($"Error reading remote config {GetType().Name}: {ex.Message}");
+                Debug.LogError($"Error reading remote config {GetType().Name}: {ex.GetType().Name}: {ex.Message}");
+                return false;
             }
         }
 
@@ -94,8 +110,8 @@ namespace SGS.Infrastructure.Tools.Configs
         {
             JsonTextPopupWindow.Show("", json =>
             {
-                LoadFromJson(json);
-                _data = Config;
+                if (TryLoadFromJson(json))
+                    _data = Config;
             });
         }
 #endif

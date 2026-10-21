@@ -130,18 +130,11 @@ namespace Infrastructure.Loading
             // TASK-126 (owner 08:39): гасим статический ScreenSpaceOverlay-канвас сцены Loading здесь же,
             // где приложение «показано» — сразу после того, как убран DontDestroyOnLoad-лоадинг-скрин.
             HideLoadingSceneStaticCanvases(sceneCanvasesAtBoot);
-#if SAYKIT_SMOKE_DISABLE_RUNTIME && !UNITY_EDITOR
-            LogSmokeBootMarker("boot finished: gameplay scope raised, loading screen hidden");
-#endif
 
             // app_loaded должен уходить, когда игра полностью загружена
-            // и игрок может взаимодействовать с экраном (см. доку SayKit). TASK-533: в smoke-плеере идёт через
-            // GlobalService.SayKit (там EmptySayKitService) — прямой вызов ушёл бы в мёртвый мост и зациклил ошибки.
-#if SAYKIT_SMOKE_DISABLE_RUNTIME && !UNITY_EDITOR
+            // и игрок может взаимодействовать с экраном (см. доку SayKit). Через шов GlobalService.SayKit
+            // (SayKitService → SayKit.trackApplicationLoaded), а не прямым вызовом SDK из бута.
             GlobalService.SayKit.TrackApplicationLoaded();
-#else
-            SayKit.trackApplicationLoaded();
-#endif
 
             // TASK-153: приёмочная оснастка автопоказа RestartPopup снята (был вызов DevAutoShowRestartPopupAsync
             // под #if GPIE_DEVELOPMENT). Требование владельца: на входе в игру попапов не показывается. Попап
@@ -248,12 +241,12 @@ namespace Infrastructure.Loading
             foreach (var asyncLoader in _resources)
                 tasks.Add(asyncLoader.Load());
 
-#if UNITY_EDITOR
-            // TASK-129: в редакторе SayKit ходит через SayKitBridgeEditor и без своего app key (TASK-064)
-            // не доводит init до EInitState.Done — прод-бут висел бы здесь вечно. Ждём SayKit-состояния
-            // ОГРАНИЧЕННО и, не дождавшись, продолжаем бут на локальном конфиге, ГРОМКО это объявив.
-            tasks.Add(WaitForSayKitInitWithEditorTimeoutAsync(cancellationToken));
+            // TASK-129/064: ждём SayKit init ОГРАНИЧЕННО и, не дождавшись, продолжаем бут на локальном конфиге,
+            // ГРОМКО это объявив. Редактор — 3 с (TASK-129), плеер — 30 с (TASK-064, решение D3: издатель
+            // требует, чтобы игра стартовала и без ответа SDK, docs/platform/saykit.md §Инициализация).
+            tasks.Add(WaitForSayKitInitWithTimeoutAsync(cancellationToken));
 
+#if UNITY_EDITOR
             // TASK-134: ограниченное ожидание загрузчиков в редакторе — СТРАХОВКА от зависшего бута, не фикс
             // конкретного дефекта. По факту (замер владельца 16:32) все 13 конфигов грузятся за ~10 мс и бут
             // доходит до конца; «мёртвой доставки Addressables после ~4-5 операций» НЕ существует — та картина
@@ -263,29 +256,17 @@ namespace Infrastructure.Loading
             // предохранитель: если какой-то загрузчик когда-нибудь зависнет, бут не встанет вечно — по
             // таймауту НЕ бросаем, называем зависшие поимённо и продолжаем на уже загруженных конфигах.
             await WaitForResourcesWithEditorTimeoutAsync(tasks, cancellationToken);
-#elif SAYKIT_SMOKE_DISABLE_RUNTIME
-            // TASK-533 (owner decision 2026-10-14, variant B): the smoke player never calls SayKit.init
-            // (SayKitInit.cs, player stub — no own SayKit app/Firebase yet, TASK-064), so GetInitState never moves and
-            // the six waits below would hold the boot on the loading screen forever. Don't wait for states that cannot
-            // come: say it loudly and boot on LOCAL config — the same semantics as the editor fallback (TASK-129).
-            // Not a timeout: there is nothing to wait for. The prod player (no define) keeps the unbounded waits.
-            LogSmokeSayKitSkipped();
-            await tasks.WhenAll(_loadingScreen.Progress, cancellationToken: cancellationToken);
 #else
-            tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Platform, cancellationToken: cancellationToken));
-            tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.RemoteConfig, cancellationToken: cancellationToken));
-            tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Consent, cancellationToken: cancellationToken));
-            tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.IDFA, cancellationToken: cancellationToken));
-            tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState >= EInitState.Gdpr, cancellationToken: cancellationToken));
-            tasks.Add(UniTask.WaitUntil(() => SayKit.GetInitState == EInitState.Done, cancellationToken: cancellationToken));
-
+            // Загрузчики конфигов на устройстве ждутся без срока, как и раньше; срок есть только у SayKit init
+            // (он среди tasks). Прежние шесть WaitUntil по EInitState схлопнуты в один «== Done»: состояния
+            // монотонны, промежуточные ожидания ничего не добавляли.
             await tasks.WhenAll(_loadingScreen.Progress, cancellationToken: cancellationToken);
 #endif
         }
 
 #if UNITY_EDITOR
         // Редакторный лимит ожидания загрузчиков конфигов (TASK-134). На устройстве (#else в LoadResources)
-        // ожидание без таймаута НЕ тронуто. Гоняем tasks.WhenAll против фиксированного дедлайна тем же приёмом
+        // загрузчики ждутся без срока (у SayKit init свой срок — WaitForSayKitInitWithTimeoutAsync). Гоняем tasks.WhenAll против фиксированного дедлайна тем же приёмом
         // WhenAny + UniTask.Delay, что и SayKit init выше: таймаут — ОБЫЧНАЯ ветка кода, а не путь через
         // отмену/исключение (прежний fire-and-forget сторож на UniTask.Delay(12s).Forget() за 22 c play-mode
         // ни разу не выстрелил — TASK-134, замеры 03; детерминированная ветка WhenAny надёжнее). Delay крутится
@@ -300,7 +281,7 @@ namespace Infrastructure.Loading
         {
             // Прогресс сохраняем как на устройстве; проигравшую ветку WhenAny не отменяем — осиротевший
             // поллер продолжит крутиться до выхода из play-mode, где его снимет cancellationToken (та же
-            // модель, что у WaitForSayKitInitWithEditorTimeoutAsync).
+            // модель, что у WaitForSayKitInitWithTimeoutAsync).
             var allTasks = tasks.WhenAll(_loadingScreen.Progress, cancellationToken: cancellationToken);
             var deadline = UniTask.Delay(
                 TimeSpan.FromSeconds(EditorResourceLoadTimeoutSeconds),
@@ -371,14 +352,15 @@ namespace Infrastructure.Loading
         }
 #endif
 
-#if UNITY_EDITOR
-        // Редакторное ограниченное ожидание SayKit init — СТРАХОВКА от зависшего бута (TASK-129/134). Плеер
-        // (#else выше) не тронут: на устройстве бут по-прежнему ждёт настоящий нативный init без таймаута.
-        // По факту (замер владельца 16:32, после переноса init из BeforeSceneLoad в начало StartAsync) SayKit
-        // в редакторе доходит до EInitState.Done за ~200 мс и таймаут НЕ срабатывает — «SayKit в редакторе
-        // без своего app key никогда не доходит до Done» больше НЕ верно (эндпоинт с пустым ключом отвечает
-        // 404 за 0.2 c, init всё равно доезжает до Done). Ожидание оставлено предохранителем: если init
-        // когда-нибудь зависнет, бут не встанет вечно.
+        // Ограниченное ожидание SayKit init — СТРАХОВКА от зависшего бута (TASK-129/134 в редакторе, TASK-064 в
+        // плеере). По факту (замер владельца 16:32, после переноса init из BeforeSceneLoad в начало StartAsync)
+        // SayKit в редакторе доходит до EInitState.Done за ~200 мс и таймаут НЕ срабатывает. В плеере срока у
+        // SDK нет, а издатель требует, чтобы игра стартовала и без его ответа (docs/platform/saykit.md
+        // §Инициализация): зависший натив (нет ответа на окно согласия, сеть ни туда ни сюда) без срока дал бы
+        // вечный лоадер. На сроке бут идёт дальше: RemoteConfigUpdated разливает то, что есть в
+        // SayKit.gameConfig (пусто или кэш натива), а пустая секция играет данными ассета (ConfigWithJson,
+        // TASK-064). Ограничение (канон): системный диалог разрешения ставит активити на паузу — Realtime-срок
+        // при этом тоже не тикает, на устройстве ветку срока естественным путём не вызвать.
         //
         // Механика таймаута: гоняем ожидание против фиксированного дедлайна UniTask.Delay через WhenAny, так
         // что таймаут — ОБЫЧНАЯ ветка кода, а не путь через отмену/исключение. Delay крутится на PlayerLoop
@@ -391,17 +373,35 @@ namespace Infrastructure.Loading
         // (единственный видимый в логе Unity канал: мост play-mode-логи не отдаёт), поэтому по этим записям
         // локализуется, где встаёт бут. Info-строки видны только при DevelopmentMinLevel=Info — на этом сгорел
         // день (owner 16:36); Warning-ветка таймаута проходила фильтр всегда.
+        // Исход пишется Warning'ом в обеих ветках: строка успеха — это строка приёмки «SayKit инициализирован с
+        // ключом X» (SDK без SAYKIT_DEBUG молчит), и Info в плеере её бы не пропустил.
         // 3s (TASK-134, owner 15:38): 10s был налогом на каждый вход в play-mode; всё, что успевает,
         // укладывается в ~200 мс, так что 3s — комфортный потолок над реальным init.
+        // 30s (TASK-064): число Piecework (TASK-797, saykit.md); собственного у издателя нет.
         private const float EditorSayKitInitTimeoutSeconds = 3f;
+        private const float PlayerSayKitInitTimeoutSeconds = 30f;
 
-        private async UniTask WaitForSayKitInitWithEditorTimeoutAsync(CancellationToken cancellationToken)
+#if UNITY_EDITOR
+        private const float SayKitInitTimeoutSeconds = EditorSayKitInitTimeoutSeconds;
+        private const string SayKitInitWaitScope = "editor";
+#else
+        private const float SayKitInitTimeoutSeconds = PlayerSayKitInitTimeoutSeconds;
+        private const string SayKitInitWaitScope = "player";
+#endif
+
+#if UNITY_IOS
+        private const string SayKitAppKey = SayKitApp.APP_KEY_IOS;
+#else
+        private const string SayKitAppKey = SayKitApp.APP_KEY_ANDROID;
+#endif
+
+        private async UniTask WaitForSayKitInitWithTimeoutAsync(CancellationToken cancellationToken)
         {
             var enter = DateTime.Now;
             _logService.Log(
                 LogLevel.Info,
                 $"[{enter:T}.{enter.Millisecond.ToString()}] Waiting for SayKit init " +
-                $"(editor, max {EditorSayKitInitTimeoutSeconds}s), current state {SayKit.GetInitState}",
+                $"({SayKitInitWaitScope}, max {SayKitInitTimeoutSeconds}s), current state {SayKit.GetInitState}",
                 LogCategory.LoadLevel);
 
             // Проигравшая ветка WhenAny не отменяется — осиротевший WaitUntil (если победит дедлайн)
@@ -409,55 +409,32 @@ namespace Infrastructure.Loading
             var initReached = UniTask.WaitUntil(
                 () => SayKit.GetInitState == EInitState.Done, cancellationToken: cancellationToken);
             var deadline = UniTask.Delay(
-                TimeSpan.FromSeconds(EditorSayKitInitTimeoutSeconds),
+                TimeSpan.FromSeconds(SayKitInitTimeoutSeconds),
                 DelayType.Realtime,
                 cancellationToken: cancellationToken);
 
             var winnerIndex = await UniTask.WhenAny(initReached, deadline);
 
             var done = DateTime.Now;
+            var elapsedMs = (long)(done - enter).TotalMilliseconds;
             if (winnerIndex == 0)
             {
                 _logService.Log(
-                    LogLevel.Info,
-                    $"[{done:T}.{done.Millisecond.ToString()}] SayKit init reached {SayKit.GetInitState}",
+                    LogLevel.Warning,
+                    $"[{done:T}.{done.Millisecond.ToString()}] [saykit] init reached Done in {elapsedMs.ToString()} ms, " +
+                    $"appKey={SayKitAppKey}",
                     LogCategory.LoadLevel);
             }
             else
             {
                 _logService.Log(
                     LogLevel.Warning,
-                    $"[{done:T}.{done.Millisecond.ToString()}] SayKit init did not reach EInitState.Done in " +
-                    $"{EditorSayKitInitTimeoutSeconds}s (stuck at {SayKit.GetInitState}). EDITOR-ONLY: boot continues on " +
-                    "LOCAL config, without remote. Root cause is the missing own app key — see TASK-064. " +
-                    "Player build is unaffected (waits for real native init, no timeout).",
+                    $"[{done:T}.{done.Millisecond.ToString()}] [saykit] init did not reach Done in " +
+                    $"{SayKitInitTimeoutSeconds}s (stuck at {SayKit.GetInitState}, {SayKitInitWaitScope}) → boot on " +
+                    $"LOCAL config, appKey={SayKitAppKey}",
                     LogCategory.LoadLevel);
             }
         }
-#endif
-
-#if SAYKIT_SMOKE_DISABLE_RUNTIME && !UNITY_EDITOR
-        // Warning, not Info: it must pass DevelopmentMinLevel=Warning (TASK-134), otherwise the skip is silent.
-        private void LogSmokeSayKitSkipped()
-        {
-            var time = DateTime.Now;
-            _logService.Log(
-                LogLevel.Warning,
-                $"[{time:T}.{time.Millisecond.ToString()}] SAYKIT_SMOKE_DISABLE_RUNTIME: SayKit.init is stubbed " +
-                $"(state {SayKit.GetInitState}), boot does NOT wait for SayKit init states and continues on LOCAL " +
-                "config, without remote. SMOKE PLAYER ONLY — see TASK-064 (own SayKit app + Firebase).",
-                LogCategory.LoadLevel);
-        }
-
-        private void LogSmokeBootMarker(string marker)
-        {
-            var time = DateTime.Now;
-            _logService.Log(
-                LogLevel.Warning,
-                $"[{time:T}.{time.Millisecond.ToString()}] {marker} (smoke player)",
-                LogCategory.LoadLevel);
-        }
-#endif
 
         // Именованный шаг хвоста бута (TASK-134). Пишет маркер входа в фазу в тот же видимый канал
         // (_logService/LogCategory.LoadLevel), что и «Load Configs start/finished», — по отсутствию маркера
@@ -489,11 +466,9 @@ namespace Infrastructure.Loading
                     LogCategory.LoadLevel);
             }
 #else
-            // Устройство: фаза зовётся напрямую, без try/catch — поведение плеера не меняется. TASK-533: в smoke-плеере
-            // маркер фазы пишется Warning'ом — иначе по logcat нельзя сказать, где встал прод-бут на устройстве.
-#if SAYKIT_SMOKE_DISABLE_RUNTIME
-            LogSmokeBootMarker($"boot step: {stepName}");
-#endif
+            // Устройство: фаза зовётся напрямую, без try/catch — поведение плеера не меняется. Самая вероятная
+            // причина исключения здесь — пустой/частичный ремоут в RemoteConfigUpdated — снята классом в
+            // ConfigWithJson (пустая/битая секция → ассет) и в RewardedConfig (TASK-064/660).
             step();
 #endif
         }

@@ -175,3 +175,19 @@ Assets/Plugins/Demigiant/DOTween/Editor/DOTweenUpgradeManager.XML
 .studio/tasks/*/crops*/
 .studio/tasks/*/renders/
 .studio/tasks/**/raw/
+
+# ПРОИЗВОДНОЕ SayKit-ПРЕБИЛДА — в git не идёт (снято с учёта 2026-10-21, TASK-064; образец — Piecework TASK-012).
+# Пребилд берёт это из ответа сервера по ключу приложения (`SayKitApp.APP_KEY_ANDROID`) и ПЕРЕЗАПИСЫВАЕТ на каждом
+# прогоне (`CheckRemoteConfigs`, `ConfigureGenerateFiles`), а `RemoveObsoleteSayKitFiles` в его начале удаляет все
+# `Assets/Resources/**/saykit_*`. Внутри — ключи Firebase, Facebook, AdMob, то есть закоммиченная копия и устаревает
+# молча, и принадлежит ЧУЖОМУ приложению: до TASK-064 здесь лежали google-services.json от `color-tile-sort-stack-puzzle`
+# (пакет `com.game.tilesort`), strings.xml третьего приложения и ответ сервера под ключом `ctlsrta`.
+# Без файлов на диске редактор на Play шумит «Settings asset is missing» — лечение локально, без сети:
+# docs/platform/saykit.md (SayKitAppSettingsImporter.TrySynchronizeSettingsAsset). Сборка пребилдом пишет всё сама.
+# Появится в Assets/Plugins/ настоящий, не генерируемый плагин — сузить правила до имён файлов.
+Assets/Plugins/Android.meta
+Assets/Plugins/Android/
+Assets/Plugins/iOS.meta
+Assets/Plugins/iOS/
+Assets/Resources/SayKit.meta
+Assets/Resources/SayKit/

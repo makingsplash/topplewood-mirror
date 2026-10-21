@@ -43,7 +43,8 @@ namespace Gameplay.Configs
 
             // One receiver line per boot (canon saykit.md §Remote config: the proof is the receiver's own log line).
             // remoteLen is the incoming string (0 = remote sent nothing); the values are what is applied. In the
-            // editor's local mode and on the smoke player the base serves the asset whatever the remote says.
+            // editor's local mode the base serves the asset whatever the remote says; an empty or unreadable remote
+            // section also serves the asset (TASK-064), so remoteLen=0 means "asset values".
             var i = Config.Interstitial;
             Debug.Log($"[ads] config_ads applied: remoteLen={remoteConfig?.Length ?? 0} " +
                       $"Enabled={i.Enabled} FromLevel={i.FromLevel} OnLose={i.OnLose}");
