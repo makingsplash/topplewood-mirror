@@ -40,7 +40,7 @@
     "com.unity.ugui": "2.0.0",
     "com.unity.visualscripting": "1.9.11",
     "com.vcontainer.extensions": "file:VContainer Extensions/",
-    "io.saygames.saykit": "https://gitlab+deploy-token-14:gldt-QqTzys6zeDQqz65yjH5L@gitlab.saygames.io/saykit/saykit-unity.git?path=/Packages/SayKit#2026102000",
+    "io.saygames.saykit": "https://gitlab+deploy-token-14:gldt-QqTzys6zeDQqz65yjH5L@gitlab.saygames.io/saykit/saykit-unity.git?path=/Packages/SayKit#2026090900",
     "jp.hadashikick.vcontainer": "https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer#1.17.0",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.adaptiveperformance": "1.0.0",
