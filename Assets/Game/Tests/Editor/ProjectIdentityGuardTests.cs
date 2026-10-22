@@ -29,6 +29,12 @@ namespace Gameplay.Tests
         /// <summary>Bundle id НЕ меняется при регистрации (решение владельца 2026-10-21): приложение заведено под ним.</summary>
         private const string ExpectedAndroidIdentifier = "com.game.dropcolorblocks";
 
+        /// <summary>
+        /// Порог пребилда SayKit пина <c>#2026102000</c>: <c>PreBuild.cs:1315</c>, <c>CheckMinAPILevel</c> (TASK-663).
+        /// Без сторожа он вскрывается только минутами сборки (<c>build-android.sh</c> exit 4), здесь — за секунды.
+        /// </summary>
+        private const int SayKitMinTargetSdk = 36;
+
         /// <summary>Обходы smoke-сборки TASK-063/533, снятые в TASK-064. Вернуть любой — снова заглушить SDK в плеере.</summary>
         private static readonly string[] SmokeDefines =
         {
@@ -124,6 +130,20 @@ namespace Gameplay.Tests
                 $"androidApplicationEntry в {path} = {entry}: бит Activity снят. Лаунчер SayKit "
                 + "(by.saygames.SayKitActivity) наследует UnityPlayerActivity; на одном GameActivity приложение "
                 + "не стартует (docs/platform/saykit.md §Пребилд).");
+        }
+
+        [Test]
+        public void AndroidTargetSdk_MeetsSayKitPrebuildThreshold()
+        {
+            string value = ReadScalar("AndroidTargetSdkVersion", out string path);
+
+            Assert.That(int.TryParse(value, out int target), Is.True, $"AndroidTargetSdkVersion в {path} = '{value}'");
+            Assert.That(
+                target,
+                Is.GreaterThanOrEqualTo(SayKitMinTargetSdk),
+                $"AndroidTargetSdkVersion в {path} = {target}, а пребилд SayKit #2026102000 требует ≥ {SayKitMinTargetSdk} "
+                + "(PreBuild.cs:1315, CheckMinAPILevel) — сборка краснеет на пребилде. Смена пина SayKit = сверить порог "
+                + "заново (docs/platform/saykit.md, таблица порогов в шапке).");
         }
 
         private static string ReadScalar(string key, out string path)

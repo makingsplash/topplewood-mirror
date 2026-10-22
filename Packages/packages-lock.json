@@ -569,14 +569,14 @@
       }
     },
     "io.saygames.saykit": {
-      "version": "https://gitlab+deploy-token-14:gldt-QqTzys6zeDQqz65yjH5L@gitlab.saygames.io/saykit/saykit-unity.git?path=/Packages/SayKit#2026062300",
+      "version": "https://gitlab+deploy-token-14:gldt-QqTzys6zeDQqz65yjH5L@gitlab.saygames.io/saykit/saykit-unity.git?path=/Packages/SayKit#2026102000",
       "depth": 0,
       "source": "git",
       "dependencies": {
         "com.unity.modules.unitywebrequest": "1.0.0",
         "com.unity.nuget.newtonsoft-json": "3.2.1"
       },
-      "hash": "79f2328dae6a4b43b1e1223da0e35f224e84e961"
+      "hash": "bc9b80ab68ac68264215c40f143480c07f1bb493"
     },
     "jp.hadashikick.vcontainer": {
       "version": "https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer#1.17.0",

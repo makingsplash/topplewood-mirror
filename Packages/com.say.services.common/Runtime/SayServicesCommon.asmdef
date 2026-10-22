@@ -18,7 +18,8 @@
         "SayExtensionsForUnity",
         "SayServices.Interfaces",
         "SayKit.API",
-        "SayKit.Internal"
+        "SayKit.Internal",
+        "SayKit.GameConfig"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
