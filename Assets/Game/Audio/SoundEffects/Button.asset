@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   _volume: 0.4
   _clips:
-  - {fileID: 8300000, guid: 5a1e7b3c9d2f4e6a8b0c1d2e3f4a5b01, type: 3}
+  - {fileID: 8300000, guid: 5a1e7b3c9d2f4e6a8b0c1d2e3f4a5b12, type: 3}
+  - {fileID: 8300000, guid: 5a1e7b3c9d2f4e6a8b0c1d2e3f4a5b13, type: 3}
+  - {fileID: 8300000, guid: 5a1e7b3c9d2f4e6a8b0c1d2e3f4a5b14, type: 3}
   _mixer: {fileID: 7151199889606348054, guid: 0b86ca5436ebe46569630ac51efdda8b, type: 2}
   _isMusic: 0
   _isLooped: 0
