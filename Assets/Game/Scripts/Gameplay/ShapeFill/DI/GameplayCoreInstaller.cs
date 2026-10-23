@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Gameplay.Adapters;
+using Gameplay.Audio;
 using Gameplay.Core;
 using Gameplay.Core.Adapters;
 using Gameplay.Core.Mechanic;
@@ -54,6 +55,14 @@ namespace Gameplay.DI
             // ICampaignStore is bound by the hosting scope (TASK-044): prod MetaCampaignStore writes the SDK-canon
             // Data.Meta.CurrentLevel; bringup PrefsCampaignStore owns its own PlayerPrefsInt (needs only Init).
             // Kept out of this context-independent core installer, exactly like IGameplayInputSource (RFC §2.3).
+
+            // TASK-667: field sounds. The presenter is ONE singleton seen as the adapter's impact sink and as an entry point
+            // (Start/Tick) — RegisterEntryPoint's AsImplementedInterfaces covers IPieceImpactSink too; a second Register
+            // would make VContainer build a second instance, and the impacts would land in the one that never ticks.
+            // IGameSounds is bound by the hosting scope (prod: AudioService; bringup: silent), like IGameplayInputSource.
+            // The headless SimRun news the domain and never builds this — it passes its own counting sink (or none).
+            builder.RegisterInstance(new ImpactSoundTuning());
+            builder.RegisterEntryPoint<GameSoundPresenter>().As<IPieceImpactSink>();
 
             // Physics adapter: one instance seen as both the generic seam and the shape_fill contract.
             builder.Register<UnityShapeFillSimulation>(Lifetime.Singleton)

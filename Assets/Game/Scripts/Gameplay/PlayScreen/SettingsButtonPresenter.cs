@@ -1,5 +1,7 @@
 using System;
 using R3;
+using Scripts.Audio;
+using SGS.Services.Audio;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer.Unity;
@@ -68,6 +70,8 @@ namespace Gameplay.PlayScreen
 
             var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
             buttonGo.transform.SetParent(SafeAreaFitter.Create(_canvas.transform), false);
+            // TASK-667: the UI click; a disabled button stays silent (ButtonSound checks interactable).
+            buttonGo.AddComponent<ButtonSound>().SoundId = Sounds.Button;
             HudTopButtons.Place(buttonGo.GetComponent<RectTransform>(), right: false);
 
             var image = buttonGo.GetComponent<Image>();

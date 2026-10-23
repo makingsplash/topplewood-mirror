@@ -1,7 +1,9 @@
 using System;
 using Cysharp.Threading.Tasks;
 using R3;
+using Scripts.Audio;
 using Services;
+using SGS.Services.Audio;
 using Ui;
 using Ui.Popups;
 using UnityEngine;
@@ -93,6 +95,8 @@ namespace Gameplay.PlayScreen
             // Offsets count from the SAFE edges (TASK-539, closes TASK-246): under a cutout the button stays tappable.
             var buttonGo = new GameObject("Button", typeof(Image), typeof(Button));
             buttonGo.transform.SetParent(SafeAreaFitter.Create(_canvas.transform), false);
+            // TASK-667: the UI click; a disabled button stays silent (ButtonSound checks interactable).
+            buttonGo.AddComponent<ButtonSound>().SoundId = Sounds.Button;
 
             var image = buttonGo.GetComponent<Image>();
             var rect = buttonGo.GetComponent<RectTransform>();

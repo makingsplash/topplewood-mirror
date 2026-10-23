@@ -115,6 +115,10 @@ namespace Gameplay.Sim
 
             // TASK-179: headless opt-in for the targeted sweep (no scene edit; committed scene stays default),
             // mirroring the SIM_TIMING_GAP/SIM_STEPLOG opt-ins. SIM_ONLY carries the comma-separated target levelIds.
+            // TASK-667: opt-in impact pass (see _reportImpacts), same headless switch as the opt-ins around it.
+            if (Application.isBatchMode && Environment.GetEnvironmentVariable("SIM_IMPACTS") == "1")
+                _reportImpacts = true;
+
             var onlyEnv = Environment.GetEnvironmentVariable("SIM_ONLY");
             if (Application.isBatchMode && !string.IsNullOrEmpty(onlyEnv))
                 _onlyLevelIds = onlyEnv;
@@ -298,6 +302,9 @@ namespace Gameplay.Sim
                 }
             }
 
+            // TASK-667: impact speeds of the GATED runs only (taken before M0 and the opt-in passes add their own).
+            var impactSummary = _impacts.Summary();
+
             IReadOnlyList<LevelSolveStats> stats = Array.Empty<LevelSolveStats>();
             try
             {
@@ -344,6 +351,8 @@ namespace Gameplay.Sim
             var written = WriteReports(runs, stats, m0, tapAudit, loseability, partial,
                 out var dir, out var csvPath, out var jsonPath);
             LogSummary(stats, m0);
+            if (_reportImpacts)
+                Debug.Log($"[level-sim] impacts: {impactSummary} (approach speed, units/s, over {runs.Count} gated runs)");
 
             // exitCode = tool health, NOT a finding: 0 ⇔ report on disk without exception; 1 ⇔ threw / no report /
             // watchdog. Solve-rate / solvability is DATA for balancer/QA, never a non-zero exit (RFC-Δ §4.2).
@@ -1087,12 +1096,24 @@ namespace Gameplay.Sim
         // world) down AFTER the run, piggy-backing on the frame-yield the RFC §6 teardown already spends.
         private int _isolationSeq;
 
+        // TASK-667: opt-in impact pass. On, every sim body carries the same read-only impact reporter prod carries (the
+        // «PieceLand» sound) feeding this counter: its poseHash vs a sweep without reporters is the proof that the sound
+        // listener does not move physics, and the speeds print as the `[level-sim] impacts:` line. OFF by default
+        // because it is not free: a managed OnCollisionEnter2D per contact-begin (~27 per run, 660k per corpus) made the
+        // gated sweep ~2× slower and tripped the 300 s watchdog (measured in TASK-667). Env SIM_IMPACTS=1 turns it on.
+        [SerializeField] private bool _reportImpacts = false;
+        // The impact pass gets this many watchdog budgets: it is slower by construction, not wedged.
+        private const float ImpactWatchdogFactor = 3f;
+        private readonly ImpactCountingSink _impacts = new();
+
+        private float WatchdogSeconds => _reportImpacts ? _batchTimeoutSeconds * ImpactWatchdogFactor : _batchTimeoutSeconds;
+
         private UnityShapeFillSimulation NewIsolatedSim(out Scene physicsScene)
         {
             physicsScene = SceneManager.CreateScene(
                 "SimRunPhysics_" + _isolationSeq++,
                 new CreateSceneParameters(LocalPhysicsMode.Physics2D));
-            return new UnityShapeFillSimulation(_tuning, physicsScene);
+            return new UnityShapeFillSimulation(_tuning, physicsScene, _reportImpacts ? _impacts : null);
         }
 
         // Unload the run's local physics scene, destroying its isolated Box2D world in full. Yields on the async
@@ -1115,9 +1136,9 @@ namespace Gameplay.Sim
 
         private bool WatchdogExpired()
         {
-            if (Time.realtimeSinceStartup - _startRealtime <= _batchTimeoutSeconds)
+            if (Time.realtimeSinceStartup - _startRealtime <= WatchdogSeconds)
                 return false;
-            Debug.LogError($"[level-sim] watchdog: sweep exceeded {_batchTimeoutSeconds}s — aborting.");
+            Debug.LogError($"[level-sim] watchdog: sweep exceeded {WatchdogSeconds}s — aborting.");
             return true;
         }
 

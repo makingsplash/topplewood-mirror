@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using DataStorage;
 using Gameplay.Adapters;
+using Gameplay.Audio;
 using Gameplay.Core;
 using Gameplay.DI;
 #if GPIE_DEVELOPMENT
@@ -62,6 +63,12 @@ namespace Game.Code.Infrastructure
                     resolver.Resolve<InputServiceGameplayInputSource>(),
                     resolver.Resolve<ITutorialInputGate>()),
                 Lifetime.Singleton);
+
+            // TASK-667: sound. The core installer's GameSoundPresenter / WinBeatView and the prod HUD presenters play
+            // through IGameSounds, bound here by the hosting scope (bringup binds a silent one). The applier pushes the
+            // saved «Sound»/«Music» flags into the mixer from Start — not Awake, where AudioMixer.SetFloat is ignored.
+            builder.Register<IGameSounds, AudioServiceGameSounds>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<SoundSettingsApplier>();
 
             builder.RegisterInstance(Data.Configs.Core).AsSelf();
 

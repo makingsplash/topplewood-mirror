@@ -60,7 +60,17 @@ namespace SGS.Services.Audio
 
         public void DeInit()
         {
-            
+
+        }
+
+        // TASK-667: the only driver of OnUpdate. Without it a finished source never returns to the pool and
+        // SoundEffect.FreeOne is never called, so an effect with _countMax > 0 goes silent for good after _countMax plays.
+        private void Update()
+        {
+            if (_busySoundSources != null)
+            {
+                OnUpdate();
+            }
         }
 
         public void OnUpdate()
@@ -83,7 +93,24 @@ namespace SGS.Services.Audio
 
         private void PreloadSounds()
         {
-            
+
+        }
+
+        /// <summary>
+        /// TASK-667: start loading the named effects now, so the first play of each does not wait on an Addressables
+        /// load (a tap must sound at once). Fire-and-forget; a missing asset is reported once by GetSoundEffect.
+        /// </summary>
+        public void Preload(IEnumerable<string> effectNames)
+        {
+            if (_effects == null || effectNames == null)
+            {
+                return;
+            }
+
+            foreach (string effectName in effectNames)
+            {
+                GetSoundEffect(effectName).Forget();
+            }
         }
         
         private void OnApplicationPause(bool pause)
@@ -121,17 +148,27 @@ namespace SGS.Services.Audio
         {
             return await Play(effectName, false);
         }
-        
+
         public async UniTask<AudioSource> Play(string effectName, int index)
         {
             return await Play(effectName, true, index);
         }
-        
-        private async UniTask<AudioSource> Play(string effectName, bool withIndex, int index = 0)
+
+        /// <summary>
+        /// TASK-667: play with a per-play volume scale (impact strength) and pitch shift in semitones (the win-star
+        /// ladder from one clip). The effect's own pitch jitter is applied on top.
+        /// </summary>
+        public async UniTask<AudioSource> Play(string effectName, float volumeScale, float semitones)
+        {
+            return await Play(effectName, false, 0, volumeScale, semitones);
+        }
+
+        private async UniTask<AudioSource> Play(string effectName, bool withIndex, int index = 0,
+            float volumeScale = 1f, float semitones = 0f)
         {
             SoundEffect effect = await GetSoundEffect(effectName);
 
-            if (effect.IsCanPlay() == false)
+            if (effect == null || effect.IsCanPlay() == false)
             {
                 return null;
             }
@@ -152,7 +189,7 @@ namespace SGS.Services.Audio
                 }
                 else
                 {
-                    effect.Play(source);
+                    effect.Play(source, volumeScale, semitones);
                 }
                 
                 _busySoundSources.Enqueue(source);
@@ -184,13 +221,26 @@ namespace SGS.Services.Audio
         public void EnableMusic(bool isEnable)
         {
             AudioConfig config = SayData.Configs.Audio;
+            if (config == null || config.MasterMixer == null)
+            {
+                Debug.LogWarning("[sfx] EnableMusic: no AudioConfig/MasterMixer loaded — the flag is not applied");
+                return;
+            }
             config.MasterMixer.SetFloat(config.MusicVolumeTag, isEnable ? 0.0f : config.MuteValue);
         }
 
         public void EnableSounds(bool isEnable)
         {
             AudioConfig config = SayData.Configs.Audio;
+            if (config == null || config.MasterMixer == null)
+            {
+                Debug.LogWarning("[sfx] EnableSounds: no AudioConfig/MasterMixer loaded — the flag is not applied");
+                return;
+            }
             config.MasterMixer.SetFloat(config.SoundVolumeTag, isEnable ? 0.0f : config.MuteValue);
+#if GPIE_DEVELOPMENT
+            Debug.Log($"[sfx] EnableSounds({isEnable})");
+#endif
         }
 
         private AudioSource GetSoundAudioSource()
@@ -203,18 +253,44 @@ namespace SGS.Services.Audio
             return gameObject.AddComponent<AudioSource>();
         }
 
+        // TASK-667: a load that fails (no asset at that address → InvalidKeyException) used to leave _effects[name] = null
+        // forever, and every later Play of that name then waited in WaitWhile for good. Now the failure is reported once
+        // and remembered as "missing": later plays of that name return null at once.
+        private readonly HashSet<string> _missingEffects = new HashSet<string>();
+
         private async UniTask<SoundEffect> GetSoundEffect(string effectName)
         {
+            if (_missingEffects.Contains(effectName))
+            {
+                return null;
+            }
+
             if (!_effects.ContainsKey(effectName))
             {
                 _effects[effectName] = null;
-                SoundEffect effect = await Addressables.LoadAssetAsync<SoundEffect>($"SoundEffects/{effectName}.asset");
+                SoundEffect effect = null;
+                try
+                {
+                    effect = await Addressables.LoadAssetAsync<SoundEffect>($"SoundEffects/{effectName}.asset");
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning($"[sfx] no SoundEffect '{effectName}' (address SoundEffects/{effectName}.asset): {e.Message}");
+                }
+
+                if (effect == null)
+                {
+                    _missingEffects.Add(effectName);
+                    _effects.Remove(effectName);
+                    return null;
+                }
+
                 _effects[effectName] = effect;
                 return effect;
             }
 
-            await UniTask.WaitWhile(() => _effects[effectName] == null);
-            return _effects[effectName];
+            await UniTask.WaitWhile(() => _effects.ContainsKey(effectName) && _effects[effectName] == null);
+            return _effects.TryGetValue(effectName, out SoundEffect loaded) ? loaded : null;
         }
     }
 }

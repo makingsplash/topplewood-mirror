@@ -18,6 +18,8 @@ namespace Game.Editor.UiBuild
     ///   { "kind": "punch", "at": 1110, "dur": 140, "scale": 1.12 },
     ///   { "kind": "loop",  "at": 2000, "period": 2400, "scale": 1.04, "alpha": 0.85, "ease": "InOutSine" } ] }
     /// </code>
+    /// Any non-loop step may also carry <c>"sound": "&lt;SoundEffect name&gt;", "semitones": 2</c> (TASK-667): the sound
+    /// plays when the step starts; a tap that completes the intro plays only the latest pending one.
     /// Field semantics — docs/art/ui-authoring.md §«Анимация показа экрана».
     /// </summary>
     [UiHandler("Reveal")]
@@ -87,6 +89,14 @@ namespace Game.Editor.UiBuild
             step.AlphaDurationMs = r.Int("alphaDur", 0);
             step.Overshoot = r.Float("overshoot", 1.70158f);
             step.CountFrom = r.Float("from", 0f);
+            // TASK-667: a sound at the step's start. The id must name an existing SoundEffect asset — a typo would
+            // otherwise compile green and stay silent at runtime.
+            step.SoundId = r.Str("sound", null);
+            step.SoundSemitones = r.Float("semitones", 0f);
+            if (step.SoundId != null)
+                SoundHandler.RequireSoundAsset(report, where, step.SoundId);
+            else if (r.Has("semitones"))
+                report.Error(where, "'semitones' без 'sound': сдвигать тон нечему");
 
             string ease = r.Str("ease", "OutQuad");
             if (Enum.TryParse(ease, false, out Ease parsed) && parsed != Ease.INTERNAL_Zero && parsed != Ease.INTERNAL_Custom)
@@ -116,6 +126,8 @@ namespace Game.Editor.UiBuild
             }
             if (step.AlphaDurationMs > 0 && step.Kind != RevealKind.In)
                 report.Error(where, "'alphaDur' имеет смысл только у шага in");
+            if (step.SoundId != null && step.Kind == RevealKind.Loop)
+                report.Error(where, "'sound' у шага loop не поддержан: петля не входит в интро, звук сыграл бы один раз в его начале");
             return step;
         }
     }

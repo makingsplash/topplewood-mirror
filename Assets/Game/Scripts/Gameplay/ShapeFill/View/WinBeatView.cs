@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using Gameplay.Audio;
 using Gameplay.Core;
 using Gameplay.PlayScreen;
 using R3;
+using Scripts.Audio;
 using Ui.Components.Reveal;
 using UnityEngine;
 using UnityEngine.UI;
@@ -49,19 +51,21 @@ namespace Gameplay.View
         private readonly TargetCardLocator _card;
         private readonly TargetPreviewConfig _previewConfig;
         private readonly WinBeatConfig _config;
+        private readonly IGameSounds _sounds;
         private readonly IDisposable _levelLoaded;
 
         private Overlay _overlay;
         private Beat _beat;
 
         public WinBeatView(GameModel model, PieceViewRegistry registry, TargetCardLocator card,
-            TargetPreviewConfig previewConfig, WinBeatConfig config)
+            TargetPreviewConfig previewConfig, WinBeatConfig config, IGameSounds sounds)
         {
             _model = model;
             _registry = registry;
             _card = card;
             _previewConfig = previewConfig;
             _config = config;
+            _sounds = sounds;
             // A (re)load mid-beat — DEV jump, scope swap — must not leave tweens on transforms the reload destroys.
             _levelLoaded = _model.LevelLoaded.Subscribe(_ => Reset());
         }
@@ -173,6 +177,7 @@ namespace Gameplay.View
             private readonly Vector3[] _frameCorners; // world, at the card's base scale
             private readonly float _windowShrink;     // frame → window (canvas behind the wooden border)
             private readonly Action _done;
+            private readonly IGameSounds _sounds;
 
             private readonly Transform _flight;
             private readonly Transform _pivot;
@@ -193,12 +198,17 @@ namespace Gameplay.View
             private Tween _tween;
             private bool _skipped;
             private bool _finished;
+            // TASK-667: the two sound cues of the beat, each ONCE and only forward. A tap jumps straight to the landing,
+            // so «WinFrame» rings exactly once, on the landing; a backward Goto (frame acceptance) never replays them.
+            private bool _liftCued;
+            private bool _frameCued;
 
             public Beat(WinBeatView owner, UnityEngine.Camera camera, List<Flyer> pieces, Action done)
             {
                 _c = owner._config;
                 _camera = camera;
                 _done = done;
+                _sounds = owner._sounds;
                 _flashPolygons = new[] { _flashPoints };
                 _overlay = owner.GetOverlay();
                 _cardRoot = owner._card.CardRoot;
@@ -319,6 +329,25 @@ namespace Gameplay.View
                 }
 
                 ApplyOverlay(t);
+                CueSounds(t);
+            }
+
+            // «WinLift» when the figure takes off, «WinFrame» (the peak of the whole win) when it lands on the card. A jump
+            // past the take-off straight onto the landing (the tap) skips the lift: two sounds in one frame would blur
+            // the peak.
+            private void CueSounds(float t)
+            {
+                if (!_liftCued && t >= _c.FlightStart)
+                {
+                    _liftCued = true;
+                    if (t < _c.FlightEnd)
+                        _sounds?.Play(Sounds.WinLift);
+                }
+                if (!_frameCued && t >= _c.FlightEnd)
+                {
+                    _frameCued = true;
+                    _sounds?.Play(Sounds.WinFrame);
+                }
             }
 
             /// <param name="e">Flight progress 0..1; −1 = before the flight (on the field plane, z = 0).</param>

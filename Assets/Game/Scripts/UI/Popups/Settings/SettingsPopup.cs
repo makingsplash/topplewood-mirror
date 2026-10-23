@@ -17,9 +17,9 @@ namespace Ui.Popups
     /// Opened by the HUD gear (<c>SettingsGearBinder</c>); while it is up the game is paused and gameplay input is off
     /// (<c>GameplayInputScreenBlocker</c>, keyed on <see cref="ScreenNames.SettingsScreen"/>).
     ///
-    /// Tiles only WRITE their Settings flags and control nothing (owner 2026-10-15: "тоглы настроек пусть будут
-    /// пустыми") — the game has no sound and no haptics yet; applying the flags is the job of the sound/haptics ticket.
-    /// AudioService is not called on purpose: it dereferences the audio config's MasterMixer, which nothing provides.
+    /// «Sound» and «Music» write their flag AND apply it to the mixer at once (TASK-667): AudioConfig.asset references
+    /// AudioMixer.mixer with exposed SoundsVolume/MusicVolume, loaded by LoadingGame. The saved value is applied at the
+    /// session start by SoundSettingsApplier. «Vibration» still only writes its flag (haptics are parked, TASK-568).
     ///
     /// State is decided in <see cref="Init"/>, not later: the intro (ScreenReveal) measures the card on the first
     /// Update, so the consent row must be on/off before that, or the card group would re-layout mid-intro.
@@ -91,9 +91,22 @@ namespace Ui.Popups
 
         public void OnBackButton() => Close();
 
-        private static void OnSoundChanged(bool value) => WriteFlag(Data.Settings.SoundEnabled, value);
+        private static void OnSoundChanged(bool value)
+        {
+            WriteFlag(Data.Settings.SoundEnabled, value);
+            var audio = GlobalService.AudioService;
+            if (audio != null)
+                audio.EnableSounds(value);
+        }
 
-        private static void OnMusicChanged(bool value) => WriteFlag(Data.Settings.MusicEnabled, value);
+        // No music in the game yet; the flag is still applied honestly, so music added later obeys it from day one.
+        private static void OnMusicChanged(bool value)
+        {
+            WriteFlag(Data.Settings.MusicEnabled, value);
+            var audio = GlobalService.AudioService;
+            if (audio != null)
+                audio.EnableMusic(value);
+        }
 
         // The vibration tile writes HapticEnabled; VibrationEnabled is a separate legacy flag left alone (designer §4).
         private static void OnHapticChanged(bool value) => WriteFlag(Data.Settings.HapticEnabled, value);

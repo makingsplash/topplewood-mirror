@@ -54,6 +54,9 @@ public class ShapeFillBringupLifetimeScope : LifetimeScope
                 resolver.Resolve<ITutorialInputGate>()),
             Lifetime.Singleton);
 
+        // TASK-667: no LoadingGame here ⇒ no AudioService and no AudioConfig — the core's sound consumers get a silent door.
+        builder.Register<Gameplay.Audio.IGameSounds, Gameplay.Audio.NullGameSounds>(Lifetime.Singleton);
+
         // App lifecycle triggers (Data-free) so the prefs flush can hook pause/focus/quit.
         builder.RegisterApplicationTriggers();
 

@@ -2,12 +2,14 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Gameplay.Audio;
 using Gameplay.Configs;
 using Gameplay.Core;
 using Gameplay.Core.Mechanic;
 using Gameplay.Tutorial;
 using Gameplay.View;
 using R3;
+using Scripts.Audio;
 using Services.Gameplay;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -54,6 +56,7 @@ namespace Gameplay.PlayScreen
         private readonly IMechanicController _mechanic;
         private readonly TourConfig _tour;
         private readonly HintButtonTourTarget _target;
+        private readonly IGameSounds _sounds;
 
         private GameObject _eventSystem;
         private GameObject _canvas;
@@ -97,8 +100,10 @@ namespace Gameplay.PlayScreen
             LevelFailStreak failStreak,
             IMechanicController mechanic,
             TourConfig tour,
-            HintButtonTourTarget target)
+            HintButtonTourTarget target,
+            IGameSounds sounds)
         {
+            _sounds = sounds;
             _model = model;
             _hint = hint;
             _interaction = interaction;
@@ -486,6 +491,10 @@ namespace Gameplay.PlayScreen
 
             LogHint($"REVEAL id={instanceId} — calling highlight seam (class-2 territory if nothing appears)");
             RevealPiece(instanceId);
+            // TASK-667: «Hint» REPLACES the button click (design TASK-666 §2 #8), so this button carries no ButtonSound and
+            // the sound plays only here, on an ACCEPTED activation: every swallowed click above stays silent, like a tap
+            // on a disabled button.
+            _sounds.Play(Sounds.Hint);
             CooldownAsync().Forget();
             // TASK-635: an ACCEPTED activation — the hint tour's HUD beat completes on this, never on a swallowed click.
             _target.NotifyActivated();

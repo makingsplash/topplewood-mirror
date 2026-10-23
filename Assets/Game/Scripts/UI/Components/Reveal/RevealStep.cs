@@ -45,6 +45,11 @@ namespace Ui.Components.Reveal
         public float Overshoot = 1.70158f;
         public float CountFrom;
 
+        /// <summary>TASK-667: a sound played when this step starts (a SoundEffect asset name); empty = silent.</summary>
+        public string SoundId;
+        /// <summary>Pitch shift of that sound in semitones — one clip, a ladder by data (win stars 0 / 2 / 4).</summary>
+        public float SoundSemitones;
+
         public int EndMs => AtMs + DurationMs;
     }
 }

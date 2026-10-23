@@ -8,33 +8,13 @@ namespace Scripts.Audio
 
     public static class Sounds
     {
-        public const string BoosterButton = "BoosterButton";
-        public const string BoosterHammer = "BoosterHammer";
         public const string Button = "Button";
-        public const string ColumnComplete = "ColumnComplete";
-        public const string FeatureBomb = "FeatureBomb";
-        public const string FeatureBombExplosion = "FeatureBombExplosion";
-        public const string FeatureBombTimer = "FeatureBombTimer";
-        public const string FeatureChainCounter = "FeatureChainCounter";
-        public const string FeatureChainKey = "FeatureChainKey";
-        public const string FeatureChainLock = "FeatureChainLock";
-        public const string FeatureCompositeFigure = "FeatureCompositeFigure";
-        public const string FeatureDoubleFigure = "FeatureDoubleFigure";
-        public const string FeatureFreeze = "FeatureFreeze";
-        public const string FeatureFreezeCounter = "FeatureFreezeCounter";
-        public const string FeatureGateClose = "FeatureGateClose";
-        public const string FeatureGateOpen = "FeatureGateOpen";
-        public const string FigureDoorEnter1 = "FigureDoorEnter1";
-        public const string FigureDoorEnter2 = "FigureDoorEnter2";
-        public const string FigureDoorEnter3 = "FigureDoorEnter3";
-        public const string FigureDrag = "FigureDrag";
+        public const string Hint = "Hint";
         public const string Lose = "Lose";
-        public const string Music = "Music";
-        public const string Popup = "Popup";
-        public const string Win = "Win";
-        public const string WoolCollect = "WoolCollect";
-        public const string SpoolClosed = "SpoolClosed";
-        public const string TileFlip = "TileFlip";
-        public const string TilePlace = "TilePlace";
+        public const string PieceLand = "PieceLand";
+        public const string PieceRelease = "PieceRelease";
+        public const string WinFrame = "WinFrame";
+        public const string WinLift = "WinLift";
+        public const string WinStar = "WinStar";
     }
 }

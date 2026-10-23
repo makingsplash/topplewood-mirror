@@ -12,7 +12,9 @@ namespace SGS.Editor.Tools.DevTools
 {
     public static class AudioCodeGenerator
     {
-        public static string SoundEffectsPath = "Audio/SoundEffects";
+        // TASK-667: the project's SoundEffect assets live next to its mixer (Assets/Game/Audio). The old "Audio/SoundEffects"
+        // pointed at a folder that never existed here, so a run threw DirectoryNotFoundException.
+        public static string SoundEffectsPath = "Game/Audio/SoundEffects";
 
         [MenuItem("Utils/Generate Audio Constants")]
         public static void GenerateAudioConstants()

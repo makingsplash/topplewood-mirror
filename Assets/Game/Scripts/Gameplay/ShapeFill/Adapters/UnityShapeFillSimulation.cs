@@ -65,20 +65,25 @@ namespace Gameplay.Adapters
         // history-/parity-dependent verdicts diagnosed in dev-architect 01 §2; a per-run scene is the documented
         // Unity "hard restart" (reload-the-scene) done cheaply, without a domain reload.
         private readonly Scene? _physicsScene;
+        // TASK-667: receiver of piece impacts (the «PieceLand» sound). Non-null ⇒ every spawned body gets a read-only
+        // PieceImpactReporter; null ⇒ no reporter is added at all. Prod passes the sound presenter, the sim harness a
+        // counting sink — the reporter only reads contacts, so poseHash is unchanged either way (plan §2.2).
+        private readonly IPieceImpactSink _impacts;
 
         // Production DI constructor (VContainer): pinned with [Inject] so the container binds THIS exact parameter
-        // list (ShapeFillTuning only, as before) regardless of the second constructor — prod resolves no Scene and
-        // stays byte-for-byte. The isolation ctor below is called explicitly by the sim harness (LevelSimRunner).
+        // list regardless of the second constructor — prod resolves no Scene. The isolation ctor below is called
+        // explicitly by the sim harness (LevelSimRunner).
         [Inject]
-        public UnityShapeFillSimulation(ShapeFillTuning tuning) : this(tuning, null)
+        public UnityShapeFillSimulation(ShapeFillTuning tuning, IPieceImpactSink impacts) : this(tuning, null, impacts)
         {
         }
 
         // TASK-379: isolation constructor used by LevelSimRunner — physicsScene is this run's own local 2D world.
-        public UnityShapeFillSimulation(ShapeFillTuning tuning, Scene? physicsScene)
+        public UnityShapeFillSimulation(ShapeFillTuning tuning, Scene? physicsScene, IPieceImpactSink impacts = null)
         {
             _tuning = tuning;
             _physicsScene = physicsScene;
+            _impacts = impacts;
         }
 
         private Transform Root
@@ -236,6 +241,10 @@ namespace Gameplay.Adapters
             }
 
             var id = _nextId++;
+            // TASK-667: impact reporter — added last, after the body is fully built, and only when someone listens. An
+            // Idle piece has its colliders off, so it reports nothing until Release (or a preplaced spawn) enables them.
+            if (_impacts != null)
+                go.AddComponent<PieceImpactReporter>().Bind(id, _impacts);
             _bodies[id] = new Body
             {
                 Rigidbody = rb,

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using SGS.Services.Ui;
 using TMPro;
@@ -34,6 +35,9 @@ namespace Ui.Components.Reveal
         private RevealTapCatcher _catcher;
         private Sequence _intro;
         private bool _pending;
+        // TASK-667: sound cues of the steps that carry one (RevealStep.SoundId). Held during CompleteIntro so a tap does
+        // not fire every remaining cue in one frame.
+        private RevealSoundCues _cues;
 
         /// <summary>True from <see cref="Show"/> until the buttons accept input.</summary>
         public bool IsRevealing => _catcher != null && _catcher.gameObject.activeSelf;
@@ -76,7 +80,19 @@ namespace Ui.Components.Reveal
         {
             if (_pending)
                 Begin();
+            // Complete(true) runs every pending callback in this frame — the sound cues among them. Hold them and play
+            // only the latest one afterwards (RevealSoundCues).
+            _cues?.BeginComplete();
             _intro?.Complete(true);
+            _cues?.EndComplete();
+        }
+
+        private static void PlayCue(string id, float semitones)
+        {
+            // No service (a scene without the LoadingGame bootstrap) → silent.
+            var audio = SGS.Services.GlobalService.AudioService;
+            if (audio != null)
+                audio.Play(id, 1f, semitones).Forget();
         }
 
         private void Update()
@@ -103,6 +119,8 @@ namespace Ui.Components.Reveal
             var unlockMs = RevealTimeline.Resolve(timings, _inputLagMs, shifts);
 
             _intro = DOTween.Sequence().SetUpdate(true).SetLink(gameObject);
+            _cues ??= new RevealSoundCues(PlayCue);
+            _cues.Clear();
             for (var i = 0; i < _nodes.Length; i++)
             {
                 if (!_nodes[i].Active)
@@ -112,7 +130,7 @@ namespace Ui.Components.Reveal
                     continue;
                 }
 
-                _nodes[i].Build(_intro, _loops, shifts[i], gameObject);
+                _nodes[i].Build(_intro, _loops, shifts[i], gameObject, _cues);
             }
 
             _intro.InsertCallback(unlockMs / 1000f, Unlock);
@@ -251,7 +269,7 @@ namespace Ui.Components.Reveal
                     Alpha = _finalAlpha;
             }
 
-            public void Build(Sequence intro, List<Tween> loops, int shiftMs, GameObject link)
+            public void Build(Sequence intro, List<Tween> loops, int shiftMs, GameObject link, RevealSoundCues cues)
             {
                 _finalPosition = _rect.anchoredPosition;
 
@@ -259,6 +277,11 @@ namespace Ui.Components.Reveal
                 {
                     var at = Mathf.Max(0, step.AtMs - shiftMs) / 1000f;
                     var duration = step.DurationMs / 1000f;
+                    if (!string.IsNullOrEmpty(step.SoundId))
+                    {
+                        var cue = cues.Add(at, step.SoundId, step.SoundSemitones);
+                        intro.InsertCallback(at, () => cues.Fire(cue));
+                    }
                     switch (step.Kind)
                     {
                         case RevealKind.In:
